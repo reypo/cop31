@@ -1,10 +1,15 @@
 import Image from "next/image";
 import { backCover, cop31, cover, socials } from "@/lib/content";
-import { logos } from "@/lib/photos";
+import { logos, photos } from "@/lib/photos";
+import { stant } from "@/lib/stant";
+import { Polaroid } from "./parcalar";
 
 /**
- * Ortak kapanış bloğu (brief §7): logolar, kurum adı, sosyal hesaplar, site, slogan.
- * Son bölüm (data-stage 7): final sahnesinin (sabit katman) üstüne bir sayfa
+ * Ortak kapanış bloğu (brief §7): logolar, kurum adı, sosyal hesaplar, site, slogan,
+ * "12.000 Yıllık Emanet · #YaniBanaEmanet". Üstte iki hatıra polaroidi (kamp özçekimi
+ * p10, Şölen'de el kalpte p06; odaklar docs/foto-yeni.md); kısa ekranlarda (≤ 740 px
+ * yükseklik) gizlenir, böylece blok tek ekranda kalır (dunya.css `.dn-kapanis-foto`).
+ * Son bölüm (data-stage 12): final sahnesinin (sabit katman) üstüne bir sayfa
  * gibi kayarak gelir; en az bir ekran boyu, uzunsa içinde kaydırılır.
  */
 export default function DunyaKapanis() {
@@ -13,10 +18,26 @@ export default function DunyaKapanis() {
 
   return (
     <footer
-      data-stage="7"
-      className="dn-bolum relative z-20 flex flex-col justify-center rounded-t-[28px] bg-white px-4 pt-16 pb-[max(2.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-22px_rgb(27_79_156/0.28)] ring-1 ring-brand-blue/5"
+      data-stage="12"
+      className="dn-bolum dn-kapanis relative z-20 flex flex-col justify-center rounded-t-[28px] bg-white px-4 pt-16 pb-[max(2.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-22px_rgb(27_79_156/0.28)] ring-1 ring-brand-blue/5"
     >
       <div className="mx-auto w-full max-w-[480px] text-center">
+        <div className="dn-kapanis-foto mx-auto mb-7 grid max-w-[300px] grid-cols-2 gap-x-4 px-1 pt-1">
+          <Polaroid
+            photo={photos.kamp2025Ozcekim}
+            rotate={-3}
+            aspect="4 / 3"
+            position="42% 50%"
+            sizes="(max-width: 520px) 40vw, 150px"
+          />
+          <Polaroid
+            photo={photos.solenKocaeliElKalpte}
+            rotate={2.5}
+            aspect="4 / 3"
+            position="50% 50%" /* "50% 36%"te el kalpte jesti alt kenarda kesiliyordu; yüz yine üst yarıda */
+            sizes="(max-width: 520px) 40vw, 150px"
+          />
+        </div>
         <div className="flex items-center justify-center gap-6">
           <Image
             src={logos.akParti.src}
@@ -38,7 +59,7 @@ export default function DunyaKapanis() {
         </div>
 
         <p className="mt-5 text-[21px] leading-tight font-black text-brand-blue">{cover.org}</p>
-        <p className="mt-1.5 text-[14px] font-bold text-brand-green">{backCover.quote}</p>
+        <p className="mt-1.5 text-[14px] font-bold text-brand-teal">{backCover.quote}</p>
 
         <Image
           src={logos.sozGenclikteTurkiye.src}
@@ -78,6 +99,9 @@ export default function DunyaKapanis() {
 
         <p className="mt-7 font-script text-[clamp(30px,9.2vw,38px)] leading-[1.1] text-balance text-brand-green">
           {cover.slogan}
+        </p>
+        <p className="dn-serif mt-2 text-[16px] leading-snug font-semibold text-[color:var(--dn-koyu)]">
+          {stant.tema} · {stant.hashtag}
         </p>
         <p className="mt-2 text-[12px] font-bold text-brand-ink">
           {backCover.line1} · {cop31.dates} · {cop31.venue}

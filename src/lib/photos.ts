@@ -133,6 +133,170 @@ export const photos = {
     height: 1600,
     alt: "Mavi yelekli gençler fidan dikiyor",
   },
+
+  // --- 1 Kasım 2026'da eklenen 22 fotoğraf (kaynak p01–p22; seçim ve odak: docs/foto-yeni.md) ---
+
+  // Gençlik Buluşmaları "Kampüs", 13 Aralık 2025
+  bulusmaKampusSoylesi: {
+    // p12
+    src: "/photos/bulusma-kampus-soylesi.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Gençlik Buluşmaları söyleşisinde gençlerin yanında elinde mikrofonla konuşan Cumhurbaşkanı Erdoğan, 13 Aralık 2025",
+  },
+  bulusmaKampusSoylesiGenis: {
+    // p11
+    src: "/photos/bulusma-kampus-soylesi-genis.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Gençlik Buluşmaları \"Kampüs\" söyleşisinde dört gençle birlikte koltuklarda oturan Cumhurbaşkanı Erdoğan, 13 Aralık 2025",
+  },
+  bulusmaKampusHediye: {
+    // p01
+    src: "/photos/bulusma-kampus-hediye.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Gençlik Buluşmaları'nda Cumhurbaşkanı Erdoğan'a üzerinde \"Gençlik\", \"Lider\" ve \"Vizyon\" yazan bir hediye kutusu takdim ediliyor",
+  },
+  bulusmaKampusMikrofon: {
+    // p02
+    src: "/photos/bulusma-kampus-mikrofon.jpg",
+    width: 1600,
+    height: 1098,
+    alt: "Gençlik Buluşmaları söyleşisinde elinde mikrofonla gençlere seslenen Cumhurbaşkanı Erdoğan; ön planda alkışlayan gençler",
+  },
+  bulusmaKampusGenclerSohbet: {
+    // p03
+    src: "/photos/bulusma-kampus-gencler-sohbet.jpg",
+    width: 1600,
+    height: 1215,
+    alt: "Gençlik Buluşmaları salonunda Cumhurbaşkanı Erdoğan'la ayakta sohbet eden gençler",
+  },
+  bulusmaKampusSalonSelam: {
+    // p17
+    src: "/photos/bulusma-kampus-salon-selam.jpg",
+    width: 1600,
+    height: 1081,
+    alt: "Gençlik Buluşmaları \"Kampüs\" salonunda kendisini alkışlayan gençleri selamlayan Cumhurbaşkanı Erdoğan, 13 Aralık 2025",
+  },
+
+  // Strateji ve İstişare Kampı, 13 Ağustos 2025
+  kamp2025Selam: {
+    // p16
+    src: "/photos/kamp-2025-selam.jpg",
+    width: 1275,
+    height: 1600,
+    alt: "Strateji ve İstişare Kampı sahnesinde gençleri selamlayan Cumhurbaşkanı Erdoğan ve AK Parti Gençlik Kolları Başkanı, 13 Ağustos 2025",
+  },
+  kamp2025Ozcekim: {
+    // p10
+    src: "/photos/kamp-2025-ozcekim.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Strateji ve İstişare Kampı'nda sahnede Cumhurbaşkanı Erdoğan'la özçekim yapan Gençlik Kolları Başkanı; arkada salonu dolduran gençler",
+  },
+  kamp2025Pankart: {
+    // p13 — kaynak zaten 1600 px; yalnızca küçük polaroid
+    src: "/photos/kamp-2025-pankart.jpg",
+    width: 1600,
+    height: 1066,
+    alt: "\"Bu Senin Hikayen – Türkiye'nin Gücü AK Gençlik\" Strateji ve İstişare Kampı sahnesinde kürsüdeki Cumhurbaşkanı Erdoğan, 13 Ağustos 2025",
+  },
+  kamp2025KursuBasparmak: {
+    // p09
+    src: "/photos/kamp-2025-kursu-basparmak.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Strateji ve İstişare Kampı'nda kürsüden başparmağını kaldırarak gençlere seslenen Cumhurbaşkanı Erdoğan, 13 Ağustos 2025",
+  },
+  kamp2025KonusmaTablo: {
+    // p04
+    src: "/photos/kamp-2025-konusma-tablo.jpg",
+    width: 1600,
+    height: 1094,
+    alt: "Strateji ve İstişare Kampı'nda arkasında büyük bir tablo bulunan kürsüde konuşan Cumhurbaşkanı Erdoğan, 13 Ağustos 2025",
+  },
+  kamp2025SalonIsiklar: {
+    // p05
+    src: "/photos/kamp-2025-salon-isiklar.jpg",
+    width: 1600,
+    height: 997,
+    alt: "Strateji ve İstişare Kampı'nda telefon ışıklarını yakan gençlerle dolu salona kürsüden seslenen Cumhurbaşkanı Erdoğan, 13 Ağustos 2025",
+  },
+
+  // Bir Gençlik Şöleni, Kocaeli Stadyumu (16 Mayıs 2026)
+  solenKocaeliTribunSelam: {
+    // p19
+    src: "/photos/solen-kocaeli-tribun-selam.jpg",
+    width: 1600,
+    height: 1063,
+    alt: "Bir Gençlik Şöleni'nde Kocaeli Stadyumu tribünlerini dolduran gençleri selamlayan Cumhurbaşkanı Erdoğan",
+  },
+  solenKocaeliKursuSelam: {
+    // p08
+    src: "/photos/solen-kocaeli-kursu-selam.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "\"Bir Gençlik Şöleni\" logolu Kocaeli kürsüsünde iki elini kaldırarak gençleri selamlayan Cumhurbaşkanı Erdoğan",
+  },
+  solenKocaeliSahaIkili: {
+    // p22
+    src: "/photos/solen-kocaeli-saha-ikili.jpg",
+    width: 1242,
+    height: 1600,
+    alt: "Kocaeli Stadyumu'nda Bir Gençlik Şöleni'nde gençleri selamlayan Cumhurbaşkanı Erdoğan ve AK Parti Gençlik Kolları Başkanı",
+  },
+  solenKocaeliSahaSelam: {
+    // p18
+    src: "/photos/solen-kocaeli-saha-selam.jpg",
+    width: 1233,
+    height: 1600,
+    alt: "Bir Gençlik Şöleni'nde Kocaeli Stadyumu sahasından tribünleri selamlayan Cumhurbaşkanı Erdoğan ve Gençlik Kolları Başkanı",
+  },
+  solenKocaeliSahaYuruyus: {
+    // p21
+    src: "/photos/solen-kocaeli-saha-yuruyus.jpg",
+    width: 1186,
+    height: 1600,
+    alt: "Bir Gençlik Şöleni'nde elini kalbine koyarak sahada yürüyen Cumhurbaşkanı Erdoğan ve Gençlik Kolları Başkanı, Kocaeli Stadyumu",
+  },
+  solenKocaeliElKalpte: {
+    // p06
+    src: "/photos/solen-kocaeli-el-kalpte.jpg",
+    width: 1067,
+    height: 1600,
+    alt: "Bir Gençlik Şöleni kürsüsünde elini kalbine koyarak gençleri selamlayan Cumhurbaşkanı Erdoğan, Kocaeli",
+  },
+  solenKocaeliKursuKonusma: {
+    // p07
+    src: "/photos/solen-kocaeli-kursu-konusma.jpg",
+    width: 1600,
+    height: 1067,
+    alt: "Bir Gençlik Şöleni'nde Kocaeli kürsüsünden mikrofonla konuşan Cumhurbaşkanı Erdoğan",
+  },
+  solenKocaeliElOpme: {
+    // p20 — önerilmez (docs/foto-yeni.md)
+    src: "/photos/solen-kocaeli-el-opme.jpg",
+    width: 1600,
+    height: 1152,
+    alt: "Bir Gençlik Şöleni sahnesinde Cumhurbaşkanı Erdoğan'ın elini öpen genç",
+  },
+
+  // GençFest – Bir Gençlik Festivali, kapalı salon (yer ve tarih müşteri onayına)
+  gencfestYuruyus: {
+    // p14
+    src: "/photos/gencfest-yuruyus.jpg",
+    width: 1600,
+    height: 1060,
+    alt: "GençFest'te gençlerle dolu salonda yürüyen Cumhurbaşkanı Erdoğan",
+  },
+  gencfestSalonKonusma: {
+    // p15
+    src: "/photos/gencfest-salon-konusma.jpg",
+    width: 1600,
+    height: 1049,
+    alt: "GençFest'te kürsüden dolu salona seslenen Cumhurbaşkanı Erdoğan",
+  },
 } as const satisfies Record<string, PhotoAsset>;
 
 /** Şeffaf PNG logolar (public/brand). */

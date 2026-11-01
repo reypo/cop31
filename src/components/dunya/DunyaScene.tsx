@@ -3,10 +3,36 @@
 import createGlobe, { type Marker } from "cobe";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { backCover, cop31, cover, facts, stats } from "@/lib/content";
 import { photos } from "@/lib/photos";
-import { usePrefersReducedMotion } from "@/lib/useScrollProgress";
+import { stant } from "@/lib/stant";
+import {
+  EMANET_RENK,
+  HALKA,
+  ISARET_CAP,
+  NABIZ_MS,
+  SERIF,
+  ZEMIN,
+  ayristir,
+  dilimBoyu,
+  sigdir,
+  dilimler,
+  etiketYeri,
+  isaretDurumu,
+  isaretler,
+  kocaeliHalkaFazi,
+  nabiz,
+  sutunGorunur,
+  yonleriSec,
+  zeminEtiketleri,
+  zeminEtiketYeri,
+  zeminSutunlari,
+  type Alan,
+  type Daire,
+  type EtiketYonu,
+  type IsaretDurumu,
+} from "./emanet-sahne";
 import {
   ANTALYA_EXPO,
   USKUDAR,
@@ -23,6 +49,8 @@ import { createStepper, type Durak, type Stepper } from "./adim";
 import {
   BOLUM_SAYISI,
   BRAND,
+  EMANET_I,
+  EMANET_II,
   GL_COLORS,
   IDLE_SPEED,
   SCALE_WORLD,
@@ -80,8 +108,78 @@ const MOTIF_TURN_DASH = -14;
 const DOT_STEP = 15;
 /** Antalya nabzı: 2 halka, 1,6 sn periyot. */
 const PULSE_MS = 1600;
-/** Nabız, son kaydırmadan bu kadar sonra sabit halkaya döner ve döngü uyur (pil). */
-const PULSE_LIVE_MS = 20_000;
+/**
+ * Dinlenmede (t = 8) nabız DOM halkalarında, Web Animations ile döner (compositor;
+ * rAF uyur). Geçişte (7 → 8) ve WebGL yokken 2D katmanda çizilir.
+ */
+/** Nabız, son kaydırmadan bu kadar sonra sabit halkaya döner ve döngü uyur (pil; yalnızca 2D yolu). */
+const PULSE_LIVE_MS = 6_000;
+/**
+ * Spot döngüsü (brief-dunya-2 §2): `data-spot-count` taşıyan bölüm dinlenmeye
+ * geçtikten SPOT_DELAY_MS sonra `data-spot="1"`, her spot süresinde 1 → n → 1.
+ * Süre okumaya göre: Emanet açıklamaları ~14 kelime (390 px'te 3–4 satır; yabancı
+ * ziyaretçi ve aynı anda küreye bakan göz için ≈4 sn) → 4.500 ms; Stantta bölge
+ * açıklamaları kısa → 3.500 ms.
+ */
+const SPOT_DELAY_MS = 600;
+const SPOT_MS_EMANET = 4_500;
+const SPOT_MS_STANT = 3_500;
+/**
+ * Kiosk: spotlu bölümde 3 spot görülür (bekleme = gecikme + 3 spot − pay); döngünün
+ * başlangıcı her kiosk turunda +3 kayar, böylece iki turda bütün alanlar vurgulanır.
+ */
+const KIOSK_SPOT_SAYI = 3;
+const kioskSpotDwell = (spotMs: number) => SPOT_DELAY_MS + KIOSK_SPOT_SAYI * spotMs - 200;
+/** Spot değişince etiket/işaret vurgusunun geçişi (ms). */
+const SPOT_BLEND_MS = 300;
+/**
+ * Spotta olmayan küre etiketlerinin opaklığı: 0 — spotta yalnızca tek etiket görünür
+ * (soluk etiketler soluk işaretlerin üstüne binip küreyi kirletiyordu). İşaretler 1'de kalır.
+ */
+const SPOT_DIM = 0;
+
+/**
+ * prefers-reduced-motion. Sunucuda (ve hidrasyon commit'inde) null: ana efekt
+ * istemci değeri gelene dek kurulmaz; böylece reduced-motion açık kullanıcıda küre
+ * önce hareketli, hemen ardından reduced olarak iki kez kurulmaz.
+ */
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const rmAbone = (cb: () => void) => {
+  const mq = window.matchMedia(RM_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const rmIstemci = () => window.matchMedia(RM_QUERY).matches;
+const rmSunucu = () => null;
+function useReducedMotion(): boolean | null {
+  return useSyncExternalStore(rmAbone, rmIstemci, rmSunucu);
+}
+/** Etiketler için porthol dairesi (tuval boyutunun oranı; maske %45,5'te opak). */
+const LABEL_CIRCLE = 0.44;
+
+/**
+ * Küre pozu küçükken (kısa ekran: k < 0,8) etiket ve işaretler de en çok %82'ye
+ * küçülür; yoksa ekranda sabit boyda kalıp küçük portholde üst üste binerler.
+ * 390×844 (k ≈ 0,89) ve masaüstünde 1.
+ */
+const smallPose = (k: number) => Math.min(1, Math.max(0.82, k / 0.8));
+
+/** "#rrggbb" → [r, g, b] (0–255). */
+const rgb255 = (h: string): [number, number, number] => [
+  parseInt(h.slice(1, 3), 16),
+  parseInt(h.slice(3, 5), 16),
+  parseInt(h.slice(5, 7), 16),
+];
+const BLUE_255 = rgb255(BRAND.blue);
+const NAVY_255 = rgb255(BRAND.navy);
+const KUM_255 = rgb255(EMANET_RENK.kum);
+/** İki renk arası (canvas fillStyle). */
+function mixRgb(a: readonly number[], b: readonly number[], t: number): string {
+  return `rgb(${Math.round(a[0] + (b[0] - a[0]) * t)},${Math.round(a[1] + (b[1] - a[1]) * t)},${Math.round(a[2] + (b[2] - a[2]) * t)})`;
+}
+
+/** "12.000 Yıllık Emanet" sayacının hedefi (yıl). */
+const EMANET_YIL = 12_000;
 
 /** Final kompozisyonunda fotoğraf dairesinin merkezi ve yarıçapı (kutu yüzdesi). */
 const PH = { cx: 57, cy: 38, r: 36 };
@@ -125,15 +223,19 @@ function tAt(y: number, stops: readonly Durak[]): number {
   return n - 1;
 }
 
-/** Bölüm geçişinde panel opaklığı: giden panel erken söner, gelen geç belirir (küre görünsün). */
+/**
+ * Bölüm geçişinde panel opaklığı: giden panel erken söner, gelen geç belirir (küre görünsün).
+ * 10 → 11: büyüyen kapak fotoğrafı panelin bulunduğu yere gelmeden panel sönmüş olsun
+ * (yarı saydam yazı fotoğrafın üstünde çift görüntü veriyordu).
+ */
 function panelOpacity(sec: number, t: number): number {
   const d = t - sec;
-  if (d >= 0) return 1 - smooth(map(d, 0.03, 0.28));
+  if (d >= 0) return 1 - smooth(sec === 10 ? map(d, 0, 0.1) : map(d, 0.03, 0.28));
   return smooth(map(d, -0.5, -0.12));
 }
 
 export default function DunyaScene({ children }: { children: ReactNode }) {
-  const reduced = usePrefersReducedMotion();
+  const reducedPref = useReducedMotion();
   // Final fotoğrafı yalnızca sahne yaklaşınca yüklenir (zayıf sinyalde ilk yüklemeyi yormasın).
   const [finaleReady, setFinaleReady] = useState(false);
 
@@ -156,11 +258,20 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
   const captionRef = useRef<HTMLDivElement>(null);
   const finDashRef = useRef<SVGGElement>(null);
   const hudRef = useRef<HTMLDivElement>(null);
+  const hudUyeRef = useRef<HTMLDivElement>(null);
+  const hudYilRef = useRef<HTMLDivElement>(null);
+  const hudGencRef = useRef<HTMLDivElement>(null);
   const membersRef = useRef<HTMLSpanElement>(null);
   const ilRef = useRef<HTMLSpanElement>(null);
   const ilceRef = useRef<HTMLSpanElement>(null);
+  const yearsRef = useRef<HTMLSpanElement>(null);
+  const youthRef = useRef<HTMLSpanElement>(null);
   const linkRef = useRef<HTMLAnchorElement>(null);
   const thumbRef = useRef<HTMLSpanElement>(null);
+  const isaretRef = useRef<HTMLDivElement>(null);
+  const halkaRef = useRef<HTMLDivElement>(null);
+  const zeminRef = useRef<HTMLDivElement>(null);
+  const antNabizRef = useRef<HTMLDivElement>(null);
 
   // Native snap bu rotada kapalı: hareketli modda kaydırmayı JS adımlama
   // (adim.ts) yönetir. Reduced-motion'da adımlama yok ve serbest kaydırma:
@@ -179,6 +290,9 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Hidrasyon commit'inde (sunucu değeri null) kurulmaz; istemci değeriyle tek kurulum.
+    if (reducedPref === null) return;
+    const reduced: boolean = reducedPref;
     const content = contentRef.current;
     const layer = layerRef.current;
     const poseEl = poseRef.current;
@@ -198,18 +312,35 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const caption = captionRef.current;
     const finDash = finDashRef.current;
     const hud = hudRef.current;
+    const hudUye = hudUyeRef.current;
+    const hudYil = hudYilRef.current;
+    const hudGenc = hudGencRef.current;
     const membersEl = membersRef.current;
     const ilEl = ilRef.current;
     const ilceEl = ilceRef.current;
+    const yearsEl = yearsRef.current;
+    const youthEl = youthRef.current;
     const link = linkRef.current;
     const thumb = thumbRef.current;
+    const isaretKatman = isaretRef.current;
+    const halka = halkaRef.current;
+    const zemin = zeminRef.current;
+    const antNabiz = antNabizRef.current;
     if (
       !content || !layer || !poseEl || !wrap || !glCanvas || !ov || !fallback || !rings || !motifs ||
       !motifBlue || !motifDash || !finale || !finBox || !photo || !disc || !slogan ||
-      !caption || !finDash || !hud || !membersEl || !ilEl || !ilceEl || !link || !thumb
+      !caption || !finDash || !hud || !hudUye || !hudYil || !hudGenc || !membersEl || !ilEl ||
+      !ilceEl || !yearsEl || !youthEl || !link || !thumb || !isaretKatman || !halka || !zemin || !antNabiz
     ) {
       return;
     }
+    /**
+     * Rota Activity ile gizlenince (ör. "← Konseptler", sonra tarayıcıda Geri) ağaç
+     * display:none olur ve efekt temizliği bir süre sonra çalışır. Bu arada gelen
+     * scroll/resize/rAF sıfır kutularla ölçüp DOM'a yazmasın (panel opaklığı, adımlayıcının
+     * '/' sayfasını kaydırması).
+     */
+    const gizli = () => content.getClientRects().length === 0;
     const ctx = ov.getContext("2d");
     if (!ctx) return;
 
@@ -217,6 +348,19 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const hintChevron = heroHint?.querySelector<SVGSVGElement>("svg") ?? null;
     const finArcs = Array.from(finBox.querySelectorAll<SVGCircleElement>("[data-fin-arc]"));
     const finDots = Array.from(finBox.querySelectorAll<SVGCircleElement>("[data-fin-dot]"));
+    // Emanet: 12 işaret (+ nabız halkası), 12 etiket, dönem halkası dilimleri, zemin halkası.
+    const isEls = isaretler.map((m) => isaretKatman.querySelector<HTMLElement>(`[data-isaret="${m.no}"]`));
+    const haloEls = isEls.map((el) => el?.querySelector<HTMLElement>("[data-halo]") ?? null);
+    const etEls = isaretler.map((m) => isaretKatman.querySelector<HTMLElement>(`[data-etiket="${m.no}"]`));
+    const dilimEls = Array.from(halka.querySelectorAll<SVGCircleElement>("[data-dilim]"));
+    const zeminDisk = zemin.querySelector<HTMLElement>("[data-zemin-disk]");
+    const zeminMetin = zemin.querySelector<HTMLElement>("[data-zemin-metin]");
+    const zeminEtiket = zemin.querySelector<SVGGElement>("[data-zemin-etiket]");
+    const zeminEtiketEls = Array.from(zemin.querySelectorAll<SVGTextElement>("[data-zemin-etiket] text"));
+    const zeminSutunEls = Array.from(zemin.querySelectorAll<SVGGElement>("[data-sutun]"));
+    // Antalya nabzı (dinlenmede DOM halkaları; bkz. PULSE_LIVE_MS üstü).
+    const antNokta = antNabiz.querySelector<HTMLElement>("[data-ant-nokta]");
+    const antHalkalar = Array.from(antNabiz.querySelectorAll<HTMLElement>("[data-ant-halka]"));
 
     // Mobil (dar ekran): GL çözünürlüğü ve harita örneklemi düşük (brief §2.3).
     const narrow = window.innerWidth < 500;
@@ -246,14 +390,61 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     let fontFamily = getComputedStyle(document.body).fontFamily || "sans-serif";
     let dirty = 6; // birkaç kare zorunlu çizim
     const morph = { dx: 0, dy: 0, s0: 1, dirty: true };
+    // Bölüm elemanları (spot döngüsü) ve Emanet bölümlerindeki liste satırlarının alan no'ları.
+    let secEls: HTMLElement[] = [];
+    let secEmanet: number[][] = [];
+    // Etiketlerin ölçek 1'deki boyu (px) ve dinlenme kamerasında seçilen yönleri.
+    const etBoy = isaretler.map(() => ({ w: 0, h: 0 }));
+    const etYon = new Map<number, EtiketYonu>();
+    // 2. bölümde üst üste binen işaretlerin kayması (px, tuval); vurgu büyüdükçe sıfırlanır.
+    const nudge = isaretler.map(() => [0, 0]);
+    const pt = new Float64Array(3);
+    const linkRect = { l: 0, t: 0, r: 0, b: 0 };
+    let emanetDirty = true;
+
+    /**
+     * Bir pozun ekran geometrisi: tuvalin (0,0) köşesinin ekrandaki yeri, ölçek
+     * ve etiketlerin kalacağı görünür alan (tuval koordinatı; sağda bölüm
+     * göstergesine pay).
+     */
+    const poseGeom = (p: Pose) => {
+      const k = p.k;
+      const ox = vw / 2 + p.x - (k * size) / 2;
+      const oy = vh / 2 + p.y - (k * size) / 2;
+      const vis: Alan = {
+        l: Math.max(0, -ox / k) + 6 / k,
+        t: Math.max(0, -oy / k) + 6 / k,
+        r: Math.min(size, (vw - ox) / k) - 20 / k,
+        b: Math.min(size, (vh - oy) / k) - 6 / k,
+      };
+      return { k, ox, oy, vis };
+    };
+    /** Etiket/işaret ölçeği: ekranda sabit boy (küre katmanı k ile ölçeklenir). */
+    const labelScale = (k: number) => (Math.min(size / 430, 1.35) / k) * smallPose(k);
+    const labelCircle = (): Daire => ({ cx: size / 2, cy: size / 2, r: LABEL_CIRCLE * size });
+    const etiketBoylari = () => {
+      etEls.forEach((el, i) => {
+        etBoy[i].w = el?.offsetWidth ?? 0;
+        etBoy[i].h = el?.offsetHeight ?? 0;
+      });
+    };
 
     const measure = () => {
       vh = window.innerHeight;
       vw = document.documentElement.clientWidth;
       const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
       const sy = window.scrollY;
-      const secs = Array.from(content.querySelectorAll<HTMLElement>("[data-stage]"))
-        .sort((a, b) => Number(a.dataset.stage) - Number(b.dataset.stage))
+      secEls = Array.from(content.querySelectorAll<HTMLElement>("[data-stage]")).sort(
+        (a, b) => Number(a.dataset.stage) - Number(b.dataset.stage),
+      );
+      secEmanet = secEls.map((el) =>
+        Array.from(el.querySelectorAll<HTMLElement>("[data-emanet]"), (li) => Number(li.dataset.emanet)),
+      );
+      // Spot döngüsü olmayan (reduced-motion) durumda da A'nın `[data-spot="0"]` stilleri geçerli olsun.
+      for (const el of secEls) {
+        if (el.hasAttribute("data-spot-count") && !el.hasAttribute("data-spot")) el.setAttribute("data-spot", "0");
+      }
+      const secs = secEls
         .map((el) => {
           const r = el.getBoundingClientRect();
           // İçeriğin (panel, ipucu, kapanış kutusu) altı; bölümün alt dolgusu hariç.
@@ -272,10 +463,13 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         const fits = sec.content - (sec.top + vh) <= FIT_TOLERANCE_PX;
         return { start, end: fits ? start : Math.min(maxScroll, Math.max(start, sec.bottom - vh)) };
       });
+      // Panelin son yazılan opaklığı yeniden ölçümde korunur; ilk ölçümde NaN (ilk kare
+      // her panele yazar: Activity dönüşünde DOM'da önceki kurulumun stili kalmış olabilir).
+      const eskiO = new Map(panels.map((p) => [p.el, p.o]));
       panels = Array.from(content.querySelectorAll<HTMLElement>("[data-panel]")).map((el) => {
         const r = el.getBoundingClientRect();
         const sec = Number(el.closest<HTMLElement>("[data-stage]")?.dataset.stage ?? -1);
-        return { el, sec, o: 1, l: r.left, t: r.top + sy, r: r.right, b: r.bottom + sy };
+        return { el, sec, o: eskiO.get(el) ?? NaN, l: r.left, t: r.top + sy, r: r.right, b: r.bottom + sy };
       });
       size = Math.max(1, wrap.clientWidth);
 
@@ -293,20 +487,33 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
       // Anlatı bölümleri: sahne alanı = panelin üstü (dar ekran) ya da solu
       // (geniş yatay ekran; CSS paneli sağa alır). En kısıtlayıcı panel esas.
-      const topInset = link.getBoundingClientRect().bottom + 8;
+      const lr = link.getBoundingClientRect();
+      linkRect.l = lr.left;
+      linkRect.t = lr.top;
+      linkRect.r = lr.right;
+      linkRect.b = lr.bottom;
+      // Kısa ekranda (yükseklik < 844; panel sahne alanını daraltır) küre linkin
+      // altından değil ekranın üstünden başlar: link küçük ve solda, kürenin üst
+      // ortası boş; böylece küre ~%15 büyük kalır (etiketler linki engel sayar).
+      const topInset = vh < 844 ? lr.top + 6 : lr.bottom + 8;
       let minTop = Infinity;
       let minLeft = Infinity;
       for (const p of panels) {
-        if (p.sec < 1 || p.sec > 5 || !secs[p.sec]) continue;
+        // 1–10: küre/zemin halkası panelin üstünde (11 kapak finali, 12 kapanış panelsiz).
+        if (p.sec < 1 || p.sec > 10 || !secs[p.sec]) continue;
         minTop = Math.min(minTop, p.t - secs[p.sec].top);
         minLeft = Math.min(minLeft, p.l);
       }
       if (Number.isFinite(minTop)) {
         const side = minLeft > vw * 0.42;
         const R = side ? minLeft - 24 : vw;
-        const T = side ? 0 : topInset;
-        const B = side ? vh : minTop - 10;
-        stagePose.k = Math.max(0.45, Math.min(1, R / (0.92 * size), (B - T) / (0.86 * size)));
+        const T = side ? 12 : topInset;
+        const B = side ? vh - 12 : minTop - 10;
+        // Geniş yatay ekranda küre solda tek başına: dönem/zemin halkası (çap ≈ tuvalin
+        // %99'u) ekranın sol/üst/alt kenarında kesilmesin, panele değmesin.
+        const fitW = side ? 1.0 : 0.92;
+        const fitH = side ? 1.0 : 0.86;
+        stagePose.k = Math.max(0.45, Math.min(1, R / (fitW * size), (B - T) / (fitH * size)));
         stagePose.x = R / 2 - vw / 2;
         stagePose.y = (T + B) / 2 - vh / 2;
       }
@@ -316,9 +523,98 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         ov.width = w;
         ov.height = w;
       }
+
+      // Emanet etiketleri: boy (ölçek 1) ve dinlenme kamerasında (t = 3, 4) yön.
+      etiketBoylari();
+      etYon.clear();
+      const geo = poseGeom(stagePose);
+      const tuRest = labelScale(stagePose.k);
+      const pad = 6 / stagePose.k;
+      const engeller: Alan[] = [
+        {
+          l: (linkRect.l - geo.ox) / geo.k - pad,
+          t: (linkRect.t - geo.oy) / geo.k - pad,
+          r: (linkRect.r - geo.ox) / geo.k + pad,
+          b: (linkRect.b - geo.oy) / geo.k + pad,
+        },
+      ];
+      const daire = labelCircle();
+      for (const [grup, tt] of [
+        [0, EMANET_I],
+        [1, EMANET_II],
+      ] as const) {
+        const P = makeProjector(sceneAt(tt, 0, true).cam, size);
+        const yon = yonleriSec(
+          grup,
+          P,
+          (no) => ({ w: etBoy[no - 1].w * tuRest, h: etBoy[no - 1].h * tuRest }),
+          (ISARET_CAP / 2) * 1.24 * tuRest,
+          daire,
+          geo.vis,
+          engeller,
+        );
+        yon.forEach((v, k) => etYon.set(k, v));
+      }
+      // Emanet girişi (t = 2, hepsi eşit boyda): üst üste binen işaretleri ayır.
+      {
+        const P = makeProjector(sceneAt(2, 0, true).cam, size);
+        const nok = isaretler.map((m) => {
+          P(m.vec, 1, pt);
+          return [pt[0], pt[1]] as const;
+        });
+        ayristir(nok, ISARET_CAP * tuRest).forEach((d, i) => {
+          nudge[i][0] = d[0];
+          nudge[i][1] = d[1];
+        });
+      }
+      // Zemin halkası (Stantta, t = 9 → stagePose): yazılar ekranda en az 11 px (dönem
+      // etiketi) / 10 px (sütun numarası). Disk 300 px'ten küçükse numaralar gizlenir,
+      // yalnızca nokta kalır. Etiketler disk kenarı ile sütun halkası arasına sığdırılır.
+      {
+        const zs = zemin.offsetWidth * stagePose.k; // 100 viewBox biriminin ekran boyu (px)
+        if (zs > 1) {
+          const birim = 100 / zs;
+          const kucuk = zs * (ZEMIN.disk / 50) < 300;
+          zemin.style.setProperty("--zemin-et", `${Math.max(2.7, 11 * birim).toFixed(2)}px`);
+          zemin.style.setProperty("--zemin-no", `${Math.max(2.6, 10 * birim).toFixed(2)}px`);
+          zemin.toggleAttribute("data-kucuk", kucuk);
+          zeminEtiketEls.forEach((el, i) => {
+            const d = zeminEtiketleri[i];
+            if (!d) return;
+            let w = 0;
+            let h = 0;
+            try {
+              const bb = el.getBBox();
+              w = bb.width;
+              h = bb.height;
+            } catch {
+              return;
+            }
+            const p = zeminEtiketYeri(d.aci, w, h, kucuk);
+            el.setAttribute("x", p.x.toFixed(2));
+            el.setAttribute("y", p.y.toFixed(2));
+            for (const ts of Array.from(el.querySelectorAll("tspan"))) ts.setAttribute("x", p.x.toFixed(2));
+          });
+        }
+      }
+
+      // Antalya nabız halkaları (tuval px): en dış yarıçap 37u, çizgi 2u (2D çizimle aynı).
+      {
+        const u = size / 430;
+        const R = 37 * u;
+        for (const el of antHalkalar) {
+          el.style.width = el.style.height = `${(2 * R).toFixed(1)}px`;
+          el.style.margin = `${(-R).toFixed(1)}px 0 0 ${(-R).toFixed(1)}px`;
+          el.style.borderWidth = `${(2 * u).toFixed(2)}px`;
+        }
+        antPos = "";
+      }
+
+      emanetDirty = true;
       morph.dirty = true;
       dirty = 6;
     };
+    let antPos = "";
     measure();
 
     /** Final: fotoğraf dairesi, kürenin (anlatı pozundaki) yerinden ve boyutundan kendi yerine gelir. */
@@ -352,9 +648,11 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const evVec = etkinlikler.map((e) => toVec(e.il));
     const antVec = toVec(ANTALYA_EXPO);
     const uskVec = toVec(USKUDAR);
-    const pt = new Float64Array(3);
     const scratch: [number, number, number] = [0, 0, 0];
+    const pillFit = new Float64Array(2);
     let pulseLive = true;
+    /** Antalya nabzı DOM halkalarında mı (dinlenme, t = 8). */
+    let antDom = false;
 
     const pill = (
       x: number,
@@ -413,6 +711,11 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       else if (by + h > vis.b && (side === "below" || side === "below-left")) by = y - gap - h;
       bx = Math.max(vis.l, Math.min(vis.r - w, bx));
       by = Math.max(vis.t, Math.min(vis.b - h, by));
+      // Porthol maskesi (%45,5'te opak) dışına taşan etiket kesilirdi (kısa ekranda küre
+      // küçük, etiket ekranda sabit boy): daireye sığacak kadar merkeze kaydır.
+      sigdir(bx, by, w, h, labelCircle(), vis, pillFit);
+      bx = pillFit[0];
+      by = pillFit[1];
       // Panel altına giren etiket söner (reduced-motion: geçişsiz).
       // d: etiket kutusu ile panel arasındaki boşluk (negatif = üst üste).
       let a = alpha;
@@ -458,8 +761,12 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
     const drawTurkey = (sc: Scene, P: Projector, u: number, tu: number, now: number) => {
       // Antalya aşamasında (dim → 1) ilçeler tamamen gizlenir, iller küçülüp soluklaşır.
-      const baseIl = sc.tr * (1 - 0.2 * sc.dim);
-      const baseIlce = sc.tr * 0.55 * (1 - sc.dim);
+      // Emanet bölümlerinde (sand → 1) iller kum tonuna döner, ilçeler neredeyse söner:
+      // 12 miras işareti öne çıkar.
+      const baseIl = sc.tr * (1 - 0.2 * sc.dim) * (1 - 0.3 * sc.sand);
+      const baseIlce = sc.tr * 0.55 * (1 - sc.dim) * (1 - 0.8 * sc.sand);
+      const ilFill = sc.sand > 0.002 ? mixRgb(BLUE_255, KUM_255, sc.sand) : BRAND.blue;
+      const ilceFill = sc.sand > 0.002 ? mixRgb(NAVY_255, KUM_255, sc.sand) : BRAND.navy;
       if (baseIl <= 0.01) return;
 
       // İlçeler: küçük, soluk noktalar (ili belirince).
@@ -481,7 +788,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
             any = true;
           }
           if (any) {
-            ctx.fillStyle = pass === 0 ? BRAND.navy : BRAND.teal;
+            ctx.fillStyle = pass === 0 ? ilceFill : BRAND.teal;
             ctx.fill();
           }
         }
@@ -530,14 +837,14 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       }
       ctx.fillStyle = "#fff";
       ctx.fill();
-      // Mavi noktalar
+      // Mavi (Emanet'te kum tonu) noktalar
       ctx.beginPath();
       for (const it of items) {
         if (it.green) continue;
         ctx.moveTo(it.x + it.r, it.y);
         ctx.arc(it.x, it.y, it.r, 0, TAU);
       }
-      ctx.fillStyle = BRAND.blue;
+      ctx.fillStyle = ilFill;
       ctx.fill();
       // Yeşil nokta/yapraklar
       ctx.beginPath();
@@ -592,36 +899,56 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         }
       }
 
-      // Gençlik buluşmaları / şölen
+      // Gençlik buluşmaları (5 → 6 izi); şölende (6 → 7) yalnızca Kocaeli kalır, büyük nabız.
       if (sc.eventsAlpha > 0.01 && sc.events > 0) {
         const active = Math.min(etkinlikler.length - 1, Math.floor(sc.events - 1e-6));
         for (let i = 0; i < etkinlikler.length; i++) {
           const a = clamp01(sc.events - i);
           if (a <= 0) continue;
           const ev = etkinlikler[i];
+          const evA = sc.eventsAlpha * (ev.big ? 1 : sc.eventsOthers);
+          if (evA <= 0.01) continue;
           P(evVec[i], 1, pt);
           if (pt[2] < 0.1) continue;
           const x = pt[0];
           const y = pt[1];
-          const r = (ev.big ? 7.5 : 5) * u * easeOut(a);
-          ctx.globalAlpha = sc.eventsAlpha;
+          // Kocaeli (Şölen) buluşma izinde (6) diğer şehirlerle aynı boyda; büyüme, nabız ve
+          // sakin halka yalnızca 6 → 7'de (Şölen kendi bölümünde; brief "Şölen bu bölümden ÇIKAR").
+          const kb = ev.big ? sc.kocaeli : 0;
+          const r = (5 + 5 * easeOut(kb)) * u * easeOut(a);
+          ctx.globalAlpha = evA;
           if (a < 1) {
             ctx.beginPath();
             ctx.arc(x, y, r + 20 * u * a, 0, TAU);
             ctx.strokeStyle = BRAND.orange;
             ctx.lineWidth = 2 * u;
-            ctx.globalAlpha = sc.eventsAlpha * (1 - a);
+            ctx.globalAlpha = evA * (1 - a);
             ctx.stroke();
-            ctx.globalAlpha = sc.eventsAlpha;
+            ctx.globalAlpha = evA;
           }
-          if (ev.big && a >= 1) {
-            ctx.beginPath();
-            ctx.arc(x, y, r + 6 * u, 0, TAU);
+          if (ev.big && kb > 0 && kb < 1) {
+            // Şölen nabzı: geçişe bağlı 3 genişleyen halka (zamana değil, scroll'a bağlı).
             ctx.strokeStyle = BRAND.orange;
-            ctx.lineWidth = 1.5 * u;
-            ctx.globalAlpha = sc.eventsAlpha * 0.45;
+            ctx.lineWidth = 2.2 * u;
+            for (let j = 0; j < 3; j++) {
+              const ph = kocaeliHalkaFazi(kb, j);
+              if (ph <= 0 || ph >= 1) continue;
+              ctx.globalAlpha = evA * 0.8 * (1 - ph);
+              ctx.beginPath();
+              ctx.arc(x, y, r + 44 * u * easeOut(ph), 0, TAU);
+              ctx.stroke();
+            }
+            ctx.globalAlpha = evA;
+          }
+          if (ev.big && a >= 1 && kb > 0) {
+            // Sakin halka (yalnızca şölende; geçişle belirir).
+            ctx.beginPath();
+            ctx.arc(x, y, r + (6 + 5 * kb) * u, 0, TAU);
+            ctx.strokeStyle = BRAND.orange;
+            ctx.lineWidth = (1.5 + 0.5 * kb) * u;
+            ctx.globalAlpha = evA * (0.45 + 0.2 * kb) * smooth(kb * 3);
             ctx.stroke();
-            ctx.globalAlpha = sc.eventsAlpha;
+            ctx.globalAlpha = evA;
           }
           ctx.beginPath();
           ctx.arc(x, y, r + 1.6 * u, 0, TAU);
@@ -631,15 +958,19 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           ctx.arc(x, y, r, 0, TAU);
           ctx.fillStyle = BRAND.orange;
           ctx.fill();
-          const showSub = i === active || (ev.big && a >= 1);
+          // Kocaeli'nin alt satırı ("Bir Gençlik Şöleni · 100.000+ genç") gösterilmez: Şölen
+          // artık kendi bölümünde (7; brief-dunya-2 §1 "Şölen bu bölümden ÇIKAR") ve orada
+          // HUD sayacı + panel aynı bilgiyi verir. Buluşma izinde yalnızca etkin etkinliğin
+          // alt satırı görünür; dinlenmede (t = 6) etiketlerin hepsi yalnızca ad.
+          const showSub = i === active && !ev.big;
           pill(
             x,
             y,
             ev.title,
             showSub ? ev.sub : null,
             ev.side,
-            sc.eventsAlpha * smooth(a * 1.6),
-            tu,
+            evA * smooth(a * 1.6),
+            tu * (1 + 0.1 * kb),
             BRAND.navy,
           );
         }
@@ -654,7 +985,9 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           const r = 7 * u;
           ctx.lineWidth = 2 * u;
           ctx.strokeStyle = BRAND.orange;
-          if (reduced || !pulseLive) {
+          if (antDom) {
+            // Dinlenme: nabız DOM halkalarında (compositor), burada yalnızca nokta + etiket.
+          } else if (reduced || !pulseLive) {
             ctx.globalAlpha = sc.antalya * 0.5;
             ctx.beginPath();
             ctx.arc(x, y, r + 14 * u, 0, TAU);
@@ -794,8 +1127,8 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       }
       const P = makeProjector(sc.cam, size);
       const u = size / 430;
-      // Etiket boyu ekranda sabit kalsın (küre katmanı k ile ölçeklenir).
-      const tu = Math.min(u, 1.35) / k;
+      // Etiket boyu ekranda sabit kalsın (küre katmanı k ile ölçeklenir; küçük pozda biraz küçülür).
+      const tu = (Math.min(u, 1.35) / k) * smallPose(k);
 
       // Kahraman: Antalya etiketi (Antalya bize dönükken)
       if (sc.hero > 0.01) {
@@ -806,7 +1139,13 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           const y = pt[1];
           ctx.globalAlpha = sc.hero * facing;
           dot(P, antVec, 4.2 * u, BRAND.orange, 1.8 * u);
-          pill(x, y, "Antalya", "COP31 · " + cop31.dates, "right", sc.hero * facing, tu, BRAND.navy);
+          // Nokta başlık panelinin hemen altındaysa (geniş ekran: küre aşağı inemiyor, motif
+          // halkası ekrandan taşardı) sağdaki etiket panele değip sönerdi: etiket noktanın altına.
+          let yan: Side = "right";
+          for (const p of panelsCv) {
+            if (x > p.l - 24 && x < p.r + 24 && y > p.t && y - p.b < 34 * tu) yan = "below";
+          }
+          pill(x, y, "Antalya", "COP31 · " + cop31.dates, yan, sc.hero * facing, tu, BRAND.navy);
         }
       }
       if (sc.tr > 0.01) drawTurkey(sc, P, u, tu, now);
@@ -888,7 +1227,11 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const kiosk = new URLSearchParams(window.location.search).get("auto") === "1";
     let kTimer = 0;
     let kPauseUntil = 0;
+    /** Kiosk tur sayacı (başa her dönüşte +1): spot döngüsünün başlangıç kayması. */
+    let kTur = 0;
     let alive = true;
+    /** Bölümün spot süresi: Emanet listeleri (3, 4) uzun açıklama, Stantta (9) kısa. */
+    const spotMsOf = (idx: number) => (idx === EMANET_I || idx === EMANET_II ? SPOT_MS_EMANET : SPOT_MS_STANT);
     const kSchedule = (ms: number) => {
       window.clearTimeout(kTimer);
       kTimer = window.setTimeout(kRun, Math.max(0, ms));
@@ -913,12 +1256,16 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         // Başa dön: küre katmanı yükleniş geçişiyle yeniden belirir.
         window.scrollTo(0, 0);
         t0 = now;
+        kTur++;
         wake();
         return kSchedule(KIOSK_DWELL_MS);
       }
       if (stepper) stepper.goTo(i + 1, KIOSK_STEP_MS);
       else window.scrollTo(0, stops[i + 1].start);
-      kSchedule((stepper ? KIOSK_STEP_MS : 0) + KIOSK_DWELL_MS);
+      // Spot döngülü bölümde (3, 4, 9) bekleme üç tam vurguyla biter: 600 + 3 × spot − 200 ms
+      // (3/4: 13,9 sn; 9: 10,9 sn); 4. spot başlamadan geçilir. Sonraki turda döngü +3'ten başlar.
+      const spotlu = secEls[i + 1]?.hasAttribute("data-spot-count") && !reduced;
+      kSchedule((stepper ? KIOSK_STEP_MS : 0) + (spotlu ? kioskSpotDwell(spotMsOf(i + 1)) : KIOSK_DWELL_MS));
     };
     const onUser = () => {
       kPauseUntil = performance.now() + KIOSK_RESUME_MS;
@@ -944,15 +1291,22 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       motifs: -1,
       turn: -1,
       hud: -1,
+      hudUye: -1,
+      hudYil: -1,
+      hudGenc: -1,
       members: "",
       il: "",
       ilce: "",
-      show: false,
+      years: "",
+      youth: "",
+      // null: ilk kare final katmanının display'ini her durumda yazar (Activity dönüşü).
+      show: null as boolean | null,
       finale: -1,
       disc: -1,
       slogan: -1,
       orbits: -1,
     };
+    let finalePrep = false;
     const setOpacity = (el: HTMLElement | SVGElement, v: number) => {
       el.style.opacity = v.toFixed(3);
       el.style.visibility = v <= 0.001 ? "hidden" : "visible";
@@ -990,14 +1344,13 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       }
 
       // Paneller: giden erken söner, gelen geç belirir (reduced-motion: hep görünür).
+      // Yalnızca opacity: visibility yazılmaz, böylece ekran okuyucu dinlenmede ekran dışında
+      // duran diğer bölümlerin başlık ve metinlerine de ulaşır (panellerde odaklanabilir öğe yok).
       for (const p of panels) {
         const o = reduced ? 1 : panelOpacity(p.sec, t);
         if (Math.abs(o - p.o) <= 1e-3) continue;
-        const wasHidden = p.o <= 0.001;
         p.o = o;
         p.el.style.opacity = o >= 0.999 ? "" : o.toFixed(3);
-        const hidden = o <= 0.001;
-        if (hidden !== wasHidden) p.el.style.visibility = hidden ? "hidden" : "";
       }
 
       // Sağ kenar bölüm göstergesi (yalnızca gösterge; tıklanmaz).
@@ -1027,13 +1380,16 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         motifDash.style.transform = `rotate(${(sc.motifTurn * MOTIF_TURN_DASH).toFixed(2)}deg)`;
       }
 
-      // HUD sayaç (Biz kimiz): geçişte 0 → 1.000.000+, bölümde tam değerde durur.
-      const hudO = sc.hud;
-      const c = sc.counter;
+      // HUD sayaçları: geçişte 0 → değer, bölümde tam değerde durur.
+      // Biz kimiz: 1.000.000+ üye · Emanet girişi: 12.000 yıllık emanet · Şölen: 100.000+ genç.
+      const hudO = Math.max(sc.hud, sc.hudYears, sc.hudYouth);
       if (Math.abs(hudO - last.hud) > 1e-3) {
         last.hud = hudO;
-        setOpacity(hud, hudO);
+        hud.style.visibility = hudO <= 0.001 ? "hidden" : "visible";
       }
+      if (Math.abs(sc.hud - last.hudUye) > 1e-3) setOpacity(hudUye, (last.hudUye = sc.hud));
+      if (Math.abs(sc.hudYears - last.hudYil) > 1e-3) setOpacity(hudYil, (last.hudYil = sc.hudYears));
+      if (Math.abs(sc.hudYouth - last.hudGenc) > 1e-3) setOpacity(hudGenc, (last.hudGenc = sc.hudYouth));
       if (hudO > 0) {
         // Sayaç kürenin üstünde ortalı kalsın (geniş ekranda küre solda).
         const hx = Math.round(pose.x);
@@ -1041,6 +1397,9 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           last.hudX = hx;
           hud.style.transform = hx !== 0 ? `translate3d(${hx}px,0,0)` : "";
         }
+      }
+      if (sc.hud > 0) {
+        const c = sc.counter;
         const members = `${Math.round(facts.members * c).toLocaleString("tr-TR")}${c >= 1 ? "+" : ""}`;
         const il = String(Math.floor(facts.provinces * c));
         const ilce = String(Math.round(facts.districts * c));
@@ -1048,15 +1407,33 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         if (il !== last.il) ilEl.textContent = last.il = il;
         if (ilce !== last.ilce) ilceEl.textContent = last.ilce = ilce;
       }
+      if (sc.hudYears > 0) {
+        const years = Math.round(EMANET_YIL * sc.years).toLocaleString("tr-TR");
+        if (years !== last.years) yearsEl.textContent = last.years = years;
+      }
+      if (sc.hudYouth > 0) {
+        const y = sc.youth;
+        const youth = `${Math.round(facts.solenAttendees * y).toLocaleString("tr-TR")}${y >= 1 ? "+" : ""}`;
+        if (youth !== last.youth) youthEl.textContent = last.youth = youth;
+      }
 
       // Final: küre söner, kapak (fotoğraf dairesi + slogan dairesi + yaylar) belirir.
-      // Katman dünya aşamasında önceden açılır (fotoğraf zamanında yüklensin).
-      const show = t > 4.2 || sc.finale > 0;
+      // Fotoğraf (React state → <Image>) Antalya bölümünde DİNLENİRKEN bağlanır, katman
+      // Stantta bölümünde dinlenirken (görünmez) açılır: 9 → 10 geçişinde React render'ı
+      // ve düzen işi olmasın (4× CPU'da 50 ms'lik kare). Kiosk/serbest atlamada yine açılır.
+      if (!finalePrep && tRaw >= 8 && Number.isInteger(tRaw)) {
+        finalePrep = true;
+        setFinaleReady(true);
+      }
+      const show = t >= 9 || sc.finale > 0;
       if (show !== last.show) {
         last.show = show;
         finale.style.display = show ? "flex" : "none";
         if (show) {
-          setFinaleReady(true);
+          if (!finalePrep) {
+            finalePrep = true;
+            setFinaleReady(true);
+          }
           morph.dirty = true;
         }
       }
@@ -1069,7 +1446,8 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         const g = smooth(sc.finale);
         const k = 1 - g;
         const sc0 = morph.s0 + (1 - morph.s0) * g;
-        photo.style.opacity = smooth(map(sc.finale, 0.03, 0.4)).toFixed(3);
+        // 0,12'den başlar: 10. bölümün paneli (t = 10,1'de sönmüş) büyüyen fotoğrafın altında yarı saydam kalmasın.
+        photo.style.opacity = smooth(map(sc.finale, 0.12, 0.45)).toFixed(3);
         photo.style.transform =
           k > 1e-4
             ? `translate3d(${(morph.dx * k).toFixed(1)}px,${(morph.dy * k).toFixed(1)}px,0) scale(${sc0.toFixed(4)})`
@@ -1102,6 +1480,235 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       }
     };
 
+    /* ---------------- Emanet: spot döngüsü ---------------- */
+    // Bölüm elemanındaki `data-spot` (A'nın listesi/planı CSS ile buna bakar) ve
+    // küredeki karşılığı: Emanet bölümlerinde spot = n → o bölümün n. alanı (no).
+    const spot = { el: null as HTMLElement | null, since: 0, val: 0, ms: SPOT_MS_EMANET, kayma: 0 };
+    const gs = { cur: 0, prev: 0, t0: -Infinity };
+
+    /** Yalnızca rAF'tan çağrılır; DOM attribute yazar (React state yok). */
+    const updateSpot = (tRaw: number, now: number) => {
+      let el: HTMLElement | null = null;
+      let n = 0;
+      // Dinlenme: tAt bölüm içinde tam sayı döndürür (geçişte kesirli).
+      const restIdx = Number.isInteger(tRaw) ? tRaw : -1;
+      // Reduced-motion: döngü yok (data-spot="0"); A bu durumda bütün açıklamaları alt alta gösterir.
+      if (!reduced && restIdx >= 0) {
+        const s = secEls[restIdx];
+        const c = s ? Number(s.getAttribute("data-spot-count")) : 0;
+        if (c >= 1) {
+          el = s;
+          n = Math.floor(c);
+        }
+      }
+      if (el !== spot.el) {
+        // Geçiş başladı / bölüm terk edildi: eski bölüm "0"a döner.
+        spot.el?.setAttribute("data-spot", "0");
+        spot.el = el;
+        spot.since = now;
+        spot.val = 0;
+        spot.ms = spotMsOf(restIdx);
+        // Kiosk: her turda döngü +3'ten başlar (iki turda bütün alanlar vurgulanır).
+        spot.kayma = kiosk && n > 0 ? (kTur * KIOSK_SPOT_SAYI) % n : 0;
+      }
+      let v = 0;
+      if (el) {
+        const e = now - spot.since;
+        v = e < SPOT_DELAY_MS ? 0 : 1 + ((Math.floor((e - SPOT_DELAY_MS) / spot.ms) + spot.kayma) % n);
+        if (v !== spot.val) {
+          spot.val = v;
+          el.setAttribute("data-spot", String(v));
+        }
+      }
+      let no = 0;
+      if (v > 0 && (restIdx === EMANET_I || restIdx === EMANET_II)) {
+        // Listedeki n. satırın alan no'su; liste yoksa grup sırası (I: 1–6, II: 7–12).
+        const x = secEmanet[restIdx]?.[v - 1] ?? 0;
+        if (x >= 1 && x <= 12) no = restIdx === EMANET_II && x <= 6 ? x + 6 : x;
+        else no = restIdx === EMANET_II ? 6 + v : v;
+      }
+      if (no !== gs.cur) {
+        gs.prev = gs.cur;
+        gs.cur = no;
+        gs.t0 = now;
+      }
+    };
+
+    /* ---------------- Emanet: işaretler, etiketler, dönem halkası, zemin ---------------- */
+    const durum: IsaretDurumu = { o: 0, s: 0, dy: 0, etiket: 0 };
+    const kutu = new Float64Array(2);
+    const nb = new Float64Array(2);
+    const em = {
+      t: NaN,
+      pose: "",
+      ring: -1,
+      draw: -1,
+      ground: -1,
+      groundIn: -1,
+      layer: null as boolean | null,
+      o: isaretler.map(() => -1),
+      tr: isaretler.map(() => ""),
+      eo: isaretler.map(() => -1),
+      etr: isaretler.map(() => ""),
+      act: isaretler.map(() => false),
+    };
+    const spotOf = (no: number, s: number) => (s === 0 || s === no ? 1 : SPOT_DIM);
+    // Spottaki işaretin nabzı: `nabiz` eğrisinden örneklenmiş Web Animations kareleri
+    // (transform + opacity, compositor'da döner; rAF döngüsü spotlar arasında uyuyabilir).
+    const nabizKareleri: Keyframe[] = Array.from({ length: 13 }, (_, k) => {
+      nabiz(k / 12, nb);
+      return { offset: k / 12, transform: `scale(${nb[0].toFixed(3)})`, opacity: Number(nb[1].toFixed(3)) };
+    });
+    const haloAnim: (Animation | null)[] = isaretler.map(() => null);
+    const stopHalos = () => {
+      haloAnim.forEach((a, i) => {
+        a?.cancel();
+        haloAnim[i] = null;
+      });
+    };
+
+    const applyEmanet = (sc: Scene, t: number, now: number) => {
+      // Dönem halkası: opaklık + üstten saat yönünde çizim (stroke-dasharray).
+      if (Math.abs(sc.ring - em.ring) > 1e-3) {
+        em.ring = sc.ring;
+        setOpacity(halka, sc.ring);
+      }
+      if (sc.ring > 0.001 && Math.abs(sc.ringDraw - em.draw) > 1e-4) {
+        em.draw = sc.ringDraw;
+        for (let i = 0; i < dilimEls.length; i++) {
+          const len = dilimBoyu(i, sc.ringDraw);
+          dilimEls[i].style.strokeDasharray = `${len.toFixed(2)} ${(360 - len).toFixed(2)}`;
+        }
+      }
+
+      // Zemin halkası (Stantta): krem disk büyüyerek, sütunlar sırayla, etiketler ve yazı.
+      if (Math.abs(sc.ground - em.ground) > 1e-3) {
+        em.ground = sc.ground;
+        setOpacity(zemin, sc.ground);
+      }
+      if (sc.ground > 0.001 && Math.abs(sc.groundIn - em.groundIn) > 1e-4) {
+        const g = sc.groundIn;
+        em.groundIn = g;
+        if (zeminDisk) zeminDisk.style.transform = g < 1 ? `scale(${(0.86 + 0.14 * easeOut(map(g, 0, 0.5))).toFixed(4)})` : "";
+        if (zeminMetin) {
+          const m = smooth(map(g, 0.5, 1));
+          zeminMetin.style.opacity = m.toFixed(3);
+          zeminMetin.style.transform = m < 1 ? `translate3d(0,${((1 - m) * 8).toFixed(1)}px,0)` : "";
+        }
+        if (zeminEtiket) zeminEtiket.style.opacity = smooth(map(g, 0.35, 0.85)).toFixed(3);
+        zeminSutunEls.forEach((el, i) => {
+          const v = sutunGorunur(g, i);
+          el.style.opacity = v.toFixed(3);
+          el.style.transform = v < 1 ? `scale(${(0.3 + 0.7 * easeOut(v)).toFixed(4)})` : "";
+        });
+      }
+
+      // 12 işaret + etiketler (yalnızca Emanet bölümlerinde ve geçişlerinde).
+      const on = sc.marks > 0.001 && sc.globe > 0.001;
+      if (on !== em.layer) {
+        em.layer = on;
+        isaretKatman.style.visibility = on ? "visible" : "hidden";
+      }
+      if (!on) {
+        stopHalos();
+        return;
+      }
+
+      const blend = now - gs.t0 < SPOT_BLEND_MS + 40;
+      if (t !== em.t || blend || emanetDirty || em.pose !== last.pose) {
+        em.t = t;
+        em.pose = last.pose;
+        emanetDirty = false;
+        const geo = poseGeom(pose);
+        const tu = labelScale(pose.k);
+        const P = makeProjector(sc.cam, size);
+        const daire = labelCircle();
+        const m = smooth((now - gs.t0) / SPOT_BLEND_MS);
+        const sy = window.scrollY;
+        for (let i = 0; i < isaretler.length; i++) {
+          const mk = isaretler[i];
+          const el = isEls[i];
+          const et = etEls[i];
+          if (!el || !et) continue;
+          isaretDurumu(sc, i, durum);
+          P(mk.vec, 1, pt);
+          const face = smooth(map(pt[2], 0.08, 0.2)); // arka yüzde gizli
+          // 2. bölümün ayırma kayması; grup vurgusu büyüdükçe işaret gerçek yerine oturur.
+          const nw = sc.rise > 0 ? 1 - Math.max(sc.emphI, sc.emphII) : 0;
+          const x = pt[0] + nudge[i][0] * nw;
+          const y = pt[1] + nudge[i][1] * nw;
+          const spotW = (gs.prev === mk.no ? 1 - m : 0) + (gs.cur === mk.no ? m : 0);
+
+          // İşaret
+          const o = durum.o * face;
+          if (Math.abs(o - em.o[i]) > 1e-3) {
+            const wasHidden = em.o[i] <= 0.001;
+            em.o[i] = o;
+            el.style.opacity = o.toFixed(3);
+            if (wasHidden !== o <= 0.001) el.style.visibility = o <= 0.001 ? "hidden" : "";
+          }
+          if (o > 0.001) {
+            const s = durum.s * tu * (1 + 0.22 * spotW);
+            const tr = `translate3d(${x.toFixed(1)}px,${(y + durum.dy * tu).toFixed(1)}px,0) scale(${s.toFixed(4)})`;
+            if (tr !== em.tr[i]) el.style.transform = em.tr[i] = tr;
+          }
+          const act = gs.cur === mk.no;
+          if (act !== em.act[i]) {
+            em.act[i] = act;
+            // Spottaki işaret ve etiketi ters renk (koyu yeşil zemin, krem yazı). Zemin 300 ms'de
+            // geçer, yazı rengi geçişin ortasında anlık döner (ikisi birlikte geçince ortada aynı
+            // tona gelip rakam ~100 ms kayboluyordu); bkz. JSX'teki transition.
+            el.style.backgroundColor = act ? EMANET_RENK.koyuYesil : "";
+            el.style.color = act ? EMANET_RENK.krem : "";
+            et.style.backgroundColor = act ? EMANET_RENK.koyuYesil : "";
+            et.style.color = act ? EMANET_RENK.krem : "";
+            et.style.zIndex = act ? "2" : "";
+          }
+
+          // Etiket: grup vurgusunda görünür; spotta olmayanlar söner; panele yaklaşınca söner.
+          let eo = durum.etiket * face;
+          if (eo > 0.001) {
+            eo *= spotOf(mk.no, gs.prev) * (1 - m) + spotOf(mk.no, gs.cur) * m;
+            const W = etBoy[i].w * tu;
+            const H = etBoy[i].h * tu;
+            etiketYeri(etYon.get(mk.no) ?? mk.yon, x, y, W, H, (ISARET_CAP / 2) * durum.s * tu, daire, geo.vis, kutu);
+            const sl = geo.ox + kutu[0] * geo.k;
+            const st = geo.oy + kutu[1] * geo.k;
+            const sr = sl + W * geo.k;
+            const sb = st + H * geo.k;
+            for (const p of panels) {
+              if (p.o < 0.35) continue;
+              const d = Math.max(p.l - sr, sl - p.r, p.t - sy - sb, st - (p.b - sy));
+              if (d < LABEL_FADE_PX) eo *= reduced ? (d > 4 ? 1 : 0) : clamp01(d / LABEL_FADE_PX);
+            }
+            const tr = `translate3d(${kutu[0].toFixed(1)}px,${kutu[1].toFixed(1)}px,0) scale(${tu.toFixed(4)})`;
+            if (tr !== em.etr[i]) et.style.transform = em.etr[i] = tr;
+          }
+          if (Math.abs(eo - em.eo[i]) > 1e-3) {
+            const wasHidden = em.eo[i] <= 0.001;
+            em.eo[i] = eo;
+            et.style.opacity = eo.toFixed(3);
+            if (wasHidden !== eo <= 0.001) et.style.visibility = eo <= 0.001 ? "hidden" : "";
+          }
+        }
+      }
+
+      // Spottaki işaretin nabzı (yalnızca dinlenmede; reduced-motion'da spot hep 0, nabız yok).
+      for (let i = 0; i < isaretler.length; i++) {
+        const halo = haloEls[i];
+        if (!halo) continue;
+        const live = gs.cur === isaretler[i].no && em.o[i] > 0.01;
+        const anim = haloAnim[i];
+        if (live && !anim && typeof halo.animate === "function") {
+          haloAnim[i] = halo.animate(nabizKareleri, { duration: NABIZ_MS, iterations: Infinity });
+        } else if (!live && anim) {
+          anim.cancel();
+          haloAnim[i] = null;
+        }
+      }
+    };
+
+
     /* ---------------- ana döngü ---------------- */
     // İsteğe bağlı rAF: scroll/resize (passive) ve adımlama döngüyü uyandırır;
     // sahne oturunca (adım bitti, boşta dönüş/nabız yok, GL durdu) döngü uyur.
@@ -1115,9 +1722,43 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     let t0 = performance.now();
     let lastActivity = t0;
 
+    /**
+     * Antalya nabzı (t = 8 dinlenme): iki DOM halkası Web Animations ile döner; 2D katman
+     * yalnızca noktayı ve etiketi çizer, rAF uyur. Geçişte 2D katman çizer (döngü zaten açık).
+     */
+    const antKareleri: Keyframe[] = Array.from({ length: 13 }, (_, k) => {
+      const ph = k / 12;
+      return { offset: ph, transform: `scale(${((7 + 30 * easeOut(ph)) / 37).toFixed(4)})`, opacity: 0.75 * (1 - ph) };
+    });
+    const antAnim: Animation[] = [];
+    const setAntDom = (on: boolean, sc: Scene) => {
+      if (on) {
+        const P = makeProjector(sc.cam, size);
+        P(antVec, 1, pt);
+        const key = `${pt[0].toFixed(1)}px,${pt[1].toFixed(1)}px`;
+        if (key !== antPos && antNokta) {
+          antPos = key;
+          antNokta.style.transform = `translate3d(${key},0)`;
+        }
+      }
+      if (on === antDom) return;
+      antDom = on;
+      antNabiz.style.visibility = on ? "visible" : "hidden";
+      for (const a of antAnim) a.cancel();
+      antAnim.length = 0;
+      if (on) {
+        antHalkalar.forEach((el, k) => {
+          if (typeof el.animate !== "function") return;
+          antAnim.push(el.animate(antKareleri, { duration: PULSE_MS, iterations: Infinity, delay: -k * (PULSE_MS / 2) }));
+        });
+      }
+      // 2D katman halkalarını bıraksın/geri alsın: bir kez yeniden çiz.
+      dirty = Math.max(dirty, 1);
+    };
+
     const tick = (now: number) => {
       raf = 0;
-      if (document.hidden) {
+      if (document.hidden || gizli()) {
         prev = 0;
         return;
       }
@@ -1144,17 +1785,21 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
       scene = sceneAt(t, idle, reduced);
       applyDom(scene, t, tRaw, intro);
+      updateSpot(tRaw, now);
+      applyEmanet(scene, t, now);
 
       // GL'i yalnızca kamera/sahne değişirken çalıştır (pil). Bölüm içinde
       // kaydırma (t sabit) ve nabız yalnızca 2D overlay'i yeniden çizer.
       const visible = scene.globe > 0.001;
+      // Antalya nabzı dinlenmede DOM'da (WebGL varsa; yoksa 2D yolu sürer).
+      setAntDom(!!globe && visible && scene.pulse && Number.isInteger(tRaw), scene);
       const changing = t !== lastT || idling || dirty > 0;
       if (dirty > 0) dirty--;
       const wantGL = visible && changing;
       const live = now - lastActivity < PULSE_LIVE_MS;
-      const pulsing = visible && scene.pulse && live;
+      const pulsing = visible && scene.pulse && live && !antDom;
       // Nabız zaman aşımına uğradı: bir kez sabit halkayla çiz, sonra uyu.
-      const pulseEnded = pulseLive && !live && visible && scene.pulse;
+      const pulseEnded = pulseLive && !live && visible && scene.pulse && !antDom;
       pulseLive = live;
       quiet = wantGL ? 0 : quiet + 1;
       if (globe) {
@@ -1179,9 +1824,40 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       lastT = t;
 
       const settling = dirty > 0 || intro < 1;
-      const busy = stepping || settling || wantGL || glRunning || pulsing || (!globe && quiet < 3);
+      // Spot döngüsü: değişimden sonraki 300 ms'lik vurgu geçişinde kare kare;
+      // aradaki sürede döngü uyur, zamanlayıcı onu bir sonraki spot anında
+      // uyandırır (yazma yine bu rAF'ta). Nabız compositor animasyonu.
+      const blending = now - gs.t0 < SPOT_BLEND_MS + 60;
+      const busy = stepping || settling || wantGL || glRunning || pulsing || blending || (!globe && quiet < 3);
+      if (spot.el) {
+        const e = now - spot.since;
+        const next =
+          e < SPOT_DELAY_MS ? SPOT_DELAY_MS : SPOT_DELAY_MS + (Math.floor((e - SPOT_DELAY_MS) / spot.ms) + 1) * spot.ms;
+        scheduleSpotWake(spot.since + next);
+      } else scheduleSpotWake(0);
       if (busy) raf = requestAnimationFrame(tick);
       else prev = 0;
+    };
+    let spotTimer = 0;
+    let spotWakeAt = 0;
+    /**
+     * `at` (performance.now) anında döngüyü uyandırır; 0 = iptal. Zamanlayıcı
+     * ateşlenmiş ama sınır henüz geçilmemişse (rAF zaman damgası) yeniden kurulur.
+     */
+    const scheduleSpotWake = (at: number) => {
+      if (at === spotWakeAt && (spotTimer !== 0 || at === 0)) return;
+      spotWakeAt = at;
+      window.clearTimeout(spotTimer);
+      spotTimer = 0;
+      if (at > 0) {
+        spotTimer = window.setTimeout(
+          () => {
+            spotTimer = 0;
+            wake();
+          },
+          Math.max(0, at - performance.now()) + 2,
+        );
+      }
     };
     const wake = () => {
       if (raf === 0) raf = requestAnimationFrame(tick);
@@ -1192,11 +1868,14 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     // Not: GL döngüsü yalnızca tick içinden açılıp kapanır (çift rAF zinciri olmasın);
     // measure() dirty'yi ayarlar, tick gerekirse küreyi yeniden çizer.
     const onScroll = () => {
+      if (gizli()) return;
       lastActivity = performance.now();
       wake();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     const onResize = () => {
+      // Activity ile gizliyken (display:none) sıfır kutularla ölçme, '/' sayfasını kaydırma.
+      if (gizli()) return;
       measure();
       // Ölçü değişti (döndürme, yazı tipi, görsel): bölüm arasında kalındıysa yerleş.
       stepper?.remeasured();
@@ -1224,7 +1903,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     ro?.observe(wrap);
     document.fonts?.ready
       .then(() => {
-        if (!alive) return;
+        if (!alive || gizli()) return;
         fontFamily = getComputedStyle(document.body).fontFamily || fontFamily;
         measure();
         wake();
@@ -1236,6 +1915,17 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       if (raf > 0) cancelAnimationFrame(raf);
       raf = -1; // geç gelen scroll/resize olayları döngüyü yeniden başlatmasın
       window.clearTimeout(kTimer);
+      window.clearTimeout(spotTimer);
+      stopHalos();
+      for (const a of antAnim) a.cancel();
+      // DOM'u nötr bırak: Activity aynı DOM'u geri getirdiğinde (tarayıcıda Geri) yeni kurulum
+      // eski satır içi opaklıkları/spot'u devralmasın; reduced-motion açılıp kapanınca da aynı.
+      for (const p of panels) {
+        p.el.style.opacity = "";
+        p.el.style.visibility = "";
+      }
+      for (const el of secEls) if (el.hasAttribute("data-spot-count")) el.setAttribute("data-spot", "0");
+      antNabiz.style.visibility = "hidden";
       stepper?.destroy();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
@@ -1249,7 +1939,9 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       ro?.disconnect();
       globe?.destroy();
     };
-  }, [reduced]);
+  }, [reducedPref]);
+
+  const reduced = reducedPref === true;
 
   const space = cover.slogan.indexOf(" ");
   const sloganTop = cover.slogan.slice(0, space);
@@ -1333,6 +2025,190 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
             />
           </svg>
         </div>
+
+        {/* Stantta: zemin halkası — krem disk, 12 sütun, dönem etiketleri, "Buradasın / Bugün" */}
+        <div
+          ref={zeminRef}
+          className="absolute aspect-square"
+          style={{ width: GLOBE_SIZE, opacity: 0, visibility: "hidden", containerType: "inline-size" }}
+        >
+          <div
+            data-zemin-disk
+            className="absolute rounded-full"
+            style={{
+              inset: `${50 - ZEMIN.disk}%`,
+              background: EMANET_RENK.krem,
+              boxShadow: "0 22px 44px -24px rgb(40 51 47 / 0.55), inset 0 0 0 1.5px rgb(40 51 47 / 0.16)",
+            }}
+          />
+          <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full overflow-visible" fill="none">
+            <circle cx={50} cy={50} r={ZEMIN.cizgi} stroke={EMANET_RENK.koyuYesil} strokeOpacity={0.28} strokeWidth={0.3} />
+            {/* Yazı boyları ekrana göre (DunyaScene measure: --zemin-et / --zemin-no, en az 11 / 10 px);
+                küçük diskte (data-kucuk) sütun numaraları gizlenir, nokta kalır (dunya.css "B: zemin"). */}
+            <g data-zemin-etiket style={{ opacity: 0, fontSize: "var(--zemin-et, 2.7px)" }}>
+              {zeminEtiketleri.map((e) => {
+                const satir = e.kisa.split(" ");
+                return (
+                  <text
+                    key={e.kisa}
+                    x={e.x}
+                    y={e.y}
+                    dy={satir.length > 1 ? undefined : "0.36em"}
+                    textAnchor="middle"
+                    fontWeight={700}
+                    fill={EMANET_RENK.koyuYesil}
+                  >
+                    {satir.length > 1
+                      ? satir.map((s, i) => (
+                          <tspan key={s} x={e.x} dy={i === 0 ? "-0.22em" : "1.15em"}>
+                            {s}
+                          </tspan>
+                        ))
+                      : e.kisa}
+                  </text>
+                );
+              })}
+            </g>
+            {zeminSutunlari.map((s) => (
+              <g
+                key={s.no}
+                data-sutun
+                className="dn-zemin-sutun"
+                style={{ opacity: 0, transformBox: "fill-box", transformOrigin: "center" }}
+              >
+                <circle
+                  cx={s.x}
+                  cy={s.y}
+                  r={ZEMIN.sutunR}
+                  fill={EMANET_RENK.krem}
+                  stroke={EMANET_RENK.koyuYesil}
+                  strokeWidth={0.35}
+                />
+                <text
+                  x={s.x}
+                  y={s.y}
+                  dy="0.36em"
+                  textAnchor="middle"
+                  fontWeight={700}
+                  fill={EMANET_RENK.koyuYesil}
+                  style={{ fontFamily: SERIF, fontSize: "var(--zemin-no, 2.6px)" }}
+                >
+                  {s.no}
+                </text>
+              </g>
+            ))}
+          </svg>
+          <div
+            data-zemin-metin
+            className="absolute inset-0 flex flex-col items-center justify-center text-center"
+            style={{ color: EMANET_RENK.koyuYesil, opacity: 0 }}
+          >
+            <span className="text-[4.1cqw] leading-none font-semibold">{stant.zemin.ust}</span>
+            <span className="mt-[0.8cqw] text-[11.5cqw] leading-none" style={{ fontFamily: SERIF, fontWeight: 600 }}>
+              {stant.zemin.alt}
+            </span>
+          </div>
+        </div>
+
+        {/* Dönem halkası: Emanet bölümlerinde porthol çevresinde, Stantta zemin halkasında */}
+        <div
+          ref={halkaRef}
+          className="absolute aspect-square"
+          style={{ width: GLOBE_SIZE, opacity: 0, visibility: "hidden" }}
+        >
+          <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full overflow-visible" fill="none">
+            {dilimler.map((d) => (
+              <circle
+                key={d.ad}
+                data-dilim
+                cx={50}
+                cy={50}
+                r={HALKA.r}
+                pathLength={360}
+                stroke={d.renk}
+                strokeWidth={HALKA.w}
+                style={{ strokeDasharray: "0 360", strokeDashoffset: -d.a0 }}
+              />
+            ))}
+          </svg>
+        </div>
+
+        {/* 12 miras işareti + ad etiketleri (konum/ölçek/opaklık rAF'tan, transform ile) */}
+        <div
+          ref={isaretRef}
+          className="absolute aspect-square"
+          style={{ width: GLOBE_SIZE, visibility: "hidden", willChange: "transform" }}
+        >
+          {isaretler.map((m) => (
+            <div
+              key={m.no}
+              data-isaret={m.no}
+              className="absolute top-0 left-0 flex items-center justify-center rounded-full"
+              style={{
+                width: ISARET_CAP,
+                height: ISARET_CAP,
+                marginLeft: -ISARET_CAP / 2,
+                marginTop: -ISARET_CAP / 2,
+                background: EMANET_RENK.krem,
+                color: EMANET_RENK.koyuYesil,
+                border: `1.5px solid ${EMANET_RENK.koyuYesil}`,
+                boxShadow: "0 2px 6px -2px rgb(40 51 47 / 0.5)",
+                fontFamily: SERIF,
+                fontSize: 11,
+                fontWeight: 700,
+                lineHeight: 1,
+                fontVariantNumeric: "lining-nums tabular-nums",
+                opacity: 0,
+                visibility: "hidden",
+                // Zemin 300 ms'de geçer; yazı rengi ortada (150 ms) anlık döner: rakam hiç kaybolmaz.
+                transition: "background-color 300ms, color 0s linear 150ms",
+              }}
+            >
+              <span
+                data-halo
+                className="absolute inset-[-2.5px] rounded-full"
+                style={{ border: `2px solid ${EMANET_RENK.nabiz}`, opacity: 0 }}
+              />
+              {m.no}
+            </div>
+          ))}
+          {isaretler.map((m) => (
+            <div
+              key={m.no}
+              data-etiket={m.no}
+              className="absolute top-0 left-0 rounded-[7px] px-[7px] py-[4.5px] text-[12px] leading-none font-bold whitespace-nowrap"
+              style={{
+                transformOrigin: "0 0",
+                background: "rgb(247 230 205 / 0.96)",
+                color: EMANET_RENK.koyuYesil,
+                boxShadow: "0 4px 12px -6px rgb(40 51 47 / 0.55), inset 0 0 0 1px rgb(40 51 47 / 0.14)",
+                opacity: 0,
+                visibility: "hidden",
+                transition: "background-color 300ms, color 0s linear 150ms",
+              }}
+            >
+              {m.ad}
+            </div>
+          ))}
+        </div>
+
+        {/* Antalya nabzı (8. bölümde dinlenirken): iki halka, Web Animations (compositor) */}
+        <div
+          ref={antNabizRef}
+          className="absolute aspect-square"
+          style={{ width: GLOBE_SIZE, visibility: "hidden" }}
+        >
+          <span data-ant-nokta className="absolute top-0 left-0 block">
+            {[0, 1].map((k) => (
+              <span
+                key={k}
+                data-ant-halka
+                className="absolute top-0 left-0 block rounded-full"
+                style={{ borderStyle: "solid", borderColor: BRAND.orange, opacity: 0 }}
+              />
+            ))}
+          </span>
+        </div>
         </div>
       </div>
 
@@ -1399,7 +2275,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
                 alt=""
                 fill
                 loading="eager"
-                sizes="(max-width: 540px) 92vw, 500px"
+                sizes="(max-width: 568px) calc(72vw - 20px), 389px"
                 className="object-cover"
                 style={{ objectPosition: "50% 56%" }}
               />
@@ -1432,39 +2308,84 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
           <div ref={captionRef} className="absolute inset-x-0 top-[calc(100%+14px)] text-center" style={{ opacity: 0 }}>
             <p className="text-[15px] leading-tight font-black text-brand-blue">Antalya&apos;dan Dünyaya</p>
-            <p className="mt-1 text-[12px] font-bold text-brand-green">
+            <p className="mt-1 text-[12px] font-bold text-brand-teal">
               {backCover.line1} · {cop31.dates}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Biz Kimiz sayacı (scroll'a bağlı) */}
+      {/* HUD sayaçları (scroll'a bağlı): Biz kimiz · 12.000 yıllık emanet · Şölen */}
       <div
         ref={hudRef}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-[calc(max(12px,env(safe-area-inset-top))+44px)] z-30 flex justify-center px-4"
-        style={{ opacity: 0, visibility: "hidden" }}
+        className="dn-hud pointer-events-none fixed inset-x-0 top-[calc(max(12px,env(safe-area-inset-top))+44px)] z-30 grid justify-items-center px-4"
+        style={{ visibility: "hidden" }}
       >
-        <div className="flex items-start gap-4 rounded-2xl bg-white/90 px-4 py-2.5 shadow-[0_10px_28px_-14px_rgb(27_79_156/0.45)] ring-1 ring-brand-blue/5">
+        <div
+          ref={hudYilRef}
+          className="flex items-center gap-3 rounded-2xl px-4 py-2 [grid-area:1/1]"
+          style={{
+            background: "rgb(247 230 205 / 0.95)",
+            color: EMANET_RENK.koyuYesil,
+            boxShadow: "0 10px 28px -14px rgb(40 51 47 / 0.5), inset 0 0 0 1px rgb(40 51 47 / 0.12)",
+            opacity: 0,
+            visibility: "hidden",
+          }}
+        >
+          <span
+            ref={yearsRef}
+            className="block min-w-[4.6ch] text-right text-[30px] leading-none"
+            style={{ fontFamily: SERIF, fontWeight: 600, fontVariantNumeric: "lining-nums tabular-nums" }}
+          >
+            0
+          </span>
+          <span className="block text-[12px] leading-tight font-bold">
+            yıllık
+            <br />
+            emanet
+          </span>
+        </div>
+        <div
+          ref={hudGencRef}
+          className="flex items-center gap-3 rounded-2xl bg-white/90 px-4 py-2.5 shadow-[0_10px_28px_-14px_rgb(27_79_156/0.45)] ring-1 ring-brand-blue/5 [grid-area:1/1]"
+          style={{ opacity: 0, visibility: "hidden" }}
+        >
+          <span
+            ref={youthRef}
+            className="block min-w-[5.4ch] text-right text-[24px] leading-none font-black text-brand-blue tabular-nums"
+          >
+            0
+          </span>
+          <span className="block text-[11px] leading-tight font-bold text-brand-teal">
+            genç
+            <br />
+            {facts.solenPlace}
+          </span>
+        </div>
+        <div
+          ref={hudUyeRef}
+          className="flex items-start gap-4 rounded-2xl bg-white/90 px-4 py-2.5 shadow-[0_10px_28px_-14px_rgb(27_79_156/0.45)] ring-1 ring-brand-blue/5 [grid-area:1/1]"
+          style={{ opacity: 0, visibility: "hidden" }}
+        >
           <div className="min-w-[8.6rem]">
             <span ref={membersRef} className="block text-[24px] leading-none font-black text-brand-blue tabular-nums">
               0
             </span>
-            <span className="mt-1 block text-[11px] font-bold text-brand-green">{stats[0].label}</span>
+            <span className="mt-1 block text-[11px] font-bold text-brand-teal">{stats[0].label}</span>
           </div>
           <span className="mt-1 h-8 w-px bg-brand-mist" />
           <div className="min-w-[2.2rem]">
             <span ref={ilRef} className="block text-[24px] leading-none font-black text-brand-blue tabular-nums">
               0
             </span>
-            <span className="mt-1 block text-[11px] font-bold text-brand-green">{stats[1].label}</span>
+            <span className="mt-1 block text-[11px] font-bold text-brand-teal">{stats[1].label}</span>
           </div>
           <div className="min-w-[3.2rem]">
             <span ref={ilceRef} className="block text-[24px] leading-none font-black text-brand-blue tabular-nums">
               0
             </span>
-            <span className="mt-1 block text-[11px] font-bold text-brand-green">{stats[2].label}</span>
+            <span className="mt-1 block text-[11px] font-bold text-brand-teal">{stats[2].label}</span>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@
 }
 
 /*
- * Anlatı bölümleri (1–5): küre üst kısımda (--dn-sahne yüksekliğinde sahne
+ * Anlatı bölümleri (1–10): küre üst kısımda (--dn-sahne yüksekliğinde sahne
  * alanı), yarı saydam panel alt yarıda. Kısa panel kalan alanda ortalanır;
  * uzun panel sahne alanının hemen altından başlar ve bölümü uzatır.
  * DunyaScene küre pozunu panellerin ölçülen yerinden türetir.
@@ -35,15 +35,38 @@
   }
 }
 
-/* Kısa telefonlar (iPhone SE vb.): küreye biraz daha yer. */
-@media (max-height: 720px) {
-  .dn-anlati {
-    --dn-sahne: 49vh;
+/*
+ * Kısa ekran (yükseklik < 844 px; telefon tarayıcısında araç çubukları açıkken
+ * 390×664 gibi, ya da 375×667): her anlatı bölümü yine tek ekrana sığsın
+ * (bölüm içi kaydırma yok). Panel tipografisi sıkılaşır (aşağıda "kısa ekran"
+ * bloğu; panel ≤ --dn-panel-max) ve sahne alanı kalan yüksekliği alır:
+ * 100svh − panel − alt dolgu, 34–46svh arasında. DunyaScene küre pozunu
+ * panellerin ölçülen yerinden türettiği için küre bu alana kendiliğinden sığar.
+ */
+@media (max-height: 843px) and (max-width: 1023px) {
+  /* Değişken kökte (.dn-kok = <main>): sabit HUD da aynı sahne alanını kullanır. */
+  .dn-kok {
+    --dn-panel-max: 400px;
+    --dn-sahne-kisa: clamp(34vh, calc(100vh - var(--dn-panel-max) - 16px), 46vh);
   }
   @supports (height: 1svh) {
-    .dn-anlati {
-      --dn-sahne: 49svh;
+    .dn-kok {
+      --dn-sahne-kisa: clamp(34svh, calc(100svh - var(--dn-panel-max) - 16px), 46svh);
     }
+  }
+
+  .dn-anlati {
+    --dn-sahne: var(--dn-sahne-kisa);
+  }
+
+  /*
+   * HUD sayaçları (DunyaScene): kısa ekranda küre ekranın üstünden başlar; üstteki
+   * HUD Türkiye'yi/Kocaeli'yi örterdi. Sahne alanının altına, panelin hemen üstüne
+   * iner (kürenin güney kenarı; Akdeniz). Kutular alta hizalı.
+   */
+  .dn-hud {
+    top: calc(var(--dn-sahne-kisa) - 82px);
+    align-items: end;
   }
 }
 
@@ -63,4 +86,613 @@
   .dn-anlati > [data-panel] {
     margin-inline: 0;
   }
+}
+
+/*
+ * Yatay telefon (ör. 844×390): üstteki sahne alanı 133 px'e iniyor, 13 bölümün 11'i ekrana
+ * sığmıyordu. Geniş ekrandaki gibi yan yana: panel sağda (≤ %54 genişlik, dikeyde ortalı),
+ * küre solda (DunyaScene: panelin solu > %42 genişlik → yatay poz). Kısa ekran tipografisi
+ * (yukarıdaki max-height bloğu) burada da geçerli.
+ */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1023px) {
+  .dn-anlati {
+    align-items: flex-end;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-right: max(22px, env(safe-area-inset-right));
+  }
+
+  .dn-anlati > [data-panel] {
+    width: min(54vw, 480px);
+    margin-inline: 0;
+  }
+}
+
+/* ===================================================================== */
+/* A: stant teması — "12.000 Yıllık Emanet" (bölüm 2, 3, 4, 9)            */
+/* Renkler page.tsx'te stant.palet'ten: --dn-krem, --dn-koyu, --dn-ahsap. */
+/* Serif: Lora, page.tsx'te --font-serif.                                  */
+/* ===================================================================== */
+
+.dn-serif {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+}
+
+/*
+ * A: krem panel (standın sütun yüzleri gibi): krem zemin; iç kontur marka yeşili %35
+ * (ahşap kontur ve koyu yeşil başlıklarla krem bölümler marka kimliğinden kopuyordu).
+ * Montserrat başlıklar (Baslik) diğer panellerdeki gibi marka mavisi (krem üstünde 3,99:1,
+ * 22 px+ kalın: büyük metin eşiği 3:1). Serif slogan, etiket, çip ve numaralar stant yeşilinde.
+ * Gölge yalnızca burada (Panel'in krem dalında Tailwind gölgesi yok).
+ */
+.dn-krem {
+  background-color: color-mix(in srgb, var(--dn-krem) 97%, transparent);
+  box-shadow:
+    0 14px 36px -16px rgb(40 51 47 / 0.45),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-brand-green) 35%, transparent);
+}
+
+/*
+ * Montserrat başlık dar ekranda (375 px) tek satırda kalsın: "Anadolu'nun emaneti".
+ * Krem panellerde başlık boyunun tek kaynağı (katmansız kural, Baslik'in text-[26px]
+ * sm:text-[30px] yardımcılarını ezer).
+ */
+.dn-krem h2:not(.dn-serif) {
+  font-size: clamp(22px, 6.6vw, 30px);
+}
+
+/* A: serif bölüm etiketi (LeafTag'in krem tema karşılığı) */
+.dn-serif-etiket {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 4px 12px 4px 10px;
+  background-color: var(--dn-koyu);
+  color: var(--dn-krem);
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.dn-serif-etiket::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--color-brand-orange);
+}
+
+/* A: dönem çipi (sütun yüzlerindeki koyu çip + dönem halkası rengi noktası) */
+.dn-donem-cip {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 2px 7px 2px 5px;
+  background-color: var(--dn-koyu);
+  color: var(--dn-krem);
+  font-size: 10.5px;
+  line-height: 1.3;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 375 px gibi dar ekranlarda en uzun çip ("Osmanlı'dan bugüne") kırpılmasın. */
+@media (max-width: 379px) {
+  .dn-donem-cip {
+    gap: 3px;
+    padding-inline: 4px 6px;
+    font-size: 10px;
+  }
+}
+
+.dn-donem-nokta {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(247 230 205 / 0.55);
+}
+
+/*
+ * A: emanet listesi satırları. Spot vurgusu: satır beyaz zemin + solda turuncu çizgi
+ * (::before, opacity), numara büyür; diğer satırlarda yalnızca dekoratif (aria-hidden)
+ * numara söner. Metin hiçbir satırda sönmez (söndürülen satırlar 2,2–2,8:1'e iniyordu).
+ */
+.dn-emanet-satir {
+  position: relative;
+  transition: background-color 300ms ease;
+}
+
+.dn-emanet-satir::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background-color: var(--color-brand-orange);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.dn-emanet-no {
+  display: inline-block;
+  color: var(--dn-koyu);
+  transform-origin: 30% 60%;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+/*
+ * A: spot açıklama alanı — açıklamalar aynı ızgara hücresinde üst üste
+ * (yükseklik = en uzun açıklama; spot değişince yerleşim kaymaz).
+ * data-spot yok ya da "0" iken 1. açıklama görünür (reduced-motion: hepsi alt alta, dosya sonu).
+ */
+.dn-aciklama {
+  display: grid;
+}
+
+/* Çıkış hızlı (120 ms), giriş çıkıştan sonra (180 ms, 120 ms gecikme): iki açıklama üst üste görünmez. */
+.dn-aciklama > * {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.dn-aciklama > [data-emanet-aciklama="1"],
+.dn-aciklama > [data-bolge-aciklama="1"] {
+  opacity: 1;
+  transition: opacity 180ms ease 120ms;
+}
+
+/* A: stant planı (StantPlani.tsx). Çizgiler ekran pikselinde ince kalır. */
+.dn-plan {
+  font-family: var(--font-display), sans-serif;
+}
+
+.dn-plan rect,
+.dn-plan circle,
+.dn-plan path {
+  vector-effect: non-scaling-stroke;
+}
+
+.dn-plan-zemin {
+  fill: rgb(255 255 255 / 0.55);
+  stroke: var(--dn-koyu);
+  stroke-width: 1.25;
+}
+
+.dn-plan-donati {
+  fill: color-mix(in srgb, var(--dn-koyu) 9%, transparent);
+  stroke: color-mix(in srgb, var(--dn-koyu) 35%, transparent);
+  stroke-width: 0.75;
+}
+
+.dn-bolge-alan {
+  color: var(--dn-ahsap);
+  transition:
+    color 300ms ease,
+    opacity 300ms ease;
+}
+
+.dn-plan-ahsap {
+  fill: currentColor;
+  fill-opacity: 0.32;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.dn-plan-oda {
+  fill: currentColor;
+  fill-opacity: 0.2;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.dn-plan-mobilya {
+  fill: rgb(255 255 255 / 0.8);
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.dn-plan-bank {
+  fill: none;
+  stroke: currentColor;
+  stroke-opacity: 0.7;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.dn-plan-kanopi {
+  fill: currentColor;
+  fill-opacity: 0.16;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.dn-plan-bant {
+  fill: none;
+  stroke: var(--dn-koyu);
+  vector-effect: none;
+}
+
+.dn-plan-sutun {
+  fill: var(--dn-krem);
+}
+
+/* Yazı boyları viewBox biriminde: plan 390 px ekranda ~318 px (×0,32), 375×667'de 300 px (×0,30). */
+.dn-plan-not {
+  fill: var(--dn-koyu);
+  font-size: 38px;
+  font-weight: 700;
+}
+
+/* Giriş şeridi (planın altı): koridor çizgisi, iki ok, "Giriş · koridor". */
+.dn-plan-koridor {
+  fill: none;
+  stroke: var(--dn-koyu);
+  stroke-opacity: 0.35;
+  stroke-width: 1.25;
+  stroke-dasharray: 5 5;
+}
+
+.dn-plan-ok {
+  fill: none;
+  stroke: var(--color-brand-orange);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dn-plan-giris-yazi {
+  fill: var(--dn-koyu);
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.dn-bolge-hap {
+  fill: rgb(255 255 255 / 0.92);
+  stroke: var(--dn-koyu);
+  stroke-width: 1;
+}
+
+.dn-bolge-daire {
+  color: var(--dn-koyu);
+  fill: currentColor;
+  transition: color 300ms ease;
+}
+
+/* Numara rengi color üzerinden: spotta daire turuncuya dönünce numara koyulaşır (krem/turuncu 2,15:1 idi). */
+.dn-bolge-no {
+  color: var(--dn-krem);
+  fill: currentColor;
+  font-size: 34px;
+  font-weight: 700;
+  transition: color 300ms ease;
+}
+
+.dn-bolge-etiket {
+  fill: var(--dn-koyu);
+  font-size: 44px;
+  font-weight: 700;
+}
+
+/*
+ * A: spot vurgusu (docs/brief-dunya-2.md §2). DunyaScene bölüm elemanına
+ * data-spot="1…n" yazar ("0" = vurgu yok). Yalnızca opacity / transform /
+ * color / background-color, 300 ms. Emanet bölümlerinde değer bölüm içi
+ * sıradır (data-emanet 1–6), Stantta bölümünde bölge no'su (data-bolge 1–4).
+ */
+/* Söndürme :where() ile düşük özgüllükte: aşağıdaki vurgu kuralları onu ezsin. */
+/*
+ * Spotta olmayan satırlarda yalnızca dekoratif (aria-hidden) numara söner; metin tam opak kalır.
+ * 0,55: 24 px numara krem üstünde ~3,1:1 (büyük metin eşiği 3:1).
+ */
+:where([data-spot]:not([data-spot="0"])) .dn-emanet-satir .dn-emanet-no {
+  opacity: 0.55;
+}
+
+/* Plan: söndürme yalnızca bölge dolgularında; rozetler ve notlar tam opak (okunur). */
+:where([data-spot]:not([data-spot="0"])) .dn-plan [data-bolge] .dn-bolge-alan {
+  opacity: 0.4;
+}
+
+/* Giden açıklama (1. açıklama dahil: varsayılan-görünür kuralının gecikmeli geçişini ezer) hızlı söner. */
+[data-spot]:not([data-spot="0"]) .dn-aciklama > * {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+[data-spot="1"] [data-emanet="1"],
+[data-spot="2"] [data-emanet="2"],
+[data-spot="3"] [data-emanet="3"],
+[data-spot="4"] [data-emanet="4"],
+[data-spot="5"] [data-emanet="5"],
+[data-spot="6"] [data-emanet="6"] {
+  background-color: rgb(255 255 255 / 0.9);
+}
+
+[data-spot="1"] [data-emanet="1"]::before,
+[data-spot="2"] [data-emanet="2"]::before,
+[data-spot="3"] [data-emanet="3"]::before,
+[data-spot="4"] [data-emanet="4"]::before,
+[data-spot="5"] [data-emanet="5"]::before,
+[data-spot="6"] [data-emanet="6"]::before {
+  opacity: 1;
+}
+
+/* Numara koyu kalır (turuncu rakam açık zeminde 2,49:1 idi); vurgu turuncu çizgide. */
+[data-spot="1"] [data-emanet="1"] .dn-emanet-no,
+[data-spot="2"] [data-emanet="2"] .dn-emanet-no,
+[data-spot="3"] [data-emanet="3"] .dn-emanet-no,
+[data-spot="4"] [data-emanet="4"] .dn-emanet-no,
+[data-spot="5"] [data-emanet="5"] .dn-emanet-no,
+[data-spot="6"] [data-emanet="6"] .dn-emanet-no {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+[data-spot="1"] .dn-aciklama > [data-emanet-aciklama="1"],
+[data-spot="2"] .dn-aciklama > [data-emanet-aciklama="2"],
+[data-spot="3"] .dn-aciklama > [data-emanet-aciklama="3"],
+[data-spot="4"] .dn-aciklama > [data-emanet-aciklama="4"],
+[data-spot="5"] .dn-aciklama > [data-emanet-aciklama="5"],
+[data-spot="6"] .dn-aciklama > [data-emanet-aciklama="6"],
+[data-spot="1"] .dn-aciklama > [data-bolge-aciklama="1"],
+[data-spot="2"] .dn-aciklama > [data-bolge-aciklama="2"],
+[data-spot="3"] .dn-aciklama > [data-bolge-aciklama="3"],
+[data-spot="4"] .dn-aciklama > [data-bolge-aciklama="4"] {
+  opacity: 1;
+  transition: opacity 180ms ease 120ms;
+}
+
+[data-spot="1"] .dn-plan [data-bolge="1"] .dn-bolge-alan,
+[data-spot="2"] .dn-plan [data-bolge="2"] .dn-bolge-alan,
+[data-spot="3"] .dn-plan [data-bolge="3"] .dn-bolge-alan,
+[data-spot="4"] .dn-plan [data-bolge="4"] .dn-bolge-alan {
+  opacity: 1;
+}
+
+[data-spot="1"] [data-bolge="1"] :is(.dn-bolge-alan, .dn-bolge-daire),
+[data-spot="2"] [data-bolge="2"] :is(.dn-bolge-alan, .dn-bolge-daire),
+[data-spot="3"] [data-bolge="3"] :is(.dn-bolge-alan, .dn-bolge-daire),
+[data-spot="4"] [data-bolge="4"] :is(.dn-bolge-alan, .dn-bolge-daire) {
+  color: var(--color-brand-orange);
+}
+
+/* Turuncu daire üstünde koyu numara (4,97:1). */
+[data-spot="1"] [data-bolge="1"] .dn-bolge-no,
+[data-spot="2"] [data-bolge="2"] .dn-bolge-no,
+[data-spot="3"] [data-bolge="3"] .dn-bolge-no,
+[data-spot="4"] [data-bolge="4"] .dn-bolge-no {
+  color: var(--dn-koyu);
+}
+
+/*
+ * E: bölge rozetindeki scale(1.08) kaldırıldı: SVG <g> transform'u Chrome'da her spot
+ * değişiminde SVG düzenini yeniden hesaplatıyordu (4 sn'de 38 layout; brief §2 "layout
+ * tetiklemez"). Vurgu: turuncu bölge + rozet dairesi ve diğer bölgelerin 0,4'e sönmesi.
+ */
+
+/*
+ * E: kısa ekran sıkılaştırması (yükseklik < 844 px, dar ekran). 390×844'teki
+ * düzen aynen kalır; burada yalnızca boşluklar ve yazı boyları küçülür, hiçbir
+ * içerik gizlenmez. Hedef: 375 px genişlikte her anlatı paneli ≤ --dn-panel-max.
+ * Seçiciler [data-panel] ile güçlendirildi (A'nın .dn-krem başlık kuralını ezsin).
+ */
+@media (max-height: 843px) and (max-width: 1023px) {
+  .dn-anlati > [data-panel] {
+    padding: 14px 16px 15px;
+  }
+
+  .dn-anlati [data-panel] .leaf-tag {
+    padding-block: 4.5px;
+  }
+
+  .dn-anlati [data-panel] .dn-serif-etiket {
+    padding-block: 3px;
+  }
+
+  .dn-anlati [data-panel] .dn-baslik {
+    margin-top: 8px;
+    font-size: 22px;
+    line-height: 1.12;
+  }
+
+  .dn-anlati [data-panel] .dn-altbaslik {
+    margin-top: 6px;
+    font-size: 15px;
+  }
+
+  .dn-anlati [data-panel] .dn-govde {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .dn-anlati [data-panel] .dn-istatistik {
+    margin-top: 10px;
+    padding-block: 8px;
+  }
+
+  /* Emanet girişi (2) */
+  .dn-anlati [data-panel] .dn-slogan {
+    margin-top: 8px;
+    font-size: 23px;
+  }
+
+  .dn-anlati [data-panel] .dn-emanet-sayilar {
+    margin-top: 10px;
+  }
+
+  .dn-anlati [data-panel] .dn-emanet-sayilar .dn-serif {
+    font-size: 28px;
+  }
+
+  .dn-anlati [data-panel] .dn-donem-serit {
+    margin-top: 10px;
+  }
+
+  .dn-anlati [data-panel] .dn-giris {
+    margin-top: 8px;
+    gap: 4px;
+  }
+
+  .dn-anlati [data-panel] .dn-giris p {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .dn-anlati [data-panel] .dn-alt-satir {
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+
+  /* Emanet listeleri (3, 4) */
+  .dn-anlati [data-panel] .dn-emanet-liste {
+    margin-top: 8px;
+  }
+
+  .dn-anlati [data-panel] .dn-emanet-satir {
+    padding-block: 0;
+  }
+
+  .dn-anlati [data-panel] .dn-emanet-no {
+    font-size: 22px;
+  }
+
+  .dn-anlati [data-panel] .dn-aciklama {
+    margin-top: 6px;
+  }
+
+  .dn-anlati [data-panel] .dn-emanet-liste + .dn-aciklama {
+    padding-top: 6px;
+  }
+
+  .dn-anlati [data-panel] .dn-aciklama > p {
+    font-size: 13px;
+    line-height: 1.33;
+  }
+
+  /* Sayı + açıklama satırı (5, 6, 7) */
+  .dn-anlati [data-panel] .dn-sayi-satir {
+    margin-top: 8px;
+  }
+
+  .dn-anlati [data-panel] .dn-sayi-satir .dn-sayi-deger {
+    font-size: 28px;
+  }
+
+  .dn-anlati [data-panel] .dn-sayi-satir p {
+    font-size: 13px;
+  }
+
+  .dn-anlati [data-panel] .dn-maddeler {
+    margin-top: 8px;
+    gap: 5px;
+  }
+
+  .dn-anlati [data-panel] .dn-madde {
+    font-size: 14px;
+  }
+
+  .dn-anlati [data-panel] .dn-iz {
+    margin-top: 8px;
+  }
+
+  .dn-anlati [data-panel] .dn-metin,
+  .dn-anlati [data-panel] .dn-alinti {
+    margin-top: 8px;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+
+  /* Polaroidler: ortalanmış dar ızgara (kartlar küçülür, yazılar kalır) */
+  .dn-anlati [data-panel] .dn-polaroid-ikili {
+    max-width: 276px;
+    margin: 12px auto 0;
+  }
+
+  .dn-anlati [data-panel] .dn-polaroid-yazi {
+    font-size: 10.5px;
+  }
+
+  /* COP31 + Başkan (8) */
+  .dn-anlati [data-panel] .dn-tarih {
+    margin-top: 6px;
+  }
+
+  .dn-anlati [data-panel] .dn-portre {
+    margin-top: 10px;
+    grid-template-columns: 27% 1fr;
+  }
+
+  /* Stantta (9) */
+  .dn-anlati [data-panel] .dn-plan-kutu {
+    max-width: 300px;
+    margin: 8px auto 0;
+  }
+
+  .dn-anlati [data-panel] .dn-plan-kutu + .dn-aciklama > p {
+    font-size: 12.5px;
+  }
+}
+
+/* A: kapanış hatıra polaroidleri — kısa ekranda (375×667 vb.) blok tek ekranda kalsın diye gizli. */
+@media (max-height: 740px) {
+  .dn-kapanis-foto {
+    display: none;
+  }
+
+  /* E: 390×664'te blok 1 px taşıyordu (üst dolgu 64 px → 44 px). */
+  .dn-kapanis {
+    padding-top: 44px;
+  }
+}
+
+/*
+ * A: reduced-motion — B spot döngüsünü çalıştırmaz (data-spot="0"), vurgu geçişleri anında.
+ * Açıklamalar üst üste değil ALT ALTA, hepsi görünür (brief §2.4 "içerik tamamen okunabilir";
+ * tek açıklama gösterilince 12 emanet cümlesinin 10'u, 4 bölge açıklamasının 3'ü kayboluyordu).
+ * Bu modda adımlama yok, serbest kaydırma: uzayan bölüm kendi içinde kaydırılır.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .dn-emanet-satir,
+  .dn-emanet-satir::before,
+  .dn-emanet-no,
+  .dn-aciklama > *,
+  .dn-bolge-alan,
+  .dn-bolge-daire,
+  .dn-bolge-no {
+    transition: none;
+  }
+
+  .dn-anlati .dn-aciklama {
+    gap: 7px;
+  }
+
+  .dn-anlati .dn-aciklama > * {
+    grid-area: auto;
+    opacity: 1;
+  }
+}
+
+/* B: zemin halkası (Stantta) — disk 300 px'ten küçükse sütun numaraları gizli, yalnızca nokta
+   (DunyaScene measure → data-kucuk; yazı boyları --zemin-et / --zemin-no ile en az 11 / 10 px). */
+[data-kucuk] .dn-zemin-sutun text {
+  display: none;
+}
+
+[data-kucuk] .dn-zemin-sutun circle {
+  r: 1.5px;
 }
