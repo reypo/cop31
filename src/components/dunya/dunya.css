@@ -1,0 +1,66 @@
+/*
+ * Konsept A — bölüm düzeni. Tüm seçiciler .dn-* (yalnızca /dunya öğeleri).
+ *
+ * Her hikâye vuruşu bir bölüm: en az bir ekran boyu, snap başı. Bölüm içeriği
+ * ekrandan uzunsa bölüm uzar ve içinde kaydırılır (adim.ts dinlenme bölgesi).
+ * Adımlama DunyaScene/adim.ts'de yönetilir; html'in native snap'i bu rotada
+ * kapalıdır (reduced-motion'da da: serbest kaydırma). scroll-snap-align yalnızca
+ * bölüm başlarını işaretler.
+ */
+
+.dn-bolum {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
+  scroll-snap-align: start;
+}
+
+/*
+ * Anlatı bölümleri (1–5): küre üst kısımda (--dn-sahne yüksekliğinde sahne
+ * alanı), yarı saydam panel alt yarıda. Kısa panel kalan alanda ortalanır;
+ * uzun panel sahne alanının hemen altından başlar ve bölümü uzatır.
+ * DunyaScene küre pozunu panellerin ölçülen yerinden türetir.
+ */
+.dn-anlati {
+  --dn-sahne: 46vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--dn-sahne);
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+@supports (height: 1svh) {
+  .dn-anlati {
+    --dn-sahne: 46svh;
+  }
+}
+
+/* Kısa telefonlar (iPhone SE vb.): küreye biraz daha yer. */
+@media (max-height: 720px) {
+  .dn-anlati {
+    --dn-sahne: 49vh;
+  }
+  @supports (height: 1svh) {
+    .dn-anlati {
+      --dn-sahne: 49svh;
+    }
+  }
+}
+
+.dn-anlati > [data-panel] {
+  margin-block: auto;
+}
+
+/* Geniş yatay ekran: panel sağda, küre solda (DunyaScene yatay poz verir). */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) {
+  .dn-anlati {
+    align-items: flex-end;
+    padding-top: 72px;
+    padding-bottom: 48px;
+    padding-right: max(48px, calc(50vw - 600px));
+  }
+
+  .dn-anlati > [data-panel] {
+    margin-inline: 0;
+  }
+}

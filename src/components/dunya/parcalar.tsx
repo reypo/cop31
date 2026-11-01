@@ -4,8 +4,9 @@ import type { PhotoAsset } from "@/lib/photos";
 
 /**
  * Yarı saydam beyaz metin paneli (küre arkada sezilir). max 480px, iç boşluk
- * 20px (sm: 24px). `data-panel`: DunyaScene harita etiketlerini panelin
- * altına girerken söndürmek için ölçer.
+ * 20px (sm: 24px). `data-panel`: DunyaScene ölçer — küre pozu (panelin
+ * üstündeki/solundaki sahne alanı), bölüm geçişinde panelin sönüp belirmesi
+ * ve harita etiketlerinin panel altına girerken sönmesi.
  */
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -98,7 +99,7 @@ export function Polaroid({
 
 /** Panel içindeki iki sütunlu küçük polaroid ızgarası (pinler için üstte pay). */
 export function PolaroidIkili({ children }: { children: ReactNode }) {
-  return <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 px-1 pt-1">{children}</div>;
+  return <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-5 px-1 pt-1">{children}</div>;
 }
 
 /** Küçük yaprak madde işareti. */
@@ -109,13 +110,4 @@ export function YaprakMadde({ children }: { children: ReactNode }) {
       <span className="min-w-0">{children}</span>
     </li>
   );
-}
-
-/**
- * Bölümler arası boşluk: küre "nefes alsın" diye ~55vh. Mobilde küre (≈ 0.9 ×
- * ekran genişliği) bu boşluğa sığar; boşluk ekran ortasından geçerken küre
- * tamamen görünür. `svh`: mobil adres çubuğu açılıp kapanırken yükseklik zıplamasın.
- */
-export function Bosluk() {
-  return <div aria-hidden="true" className="h-[56svh]" />;
 }

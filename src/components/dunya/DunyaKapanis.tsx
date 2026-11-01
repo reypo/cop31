@@ -4,15 +4,18 @@ import { logos } from "@/lib/photos";
 
 /**
  * Ortak kapanış bloğu (brief §7): logolar, kurum adı, sosyal hesaplar, site, slogan.
- * Final sahnesinin (sabit katman) üstüne bir sayfa gibi kayarak gelir; en az
- * bir ekran boyu: sayfa sonunda kapağın kesik parçaları üstte görünmesin.
+ * Son bölüm (data-stage 7): final sahnesinin (sabit katman) üstüne bir sayfa
+ * gibi kayarak gelir; en az bir ekran boyu, uzunsa içinde kaydırılır.
  */
 export default function DunyaKapanis() {
   const sosyal = socials.filter((s) => s.name !== "Web");
   const web = socials.find((s) => s.name === "Web");
 
   return (
-    <footer className="relative z-20 flex min-h-svh flex-col justify-center rounded-t-[28px] bg-white px-4 pt-16 pb-[max(2.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-22px_rgb(27_79_156/0.28)] ring-1 ring-brand-blue/5">
+    <footer
+      data-stage="7"
+      className="dn-bolum relative z-20 flex flex-col justify-center rounded-t-[28px] bg-white px-4 pt-16 pb-[max(2.5rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-22px_rgb(27_79_156/0.28)] ring-1 ring-brand-blue/5"
+    >
       <div className="mx-auto w-full max-w-[480px] text-center">
         <div className="flex items-center justify-center gap-6">
           <Image

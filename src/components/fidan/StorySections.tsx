@@ -1,17 +1,5 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
-import {
-  backCover,
-  baskanMesaji,
-  bizKimiz,
-  bulusmalar,
-  cop31,
-  cover,
-  facts,
-  iklim,
-  solenler,
-  vizyon,
-} from "@/lib/content";
+import { backCover, bizKimiz, bulusmalar, cop31, cover, facts, iklim, solenler, vizyon } from "@/lib/content";
 import { photos } from "@/lib/photos";
 import Polaroid from "./Polaroid";
 
@@ -45,25 +33,27 @@ function splitTitle(title: string): [string, string] {
 }
 
 /**
- * Bir bölüm. Mobilde: üstte boşluk (fidan bu sürede büyür), altta kart.
- * Kart `position: sticky; bottom` ile ekranın altında durur; bir sonraki
- * bölüm gelirken yerinde söner (FidanStory). Masaüstünde sağ sütunda,
- * dikey ortalı, normal akışta. data-fidan-section adı FidanStory'deki
- * kamera ve büyüme zamanlamasıyla eşleşir.
+ * Bir hikâye vuruşu = bir <section data-fidan-snap>. Mobilde tam 100svh
+ * (kart penceresine sığmayan içerik varsa + --ovf kadar bölüm içi kaydırma
+ * payı), kart altta. Kartlar sticky değil: konumları ve sönmeleri FidanStory'de
+ * kaydırmanın fonksiyonu (bölümde durunca kart ekranın altında; geçişte eski
+ * kart yerinde söner, yenisi bölümle birlikte alttan gelir). Masaüstünde sağ
+ * sütunda, dikey ortalı. data-fidan-section adı FidanStory'deki kamera ve
+ * büyüme eşlemesiyle eşleşir.
  */
 function Screen({ name, children }: { name: string; children: ReactNode }) {
   return (
     <section
+      data-fidan-snap=""
       data-fidan-section={name}
-      className="fidan-sec relative flex flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:min-h-svh md:justify-center md:px-0 md:py-16"
+      className="fidan-sec relative flex flex-col justify-end px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:justify-center md:px-0 md:py-16"
     >
-      <div aria-hidden="true" className="fidan-spacer" />
       {children}
     </section>
   );
 }
 
-/** Metin kartı. Pencere (data-fidan-win) mobilde en fazla 46svh; taşan içerik pencerede akar. */
+/** Metin kartı. Pencere (data-fidan-win) mobilde en fazla 50svh; taşan içerik bölüm içi kaydırmayla pencerede akar. */
 function Card({ tag, children }: { tag: string; children: ReactNode }) {
   return (
     <div
@@ -101,10 +91,11 @@ export default function StorySections() {
   const [titleA, titleB] = splitTitle(cover.title);
   return (
     <>
-      {/* 0 — Tohum (kahraman). Mobilde üstte sabit durur, kökler büyürken yerinde söner. */}
+      {/* 1 — Tohum (başlık) */}
       <section
+        data-fidan-snap=""
         data-fidan-section="tohum"
-        className="fidan-hero relative px-4 pt-[calc(max(0.75rem,env(safe-area-inset-top))+2.9rem)] md:flex md:min-h-svh md:flex-col md:justify-center md:px-0 md:py-16"
+        className="fidan-hero relative px-4 pt-[calc(max(0.75rem,env(safe-area-inset-top))+2.9rem)] md:flex md:flex-col md:justify-center md:px-0 md:py-16"
       >
         <div
           data-fidan-card=""
@@ -141,7 +132,7 @@ export default function StorySections() {
         </div>
       </section>
 
-      {/* 1 — Kökler: Biz Kimiz */}
+      {/* 2 — Kökler: Biz Kimiz */}
       <Screen name="kok">
         <Card tag="Kökler">
           <h2 className={H2}>{bizKimiz.title}</h2>
@@ -158,19 +149,12 @@ export default function StorySections() {
         </Card>
       </Screen>
 
-      {/* 2 — Gövde: vizyon */}
+      {/* 3 — Gövde: vizyon; gövdedeki iki boğum 2017 ve TBMM */}
       <Screen name="govde">
         <Card tag="Gövde">
           <h2 className={H2}>{vizyon.title}</h2>
-          <p className={`mt-3 ${BODY}`}>{vizyon.intro}</p>
-        </Card>
-      </Screen>
-
-      {/* 3 — Gövdedeki iki boğum: 2017 ve TBMM */}
-      <Screen name="bogum">
-        <Card tag="Gövdedeki iki boğum">
           {vizyon.items.slice(1).map((item) => (
-            <div key={item.title} className="fidan-item mt-3.5 flex gap-3">
+            <div key={item.title} className="fidan-item mt-3 flex gap-3">
               <span
                 aria-hidden="true"
                 className="mt-[5px] size-3 shrink-0 rounded-full bg-brand-orange shadow-[0_0_0_2.5px_#fff,0_1px_4px_rgb(0_0_0/0.25)]"
@@ -179,130 +163,85 @@ export default function StorySections() {
                 <h3 className="text-balance text-[1.06rem] leading-snug font-black text-brand-blue md:text-[1.25rem]">
                   {item.title}
                 </h3>
-                <p className={`mt-1 ${BODY}`}>{item.text}</p>
+                <p className={`mt-0.5 ${BODY}`}>{item.text}</p>
               </div>
             </div>
           ))}
         </Card>
       </Screen>
 
-      {/* 4 — Dallar: Gençlik Buluşmaları */}
-      <Screen name="bulusma">
+      {/* 4 — Dallar: Gençlik Buluşmaları (sol dallar) ve Şölen (sağ dallar) */}
+      <Screen name="dallar">
         <Card tag="Dallar">
           <h2 className={H2}>{bulusmalar.title}</h2>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-2.5 flex items-center gap-3">
             <Stat value={`${facts.meetings}+`} size="lg" />
             <p className={NOTE}>
               gençlik buluşması: son {facts.meetingsYears} yılda, Cumhurbaşkanımızın katılımıyla
             </p>
           </div>
-          <p className={`mt-3 ${BODY}`}>{bulusmalar.paragraphs[2]}</p>
-        </Card>
-      </Screen>
-
-      {/* 5 — Dallar: Şölen */}
-      <Screen name="solen">
-        <Card tag="Dallar">
-          <h2 className={H2}>{solenler.title}</h2>
-          <div className="mt-3 flex items-center gap-3">
-            <Stat value={`${fmt(facts.solenAttendees)}+`} label="genç" size="lg" />
-            <p className={NOTE}>
-              <span className="block whitespace-nowrap">{facts.solenDate}</span>
-              <span className="block">{facts.solenPlace}</span>
-            </p>
+          <p className={`mt-2.5 ${BODY}`}>{bulusmalar.paragraphs[1]}</p>
+          <div className="fidan-item mt-3.5 border-t border-brand-mist pt-3">
+            <h3 className="text-[1.15rem] leading-snug font-black text-brand-blue md:text-[1.4rem]">{solenler.title}</h3>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Stat value={`${fmt(facts.solenAttendees)}+`} label="genç" size="lg" />
+              <p className={NOTE}>
+                <span className="block whitespace-nowrap">{facts.solenDate}</span>
+                <span className="block">{facts.solenPlace}</span>
+              </p>
+            </div>
           </div>
-          <p className={`mt-3 ${BODY}`}>{solenler.paragraphs[0]}</p>
         </Card>
       </Screen>
 
-      {/* 6 — Yapraklar: Hatıra Ormanı */}
+      {/* 5 — Yapraklar: iklim eylemleri */}
       <Screen name="yaprak">
         <Card tag="Yapraklar">
           <h2 className={H2}>{iklim.title}</h2>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-2.5 flex items-center gap-3">
             <Stat value={String(facts.saplings)} size="lg" />
             <p className={NOTE}>{iklim.items[0]}</p>
           </div>
-          <div className="fidan-pair mt-5 grid grid-cols-2 gap-3 px-1">
-            <Polaroid
-              photo={photos.hatiraOrmaniTabela}
-              caption="Hatıra Ormanı"
-              pos="45% 50%"
-              rot={-3}
-              sizes="(min-width: 768px) 220px, 45vw"
-            />
-            <Polaroid
-              photo={photos.fidanDikimiBaskan}
-              caption="Fidan dikimi"
-              pos="66% 30%"
-              rot={3}
-              sizes="(min-width: 768px) 220px, 45vw"
-            />
-          </div>
-        </Card>
-      </Screen>
-
-      {/* 7 — Yapraklar: Genç İklim */}
-      <Screen name="iklim">
-        <Card tag="Yapraklar">
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-2.5 space-y-1.5">
             {iklim.items.slice(1).map((item) => (
               <li key={item} className="flex gap-2.5">
                 <span aria-hidden="true" className="mt-[6px] h-[9px] w-[9px] shrink-0 rounded-[0_60%_0_60%] bg-brand-green" />
-                <span className="text-balance text-[14.5px] leading-snug font-bold text-brand-blue md:text-[16px]">
+                <span className="text-balance text-[14px] leading-snug font-bold text-brand-blue md:text-[16px]">
                   {keepDates(item)}
                 </span>
               </li>
             ))}
           </ul>
-          <div className="fidan-pair mt-5 grid grid-cols-2 gap-3 px-1">
+          <div className="fidan-trio mt-4 grid grid-cols-3 gap-2.5 md:gap-4">
+            <Polaroid
+              photo={photos.hatiraOrmaniTabela}
+              caption="Hatıra Ormanı"
+              pos="45% 50%"
+              rot={-3}
+              compact
+              sizes="(min-width: 768px) 150px, 30vw"
+            />
             <Polaroid
               photo={photos.gencIklimPanel}
               caption="Genç İklim"
               pos="60% 40%"
               rot={2}
-              sizes="(min-width: 768px) 220px, 45vw"
+              compact
+              sizes="(min-width: 768px) 150px, 30vw"
             />
             <Polaroid
               photo={photos.fidanDikimiGencler}
               caption="Fidan dikimi"
               pos="50% 40%"
-              rot={-3}
-              sizes="(min-width: 768px) 220px, 45vw"
+              rot={-2}
+              compact
+              sizes="(min-width: 768px) 150px, 30vw"
             />
           </div>
         </Card>
       </Screen>
 
-      {/* 8 — Orman: Başkan'ın mesajı (silüet ağaçlar yanlardan gelir) */}
-      <Screen name="baskan">
-        <Card tag="Orman">
-          <figure className="mt-3">
-            <span aria-hidden="true" className="-mb-1 block h-7 font-display text-[3.2rem] leading-[0.9] font-black text-brand-green">
-              &ldquo;
-            </span>
-            <blockquote className={BODY}>{baskanMesaji.paragraphs[0]}</blockquote>
-            <figcaption className="mt-4 flex items-center gap-3">
-              <span className="relative size-12 shrink-0 overflow-hidden rounded-full border-[2.5px] border-brand-green bg-brand-mist">
-                <Image
-                  src={photos.baskanVeCumhurbaskani.src}
-                  alt={baskanMesaji.name}
-                  fill
-                  sizes="140px"
-                  className="scale-[2.6] object-cover"
-                  style={{ objectPosition: "33% 30%", transformOrigin: "33% 33%" }}
-                />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[15px] leading-tight font-black text-brand-blue">{baskanMesaji.name}</span>
-                <span className="block text-[12px] leading-snug font-bold text-brand-teal">{baskanMesaji.role}</span>
-              </span>
-            </figcaption>
-          </figure>
-        </Card>
-      </Screen>
-
-      {/* 9 — Orman: slogan, ortada. Fidan kahraman kalır; altında kapanış bloğu. */}
+      {/* 6 — Orman + slogan: fidan kahraman kalır, silüet ağaçlar yanlardan gelir. */}
       <Screen name="orman">
         <div
           data-fidan-card=""

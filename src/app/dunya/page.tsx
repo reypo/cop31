@@ -9,8 +9,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * Konsept A — "Antalya'dan Dünyaya". Sabit cobe küresi arkada; önde kayan
- * metin panelleri. Tek etkileşim dikey scroll. Kiosk modu: /dunya?auto=1
+ * Konsept A — "Antalya'dan Dünyaya". Sabit cobe küresi arkada; önde 8 tam
+ * ekran bölüm. Her kaydırma hareketi bir sonraki bölüme ~1 sn'lik geçişle
+ * gider; küre animasyonu bu geçişte oynar, bölümde sahne sabit durur.
+ * Tek etkileşim dikey scroll. Kiosk modu (bölüm bölüm): /dunya?auto=1
  */
 export default function DunyaPage() {
   return (

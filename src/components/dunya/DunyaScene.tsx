@@ -19,7 +19,9 @@ import {
   revealRank,
   type Etkinlik,
 } from "./iller";
+import { createStepper, type Durak, type Stepper } from "./adim";
 import {
+  BOLUM_SAYISI,
   BRAND,
   GL_COLORS,
   IDLE_SPEED,
@@ -39,20 +41,31 @@ import {
   type Vec3,
 } from "./sahne";
 
-type Anchor = { top: number; bottom: number };
 type Rect = { l: number; t: number; r: number; b: number };
+/** Ölçülmüş panel (sayfa koordinatı) + bölümü + o anki opaklığı. */
+type PanelInfo = Rect & { el: HTMLElement; sec: number; o: number };
+/** Küre katmanının pozu: ekran merkezine göre kayma (px) ve ölçek. */
+type Pose = { x: number; y: number; k: number };
 type Side = Etkinlik["side"] | "right";
 
 /** Etiket, yarı saydam panele bu kadar (px) yaklaşınca sönmeye başlar. */
 const LABEL_FADE_PX = 12;
+/**
+ * Bölüm içeriği ekranın altından en çok bu kadar (px) taşarsa bölüm sığmış
+ * sayılır (panelin 20 px'lik iç dolgusunun yarısı: metin/kart kesilmez).
+ */
+const FIT_TOLERANCE_PX = 10;
 
 const MASK = "radial-gradient(closest-side, #000 91%, transparent 100%)";
 const GLOBE_SIZE = "calc(min(100vw, 100vh) * 1.1)";
-/** Final kapak kutusu: mobilde ekran genişliği → fotoğraf dairesi 72vw, mavi daire 52vw. */
-const FINAL_BOX = "min(100vw, 64svh, 540px)";
+/** Final kapak kutusu: mobilde ekran genişliği (sağ kenar göstergesine pay bırakarak). */
+const FINAL_BOX = "min(calc(100vw - 28px), 64svh, 540px)";
 
-const KIOSK_MS = 60_000;
-const KIOSK_HOLD_MS = 3_000;
+/** Kiosk (?auto=1): her bölümde bekleme, bölüm geçişi ve uzun bölümde okuma hızı. */
+const KIOSK_DWELL_MS = 6_000;
+const KIOSK_STEP_MS = 1_200;
+const KIOSK_READ_PX_S = 70;
+const KIOSK_READ_HOLD_MS = 2_000;
 /** Kiosk: kullanıcı dokununca/kaydırınca akış durur; bu süre dokunulmazsa kaldığı yerden sürer. */
 const KIOSK_RESUME_MS = 30_000;
 /** Kahramanda boşta dönüş: son kaydırmadan sonra bu kadar sürer, sonra yavaşlayıp durur (pil). */
@@ -63,6 +76,8 @@ const INTRO_MS = 700;
 /** Kahraman motiflerinin scroll ile dönüşü (derece): mavi yaylar saat yönünde, kesik halka ters. */
 const MOTIF_TURN_BLUE = 22;
 const MOTIF_TURN_DASH = -14;
+/** Sağ kenar bölüm göstergesi: nokta çapı + aralık (px). */
+const DOT_STEP = 15;
 /** Antalya nabzı: 2 halka, 1,6 sn periyot. */
 const PULSE_MS = 1600;
 /** Nabız, son kaydırmadan bu kadar sonra sabit halkaya döner ve döngü uyur (pil). */
@@ -94,25 +109,27 @@ const FIN_ARCS = [
 ] as const;
 
 /**
- * Viewport ortasının (scroll konumu y ile) sahne koordinatına çevrilmesi.
- * k. panel ortadan geçerken s ∈ [k, k+0.5]; önceki boşlukta s ∈ [k-0.5, k].
+ * Scroll konumunu sahne koordinatına çevirir (bkz. sahne.ts başı): k. bölümün
+ * dinlenme bölgesinde t = k; k. bölgenin sonundan k+1'in başına dek t ∈ (k, k+1).
  */
-function stageAt(y: number, vh: number, anchors: readonly Anchor[]): number {
-  const n = anchors.length;
+function tAt(y: number, stops: readonly Durak[]): number {
+  const n = stops.length;
   if (n === 0) return 0;
-  const c = y + vh / 2;
-  for (let k = 0; k < n; k++) {
-    const a = anchors[k];
-    // Kahraman bölümü sayfanın en üstünde: ilerleme scroll 0'dan başlar.
-    const top = k === 0 ? Math.min(a.top + vh / 2, a.bottom - 1) : a.top;
-    if (c < top) {
-      if (k === 0) return 0;
-      const prev = anchors[k - 1].bottom;
-      return k - 0.5 + 0.5 * clamp01((c - prev) / Math.max(1, top - prev));
-    }
-    if (c <= a.bottom) return k + 0.5 * clamp01((c - top) / Math.max(1, a.bottom - top));
+  for (let i = 0; i < n - 1; i++) {
+    // Sınırlar kesirli (DPR), scrollY yuvarlanır: 1,5 px pay (adim.ts ile aynı).
+    const a = stops[i].end;
+    if (y <= a + 1.5) return i;
+    const b = stops[i + 1].start;
+    if (y < b - 1.5) return i + clamp01((y - a) / Math.max(1, b - a));
   }
-  return n - 0.5;
+  return n - 1;
+}
+
+/** Bölüm geçişinde panel opaklığı: giden panel erken söner, gelen geç belirir (küre görünsün). */
+function panelOpacity(sec: number, t: number): number {
+  const d = t - sec;
+  if (d >= 0) return 1 - smooth(map(d, 0.03, 0.28));
+  return smooth(map(d, -0.5, -0.12));
 }
 
 export default function DunyaScene({ children }: { children: ReactNode }) {
@@ -122,6 +139,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
   const contentRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
+  const poseRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const glRef = useRef<HTMLCanvasElement>(null);
   const ovRef = useRef<HTMLCanvasElement>(null);
@@ -141,10 +159,29 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
   const membersRef = useRef<HTMLSpanElement>(null);
   const ilRef = useRef<HTMLSpanElement>(null);
   const ilceRef = useRef<HTMLSpanElement>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const thumbRef = useRef<HTMLSpanElement>(null);
+
+  // Native snap bu rotada kapalı: hareketli modda kaydırmayı JS adımlama
+  // (adim.ts) yönetir. Reduced-motion'da adımlama yok ve serbest kaydırma:
+  // "y proximity" denendi, ama Chrome ekranın ~1/3'ü içindeki her konumu bölüm
+  // başına geri çektiği için yavaş kaydırma (100 px'lik tekerlek çentikleri,
+  // yavaş parmak sürüklemesi) ilk ekrandan hiç çıkamıyordu. Sahne yine en
+  // yakın bölümün son karesinde durur. Activity rotayı gizleyince/unmount'ta
+  // eski değer geri yüklenir, stil başka sayfaya sızmaz.
+  useEffect(() => {
+    const html = document.documentElement;
+    const prev = html.style.scrollSnapType;
+    html.style.scrollSnapType = "none";
+    return () => {
+      html.style.scrollSnapType = prev;
+    };
+  }, []);
 
   useEffect(() => {
     const content = contentRef.current;
     const layer = layerRef.current;
+    const poseEl = poseRef.current;
     const wrap = wrapRef.current;
     const glCanvas = glRef.current;
     const ov = ovRef.current;
@@ -164,10 +201,12 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const membersEl = membersRef.current;
     const ilEl = ilRef.current;
     const ilceEl = ilceRef.current;
+    const link = linkRef.current;
+    const thumb = thumbRef.current;
     if (
-      !content || !layer || !wrap || !glCanvas || !ov || !fallback || !rings || !motifs ||
+      !content || !layer || !poseEl || !wrap || !glCanvas || !ov || !fallback || !rings || !motifs ||
       !motifBlue || !motifDash || !finale || !finBox || !photo || !disc || !slogan ||
-      !caption || !finDash || !hud || !membersEl || !ilEl || !ilceEl
+      !caption || !finDash || !hud || !membersEl || !ilEl || !ilceEl || !link || !thumb
     ) {
       return;
     }
@@ -187,22 +226,21 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const mapSamples = narrow ? 14_000 : 36_000;
 
     /* ---------------- ölçüm ---------------- */
-    let anchors: Anchor[] = [];
-    // Yarı saydam metin panelleri (sayfa koordinatı): etiketler panelin altına
-    // girerken sönsün (arkadan "hayalet" yazı görünmesin).
-    let panels: Rect[] = [];
+    // Bölümlerin dinlenme bölgeleri (sayfa px): adımlama hedefleri ve t eşlemesi.
+    let stops: Durak[] = [];
+    // Yarı saydam metin panelleri (sayfa koordinatı): geçişte sönüp belirir;
+    // harita etiketleri panelin altına girerken söner (arkadan "hayalet" yazı olmasın).
+    let panels: PanelInfo[] = [];
     const panelsCv: Rect[] = [];
     let vh = window.innerHeight;
     let vw = document.documentElement.clientWidth;
-    let maxScroll = 1;
-    let sceneMax = 1;
     let size = Math.max(1, wrap.clientWidth);
-    // Küre kutusunun (kaydırmasız) viewport'taki sol/üst köşesi: katman flex ile ortalı.
-    let wrL = 0;
-    let wrT0 = 0;
-    // Kahramanda küre katmanı, başlık paneli ile alt ipucu arasına ortalanır.
-    let shiftMax = 0;
-    let shiftNow = 0;
+    // Küre pozları: kahraman (başlık ile ipucu arası) ve anlatı bölümleri
+    // (panelin üstündeki ya da solundaki sahne alanı). Poz, tuvalin ekrana
+    // izdüşümünü de belirler: ekran = merkez + poz + k · (tuval − boyut/2).
+    const heroPose: Pose = { x: 0, y: 0, k: 1 };
+    const stagePose: Pose = { x: 0, y: 0, k: 1 };
+    const pose: Pose = { x: 0, y: 0, k: 1 };
     // Tuvalin ekranda görünen kısmı (etiketleri içeride tutmak için), tuval koordinatında.
     const vis = { l: 0, t: 0, r: 1, b: 1 };
     let fontFamily = getComputedStyle(document.body).fontFamily || "sans-serif";
@@ -212,34 +250,65 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const measure = () => {
       vh = window.innerHeight;
       vw = document.documentElement.clientWidth;
-      maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
       const sy = window.scrollY;
-      anchors = Array.from(content.querySelectorAll<HTMLElement>("[data-stage]"))
+      const secs = Array.from(content.querySelectorAll<HTMLElement>("[data-stage]"))
         .sort((a, b) => Number(a.dataset.stage) - Number(b.dataset.stage))
         .map((el) => {
           const r = el.getBoundingClientRect();
-          return { top: r.top + sy, bottom: r.bottom + sy };
+          // İçeriğin (panel, ipucu, kapanış kutusu) altı; bölümün alt dolgusu hariç.
+          let contentBottom = r.top;
+          for (const c of Array.from(el.children)) {
+            const cr = c.getBoundingClientRect();
+            if (cr.height > 1) contentBottom = Math.max(contentBottom, cr.bottom);
+          }
+          return { top: r.top + sy, bottom: r.bottom + sy, content: contentBottom + sy };
         });
+      stops = secs.map((sec) => {
+        const start = Math.min(maxScroll, sec.top);
+        // Bölüm ekrandan yalnızca alt dolgusu kadar uzunsa (içerik sığıyor) "uzun"
+        // sayılmaz: aksi hâlde birkaç px'lik bölüm içi kaydırma, görünür hiçbir
+        // şey yapmayan "ölü" bir hareket olur (ör. 1280×800'de 807 px'lik bölüm).
+        const fits = sec.content - (sec.top + vh) <= FIT_TOLERANCE_PX;
+        return { start, end: fits ? start : Math.min(maxScroll, Math.max(start, sec.bottom - vh)) };
+      });
       panels = Array.from(content.querySelectorAll<HTMLElement>("[data-panel]")).map((el) => {
         const r = el.getBoundingClientRect();
-        return { l: r.left, t: r.top + sy, r: r.right, b: r.bottom + sy };
+        const sec = Number(el.closest<HTMLElement>("[data-stage]")?.dataset.stage ?? -1);
+        return { el, sec, o: 1, l: r.left, t: r.top + sy, r: r.right, b: r.bottom + sy };
       });
-      // Sahne ilerlemesi p: kapanış bloğu hariç (son aşamanın altı ekranın altına gelince 1).
-      const end = anchors.length ? anchors[anchors.length - 1].bottom : maxScroll + vh;
-      sceneMax = Math.max(1, Math.min(maxScroll, end - vh));
       size = Math.max(1, wrap.clientWidth);
-      wrL = (vw - size) / 2;
-      wrT0 = (vh - size) / 2;
 
-      const heroPanel = content.querySelector<HTMLElement>('[data-stage="0"] [data-panel]');
+      // Kahraman: küre, başlık paneli ile alt ipucu arasına ortalanır.
+      const heroPanel = panels.find((p) => p.sec === 0);
+      heroPose.x = 0;
+      heroPose.k = 1;
+      heroPose.y = 0;
       if (heroPanel && heroHint) {
-        const pb = heroPanel.getBoundingClientRect().bottom + sy;
         const ht = heroHint.getBoundingClientRect().top + sy;
         // Motif halkası (en dış yay ≈ %43.5) ekranın altından taşmasın (masaüstü/yatay ekran).
         const room = vh / 2 - 0.435 * size - 14;
-        shiftMax = Math.max(0, Math.min(0.14 * vh, room, (pb + ht) / 2 - vh / 2));
-      } else {
-        shiftMax = 0;
+        heroPose.y = Math.max(0, Math.min(0.14 * vh, room, (heroPanel.b + ht) / 2 - vh / 2));
+      }
+
+      // Anlatı bölümleri: sahne alanı = panelin üstü (dar ekran) ya da solu
+      // (geniş yatay ekran; CSS paneli sağa alır). En kısıtlayıcı panel esas.
+      const topInset = link.getBoundingClientRect().bottom + 8;
+      let minTop = Infinity;
+      let minLeft = Infinity;
+      for (const p of panels) {
+        if (p.sec < 1 || p.sec > 5 || !secs[p.sec]) continue;
+        minTop = Math.min(minTop, p.t - secs[p.sec].top);
+        minLeft = Math.min(minLeft, p.l);
+      }
+      if (Number.isFinite(minTop)) {
+        const side = minLeft > vw * 0.42;
+        const R = side ? minLeft - 24 : vw;
+        const T = side ? 0 : topInset;
+        const B = side ? vh : minTop - 10;
+        stagePose.k = Math.max(0.45, Math.min(1, R / (0.92 * size), (B - T) / (0.86 * size)));
+        stagePose.x = R / 2 - vw / 2;
+        stagePose.y = (T + B) / 2 - vh / 2;
       }
 
       const w = Math.round(size * ovDpr);
@@ -252,29 +321,28 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     };
     measure();
 
-    /** Final: fotoğraf dairesi, kürenin yerinden ve boyutundan kendi yerine gelir. */
+    /** Final: fotoğraf dairesi, kürenin (anlatı pozundaki) yerinden ve boyutundan kendi yerine gelir. */
     const computeMorph = () => {
       const b = finBox.getBoundingClientRect();
       const W = b.width;
       if (W <= 0) return;
       const pcx = b.left + (W * PH.cx) / 100;
       const pcy = b.top + (W * PH.cy) / 100;
-      morph.dx = vw / 2 - pcx;
-      morph.dy = vh / 2 - pcy;
+      morph.dx = vw / 2 + stagePose.x - pcx;
+      morph.dy = vh / 2 + stagePose.y - pcy;
       // Fotoğraftaki dünya, dairenin ~%54'ü: başlangıçta WebGL küresiyle örtüşsün (üst sınır 1.9×).
-      const globeR = 0.4 * SCALE_WORLD * size;
-      morph.s0 = Math.min(1.9, Math.max(1, globeR / (0.54 * ((W * PH.r) / 100))));
+      const globeR = 0.4 * SCALE_WORLD * size * stagePose.k;
+      morph.s0 = Math.min(1.9, Math.max(0.6, globeR / (0.54 * ((W * PH.r) / 100))));
       morph.dirty = false;
     };
 
     /* ---------------- sahne durumu ---------------- */
-    let ySmooth = window.scrollY;
     let idle = 0;
-    const sOf = (y: number) => {
-      const raw = stageAt(y, vh, anchors);
+    const tOf = (y: number) => {
+      const raw = tAt(y, stops);
       return reduced ? quantize(raw) : raw;
     };
-    let scene: Scene = sceneAt(sOf(ySmooth), clamp01(ySmooth / sceneMax), idle, reduced);
+    let scene: Scene = sceneAt(tOf(window.scrollY), idle, reduced);
     let drawn: Scene | null = null; // GL'in bir sonraki/son karesinin sahnesi (onRender'da güncellenir)
 
     /* ---------------- overlay (2D) ---------------- */
@@ -706,24 +774,28 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       ctx.setTransform(ovDpr, 0, 0, ovDpr, 0, 0);
       ctx.globalAlpha = 1;
       ctx.clearRect(0, 0, size, size);
-      // Tuvalin bu karedeki üst kenarı (kahraman kaydırması dahil) ve görünen kısmı.
-      const wrT = wrT0 + shiftNow;
-      vis.l = Math.max(0, -wrL) + 8;
-      vis.r = Math.min(size, vw - wrL) - 8;
-      vis.t = Math.max(0, -wrT) + 8;
-      vis.b = Math.min(size, vh - wrT) - 8;
-      // Ekrandaki panellerin tuval koordinatları (bu kare için).
+      // Tuvalin (0,0) köşesinin ekrandaki yeri (poz: kayma + ölçek) ve görünen kısmı.
+      const k = pose.k;
+      const ox = vw / 2 + pose.x - (k * size) / 2;
+      const oy = vh / 2 + pose.y - (k * size) / 2;
+      vis.l = Math.max(0, -ox / k) + 8;
+      vis.r = Math.min(size, (vw - ox) / k) - 8;
+      vis.t = Math.max(0, -oy / k) + 8;
+      vis.b = Math.min(size, (vh - oy) / k) - 8;
+      // Ekrandaki (sönmemiş) panellerin tuval koordinatları (bu kare için).
       const sy = window.scrollY;
       panelsCv.length = 0;
       for (const p of panels) {
-        const t = p.t - sy - wrT;
-        const b = p.b - sy - wrT;
+        if (p.o < 0.35) continue;
+        const t = (p.t - sy - oy) / k;
+        const b = (p.b - sy - oy) / k;
         if (b < -LABEL_FADE_PX || t > size + LABEL_FADE_PX) continue;
-        panelsCv.push({ l: p.l - wrL, t, r: p.r - wrL, b });
+        panelsCv.push({ l: (p.l - ox) / k, t, r: (p.r - ox) / k, b });
       }
       const P = makeProjector(sc.cam, size);
       const u = size / 430;
-      const tu = Math.min(u, 1.35);
+      // Etiket boyu ekranda sabit kalsın (küre katmanı k ile ölçeklenir).
+      const tu = Math.min(u, 1.35) / k;
 
       // Kahraman: Antalya etiketi (Antalya bize dönükken)
       if (sc.hero > 0.01) {
@@ -804,36 +876,69 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       fallback.style.display = "block";
     }
 
-    /* ---------------- kiosk (?auto=1) ---------------- */
-    // 60 sn'de baştan sona, sonda 3 sn bekle, başa dön, sonsuz döngü. Kullanıcı
-    // dokunur/kaydırırsa akış durur; 30 sn dokunulmazsa kaldığı yerden sürer.
+    /* ---------------- adımlama + kiosk (?auto=1) ---------------- */
+    // Hareket tercihi varsa adımlama yok (native proximity snap, sahne son karede).
+    const stepper: Stepper | null = reduced
+      ? null
+      : createStepper({ stops: () => stops, viewport: () => vh, wake: () => wake() });
+
+    // Kiosk: bölüm bölüm; her bölümde KIOSK_DWELL_MS bekler, KIOSK_STEP_MS'de
+    // geçer; uzun bölümde okuma hızında sonuna kayar. Sonda başa döner.
+    // Kullanıcı dokunur/kaydırırsa akış durur; 30 sn dokunulmazsa kaldığı yerden sürer.
     const kiosk = new URLSearchParams(window.location.search).get("auto") === "1";
-    let kPhase: "run" | "hold" = "run";
-    let kPos = window.scrollY;
-    let kResync = true;
-    let kHoldUntil = 0;
-    let kPauseUntil = 0;
     let kTimer = 0;
-    let snap = false;
+    let kPauseUntil = 0;
+    let alive = true;
+    const kSchedule = (ms: number) => {
+      window.clearTimeout(kTimer);
+      kTimer = window.setTimeout(kRun, Math.max(0, ms));
+    };
+    const kRun = () => {
+      if (!alive) return;
+      const now = performance.now();
+      if (document.hidden) return kSchedule(1000);
+      if (now < kPauseUntil) return kSchedule(kPauseUntil - now + 50);
+      if (stepper?.busy()) return kSchedule(250);
+      const y = window.scrollY;
+      const i = Math.round(tAt(y, stops));
+      const st = stops[i];
+      if (!st) return kSchedule(KIOSK_DWELL_MS);
+      if (st.end - st.start > 2 && y < st.end - 1) {
+        const dur = ((st.end - y) / KIOSK_READ_PX_S) * 1000;
+        if (stepper) stepper.glideTo(st.end, dur);
+        else window.scrollTo(0, st.end);
+        return kSchedule((stepper ? dur : 0) + KIOSK_READ_HOLD_MS);
+      }
+      if (i >= stops.length - 1) {
+        // Başa dön: küre katmanı yükleniş geçişiyle yeniden belirir.
+        window.scrollTo(0, 0);
+        t0 = now;
+        wake();
+        return kSchedule(KIOSK_DWELL_MS);
+      }
+      if (stepper) stepper.goTo(i + 1, KIOSK_STEP_MS);
+      else window.scrollTo(0, stops[i + 1].start);
+      kSchedule((stepper ? KIOSK_STEP_MS : 0) + KIOSK_DWELL_MS);
+    };
     const onUser = () => {
       kPauseUntil = performance.now() + KIOSK_RESUME_MS;
-      kPhase = "run";
-      kResync = true;
-      window.clearTimeout(kTimer);
-      kTimer = window.setTimeout(() => wake(), KIOSK_RESUME_MS + 50);
+      kSchedule(KIOSK_RESUME_MS + 50);
     };
     if (kiosk) {
       window.addEventListener("wheel", onUser, { passive: true });
       window.addEventListener("touchstart", onUser, { passive: true });
       window.addEventListener("pointerdown", onUser, { passive: true });
       window.addEventListener("keydown", onUser);
+      kSchedule(KIOSK_DWELL_MS);
     }
 
     /* ---------------- DOM güncellemeleri ---------------- */
     const last = {
       hint: -1,
       layer: -1,
-      shift: -1,
+      pose: "",
+      hudX: NaN,
+      thumb: -1,
       globe: -1,
       rings: -1,
       motifs: -1,
@@ -853,10 +958,10 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       el.style.visibility = v <= 0.001 ? "hidden" : "visible";
     };
 
-    const applyDom = (sc: Scene, s: number, sRaw: number, intro: number) => {
-      // "Aşağı kaydırın" ipucu kaydırma başlayınca söner (yukarı kayıp sayaçla çakışmasın).
+    const applyDom = (sc: Scene, t: number, tRaw: number, intro: number) => {
+      // "Aşağı kaydırın" ipucu ilk geçişin başında söner.
       if (heroHint) {
-        const hintO = reduced ? (sRaw > 0.3 ? 0 : 1) : 1 - smooth(map(s, 0.05, 0.28));
+        const hintO = reduced ? (tRaw > 0.3 ? 0 : 1) : 1 - smooth(map(t, 0.02, 0.2));
         if (Math.abs(hintO - last.hint) > 1e-3) {
           const wasHidden = last.hint <= 0.001;
           last.hint = hintO;
@@ -869,17 +974,38 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           }
         }
       }
-      // Küre katmanı: yükleniş + kahramanda aşağı kayma (yalnızca transform/opacity).
+      // Küre katmanı: yükleniş (opaklık) + poz (kahraman ↔ anlatı; yalnızca transform).
       if (Math.abs(intro - last.layer) > 1e-3) {
         last.layer = intro;
         layer.style.opacity = intro.toFixed(3);
       }
-      const shift = Math.round(shiftMax * sc.heroShift * 10) / 10;
-      if (shift !== last.shift) {
-        last.shift = shift;
-        layer.style.transform = shift > 0 ? `translate3d(0,${shift}px,0)` : "";
+      const h = sc.heroShift;
+      pose.x = stagePose.x + (heroPose.x - stagePose.x) * h;
+      pose.y = stagePose.y + (heroPose.y - stagePose.y) * h;
+      pose.k = stagePose.k + (heroPose.k - stagePose.k) * h;
+      const poseKey = `${pose.x.toFixed(1)}px,${pose.y.toFixed(1)}px,0) scale(${pose.k.toFixed(4)}`;
+      if (poseKey !== last.pose) {
+        last.pose = poseKey;
+        poseEl.style.transform = `translate3d(${poseKey})`;
       }
-      shiftNow = shift;
+
+      // Paneller: giden erken söner, gelen geç belirir (reduced-motion: hep görünür).
+      for (const p of panels) {
+        const o = reduced ? 1 : panelOpacity(p.sec, t);
+        if (Math.abs(o - p.o) <= 1e-3) continue;
+        const wasHidden = p.o <= 0.001;
+        p.o = o;
+        p.el.style.opacity = o >= 0.999 ? "" : o.toFixed(3);
+        const hidden = o <= 0.001;
+        if (hidden !== wasHidden) p.el.style.visibility = hidden ? "hidden" : "";
+      }
+
+      // Sağ kenar bölüm göstergesi (yalnızca gösterge; tıklanmaz).
+      const thumbY = t * DOT_STEP;
+      if (Math.abs(thumbY - last.thumb) > 0.05) {
+        last.thumb = thumbY;
+        thumb.style.transform = `translate3d(0,${thumbY.toFixed(2)}px,0)`;
+      }
 
       if (Math.abs(sc.globe - last.globe) > 1e-3) {
         last.globe = sc.globe;
@@ -901,15 +1027,20 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         motifDash.style.transform = `rotate(${(sc.motifTurn * MOTIF_TURN_DASH).toFixed(2)}deg)`;
       }
 
-      // HUD sayaç. Reduced-motion'da son değerler; Türkiye boşluğunda görünür,
-      // Biz Kimiz paneli yukarı çıkıp HUD'un altına girmeden gizlenir (ham s ile).
-      const hudO = reduced ? (sRaw >= 0.75 && sRaw < 1.12 ? 1 : 0) : sc.hud;
-      const c = reduced ? 1 : sc.counter;
+      // HUD sayaç (Biz kimiz): geçişte 0 → 1.000.000+, bölümde tam değerde durur.
+      const hudO = sc.hud;
+      const c = sc.counter;
       if (Math.abs(hudO - last.hud) > 1e-3) {
         last.hud = hudO;
         setOpacity(hud, hudO);
       }
       if (hudO > 0) {
+        // Sayaç kürenin üstünde ortalı kalsın (geniş ekranda küre solda).
+        const hx = Math.round(pose.x);
+        if (hx !== last.hudX) {
+          last.hudX = hx;
+          hud.style.transform = hx !== 0 ? `translate3d(${hx}px,0,0)` : "";
+        }
         const members = `${Math.round(facts.members * c).toLocaleString("tr-TR")}${c >= 1 ? "+" : ""}`;
         const il = String(Math.floor(facts.provinces * c));
         const ilce = String(Math.round(facts.districts * c));
@@ -920,7 +1051,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
 
       // Final: küre söner, kapak (fotoğraf dairesi + slogan dairesi + yaylar) belirir.
       // Katman dünya aşamasında önceden açılır (fotoğraf zamanında yüklensin).
-      const show = s > 4.3 || sc.finale > 0;
+      const show = t > 4.2 || sc.finale > 0;
       if (show !== last.show) {
         last.show = show;
         finale.style.display = show ? "flex" : "none";
@@ -972,14 +1103,16 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     };
 
     /* ---------------- ana döngü ---------------- */
-    // İsteğe bağlı rAF: scroll/resize (passive) döngüyü uyandırır; sahne
-    // oturunca (lerp bitti, boşta dönüş/nabız/kiosk yok, GL durdu) döngü uyur.
+    // İsteğe bağlı rAF: scroll/resize (passive) ve adımlama döngüyü uyandırır;
+    // sahne oturunca (adım bitti, boşta dönüş/nabız yok, GL durdu) döngü uyur.
+    // Adımlama kaydırmayı bu döngüde ilerletir: sahne aynı karede yeni konumu okur.
     // Küre görünmezken (final/kapanış) ve sekme arka plandayken GL çalışmaz.
     let raf = 0;
     let prev = 0;
     let quiet = 0;
     let lastY = -1;
-    const t0 = performance.now();
+    let lastT = -1;
+    let t0 = performance.now();
     let lastActivity = t0;
 
     const tick = (now: number) => {
@@ -992,46 +1125,14 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       const dt = Math.min(0.1, Math.max(0, rawDt));
       prev = now;
 
-      let kioskOn = false;
-      if (kiosk && now >= kPauseUntil) {
-        kioskOn = true;
-        if (kPhase === "run") {
-          if (kResync) {
-            kPos = window.scrollY;
-            kResync = false;
-          }
-          kPos = Math.min(maxScroll, kPos + (Math.min(rawDt, 0.25) * 1000 * maxScroll) / KIOSK_MS);
-          window.scrollTo(0, kPos);
-          if (kPos >= maxScroll - 0.5) {
-            kPhase = "hold";
-            kHoldUntil = now + KIOSK_HOLD_MS;
-          }
-        } else if (now >= kHoldUntil) {
-          window.scrollTo(0, 0);
-          kPos = 0;
-          kPhase = "run";
-          snap = true;
-          lastActivity = now;
-        }
-      }
-
+      const stepping = stepper ? stepper.frame(now) || stepper.busy() : false;
       const y = window.scrollY;
-      const prevY = ySmooth;
-      if (reduced || snap) {
-        ySmooth = y;
-        snap = false;
-      } else {
-        // ~0.14 / kare (60 fps'e göre), kare hızından bağımsız
-        ySmooth += (y - ySmooth) * (1 - Math.pow(0.86, dt * 60));
-        if (Math.abs(y - ySmooth) < 0.5) ySmooth = y;
-      }
-      const sRaw = stageAt(ySmooth, vh, anchors);
-      const s = reduced ? quantize(stageAt(y, vh, anchors)) : sRaw;
-      const p = clamp01(ySmooth / sceneMax);
+      const tRaw = tAt(y, stops);
+      const t = reduced ? quantize(tRaw) : tRaw;
 
       // Kahramanda boşta dönüş: son etkinlikten IDLE_SPIN_MS sonra yavaşlayıp durur.
       let idling = false;
-      if (!reduced && s <= 0.1) {
+      if (!reduced && t <= 0.1) {
         const since = now - lastActivity;
         const k = since < IDLE_SPIN_MS ? 1 : 1 - smooth((since - IDLE_SPIN_MS) / IDLE_EASE_MS);
         if (k > 0) {
@@ -1041,13 +1142,13 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       }
       const intro = reduced ? 1 : smooth((now - t0) / INTRO_MS);
 
-      scene = sceneAt(s, p, idle, reduced);
-      applyDom(scene, s, reduced ? stageAt(y, vh, anchors) : sRaw, intro);
+      scene = sceneAt(t, idle, reduced);
+      applyDom(scene, t, tRaw, intro);
 
-      // GL'i yalnızca kamera/sahne değişirken çalıştır (pil). Nabız tek başına
-      // yalnızca 2D overlay'i yeniden çizer.
+      // GL'i yalnızca kamera/sahne değişirken çalıştır (pil). Bölüm içinde
+      // kaydırma (t sabit) ve nabız yalnızca 2D overlay'i yeniden çizer.
       const visible = scene.globe > 0.001;
-      const changing = ySmooth !== prevY || idling || dirty > 0;
+      const changing = t !== lastT || idling || dirty > 0;
       if (dirty > 0) dirty--;
       const wantGL = visible && changing;
       const live = now - lastActivity < PULSE_LIVE_MS;
@@ -1064,20 +1165,21 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
           glRunning = false;
           globe.toggle(false);
         }
-        if (!glRunning && (pulsing || pulseEnded || (reduced && y !== lastY && visible))) {
+        if (!glRunning && (pulsing || pulseEnded || (y !== lastY && visible))) {
           // Kamera sabit: GL'in son karesiyle aynı sahnede yalnızca 2D katman
-          // (nabız; reduced-motion'da panel altına giren etiketlerin sönmesi).
+          // (nabız; panel altına giren etiketlerin sönmesi).
           drawOverlay(drawn ?? scene, now);
         }
-      } else if (wantGL || pulsing || quiet < 3) {
+      } else if (wantGL || pulsing || quiet < 3 || y !== lastY) {
         // WebGL yok: overlay yine çizilir, küre CSS diskiyle temsil edilir.
         fallback.style.transform = `scale(${Math.min(scene.cam.scale, 3).toFixed(3)})`;
         drawOverlay(scene, now);
       }
       lastY = y;
+      lastT = t;
 
-      const settling = dirty > 0 || (!reduced && ySmooth !== y) || intro < 1;
-      const busy = kioskOn || settling || wantGL || glRunning || pulsing || (!globe && quiet < 3);
+      const settling = dirty > 0 || intro < 1;
+      const busy = stepping || settling || wantGL || glRunning || pulsing || (!globe && quiet < 3);
       if (busy) raf = requestAnimationFrame(tick);
       else prev = 0;
     };
@@ -1096,6 +1198,8 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     const onResize = () => {
       measure();
+      // Ölçü değişti (döndürme, yazı tipi, görsel): bölüm arasında kalındıysa yerleş.
+      stepper?.remeasured();
       wake();
     };
     window.addEventListener("resize", onResize, { passive: true });
@@ -1118,7 +1222,6 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onResize);
     ro?.observe(content);
     ro?.observe(wrap);
-    let alive = true;
     document.fonts?.ready
       .then(() => {
         if (!alive) return;
@@ -1133,6 +1236,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       if (raf > 0) cancelAnimationFrame(raf);
       raf = -1; // geç gelen scroll/resize olayları döngüyü yeniden başlatmasın
       window.clearTimeout(kTimer);
+      stepper?.destroy();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
@@ -1161,9 +1265,15 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
       <div
         ref={layerRef}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         style={{ opacity: reduced ? 1 : 0 }}
       >
+        {/* Poz kabı: kahramanda ortada, anlatı bölümlerinde panelin üstünde/solunda */}
+        <div
+          ref={poseRef}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ willChange: "transform" }}
+        >
         {/* Yakın planda "lomboz" çerçevesi (Türkiye/Antalya aşamaları) */}
         <div
           ref={ringsRef}
@@ -1222,6 +1332,7 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
               clipPath="url(#dunya-motif-sol)"
             />
           </svg>
+        </div>
         </div>
       </div>
 
@@ -1358,7 +1469,24 @@ export default function DunyaScene({ children }: { children: ReactNode }) {
         </div>
       </div>
 
+      {/* Bölüm göstergesi: sağ kenarda ince noktalar (yalnızca gösterge, tıklanmaz) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-1/2 right-[max(5px,env(safe-area-inset-right))] z-40 -translate-y-1/2"
+      >
+        <div className="relative flex flex-col items-center" style={{ gap: DOT_STEP - 5 }}>
+          {Array.from({ length: BOLUM_SAYISI }, (_, i) => (
+            <span key={i} className="size-[5px] rounded-full bg-brand-navy/25" />
+          ))}
+          <span
+            ref={thumbRef}
+            className="absolute top-[-5px] left-1/2 -ml-[3.5px] h-[15px] w-[7px] rounded-full bg-brand-blue shadow-[0_0_0_2px_rgb(255_255_255/0.9)]"
+          />
+        </div>
+      </div>
+
       <Link
+        ref={linkRef}
         href="/"
         className="fixed top-[max(12px,env(safe-area-inset-top))] left-3 z-50 rounded-full bg-white/95 px-3 py-1.5 text-[13px] font-bold text-brand-navy shadow-[0_4px_14px_-6px_rgb(27_79_156/0.4)] ring-1 ring-brand-blue/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
       >

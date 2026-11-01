@@ -1,17 +1,17 @@
 /**
  * Konsept A sahne zaman çizelgesi ve küre izdüşümü.
  *
- * "s" (sahne koordinatı) DunyaScene'de scroll konumundan DOM'a bağlı
- * türetilir: k. metin paneli ekran ortasından geçerken s ∈ [k, k+0.5],
- * k. panelden önceki boşluk (~55vh) geçerken s ∈ [k-0.5, k]. Küre
- * "gösterileri" bu boşluklarda olur; panel geçerken küre o aşamada durur.
- * Böylece panel yükseklikleri değişse de küre hareketi panelle senkron kalır.
+ * Sayfa bölüm bölüm ilerler (DunyaScene + adim.ts). Sahne koordinatı
+ * "t" = bölüm index'i + bölümler arası geçiş ilerlemesi:
+ *   - k. bölüm "dinlenme" hâlindeyken (bölümün üstü viewport üstünde ya da
+ *     uzun bölümün içinde kaydırılırken) t = k ve sahne SABİTTİR;
+ *   - k → k+1 geçişinde (k. bölümün altı viewport altından k+1'in üstü
+ *     viewport üstüne gelene dek, tam bir ekran boyu) t ∈ (k, k+1).
+ * Her animasyon vuruşu bu geçiş aralıklarından birinde oynar ve tamsayı
+ * t'de biter: bir bölümde durulduğunda yarım kalmış hareket olmaz.
  *
- * "p" (sahne ilerlemesi, 0–1) kapanış bloğu hariç sayfa ilerlemesidir; final
- * bu değere bağlıdır: küre → kapak fotoğrafı 0.88–0.94, ardından mavi slogan
- * dairesi 0.925–0.96 ve slogan 0.935–0.975 (fotoğraf yerine oturduktan sonra).
- * Harita etiketleri yarı saydam panellerin altına girerken DunyaScene'de
- * ekran uzayında (panel dikdörtgenine uzaklıkla) söndürülür.
+ * Bölümler: 0 kahraman · 1 Biz kimiz · 2 İklim · 3 Buluşmalar/Şölen ·
+ * 4 Antalya · 5 Dünya · 6 Kapak finali · 7 Kapanış bloğu.
  *
  * İzdüşüm cobe 0.6.4 shader'ından türetildi:
  *   dünya konumu  v = [-cos(lat)cos(lng-π), sin(lat), cos(lat)sin(lng-π)]
@@ -117,9 +117,10 @@ export const GL_COLORS = {
 /**
  * Antalya aşamasının odağı: Antalya'nın kendisi değil, Antalya ile Türkiye
  * merkezi arasında, biraz güneyde. Böylece Türkiye'nin tamamı diskte kalır
- * (şekli okunur), Antalya ekran ortasının biraz üstünde ve solunda durur.
+ * (şekli okunur), Antalya diskin ortasına yakın, biraz solunda durur
+ * (küre panelin üstündeki sahne alanında tamamen görünür).
  */
-const ANT_FOCUS = { lat: 34.7, lng: 33.6 } as const;
+const ANT_FOCUS = { lat: 36.4, lng: 33.2 } as const;
 
 const PHI_TR = focusPhi(TURKIYE_MERKEZ.lng);
 const THETA_TR = focusTheta(TURKIYE_MERKEZ.lat);
@@ -167,7 +168,7 @@ export type Scene = {
   motifs: number;
   /** Motiflerin scroll'a bağlı yavaş dönüşü (0–1; derece DunyaScene'de). */
   motifTurn: number;
-  /** Kahramanda küre katmanının aşağı kayması (0–1; piksel DunyaScene'de ölçülür). */
+  /** Kahraman pozundan bölüm pozuna geçiş (1 = kahraman; katman konumu DunyaScene'de ölçülür). */
   heroShift: number;
   /** Türkiye katmanı genel opaklığı. */
   tr: number;
@@ -184,7 +185,7 @@ export type Scene = {
   /** Antalya aşaması (0–1): ilçeler gizlenir, il noktaları küçülür ve soluklaşır. */
   dim: number;
   antalya: number;
-  /** Antalya nabzı canlı mı (işaretçi panelin altına girmeden önce). */
+  /** Antalya nabzı canlı mı (Antalya bölümü ve ona geçiş). */
   pulse: boolean;
   /** Dünya katmanı (yaylar) opaklığı. */
   world: number;
@@ -194,7 +195,7 @@ export type Scene = {
   allCapitals: boolean;
   /** WebGL küre katmanı opaklığı (finalde söner). */
   globe: number;
-  /** Final: küre → kapak fotoğrafı geçişi (0–1; p 0.88–0.94). */
+  /** Final: küre → kapak fotoğrafı geçişi (0–1; t 5.0–5.55). */
   finale: number;
   /** Final: sol alttaki lacivert→mavi daire. */
   disc: number;
@@ -207,34 +208,35 @@ export type Scene = {
   porthole: number;
 };
 
+/** Bölüm sayısı (kapanış bloğu dahil). */
+export const BOLUM_SAYISI = 8;
+
 /**
- * Reduced-motion: s'yi bölümün sabit karesine yuvarlar. Kesme noktası
- * boşluğun ortası (k + 0.75): önceki panel ekrandan çıkmış, sonraki henüz
- * girmemişken sahne değişir; panel ekrandayken arkadaki sahne hep kendi aşamasıdır.
+ * Reduced-motion: sahne her zaman bir bölümün dinlenme karesindedir; kesme
+ * noktası geçişin ortası (iki panel de ekranın ortasından uzaktayken).
  */
-export function quantize(s: number): number {
-  const k = Math.max(0, Math.min(6, Math.floor(s + 0.25)));
-  return k === 0 ? 0 : k + 0.25;
+export function quantize(t: number): number {
+  return Math.max(0, Math.min(BOLUM_SAYISI - 1, Math.round(t)));
 }
 
 /**
- * Sahne durumu. `s` sahne koordinatı, `p` sahne ilerlemesi (0–1, kapanış
- * bloğu hariç). `idle` kahraman ekranındaki boşta dönüş açısı (rad);
- * reduced-motion'da 0 verilir.
+ * Sahne durumu. `t` sahne koordinatı (bkz. dosya başı), `idle` kahraman
+ * ekranındaki boşta dönüş açısı (rad); reduced-motion'da 0 verilir.
+ * Tüm aralıklar [k, k+1] geçişlerinin içindedir ve tamsayı t'de tamamlanır.
  */
-export function sceneAt(s: number, p: number, idle: number, reduced: boolean): Scene {
-  // Kahraman → Türkiye
-  const rot0 = smooth(map(s, 0.08, 0.52));
-  const zoomTR = smooth(map(s, 0.46, 0.76));
-  // Türkiye → Antalya
-  const toAnt = smooth(map(s, 3.55, 3.86));
-  // Antalya → Dünya
-  const out = smooth(map(s, 4.5, 4.8));
-  const rot = reduced ? 0 : smooth(map(s, 4.62, 5.7));
+export function sceneAt(t: number, idle: number, reduced: boolean): Scene {
+  // 0 → 1: kahraman → Türkiye (dönüş, yakınlaşma, iller, sayaç)
+  const rot0 = smooth(map(t, 0.0, 0.62));
+  const zoomTR = smooth(map(t, 0.28, 0.86));
+  // 3 → 4: Türkiye → Antalya
+  const toAnt = smooth(map(t, 3.1, 3.8));
+  // 4 → 5: Antalya → Dünya (geri çekilme + tam tur, başkentler)
+  const out = smooth(map(t, 4.0, 4.42));
+  const rot = reduced ? (t >= 4.5 ? 1 : 0) : smooth(map(t, 4.14, 4.97));
 
   let phi: number;
   let theta: number;
-  if (s < 4.5) {
+  if (t < 4) {
     const heroOff = (1 - rot0) * wrapPi(HERO_OFFSET - idle);
     phi = lerp(PHI_TR + heroOff, PHI_ANT, toAnt);
     theta = lerp(lerp(THETA_HERO, THETA_TR, rot0), THETA_ANT, toAnt);
@@ -252,29 +254,31 @@ export function sceneAt(s: number, p: number, idle: number, reduced: boolean): S
   // Yakınlaşınca kara noktaları çok büyür/bulanıklaşır: soluklaştır, il katmanı öne çıksın.
   const mapBrightness = lerp(0.82, 0.16, zoomness);
 
-  const tr = map(s, 0.5, 0.6) * (1 - map(s, 4.5, 4.62));
-  const provinces = 81 * map(s, 0.56, 0.92);
-  const green = 81 * map(s, 1.55, 1.9);
-  const leaf = map(s, 1.6, 1.85) * (1 - map(s, 2.5, 2.6));
-  const uskudar = map(s, 1.74, 1.86) * (1 - map(s, 2.5, 2.58));
-  const events = 5 * map(s, 2.6, 2.95);
-  const eventsAlpha = map(s, 2.56, 2.62) * (1 - map(s, 3.5, 3.6));
-  const dim = smooth(map(s, 3.55, 3.8));
-  const antalya = map(s, 3.7, 3.86) * (1 - map(s, 4.5, 4.58));
-  const world = map(s, 4.58, 4.72);
-  const hero = 1 - map(s, 0.45, 0.55);
+  const tr = map(t, 0.44, 0.58) * (1 - map(t, 4.0, 4.12));
+  const provinces = 81 * map(t, 0.48, 0.97);
+  // 1 → 2: iller yeşile döner, yaprak olur; Üsküdar Hatıra Ormanı
+  const green = 81 * map(t, 1.25, 1.82);
+  const leaf = map(t, 1.38, 1.88) * (1 - map(t, 2.12, 2.32));
+  const uskudar = map(t, 1.72, 1.94) * (1 - map(t, 2.08, 2.26));
+  // 2 → 3: buluşma/şölen izi (Ankara → … → Kocaeli)
+  const events = 5 * map(t, 2.34, 2.96);
+  const eventsAlpha = map(t, 2.28, 2.36) * (1 - map(t, 3.04, 3.2));
+  const dim = smooth(map(t, 3.1, 3.7));
+  const antalya = map(t, 3.55, 3.86) * (1 - map(t, 4.0, 4.1));
+  const world = map(t, 4.1, 4.24);
+  const hero = 1 - map(t, 0.0, 0.24);
 
-  // Final (p'ye bağlı). Reduced-motion: geçişsiz, tek eşik.
-  const fin = reduced ? (p >= 0.9 ? 1 : 0) : map(p, 0.88, 0.94);
+  // 5 → 6: küre → kapak fotoğrafı, ardından slogan dairesi ve yaylar.
+  const fin = map(t, 5.0, 5.55);
 
   return {
     cam: { phi, theta, scale },
     mapBrightness,
-    markerColor: s < 3 ? GL_COLORS.orange : GL_COLORS.green,
+    markerColor: t < 2.5 ? GL_COLORS.orange : GL_COLORS.green,
     hero,
-    motifs: 1 - smooth(map(s, 0.36, 0.52)),
-    motifTurn: reduced ? 0 : smooth(map(s, 0, 0.52)),
-    heroShift: 1 - smooth(map(s, 0.12, 0.52)),
+    motifs: 1 - smooth(map(t, 0.04, 0.42)),
+    motifTurn: reduced ? 0 : smooth(map(t, 0, 0.6)),
+    heroShift: 1 - smooth(map(t, 0.08, 0.7)),
     tr,
     provinces,
     green,
@@ -284,19 +288,18 @@ export function sceneAt(s: number, p: number, idle: number, reduced: boolean): S
     eventsAlpha,
     dim,
     antalya,
-    pulse: !reduced && antalya > 0.01 && s < 4.1,
+    pulse: !reduced && antalya > 0.01,
     world,
     rot,
     allCapitals: reduced,
-    // Fotoğraf (üst katman) hızla opaklaşır, küre altında söner: çift görüntü kısa
-    // sürer; masaüstünde fotoğrafın örtmediği küre kenarı da erken kaybolur.
-    globe: reduced ? 1 - fin : 1 - smooth(map(fin, 0.1, 0.55)),
+    // Fotoğraf (üst katman) hızla opaklaşır, küre altında söner: çift görüntü kısa sürer.
+    globe: 1 - smooth(map(fin, 0.1, 0.55)),
     finale: fin,
-    disc: reduced ? fin : map(p, 0.925, 0.96),
-    slogan: reduced ? fin : map(p, 0.935, 0.975),
-    orbits: reduced ? fin : map(p, 0.9, 0.98),
-    hud: map(s, 0.54, 0.62) * (1 - map(s, 1.12, 1.24)),
-    counter: map(s, 0.56, 0.92),
+    disc: map(t, 5.42, 5.76),
+    slogan: map(t, 5.54, 5.9),
+    orbits: map(t, 5.18, 5.95),
+    hud: map(t, 0.34, 0.5) * (1 - map(t, 1.0, 1.16)),
+    counter: map(t, 0.48, 0.97),
     porthole: clamp01((scale - 1.3) / 2),
   };
 }
