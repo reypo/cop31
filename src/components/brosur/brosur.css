@@ -1,0 +1,314 @@
+/*
+ * Konsept D — Dijital Broşür. Tüm seçiciler .br-root / .br-* altında;
+ * rota dışında hiçbir şeyi etkilemez (globals.css'e dokunulmaz).
+ */
+
+/*
+ * Belge scroll'u üzerindeki snap (html { scroll-snap-type }) burada değil:
+ * shell.tsx içindeki <style> ile verilir ve rota Activity ile gizlenince
+ * media="not all" ile kapanır (bkz. Next docs: preserving-ui-state).
+ */
+
+.br-root {
+  overflow-x: clip;
+}
+
+.br-page {
+  scroll-snap-align: start;
+}
+
+.br-navy {
+  background-color: var(--color-brand-navy);
+  background-image: linear-gradient(165deg, var(--color-brand-navy) 0%, #0b5f9a 62%, var(--color-brand-blue) 100%);
+}
+
+.br-leaf-light {
+  background-color: #ffffff;
+  color: var(--color-brand-navy);
+}
+
+/* Yatay taşma olmasın: döndürülmüş kartlar sütun içinde kalır. */
+.br-polaroid {
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Giriş animasyonları: bölüm data-inview="0" iken gizli, "1" olunca geçiş. */
+/* ---------------------------------------------------------------------- */
+
+.br-root [data-a] {
+  transition-property: opacity, transform;
+  transition-duration: 520ms, 680ms;
+  transition-timing-function: cubic-bezier(0.22, 0.7, 0.2, 1);
+  transition-delay: var(--d, 0ms);
+}
+
+.br-root [data-a="drop"] {
+  transform: translate3d(0, 0, 0) rotate(var(--r, 0deg)) scale(1);
+  transition-duration: 320ms, 820ms;
+  transition-timing-function: ease-out, cubic-bezier(0.3, 1.38, 0.52, 1);
+}
+
+.br-root [data-a="pop"] {
+  transition-timing-function: ease-out, cubic-bezier(0.3, 1.45, 0.55, 1);
+}
+
+.br-root [data-inview="0"] [data-a] {
+  opacity: 0;
+}
+
+.br-root [data-inview="0"] [data-a="down"] {
+  transform: translate3d(0, -26px, 0);
+}
+
+.br-root [data-inview="0"] [data-a="up"] {
+  transform: translate3d(0, 22px, 0);
+}
+
+.br-root [data-inview="0"] [data-a="left"] {
+  transform: translate3d(-22px, 0, 0);
+}
+
+.br-root [data-inview="0"] [data-a="pop"] {
+  transform: scale(0.82);
+}
+
+.br-root [data-inview="0"] [data-a="drop"] {
+  transform: translate3d(0, -70px, 0) rotate(calc(var(--r, 0deg) - 13deg)) scale(1.12);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Kapak: JS beklemeden CSS ile açılış (zayıf sinyalde de ilk ekran dolu). */
+/* ---------------------------------------------------------------------- */
+
+.br-cover-art {
+  container-type: inline-size;
+}
+
+.br-disc {
+  background-image: linear-gradient(40deg, var(--color-brand-navy) 8%, var(--color-brand-blue) 92%);
+  box-shadow: 0 18px 36px -18px rgb(27 79 156 / 0.65);
+}
+
+.br-slogan {
+  font-size: clamp(22px, 7.4cqw, 33px);
+}
+
+.br-globe {
+  box-shadow:
+    0 0 0 5px #ffffff,
+    0 22px 44px -20px rgb(15 60 40 / 0.55);
+}
+
+.br-c {
+  animation-duration: 900ms;
+  animation-timing-function: cubic-bezier(0.22, 0.7, 0.2, 1);
+  animation-fill-mode: both;
+  animation-delay: var(--d, 0ms);
+}
+
+.br-c-down {
+  animation-name: br-in-down;
+}
+
+.br-c-scale {
+  animation-name: br-in-scale;
+  animation-duration: 1100ms;
+}
+
+.br-c-pop {
+  animation-name: br-in-scale;
+  animation-timing-function: cubic-bezier(0.3, 1.4, 0.55, 1);
+}
+
+.br-c-fade {
+  animation-name: br-in-fade;
+}
+
+.br-c-draw {
+  stroke-dasharray: 1 1;
+  animation-name: br-draw;
+  animation-duration: 1500ms;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.br-c-spin {
+  transform-origin: 240px 152px;
+  animation-name: br-spin-in;
+  animation-duration: 1400ms;
+}
+
+.br-hint {
+  animation: br-hint 1.8s ease-in-out 1.6s 3 both;
+}
+
+@keyframes br-in-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0);
+  }
+}
+
+@keyframes br-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+
+@keyframes br-in-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes br-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes br-spin-in {
+  from {
+    opacity: 0;
+    transform: rotate(-38deg);
+  }
+}
+
+@keyframes br-hint {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 5px, 0);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sağ kenarda ilerleme fidanı.                                             */
+/* ---------------------------------------------------------------------- */
+
+.br-sapling {
+  --p: 0;
+  --h: 56svh;
+  position: fixed;
+  right: max(5px, env(safe-area-inset-right));
+  top: 24svh;
+  z-index: 40;
+  width: 16px;
+  height: var(--h);
+  pointer-events: none;
+}
+
+.br-sapling__track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+  background-image: linear-gradient(to top, rgb(12 119 182 / 0.28), rgb(12 119 182 / 0.08));
+}
+
+.br-sapling__stem {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  height: 100%;
+  margin-left: -1.5px;
+  border-radius: 3px;
+  background-image: linear-gradient(to top, var(--color-brand-teal), var(--color-brand-green));
+  transform-origin: 50% 100%;
+  transform: scaleY(var(--p));
+}
+
+.br-sapling__soil {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 14px;
+  height: 3px;
+  margin-left: -7px;
+  border-radius: 3px;
+  background-color: var(--color-brand-teal);
+  opacity: 0.55;
+}
+
+.br-sapling__tip {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-bottom: -2px;
+  transform: translate3d(0, calc(var(--p) * var(--h) * -1), 0);
+}
+
+.br-sapling__tip svg {
+  display: block;
+}
+
+.br-sapling__leaf {
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 4px;
+  margin-bottom: -2px;
+  border-radius: 0 100% 0 100%;
+  background-color: var(--color-brand-green);
+  transform: scale(0);
+  transition: transform 320ms cubic-bezier(0.3, 1.5, 0.55, 1);
+}
+
+.br-sapling__leaf[data-side="r"] {
+  margin-left: 1px;
+  transform-origin: 0 50%;
+}
+
+.br-sapling__leaf[data-side="l"] {
+  margin-left: -8px;
+  transform-origin: 100% 50%;
+  border-radius: 100% 0 100% 0;
+}
+
+.br-sapling__leaf[data-side="r"][data-on="1"] {
+  transform: rotate(-32deg) scale(1);
+}
+
+.br-sapling__leaf[data-side="l"][data-on="1"] {
+  transform: rotate(32deg) scale(1);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hareket azaltma: her şey son karede, tamamen okunur.                    */
+/* ---------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .br-root [data-a] {
+    transition: none !important;
+  }
+
+  .br-root [data-inview="0"] [data-a] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .br-root [data-inview="0"] [data-a="drop"] {
+    transform: rotate(var(--r, 0deg)) !important;
+  }
+
+  .br-c,
+  .br-hint {
+    animation: none !important;
+  }
+
+  .br-sapling__leaf {
+    transition: none !important;
+  }
+}
