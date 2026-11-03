@@ -134,6 +134,11 @@ python -X utf8 -P scripts/icinden/kapak-ton.py --kare D:/soft/cop31-varlik/rende
 # F turu (denetim M-1/M-2; CRF_TABLO r21 H.264 27, r32 H.264 26,5):
 node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip r21.h264,r32.h264 --temizle
 node scripts/icinden/manifest-birlestir.mjs   # bayraksız; F'de HIZ_GERI 1,0 (D2-01) ve d4 `oyun` yalnız yatay (D1-14)
+# E2 turu (§12.12, D1-02; render yok; KIRPIM_Y t56/t67/t78 rampaları, yalnız yatay):
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip t56.yatay,r65.yatay,p6.yatay,t67.yatay,r76.yatay,p7.yatay,t78.yatay,r87.yatay
+node scripts/icinden/manifest-birlestir.mjs
+python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t56.yatay,r65.yatay,p6.yatay,t67.yatay,r76.yatay,p7.yatay,t78.yatay,r87.yatay --temel 0.673 --oturum-temel 0.989 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-E2.json
+node scripts/icinden/kodla.mjs --artik --kuru && node scripts/icinden/kodla.mjs --artik   # 14 eski yatay dosya
 ```
 
 Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kurulması + 85 VMAF; D turunda 7 dk 57 s: dikişler + t01/l1/t12/l2/t23 için 10 yeni FFV1 referansı + 85 VMAF; referanslar önbellekteyse daha kısa):
@@ -153,9 +158,22 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
    - **`--poster-q ad[.boyut]=q`**: poster WebP kalitesi (varsayılan 80). C turu: hepsi 80. D turu (§11.6-2): `p3=68`
      (dikey + yatay; p3 merdiveni `docs/klip-oynatma.md` §5), öteki posterler 80.
    - **Yatay kırpım `kirpimY`** (master px, `KIRPIM_Y` tablosu; §11.2-5): sayı ya da `{bas, son, k0, k1}` (kare ≤ k0 →
-     bas, ≥ k1 → son, arası easeInOutCubic). **t23 `{420 → 200, 24 → 72}`**, **l3 (ve p3) 200**, **t34
-     `{200 → 420, 47 → 48}`** (basamak düz #FFF1DC parlama karelerinde; 47↔48 farkı 0 kalır), diğerleri 420 (t01/l1/t12/l2
-     ve S2 klipleri değişmez; lombar hizası, `dunyaC`, `sutunlar`, `brosurDikdortgen` aynı). ffmpeg: `crop=w=iw:h=ih*1080/1920:x=0:y='ih*(<bas>+(<son>-<bas>)*e(n))/1920'`,
+     bas, ≥ k1 → son, arası easeInOutCubic). Tablo (geri klipler ileri klibin nesnesini ileri kare numarasıyla
+     kullanır; ters rampa `reverse`'ten gelir):
+
+     | Klip (+ geri, poster) | `kirpimY` | Neden |
+     |---|---|---|
+     | t23 (r32) | `{420 → 200, 24 → 72}` | d3'te ufuk (C turu, §11.2-5) |
+     | l3, p3 | 200 | |
+     | t34 (r43) | `{200 → 420, 47 → 48}` | basamak düz #FFF1DC parlama karelerinde; 47↔48 farkı 0 |
+     | **t56 (r65), p6 = t56[59]** | **`{420 → 293, 30 → 59}`** | E2 (§12.12, D1-02): d6 "İklim Eylemleri" 844×390'da görünsün; t56[0] ≡ l5[0] 420'de |
+     | **t67 (r76), p7 = t67[47]** | **`{293 → 233, 0 → 47}`** | E2: d7 "1.000.000+" üstü bütün yatay ekranlarda görünsün |
+     | **t78 (r87)** | **`{233 → 420, 0 → 40}`** | E2: 41–65. kareler 420 → d8 kapak geometrisi (`brosurDikdortgen`, `bankoDonusum`) değişmez |
+     | diğerleri | 420 | t01/l1/t12/l2/t45/l4/l5: lombar hizası, `dunyaC`, `sutunlar` aynı |
+
+     `duvarCapalari` yatayı p6'nın `kirpimY`'siyle (293) çevrilir; `orman` çapası (master y 1434) bu kırpımda kadraj
+     dışında kalır (manifest uyarısı; site duvarda kılavuz çizmez).
+     ffmpeg: `crop=w=iw:h=ih*1080/1920:x=0:y='ih*(<bas>+(<son>-<bas>)*e(n))/1920'`,
      `e` kare numarası `n` ile easeInOutCubic; crop değeri tam sayıya yuvarlar (lrint), ölçekten önce. Geri klipler
      `reverse` kırpım + ölçekten SONRA olduğundan kendiliğinden doğru. Dikey kırpım (x 420) değişmez.
    - Tek klip: `--klip t56`. Önizleme seti örneği: `--kaynak D:/soft/cop31-varlik/render --esle
@@ -169,8 +187,8 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
    kodlama/render-son.json`, `--ton kodlama/render-son-kapak-ton.json`, `--yaylar render-son/yaylar.json`, `--kaynak
    render`). Yatay çapalar klip başına `kirpimY` ile çevrilir (listeden; çapanın klibi/karesi: etiket ve sütun → poster
    karesi, `dunyaC` → t01 0. kare, `brosurDikdortgen` → t78 son kare, `duvarCapalari` → p6). Uyarıları okuyun (kare
-   sayısı, poster, sözlük dışı çapa, 12 sütun, 12 emanet, 3 duvar çapası, 27 yay); E turu son çalıştırmada beklenen tek
-   uyarı t01 `dunyaC`'nin kare başına verilmiş olması. Çıktının sonunda rol tablosu (id | rol | tur | gelen | ileri/geri
+   sayısı, poster, sözlük dışı çapa, 12 sütun, 12 emanet, 3 duvar çapası, 27 yay); E2 turu son çalıştırmada beklenen
+   uyarılar t01 `dunyaC`'nin kare başına verilmiş olması ve d6 `orman` duvar çapasının yatay kırpım dışında kalması. Çıktının sonunda rol tablosu (id | rol | tur | gelen | ileri/geri
    | döngü | poster | okuma) basılır. Yeni render yokken: `--gecici` (§0). E turunda liste `p8` poster satırları
    (eski p6 plakası, K0) ve t67/t78/r76/r87, p6/p7 satırları içermeli.
 5. `kart.mjs`: ana sayfa kartı `public/icinden/kart-icinden.webp` (p1 = `render-son/l1/k_0000.png`, ≤ 60 KB).

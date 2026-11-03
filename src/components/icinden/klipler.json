@@ -1,6 +1,6 @@
 {
  "surum": 2,
- "olusturma": "2026-11-03T16:07:36.330Z",
+ "olusturma": "2026-11-03T17:21:56.575Z",
  "kaynak": "render",
  "fps": 30,
  "master": 1920,
@@ -2381,8 +2381,8 @@
       "av1": "/icinden/v/d/t56.d7c2481f.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t56.06efc017.h264.mp4",
-      "av1": "/icinden/v/y/t56.0e5d37a2.av1.mp4"
+      "h264": "/icinden/v/y/t56.449c9425.h264.mp4",
+      "av1": "/icinden/v/y/t56.9825256a.av1.mp4"
      }
     },
     "bayt": {
@@ -2392,8 +2392,8 @@
       "av1": 368607
      },
      "yatay": {
-      "h264": 632746,
-      "av1": 401462
+      "h264": 636100,
+      "av1": 406278
      }
     },
     "geri": {
@@ -2407,8 +2407,8 @@
        "av1": "/icinden/v/d/r65.0be32f17.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r65.5aac1227.h264.mp4",
-       "av1": "/icinden/v/y/r65.2bb48828.av1.mp4"
+       "h264": "/icinden/v/y/r65.e5377570.h264.mp4",
+       "av1": "/icinden/v/y/r65.dafeb51f.av1.mp4"
       }
      },
      "bayt": {
@@ -2418,8 +2418,8 @@
        "av1": 291272
       },
       "yatay": {
-       "h264": 543431,
-       "av1": 314171
+       "h264": 549237,
+       "av1": 318325
       }
      }
     },
@@ -2471,9 +2471,9 @@
      "lqip": "data:image/webp;base64,UklGRi4BAABXRUJQVlA4ICIBAABQBwCdASoYACsAPtFgp08oJSMiKrgIAQAaCUAW/Wr2wG3/k4YHAnkB80B/sbyRv74U/U+Uvtn4vumX1OPgwjdYTLsAAP74Tb5yOFznUN2KZLfe6VRx8Toi1Lvnl6h+b7OAEhU6tcK+LcVnHJh29U+FFmtb7jt7EsOJ0QTsVyPnsPJJiaHScIWpkJc0h24GKNGe9fCRDe/fg90ngijffkLTPtmiuBzkMA8XRq/sRj6Ft8Wt4JDz/iqSORXxecHtEKCsdVy2UYZNfwnKV6FFjrb3z9lvC/sKwRL/UbdSPo06DuSPzCcYMOeJM6Bw34a1ZGs6X22Dy+PpHnUT3csw5XOzlVXmHwbeI+x6zUkcMQYEI+8ZUvibAcwfS1O7fwwVvAAAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p6.3c64532f.webp",
-     "bayt": 44924,
-     "lqip": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGS2T/gJQqsau62U1pPAAP1v1ylPWRdYBYebfAlIz0z5Yy5B8iYdYL8r2ldjrOdX6utUMf3wm+LbAgGywfmkM4bkM90Wo7eukZAMyPhhHwjpg5NFoQyQqb+TMpLPG/46jzafG1vwSCVo5amiyREQAA=="
+     "dosya": "/icinden/p/y/p6.3de45a8a.webp",
+     "bayt": 44364,
+     "lqip": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUAAvSf99efuuIjiAAMybAotqc9UUW2uFUNGEq3UXLJlKnO0q+B7T4imExK0gA2Ztt8Hs77PVoMYRkgkm5LDAdDGPJo6GdCNQW5BYLlm6A7PoQexSr8WGdEWjaEfE3WZKmWvuycWax/kg4cXafNTiBITAAAA="
     }
    },
    "dongu": null,
@@ -2488,8 +2488,8 @@
       "av1": "/icinden/v/d/t67.f1baa2fe.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t67.e6a7c40c.h264.mp4",
-      "av1": "/icinden/v/y/t67.23207f22.av1.mp4"
+      "h264": "/icinden/v/y/t67.4017166e.h264.mp4",
+      "av1": "/icinden/v/y/t67.4a9dad7e.av1.mp4"
      }
     },
     "bayt": {
@@ -2499,8 +2499,8 @@
       "av1": 186414
      },
      "yatay": {
-      "h264": 338233,
-      "av1": 218077
+      "h264": 336399,
+      "av1": 220603
      }
     },
     "geri": {
@@ -2514,8 +2514,8 @@
        "av1": "/icinden/v/d/r76.0dc0404e.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r76.a3435572.h264.mp4",
-       "av1": "/icinden/v/y/r76.3c6271fc.av1.mp4"
+       "h264": "/icinden/v/y/r76.7b851645.h264.mp4",
+       "av1": "/icinden/v/y/r76.c854da7c.av1.mp4"
       }
      },
      "bayt": {
@@ -2525,8 +2525,8 @@
        "av1": 147801
       },
       "yatay": {
-       "h264": 246946,
-       "av1": 176337
+       "h264": 243934,
+       "av1": 177453
       }
      }
     },
@@ -2537,17 +2537,17 @@
      {
       "ad": "fidan",
       "dikey": [189.9, 547.3],
-      "yatay": [469.9, 267.3]
+      "yatay": [469.9, 352]
      },
      {
       "ad": "genc_iklim",
       "dikey": [467.4, 665.2],
-      "yatay": [747.4, 385.2]
+      "yatay": [747.4, 469.9]
      },
      {
       "ad": "orman",
       "dikey": [315.1, 956.1],
-      "yatay": [595.1, 676.1]
+      "yatay": [595.1, 760.8]
      }
     ]
    }
@@ -2565,9 +2565,9 @@
      "lqip": "data:image/webp;base64,UklGRmIBAABXRUJQVlA4IFYBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ3TmnuXyi0S7S8cry19y7InjOk8alIOAfXWiN6s8Cfe94ptH2vlpYAA/vSA9vcds4EB2WurFseDd9XTU425yLCqQZcFswfGrujmLiPgF1IUgZyufOi2mDuVVxn8l7cPbtusKM1IZdIFTV9GuauzOYmxcYeoi6HIilD+oE2PhxSi87bhdm1hQAF9xZ1vVV+NsX7Mrl2JliGaOcjRTa6lkBSnhpI0WcnGyUOC72EyjHaa/wNiv4xN6UnfC7zc7fxEJFGpY7pLpuR35DPk4GsIElXjpyKfg20YRAZYQor4k+B96AMEne73NvimN4JcKaysgpx+Q2J4/tPd3v2mWq9uTOGGX9bkMYPHF8M8BXC8ylRPC5ciI4DNFiw+d7LTVKwwpT8jraFrb7MRgguEPA1JFj+R7q0xGusAAAA="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p7.e010f778.webp",
-     "bayt": 30704,
-     "lqip": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAAAQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUI4AAxzje4Kb7lDXgAD86SX1KT1pU24D072GSg9AsPta6buUWfugwmmZl9GCm08T20uf7TPbyHyKp8+3i0VqEHJ+9ycW8VnsO5J6/jASv7a7nEuNca6nke2HfucDDHnXvA/forh1ls3WjFlqgvUK6Nb0loAAAA=="
+     "dosya": "/icinden/p/y/p7.c846db3c.webp",
+     "bayt": 27178,
+     "lqip": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4PdOHKTPPgIAAPch2aIwoR/gf0LHZwEYnDvira4rdPlkmTDnG2yTq+/M0h+cDikB7geCmPF8f3wNXPHb+K9wPVBG3HJIA5h/fFRe0U/47D1zkS7U0XCOx7LHjgDD4OCEB2QgtpLwxwgAAA=="
     }
    },
    "dongu": null,
@@ -2582,8 +2582,8 @@
       "av1": "/icinden/v/d/t78.26c255cf.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t78.d5832a6f.h264.mp4",
-      "av1": "/icinden/v/y/t78.201b5319.av1.mp4"
+      "h264": "/icinden/v/y/t78.99abe966.h264.mp4",
+      "av1": "/icinden/v/y/t78.ffe6a435.av1.mp4"
      }
     },
     "bayt": {
@@ -2593,8 +2593,8 @@
       "av1": 304513
      },
      "yatay": {
-      "h264": 569171,
-      "av1": 293994
+      "h264": 583360,
+      "av1": 301227
      }
     },
     "geri": {
@@ -2608,8 +2608,8 @@
        "av1": "/icinden/v/d/r87.97ebfb6d.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r87.e241d4d3.h264.mp4",
-       "av1": "/icinden/v/y/r87.a1914c8a.av1.mp4"
+       "h264": "/icinden/v/y/r87.46fe3936.h264.mp4",
+       "av1": "/icinden/v/y/r87.b4b7caef.av1.mp4"
       }
      },
      "bayt": {
@@ -2619,8 +2619,8 @@
        "av1": 235572
       },
       "yatay": {
-       "h264": 393318,
-       "av1": 229538
+       "h264": 394391,
+       "av1": 233174
       }
      }
     },

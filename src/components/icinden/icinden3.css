@@ -976,15 +976,36 @@
     justify-content: center;
     padding: 56px 40px 56px 28px;
   }
+  /*
+   * Sol sönüm (sonum + 40 px) smoothstep (3t² − 2t³) eğrisinde 16 parça: doğrusal rampa iki ucunda eğim kırığı
+   * yapıyordu; d3'te düz gökte x ≈ 650'de (1280×800) dikey çizgi gibi okunuyordu (E2, M2 gözlemi). Metin düzlükte
+   * (alfa --a … --a0); kontrast değişmez.
+   */
   .v3-bant:not(.v3-acilis)::before {
+    --r: calc(var(--sonum) + 40px);
     top: 0;
     right: 0;
     bottom: 0;
-    left: calc(-1 * var(--sonum) - 40px);
+    left: calc(-1 * var(--r));
     background: linear-gradient(
       to left,
       rgb(var(--scrim) / var(--a0)),
-      rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum) - 40px),
+      rgb(var(--scrim) / var(--a)) calc(100% - var(--r)),
+      rgb(var(--scrim) / calc(var(--a) * 0.989)) calc(100% - var(--r) * 0.9375),
+      rgb(var(--scrim) / calc(var(--a) * 0.957)) calc(100% - var(--r) * 0.875),
+      rgb(var(--scrim) / calc(var(--a) * 0.908)) calc(100% - var(--r) * 0.8125),
+      rgb(var(--scrim) / calc(var(--a) * 0.844)) calc(100% - var(--r) * 0.75),
+      rgb(var(--scrim) / calc(var(--a) * 0.768)) calc(100% - var(--r) * 0.6875),
+      rgb(var(--scrim) / calc(var(--a) * 0.684)) calc(100% - var(--r) * 0.625),
+      rgb(var(--scrim) / calc(var(--a) * 0.593)) calc(100% - var(--r) * 0.5625),
+      rgb(var(--scrim) / calc(var(--a) * 0.500)) calc(100% - var(--r) * 0.5),
+      rgb(var(--scrim) / calc(var(--a) * 0.407)) calc(100% - var(--r) * 0.4375),
+      rgb(var(--scrim) / calc(var(--a) * 0.316)) calc(100% - var(--r) * 0.375),
+      rgb(var(--scrim) / calc(var(--a) * 0.232)) calc(100% - var(--r) * 0.3125),
+      rgb(var(--scrim) / calc(var(--a) * 0.156)) calc(100% - var(--r) * 0.25),
+      rgb(var(--scrim) / calc(var(--a) * 0.092)) calc(100% - var(--r) * 0.1875),
+      rgb(var(--scrim) / calc(var(--a) * 0.043)) calc(100% - var(--r) * 0.125),
+      rgb(var(--scrim) / calc(var(--a) * 0.011)) calc(100% - var(--r) * 0.0625),
       rgb(var(--scrim) / 0)
     );
   }
@@ -1059,23 +1080,31 @@
  * Yatay köşe bantları (F turu). Yatayda bant varsayılanı sağda tam boy; şu duraklarda sahnenin boş köşesine iner,
  * scrim yalnız bandın arkasında (bir yönden doğrusal, öteki yönden maske ile söner; elips köşe sorunu yok, D1-04):
  *  - duvar (d6/d7, D1-01): duvar baskısı tüm genişliği kaplıyor, sağ yarıdaki bant metni duvar yazısının üstüne
- *    biniyordu → sağ alt, dağ şeridi/bank bölgesi (1280×800'de y > ~600). Başlık ikincil boyda (duvar zaten aynı
- *    başlığı büyük gösteriyor; D1-12'nin ikinci seçeneği, yalnız yatayda), metin ≤ 560 px.
+ *    biniyordu → F'de sağ alt, dağ şeridi/bank bölgesi; E2'den beri (yatay kırpım yukarı, D1-02) sağ sütun, duvar
+ *    yazı bloğunun sağında. Başlık ikincil boyda (duvar zaten aynı başlığı büyük gösteriyor; D1-12'nin ikinci
+ *    seçeneği, yalnız yatayda).
  *  - anatomi (d4, D1-03): sağ-orta bant yeni ön cephe pankartının üstüne düşüyordu → sol üst (karanlık tavan/hol).
  *  - dunya (d1/d11) yatay telefonda (D1-07): künye ("Antalya / Açılışa N gün") bant gövdesinin hemen solunda, aynı
  *    hizadaydı → bant sağ kenarda ≤ 300 px, metin üstte.
  */
 @media (min-aspect-ratio: 4/3) {
+  /*
+   * E2 (§12.12): yatay kırpım duvarlarda yukarı alındı (d6 293, d7 233) → duvar yazısı ve "Sen de söz ver." ekranları
+   * kadrajın altına dek iniyor; bant sağ sütunda, duvar yazı bloğunun (master x ≤ 1390) sağında. Sütunun sol kenarı
+   * video kapağından: --wv = videonun CSS genişliği (cover), master x 1400 → 50vw + (1400/1920 − 0,5)·--wv. Yan sönüm
+   * (--yan) sütunun içinde kalır (ekranın/yazının üstüne açık scrim düşmez). 4:3–3:2 arası (iPad yatay) aşağıda:
+   * sütun dar, yazı küçülür.
+   */
   .v3-bant[data-rol="duvar"]:not(.v3-acilis) {
     --sonum: 48px;
+    --yan: 48px;
+    --wv: max(100vw, 100vh * 16 / 9);
     top: auto;
-    width: min(50vw, 640px);
+    width: clamp(220px, calc(50vw - 0.2292 * var(--wv) - var(--yan)), 640px);
     justify-content: flex-end;
-    padding: 0 40px calc(env(safe-area-inset-bottom, 0px) + 28px);
+    padding: 0 28px calc(env(safe-area-inset-bottom, 0px) + 28px) 0;
   }
-  /* yan sönüm (--yan) üst sönümden geniş: dar bir yan kenar yumuşak da olsa dikdörtgen yama gibi okunuyordu */
   .v3-bant[data-rol="duvar"]:not(.v3-acilis)::before {
-    --yan: 120px;
     top: calc(-1 * var(--sonum));
     right: 0;
     bottom: 0;
@@ -1139,24 +1168,33 @@
     text-shadow: none;
   }
 }
+/* 4:3–3:2 (iPad yatay; dikey kırpım yok): sağ sütun 1024×768'de ~170 px → yazı küçük, sönüm dar (E2). */
+@media (min-aspect-ratio: 4/3) and (max-aspect-ratio: 3/2) {
+  .v3-bant[data-rol="duvar"]:not(.v3-acilis) {
+    --yan: 32px;
+    width: max(176px, calc(50vw - 0.2292 * var(--wv) - var(--yan)));
+    padding-right: 16px;
+  }
+  .v3-bant[data-rol="duvar"] .v3-baslik {
+    font-size: 22px;
+    line-height: 26px;
+  }
+  .v3-bant[data-rol="duvar"] :is(.v3-spot-satir, .v3-govde) {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
 @media (min-aspect-ratio: 4/3) and (max-height: 480px) {
   /*
-   * Yatay telefonda duvar bandı sol altta: sağ altta d6'nın "İstanbul" satırı bandın altında kalıp başlığın arkasından
-   * okunuyordu (390 px yükseklikte duvar yazısı ekranın altına dek iniyor); sol altta yalnız saksı ve dağ şeridi var.
+   * Yatay telefonda da sağ sütun (E2): kırpım yukarı alındığından duvar yazısı (d6 "İstanbul", d7 ekranlar) 390 px
+   * yükseklikte kadrajın altına dek iniyor; sol alt (F) artık d6'da "2025"/"21-23 Ağustos" satırlarına biniyordu.
    */
   .v3-bant[data-rol="duvar"]:not(.v3-acilis) {
     --a: 0.84;
-    right: auto;
-    left: 0;
-    width: min(52vw, 440px);
-    padding: 0 24px calc(env(safe-area-inset-bottom, 0px) + 12px) 20px;
-  }
-  .v3-bant[data-rol="duvar"]:not(.v3-acilis)::before {
-    --yan: 72px;
-    right: calc(-1 * var(--yan));
-    left: 0;
-    -webkit-mask-image: linear-gradient(to left, transparent, #000 var(--yan));
-    mask-image: linear-gradient(to left, transparent, #000 var(--yan));
+    --sonum: 24px;
+    --yan: 28px;
+    width: max(176px, calc(50vw - 0.2292 * var(--wv) - var(--yan)));
+    padding: 0 12px calc(env(safe-area-inset-bottom, 0px) + 12px) 0;
   }
   .v3-bant[data-rol="duvar"] .v3-baslik {
     font-size: 20px;

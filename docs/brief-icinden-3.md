@@ -1588,3 +1588,95 @@ Aşağıdakiler §12.6/§12.10'daki açık kapıları kapatır; §12.6 ile çeli
     listesinde soru.
 11. **Commit**: `git add -A src scripts docs public/icinden .gitignore next.config.ts eslint.config.mjs`; 68 eski D medya
     dosyası silinir, 92 yeni E dosyası eklenir; `.next-*`, `tsconfig.next-*.json`, `.qa/` izlenmez.
+
+### 12.12 E2 turu (yatay kırpım rampası, render yok; denetim D1-02, 3 Kasım 2026)
+
+§12.11-10'daki D1-02 render yerine kodlamada çözüldü: yatay teslimin kırpım ofseti (`kirpimY`, master px) duvar
+kliplerinde rampa (`kodla.mjs` `KIRPIM_Y`; easeInOutCubic, `manifest-birlestir.mjs` `kirpimYKare` aynı eğri). Geri klipler
+ileri klibin nesnesini ileri kare numarasıyla kullanır, ters rampa `reverse`'ten gelir (r43'teki gibi; kodda doğrulandı).
+Dikey dosyaların hiçbiri değişmedi. Ortam: prod `.next-e2`, `next start -p 3103`, headless Chrome (playwright-core);
+QA çıktıları `.qa/icinden3/e2/k/`.
+
+**1. Ölçüm (master PNG16, `render-son`) ve seçim**
+
+| | Glif üstü | Alt sınır | Kısıtlar → aralık | Seçilen |
+|---|---|---|---|---|
+| d7 (t67[47] ≡ p7/k_0000) | "1.000.000+" y **401** (x 560–640) | "Sen de söz ver." ekranlarının alt kenarı y **1161** (x 568–1381) | (a) ≤ 341 · (b) ≤ 265 · (c) ≥ 201 | **Y7 = 233** |
+| d6 (t56[59] ≡ p6/k_0000) | "İklim Eylemleri" y **454** (x 1240–1280; "leri") | "İstanbul" alt kenarı y **1228** (x ≤ 1388) | (b) ≤ 318 · (c) ≥ 268 | **Y6 = 293** |
+
+(a) 1280×800 ve 1920×1080'de glif üstü ≥ Y + 60; (b) 844×390'da (cover üst/alt 96 master px keser) ≥ Y + 96 + 40;
+(c) alt sınır ≤ Y + 1080 − 96 − 24. İkisi de aralığın ortası (üst ve alt payları eşit). d6 koşulu sağlandı (844×390'da
+başlık önceden −27 css px, yani kesikti) → d6'ya da uygulandı.
+
+| Klip | `kirpimY` | Not |
+|---|---|---|
+| t56 (r65) | `{420 → 293, 30 → 59}` | t56[0] ≡ l5[0] 420'de |
+| p6 | 293 | t56[59] |
+| t67 (r76) | `{293 → 233, 0 → 47}` | |
+| p7 | 233 | t67[47] |
+| t78 (r87) | `{233 → 420, 0 → 40}` | 41–65 = 420: `brosurDikdortgen`, `bankoDonusum`, p8 dikişi aynı |
+
+**2. Glif payı** (ekran görüntüsünde ölçülen glif üstü → çerçeve üstü, CSS px; geometriden beklenenle ±1 px)
+
+| Görünüm | d7 "1.000.000+" E → E2 | d6 "İklim Eylemleri" E → E2 | Alt sınır → çerçeve altı (E2) |
+|---|---|---|---|
+| 1280×800 | 0 (kesik; beklenen −14) → **124** | 25 → **120** | d7 ekranlar 113 · d6 "İstanbul" 107 |
+| 1920×1080 | 0 (kesik; −19) → **168** | 34 → **161** | 152 · 145 |
+| 844×390 | 0 (kesik; −51) → **32** | 0 (kesik; −27) → **29** | **24** · **21** |
+| 390×844 | değişmedi (piksel farkı 0; d3/d6/d7) | | |
+
+Master px karşılığı: d7 168 (a, ≥ 60 ✓), 844×390'da 72 (b, ≥ 40 ✓); d6 161 / 65 ✓. (b)'de kalan açık yok.
+
+**3. DOM bandı** (`icinden3.css` "Yatay köşe bantları"): kırpım yukarı alınınca duvar yazısı kadrajın altına dek iniyor
+(1280×800'de d7 ekranları x 350–952, y 498–687; F'nin sağ alt bandı x ≥ 680, metin y ≥ 646 → çakışırdı). Duvar bandı her yatay ekranda
+**sağ sütuna**, duvar yazı bloğunun (master x ≤ 1390) sağına alındı: genişlik `50vw − 0,2292·--wv − --yan`
+(`--wv = max(100vw, 100vh·16/9)`, cover video genişliği; master x 1400'ün CSS karşılığı), yan sönüm sütunun içinde
+(ekrana/yazıya açık scrim düşmez). Yatay telefonda (≤ 480 px) sol alt (F) kalktı, sağ sütun, `--sonum` 24 px. 4:3–3:2
+(iPad yatay) ayrı: başlık 22 px, gövde 14 px, genişlik ≥ 176 px. Ölçülen bant metin kutusu ↔ duvar içeriği: 1280×800,
+1920×1080, 844×390, 1024×768'de d6/d7'de kesişme yok (yatay ara 30–88 px); 1024×768 d6'da sönümün en sol 2 px'i
+(α ≈ 0) "İstanbul" bloğunun sağ kenarına değiyor. Başlık boyları: 28 px (≥ 3:2), 22 px (iPad), 20 px (telefon).
+
+**4. d3 scrim kenarı** (§12.11-10 CSS; M2 gözlemi x ≈ 650 kırık çizgi): varsayılan yatay bandın sol sönümü
+(`--sonum` + 40 px) doğrusal yerine smoothstep (3t² − 2t³) eğrisinde 16 parçalı durak. Gök sütun profili (1280×800,
+satır 4–30): luma x 640/660/680 226,7 / 216,4 / 197,5 → 226,7 / 223,7 / 209,9; sol uçta eğim atlaması 0,725 → **0,207**/px,
+sağ uçta 0,904 → **0,099**/px (1920×1080: 0,798 → 0,241, 0,827 → 0,049); en dik eğim 1,15 → 1,51/px (smoothstep ortası);
+4 px pencerede en büyük eğim değişimi 1,05 → 0,67. Metin düzlükte; scrim-olc d3 ✓ (aşağıda). Dikey değişmedi.
+
+**5. Kodlama** (CRF_TABLO değişmedi; 14 yatay dosya, 29 s)
+
+| Dosya (yatay) | H.264 E → E2 (B) | AV1 E → E2 (B) | VMAF ort / en kötü kare H.264 · AV1 |
+|---|---|---|---|
+| t56 | 632.746 → 636.100 | 401.462 → 406.278 | 99,23 / 88,60 · 99,63 / 93,68 |
+| r65 | 543.431 → 549.237 | 314.171 → 318.325 | 98,71 / 89,16 · 99,43 / 92,72 |
+| t67 | 338.233 → 336.399 | 218.077 → 220.603 | 99,22 / 90,06 · 99,64 / 93,39 |
+| r76 | 246.946 → 243.934 | 176.337 → 177.453 | 98,65 / 83,78 · 99,57 / 93,42 |
+| t78 | 569.171 → 583.360 | 293.994 → 301.227 | 99,80 / 93,98 · 99,84 / 94,83 |
+| r87 | 393.318 → 394.391 | 229.538 → 233.174 | 99,03 / 86,39 · 99,48 / 89,14 |
+| **Toplam** | 2.723.845 → 2.743.421 (+19.576) | 1.633.579 → 1.657.060 (+23.481) | hepsi ≥ 90 ort., duvar en kötü ≥ 80 ✓ |
+
+Posterler (WebP q80): p6 44.924 → 44.364, p7 30.704 → 27.178 (−4.086 B). Eski 14 dosya `--artik` ile silindi (4,433 MB).
+
+**6. Kapılar** (`kodlama-dogrula.py --temel 0.673 --oturum-temel 0.989`, `dogrula-render-son-E2.json`; MB = 10^6 B)
+
+| Kapı | F (E commit) | E2 | |
+|---|---|---|---|
+| Yatay H.264: ilk / kritik maks / pencere maks / set | 2,038 / 2,045 (d2) / 2,454 / 12,429 | 2,038 / 2,045 / 2,454 / **12,445** | ✓ |
+| Yatay AV1: ilk / kritik maks / pencere maks / set / oturum | 1,798 / 2,045 / 2,519 (d3) / 10,870 / 11,859 | 1,798 / 2,045 / 2,519 / **10,889** / **11,878** | ✓ |
+| Yatay AV1 d6 / d7 kritik · pencere | 0,249 / 0,322 · 0,563 / 0,499 | 0,248 / 0,329 · 0,566 / 0,507 | ✓ |
+| mobile-av1 (dikey) oturum | 11,953 | 11,953 (dikey dosya değişmedi) | ✓ |
+| Dikiş (kodlanmış ≤ 3), yatay H.264 / AV1 | | t56→p6 1,65 / 1,47 · t67→p7 1,53 / 1,44 · d6 t56son↔t67[0] 1,25 / 0,94 · d7 t67son↔t78[0] 1,06 / 0,89 · l5[0]↔t56[0] 1,21 / 1,04 · r76 son↔t56son 1,24 / 1,11 · r87 son↔t67son 1,12 / 0,99 · r65 son↔l5[0] 1,56 / 1,55 | ✓ |
+| t78 son ↔ p8 (broşür dışı, pay 45) | 1,117 / 1,152 | 1,119 / 1,187 | ✓ |
+| Manifest | | yalnız d5/d6/d7 yatay yol + bayt + p6/p7 yatay lqip + d6 `duvarCapalari` yatay y (293 ile); dikey/HEVC farkı 0; `brosurDikdortgen` aynı | ✓ |
+| Kapak DOM↔video | ≤ 0,004 px | dx/dy ≤ 0,002, dw/dh ≤ 0,004 px (3 görünüm) | ✓ |
+| Scrim ≥ 4,5:1 (d2, d3, d4, d6, d7 × 390×844, 1280×800, 844×390) | 12/12 | **15/15**; en dar pay m d7 0,049, 1280×800 d6 0,055, d7 0,066 | ✓ |
+| Perf (4× CPU, 0→11→0, 22 adım; mobil dokunma / masaüstü fare) | | fps 59,9 / 60,0; > 50 ms kare 1 (7→8, 54 ms) / 0; düşen 1 / 1 (/1.044; bilgi, §12.11-1); yedek 0, konsol hatası 0 | ✓ |
+| tsc / eslint (argümansız) / build | ✓ | ✓ / 0 hata / ✓ | ✓ |
+
+Geçiş ortası kareleri (CDP `Page.startScreencast`, %30/50/70; 6→7 ve 7→8; 1280×800, 1920×1080, 844×390, 390×844):
+kırpım kayması kamera hareketi içinde okunmuyor; bant geçişte sönük.
+
+**7. Bilinen**
+- `manifest-birlestir.mjs`: d6 `duvarCapalari` yatayı artık p6'nın `kirpimY`'siyle (önce sabit 420); `orman` çapası (master
+  y 1434) 293 kırpımında kadraj dışı (video y 760,8) → uyarı. Site duvarda kılavuz çizmediği için (F, D1-11) etkisiz.
+- 1024×768 gibi 4:3 ekranlarda duvar bandı dar (176 px); metin küçük. Gerçek iPad'de görülmedi.
+- Gerçek iPhone testi açık (değişmedi).

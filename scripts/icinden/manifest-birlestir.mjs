@@ -19,7 +19,8 @@
 // [4×[x, y]] (t78 son kare; E turundan önce t56), kamera{}}. Master → video uzayı: dikey ((x−420)/1,5, y/1,5), yatay
 // (x/1,5, (y − kirpimY)/1,5); kirpimY klip başına (kodla.mjs KIRPIM_Y → liste öğesinin `kirpimY`'si; yoksa 420; §11.2-5:
 // d3'te l3/p3 200). Çapanın klibi ve karesi: etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son
-// karesi), dunyaC → t01 0. kare, brosurDikdortgen → t78 son kare, duvarCapalari → p6 (yoksa t56 son kare).
+// karesi), dunyaC → t01 0. kare, brosurDikdortgen → t78 son kare, duvarCapalari → p6 (yoksa t56 son kare; yatayda
+// t56 son karesinin kirpimY'si, E2'den beri 293).
 // yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; d1 ve d11'e aynen.
 // LQIP: posterden 24 px genişlikte WebP (sharp).
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -318,15 +319,19 @@ for (const D of DURAKLAR) {
     // p6 çapaları (S2b json_yaz): önce p6 fragmanının yön başına `duvarCapalari` listesi (master px; her yön kendi
     // kırpımına giren nokta), yoksa p6 `capalar` (iki kırpıma da giren tek nokta), yoksa t56 son karesi. --gecici'de
     // eski p6 plakasında yok → boş.
+    // Yatay: p6 = t56 son karesi, kırpımı o karedeki `kirpimY` (E2: 293; §12.12). Kırpım dışına düşen yatay çapa uyarı
+    // verir ama yazılır (site F'den beri duvarda kılavuz çizmez; alan yalnız kayıt).
+    const yP6 = kirpimYKare("t56", (fragmanlar.t56?.kare ?? 1) - 1);
     const yonlu = Array.isArray(fragmanlar.p6?.duvarCapalari) ? Object.fromEntries(fragmanlar.p6.duvarCapalari.map((x) => [x.ad, x])) : null;
-    const kaynak = fragmanlar.p6?.capalar ? { c: fragmanlar.p6.capalar, yY: KIRPIM_Y_VARSAYILAN } : capa ? { c: capa, yY } : null;
+    const kaynak = fragmanlar.p6?.capalar ? { c: fragmanlar.p6.capalar, yY: yP6 } : capa ? { c: capa, yY } : null;
     const bulunan = DUVAR_CAPA.filter((ad) => yonlu?.[ad] || kaynak?.c[ad]);
     if (bulunan.length)
       ozel.duvarCapalari = bulunan.map((ad) =>
         yonlu?.[ad]
-          ? { ad, dikey: video("dikey", yonlu[ad].dikey), yatay: video("yatay", yonlu[ad].yatay, KIRPIM_Y_VARSAYILAN) }
+          ? { ad, dikey: video("dikey", yonlu[ad].dikey), yatay: video("yatay", yonlu[ad].yatay, yP6) }
           : { ad, dikey: video("dikey", kaynak.c[ad]), yatay: video("yatay", kaynak.c[ad], kaynak.yY) },
       );
+    for (const c of ozel.duvarCapalari ?? []) if (!icinde("yatay", c.yatay)) uyarilar.push(`${D.id}: duvar çapası "${c.ad}" yatay kırpım dışında (${c.yatay.join(", ")}; kirpimY ${yP6})`);
     if (bulunan.length !== DUVAR_CAPA.length) uyarilar.push(`${D.id}: duvar çapası ${bulunan.length}/${DUVAR_CAPA.length} (${DUVAR_CAPA.join(", ")})`);
   }
   if (D.rol === "brosur-kapak") {

@@ -150,13 +150,20 @@ const RENK = "out_color_matrix=bt709:out_range=tv";
  * Yatay kırpımın y ofseti, master px (§11.2-5: d3'te ufuk — Beydağları, körfez — kadraja girsin). Sayı ya da
  * {bas, son, k0, k1}: kare ≤ k0 → bas, ≥ k1 → son, arası easeInOutCubic. t34'te {200 → 420, 47 → 48} basamaktır:
  * geçiş düz parlama karelerinde (#FFF1DC) olur, 47↔48 farkı 0 kalır. Listede olmayan klip 420 (t01/l1/t12/l2 ve
- * S2 klipleri değişmez; lombar hizası bozulmaz). Geri klipler `reverse` kırpımdan SONRA olduğundan kendiliğinden doğru.
- * E turunda değişmez (§12.3: d6/d7 yatayda 420).
+ * S2 klipleri değişmez; lombar hizası bozulmaz). Geri klipler `reverse` kırpımdan SONRA olduğundan kendiliğinden doğru
+ * (r43, r65, r76, r87 ileri klibin nesnesini ileri kare numarasıyla kullanır; ters rampa reverse'ten gelir).
+ * E2 turu (§12.12, denetim D1-02; render yok): duvar duraklarında yatay kırpım yukarı — d6 293 ("İklim Eylemleri"
+ * üstü 844×390'da da görünür), d7 233 ("1.000.000+" üstü 1280×800/1920×1080/844×390'da görünür, "Sen de söz ver."
+ * ekranlarının alt kenarı 844×390'da kadrajda). t56[0] ≡ l5[0] (420) ve t78 41–65 (420; d8 kapak geometrisi,
+ * brosurDikdortgen, bankoDonusum) değişmez; p6 = t56[59] = 293, p7 = t67[47] = 233.
  */
 const KIRPIM_Y = {
   t23: { bas: 420, son: 200, k0: 24, k1: 72 },
   l3: 200,
   t34: { bas: 200, son: 420, k0: 47, k1: 48 },
+  t56: { bas: 420, son: 293, k0: 30, k1: 59 },
+  t67: { bas: 293, son: 233, k0: 0, k1: 47 },
+  t78: { bas: 233, son: 420, k0: 0, k1: 40 },
 };
 const KIRPIM_Y_VARSAYILAN = 420;
 const kirpimYOf = (klip) => KIRPIM_Y[klip] ?? KIRPIM_Y_VARSAYILAN;
