@@ -1,6 +1,6 @@
 """S1 (dış sahne) doku ve geometri hazırlığı — sistem Python'u (numpy, PIL, rasterio, shapely; `su` için scipy).
 
-    python -X utf8 -P hazirla.py [su|dunya|c1|s2|arazi|osm|hepsi] [--varlik D:/soft/cop31-varlik]
+    python -X utf8 -P hazirla.py [su|dunya|c1|rolyef|s2|arazi|osm|hepsi] [--varlik D:/soft/cop31-varlik]
 
 Çıktı: <varlik>/s1/tex/ (depo dışı); `su` → <varlik>/dunya/su-maskesi-*.png (+ .c-yedek.png, su-maskesi.json) ve
 <varlik>/render-son/_onizleme/s1-maske-fark.png (kaynak: GEBCO bath + elev, BMNG Kasım). Bellek: 21600'lük kaynaklar
@@ -539,8 +539,12 @@ def dunya():
 
 
 # ---------------------------------------------------------------------------------------------- C1 yaması (463 m)
-C1_ENLEM = (22.0, 46.0)
-C1_BOYLAM = (16.0, 44.0)
+# E turu (brief §12.2): 22–46 K / 16–44 D → 22–54 K / 16–48 D (d2 tüm Türkiye: dikey kırpımın kuzeyi ~52 K, yatay
+# kırpımın doğusu ~52 D). Yeni şerit (46–54 K ya da 44–48 D) sahne.py'de yalnız alt < 6.000 km'de karışır (`c1_ek_k`);
+# eski kutunun içi bayt bayt aynı kalır (pencere ofsetleri tam piksel, JPEG blokları hizalı; ölçüm BENIOKU E turu).
+C1_ENLEM = (22.0, 54.0)
+C1_BOYLAM = (16.0, 48.0)
+C1_ESKI = {"enlem": (22.0, 46.0), "boylam": (16.0, 44.0)}       # D turu kutusu (sahne.py: c1_ek_k = 0'da eski ağırlık)
 
 
 def c1():
@@ -573,9 +577,46 @@ def c1():
         os.path.join(OUT, "c1_su.png"))
     out.crop((int((28 - lo0) * 240), int((la1 - 39) * 240), int((35 - lo0) * 240), int((la1 - 34) * 240))) \
         .resize((1050, 750), Image.LANCZOS).save(os.path.join(OUT, "_onizleme_c1.jpg"), quality=88)
-    json.dump({"enlem": C1_ENLEM, "boylam": C1_BOYLAM, "px_derece": 240, "boyut": [gen, yuk]},
+    json.dump({"enlem": C1_ENLEM, "boylam": C1_BOYLAM, "px_derece": 240, "boyut": [gen, yuk],
+               "eski": C1_ESKI},
               open(os.path.join(OUT, "c1_yama.json"), "w"))
     log("c1_yama.jpg", gen, yuk)
+
+
+# ---------------------------------------------------------------------------------------------- rölyef (E turu)
+ROLYEF_ENLEM = (34.0, 44.0)
+ROLYEF_BOYLAM = (24.0, 46.0)
+ROLYEF_SIGMA = 1.2
+
+
+def rolyef():
+    """d2 rölyefi (brief §12.2): GEBCO_08 C1 30″ (8 bit, ~26,6 m/birim; 120 px/°) 34–44 K / 24–46 D penceresi, σ 1,2 px
+    Gauss (8 bitlik basamakları yumuşatır), 16 bit PNG (0–65535 = 0–255 × 257; deniz 0) → s1/tex/rolyef_tr.png.
+    sahne.py: Dunya malzemesinde ShaderNodeBump yüksekliği (Non-Color), kutu rolyef_tr.json."""
+    from scipy.ndimage import gaussian_filter
+    la0, la1 = ROLYEF_ENLEM; lo0, lo1 = ROLYEF_BOYLAM
+    yol = os.path.join(V, "dunya", "gebco_08_rev_elev_C1_grey_geo.tif")
+    rasterio = rio()
+    with rasterio.open(yol) as r:
+        t = r.transform
+        px = round(1.0 / t.a)
+        assert abs(t.c) < 1e-9 and abs(t.f - 90.0) < 1e-9 and px == 120, (t, px)
+    sut, sat = int(round(lo0 * px)), int(round((90 - la1) * px))
+    gen, yuk = int(round((lo1 - lo0) * px)), int(round((la1 - la0) * px))
+    pay = 8                                                  # kenar etkisi olmasın: pencereyi genişlet, sonra kırp
+    h = oku_pencere(yol, sut - pay, sat - pay, gen + 2 * pay, yuk + 2 * pay)[0].astype(np.float32)
+    hb = gaussian_filter(h, ROLYEF_SIGMA, mode="nearest")[pay:-pay, pay:-pay]
+    h0 = h[pay:-pay, pay:-pay]
+    u16 = np.clip(np.round(hb * 257.0), 0, 65535).astype(np.uint16)
+    Image.fromarray(u16).save(os.path.join(OUT, "rolyef_tr.png"))                 # uint16 → I;16
+    olc = {"enlem": ROLYEF_ENLEM, "boylam": ROLYEF_BOYLAM, "px_derece": px, "boyut": [gen, yuk], "sigma_px": ROLYEF_SIGMA,
+           "kaynak": "gebco_08_rev_elev_C1_grey_geo.tif (GEBCO_08, NASA EO)", "olcek": "16 bit = 8 bit x 257; 8 bit ~26,6 m",
+           "ham_8bit": {"min": int(h0.min()), "max": int(h0.max()), "ort": round(float(h0.mean()), 2),
+                        "sifir_orani": round(float((h0 == 0).mean()), 4)},
+           "u16": {"min": int(u16.min()), "max": int(u16.max()), "ort": round(float(u16.mean()), 1)}}
+    json.dump(olc, open(os.path.join(OUT, "rolyef_tr.json"), "w"), ensure_ascii=False)
+    Image.fromarray((hb / max(1.0, hb.max()) * 255).astype(np.uint8)).save(os.path.join(OUT, "_onizleme_rolyef.png"))
+    log("rolyef_tr.png", gen, yuk, olc["ham_8bit"], olc["u16"])
 
 
 # ---------------------------------------------------------------------------------------------- Sentinel-2
@@ -731,9 +772,9 @@ def osm():
 
 
 if __name__ == "__main__":
-    isler = {"su": su, "dunya": dunya, "c1": c1, "s2": s2, "arazi": arazi, "osm": osm}
+    isler = {"su": su, "dunya": dunya, "c1": c1, "rolyef": rolyef, "s2": s2, "arazi": arazi, "osm": osm}
     if a.is_ == "hepsi":
-        for k in ("su", "dunya", "c1", "s2", "arazi", "osm"):
+        for k in ("su", "dunya", "c1", "rolyef", "s2", "arazi", "osm"):
             isler[k]()
     else:
         for k in a.is_.split(","):

@@ -1,7 +1,7 @@
 /**
  * d yayını (broşür sayfa çevirme, sayaç): yayıncı rAF döngüsünden dYayinla(d, hareketli) çağırır,
  * aboneler (Brosur.tsx) d'ye göre DOM'a yazar. v2'de yayıncı IcindenSahne (d sürekli 0…9); v3'te
- * VideoSahne (yalnız broşür evrelerinde, v2 ölçeğinde: v3 durağı k ↔ d = k − 1).
+ * VideoSahne (yalnız broşür evrelerinde; E turundan beri d = /icinden durak numarası, sayfa dizinleri rol tablosundan).
  */
 type Abone = (d: number, hareketli: boolean) => void;
 const aboneler = new Set<Abone>();

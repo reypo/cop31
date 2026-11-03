@@ -332,6 +332,34 @@ uygulanacaksa GOP 24 (H.264 +%16, AV1 +%5). Asıl maliyet yuva: ters klip ileri 
 
 ## 5. Bütçe — gerçek render ile ölçüldü (D turu, 3 Kasım 2026, kodlama ajanı K-D; C turu K-C)
 
+**E turu (W1, 3 Kasım 2026): 12 durak, tablo veride.** Aşağıdaki D ölçümleri 11 duraklı (d0–d10) zincir içindir. E
+turunda durak tablosu manifestte (`rol`, `docs/klipler-sema.md` §0); bütçe tanımları yeni zincire göre okunur
+(brief-icinden-3 §12.5): kritik yol ve pencere d1–d7 için (d6/d7 döngüsüz: kritik = ileri + poster), **tam tur oturumu
+0→11** (d11 dönüşü önbellekten), sınır ≤ 12,00 MB (AV1, §12.9-3). **Ölçüldü (M, 4G 4 Mbps/50 ms, önbellek kapalı):
+mobile-av1 oturumu 11,953 MB ✓ (iki koşu)**, desktop-av1 11,706. Tablodaki MB değerleri F turu sonrası listeden
+(`kodlama-dogrula.py --temel 0.673 --oturum-temel 0.989`, `dogrula-render-son-F.json`; MB = 10^6 bayt): dikey AV1
+kritik / pencere, son sütunda yatay H.264 penceresi (M'de tek ✗ olan set; F'de r21 H.264 CRF 27 ile 2,504 → 2,454).
+
+| Durak (rol) | Varışta video | Kritik yol (ileri + varış döngüsü + varış posteri) | Pencere ek (geri) | E ölçüm |
+|---|---|---|---|---|
+| d0 lombar | — | t01 + l1 + p1 | — | ilk yükleme AV1 1,942 · H.264 2,252 (dikey) ≤ 2,5 ✓ |
+| d1 dunya | l1 | t12 + l2 + p2 | r10 | 1,166 / 1,343 · y-H.264 1,434 ✓ |
+| d2 emanet | l2 | t23 + l3 + p3 | r21 | 1,960 (≤ 2,1) / 2,414 · y-H.264 **2,454** ✓ |
+| d3 expo | l3 | t34 + l4 + p4 | r32 | 1,338 / 2,493 (≤ 2,6) · y-H.264 2,428 ✓ |
+| d4 anatomi | l4 | t45 + l5 + p5 | r43 | 0,848 / 1,866 · y-H.264 2,054 ✓ |
+| d5 sutunlar | l5 | t56 + p6 | r54 | 0,412 / 0,923 · y-H.264 1,241 ✓ |
+| d6 duvar | t56 son kare | t67 + p7 | r65 | 0,218 / 0,509 · y-H.264 0,912 ✓ |
+| d7 duvar | t67 son kare | t78 + p8 (+ broşür görselleri) | r76 | 0,330 / 0,478 · y-H.264 0,844 ✓ |
+| d8 brosur-kapak | — (DOM) | — | r87 | 0 / 0,236 · y-H.264 0,393 ✓ |
+| d9 brosur-sayfa | — (DOM) | — | — | — |
+| d10 brosur-arka | — (DOM) | t01 + l1 (önbellekte) | — | — |
+| d11 dunya | l1 | — | r10 (önbellekte) | — |
+
+W1'in geçici manifestiyle (`--gecici`, port 3100, prod, Chrome headless, gerçek cihaz değil) ölçülenler: 0→11→0 dokunma
+ve tekerlek 22/22 adım, yedek 0, konsol hatası 0; kiosk turu 120,8 s (d6 11,0 s, d7 5,0 s dinlenme; geçici t67/t78 2,4 s
+olduğundan son kliplerle ~119–120 s beklenir); havuz: döngüsüz duvar durağında üçüncü yuva boş kalır (uzaktaki l1 artık
+d6'da yuvaya alınmaz; sıradaki geçiş pencereden iner).
+
 Kaynak: `D:\soft\cop31-varlik\render-son\` (Cycles 1920², PNG 16 bit). C turunda S1 t23 + t34a, S2 t34b + l4 + p6
 yeniden render edildi. D turunda S1-D2 t01/l1/t12/l2/t23'ü yeni su maskesiyle (Katara, brief §11.6-6) yeniden render
 etti; l3, t34 ve S2 klipleri değişmedi. t34 = `scripts/icinden/t34-birlestir.py` (kare 47 ↔ 48 16 bit farkı 0). Tek
@@ -415,7 +443,7 @@ referansına karşı, ortalama (parantezde en düşük kare).
 - l2 H.264/HEVC +7 kB, t01 HEVC −11 kB; öteki yeni master'lar ±10 kB içinde.
 
 Bütçe (§11.2-3 tanımı, §11.6-1 sınırları; MB). İlk yükleme = HTML+JS+CSS+font 0,5 + t01 + p1 + l1 + t12. d_j
-varışında **kritik yol** = t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8 MB (**d2 istisnası ≤ 2,1**). **Pencere** = kritik + r(j→j−1)
+varışında **kritik yol** = t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8 MB (**d2 istisnası ≤ 2,1**; E turunda yeni zincir, yukarıdaki tablo). **Pencere** = kritik + r(j→j−1)
 ≤ 2,5 MB (**AV1 d3 istisnası ≤ 2,6**). Set = video + poster. **Tam tur oturumu (0→10)** = set + 1,27 MB medya dışı
 (W-B2 ölçümü: oturum 11,82 − set 10,55; font, JS, HTML, broşür görselleri); d10 dönüşü önbellekten.
 

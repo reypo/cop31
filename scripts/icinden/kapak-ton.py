@@ -1,32 +1,57 @@
-# /icinden v3 — d6 kapak ton eşlemesi: render'daki kapak (t56 son karesi) ↔ DOM kapak (kapak-dom-sirtsiz.png).
+# /icinden v3 — d8 kapak ton eşlemesi: render'daki kapak (t78 son karesi) ↔ DOM kapak (kapak-dom-sirtsiz.png).
 #
-# d5→d6'da video kapağı DOM kapağa 200 ms'de kesişir, sonra DOM 420 ms'de okuma boyutuna FLIP'lenir. Render'ın
-# ışığı ve AgX tonu kâğıdı griye, maviyi soluğa çeker (S2 A turu: kâğıt #DED8D4, mavi #4D87B6 ↔ doku #FFFFFF,
-# #175EA6). Site DOM kapağa CSS filtresiyle aynı tonu verip FLIP boyunca kimliğe indirir (VideoSahne.tsx tonYaz).
-# Bu betik o filtrenin parametrelerini bulur: saturate(s) contrast(c) brightness(b) sepia(p), sRGB'de (tarayıcılar
-# CSS filtre işlevlerini sRGB değerlerinde uygular), en küçük kareler.
+# d7→d8'de (E turu, §12.1; D turunda d5→d6, t56) video kapağı DOM kapağa 200 ms'de kesişir, sonra DOM 420 ms'de okuma
+# boyutuna FLIP'lenir. Render'ın ışığı ve AgX tonu kâğıdı griye, maviyi soluğa çeker (S2 A turu: kâğıt #DED8D4, mavi
+# #4D87B6 ↔ doku #FFFFFF, #175EA6). Site DOM kapağa CSS filtresiyle aynı tonu verip FLIP boyunca kimliğe indirir
+# (VideoSahne.tsx tonYaz). Bu betik o filtrenin parametrelerini bulur: saturate(s) contrast(c) brightness(b) sepia(p),
+# sRGB'de (tarayıcılar CSS filtre işlevlerini sRGB değerlerinde uygular), en küçük kareler.
 #
-#   python -X utf8 -P scripts/icinden/kapak-ton.py --kare <render-son/t56/k_0059.png> --fragman <render-son/t56.json>
-#        [--dom D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png] --cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json
+#   python -X utf8 -P scripts/icinden/kapak-ton.py [--kok D:/soft/cop31-varlik/render-son] [--klip t78]
+#        [--kare <kok>/<klip>/k_<son>.png] [--fragman <kok>/<klip>.json]
+#        [--dom D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png] [--cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json]
 #   python -X utf8 -P scripts/icinden/kapak-ton.py --cift FFFFFF=DED8D4,1266AB=4D87B6 --cikti <json>
+#
+# Varsayılan girdi (§12.5): t78'in SON karesi (`<kok>/t78/` içindeki en büyük k_NNNN.png; 66 karede k_0065) ve
+# `t78.json`'un `brosur_dikdortgen`'i (S2-E json_yaz: brosur_dikdortgen → t78). t78 kuyruğu eski t56 kuyruğunun
+# birebir eşi (§12.3; §12.6: t78[65] ↔ eski t56[71] ≤ 0,05) olduğundan sonuç D turundakiyle aynı çıkmalı; sapma
+# §12.7-4'ün işareti. Çıktı varsayılanı `<kodlama>/<kok klasör adı>-kapak-ton.json` (manifest-birlestir.mjs `--ton`
+# varsayılanı; site D[8] `ozel.kapakTon`).
 #
 # Görüntü kipi: fragmanın `brosur_dikdortgen`'i (master px; dönüklük ~0) karede kırpılır, DOM görüntüsüyle aynı
 # 34×48 ızgaraya küçültülür (kenardan 2 hücre dışarıda), her hücre bir renk çifti. Kare boyutu master'dan farklıysa
-# (960² önizleme) dikdörtgen oranla ölçeklenir. Çıktı manifest-birlestir.mjs `--ton` ile d6 `ozel.kapakTon` olur.
+# (960² önizleme) dikdörtgen oranla ölçeklenir.
 import argparse
 import json
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
 ap = argparse.ArgumentParser()
+ap.add_argument("--kok", default="D:/soft/cop31-varlik/render-son")
+ap.add_argument("--klip", default="t78", help="kapağın göründüğü geçiş (E turu t78; D turu t56)")
 ap.add_argument("--kare")
 ap.add_argument("--fragman")
 ap.add_argument("--dom", default="D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png")
 ap.add_argument("--cift")
-ap.add_argument("--cikti", required=True)
+ap.add_argument("--cikti")
 a = ap.parse_args()
+if a.cikti is None:
+    a.cikti = str(Path(a.kok).parent / "kodlama" / f"{Path(a.kok).name}-kapak-ton.json")
+if not a.cift:
+    if a.kare is None:
+        kareler = sorted(Path(a.kok, a.klip).glob("k_*.png"))
+        if not kareler:
+            sys.exit(f"kare yok: {Path(a.kok, a.klip, 'k_*.png')} (--kare ile verin)")
+        a.kare = str(kareler[-1])
+    if a.fragman is None:
+        a.fragman = str(Path(a.kok, f"{a.klip}.json"))
+    fr_ = json.load(open(a.fragman, encoding="utf8"))
+    if "brosur_dikdortgen" not in fr_:
+        sys.exit(f"{a.fragman}: brosur_dikdortgen yok (S2-E json_yaz onu t78'e yazar)")
+    if fr_.get("kare") and Path(a.kare).stem != f"k_{fr_['kare'] - 1:04d}" and Path(a.kare).parent.name == a.klip:
+        print(f"UYARI: {a.kare} son kare değil (fragman {fr_['kare']} kare → k_{fr_['kare'] - 1:04d})", file=sys.stderr)
 
 SEP = np.array([[0.393, 0.769, 0.189], [0.349, 0.686, 0.168], [0.272, 0.534, 0.131]])
 

@@ -87,39 +87,166 @@
     6px 10px 24px rgb(40 30 20 / 0.28);
 }
 /*
- * Sahnedeki broşürde gölge kâğıdın kendisinde değil ayrı bir katmanda (::before, will-change): d9 → d10 dalışında
+ * Sahnedeki broşürde gölge kâğıdın kendisinde değil ayrı katmanlarda (.ic-br-zemin, will-change): dönüşe dalışta
  * ahşap beyaza dönerken sayfa beyaz kâğıtla birleşsin diye yalnız gölge söner (data-dalis; C turu, denetim A1-06:
  * gölgeli boş sayfa beyazda "yüzüyordu"). Kâğıdın opaklığı sayfaları da taşıdığı için kullanılamaz.
+ * E turu (§12.4-5): iki gölge — a 24 px (render ışığı; kesişme karesi) ve b 34 px (okuma); FLIP'te Brosur çapraz
+ * söndürür (brosurGirisYayinla). Dalışta sarmalayıcı söner (satır içi opaklıklara dokunmaz).
  */
 .v3 .ic-br > .ic-br-kagit {
   box-shadow: none;
+  /* Giriş eğimi + çevirme kalkması (Brosur yazar; dinlenmede "none"). */
+  will-change: transform, opacity;
 }
-.v3 .ic-br > .ic-br-kagit::before {
+.v3 .ic-br-zeminler {
   position: absolute;
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  box-shadow:
-    0 0 0 1px rgb(40 51 47 / 0.06),
-    6px 10px 24px rgb(40 30 20 / 0.28);
-  content: "";
   pointer-events: none;
   transition: opacity 300ms linear;
   will-change: opacity;
 }
-.v3[data-dalis="1"] .ic-br > .ic-br-kagit::before {
+.v3 .ic-br-zemin {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  will-change: opacity;
+}
+.v3 .ic-br-zemin-a {
+  box-shadow:
+    0 0 0 1px rgb(40 51 47 / 0.06),
+    6px 10px 24px rgb(40 30 20 / 0.28);
+}
+.v3 .ic-br-zemin-b {
+  box-shadow:
+    0 0 0 1px rgb(40 51 47 / 0.06),
+    8px 14px 34px rgb(40 30 20 / 0.3);
   opacity: 0;
 }
-/* Canlılık (v2 kuralı, v3 numarası): kapak yörüngesi d6, polaroid sarkacı d7–d8. */
-.v3[data-dinlenme="6"] .ic-br-yorunge {
+.v3[data-dalis="1"] .ic-br-zeminler {
+  opacity: 0;
+}
+
+/*
+ * E turu menteşesi ("3b" kipi, Brosur data-kip; §12.4-5). Hepsi transform/opacity, preserve-3d yok, filter/mask yok.
+ *  - koyulaşma (.ic-br-kivrim): sırttan kenara gradyan, 1/40 genişlikte boyanıp gerilir (F turu); "duz" kipinde eski kıvrım gradyanı.
+ *  - sırt parlak şeridi: dar gradyan (θ 20–50°'de 0,25; Brosur yazar, dinlenmede 0: çizilmez).
+ *  - hayalet sayfalar: yarım boyutta yerleşik (--u 0,5px), scale(2); başlık çipi + sayfa no + soyut düzen (F turu).
+ *  - ortak alt gölge: düz gövde (scaleX = cosθ) + 96 birimlik yumuşak kenar (translateX); kâğıtla kırpılı.
+ *  - arka kapak öğeleri (data-sira) ve 50+ satırı kendi katmanlarında: opaklık/metin değişimi sayfayı yeniden boyatmaz.
+ */
+/*
+ * Katmandaki sayfalar kırpmaz (W2b, ölçüldü): yuvarlak köşeli overflow:hidden sayfanın köşesine değen birleşik çocukları
+ * (koyulaşma, parlak şerit, hayaletlerin çocukları) için Chrome maske katmanı ("Synthesized Clip") üretiyordu — mobil
+ * DPR 3'te 16–46 MB karo belleği ve dinlenmede maske. İçerik zaten kâğıdın içinde; köşeye değen çocuklar köşeyi kendisi
+ * yuvarlar (boyamada, kırpmasız).
+ */
+.v3 .ic-br .ic-br-sayfa {
+  overflow: visible;
+}
+.v3 .ic-br .ic-br-kivrim,
+.v3 .ic-br .ic-br-sirt,
+.v3 .ic-br .ic-br-parlak,
+.v3 .ic-br .ic-br-golge {
+  border-radius: inherit;
+}
+/*
+ * Koyulaşma sırttan serbest kenara gradyan (F turu, denetim D1-09; düz dolgu kapı/kart gibi okunuyordu): Brosur opaklığı
+ * 0,5·sinθ yazar, gradyan 0,3 → 1 → 0,15 → 0,5·sinθ. Raster belleği düşük kalsın diye öğe 1/40 genişlikte boyanır ve
+ * scaleX(40) ile gerilir (yatay gradyan gerilince aynı; köşe yarıçapı eliptik: gerilince 6 × 6 birim). Dönüşüm sabit,
+ * animasyon yalnız opaklık.
+ */
+.v3 .ic-br[data-kip="3b"] .ic-br-kivrim {
+  right: auto;
+  width: calc(17 * var(--u));
+  border-radius: calc(0.15 * var(--u)) / calc(6 * var(--u));
+  background: linear-gradient(to right, rgb(24 30 28 / 0.3), rgb(24 30 28));
+  transform: scaleX(40);
+  transform-origin: 0 0;
+}
+/* Hayalet sayfanın soyut düzeni (D1-09): metin değil, gri çubuklar ve görsel bloğu (#28332F, %8–16). */
+.v3 .ic-br-h-blok {
+  position: absolute;
+  z-index: 3;
+  border-radius: calc(4 * var(--u));
+}
+.v3 .ic-br-h-m {
+  background: rgb(40 51 47 / 0.1);
+}
+.v3 .ic-br-h-a {
+  background: rgb(40 51 47 / 0.16);
+}
+.v3 .ic-br-h-g {
+  border-radius: calc(6 * var(--u));
+  background: linear-gradient(160deg, rgb(40 51 47 / 0.08), rgb(40 51 47 / 0.14));
+}
+.v3 .ic-br-parlak {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  width: calc(72 * var(--u));
+  background: linear-gradient(to right, rgb(255 255 255 / 0), rgb(255 255 255 / 0.85) 40%, rgb(255 255 255 / 0));
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+.v3 .ic-br-hayalet-no {
+  z-index: 4;
+  font-size: calc(64 * var(--u));
+  line-height: 1;
+  font-weight: 900;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-brand-blue);
+}
+.v3 .ic-br-altgolge {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+.v3 .ic-br-altgolge > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.v3 .ic-br-altgolge-dolu {
+  width: calc(680 * var(--u));
+  background: rgb(24 30 28);
+}
+.v3 .ic-br-altgolge-kenar {
+  width: calc(96 * var(--u));
+  background: linear-gradient(to right, rgb(24 30 28), rgb(24 30 28 / 0));
+}
+.v3 .ic-br[data-kip="3b"] .ic-br-sayfa-arka [data-sira],
+.v3 .ic-br[data-kip="3b"] .ic-br-sayfa-bulusma .ic-br-blok-baslik {
+  will-change: opacity;
+}
+.v3 .ic-br-sayi {
+  font-variant-numeric: tabular-nums;
+}
+/* Canlılık (v2 kuralı; E turu rol seçicisi): kapak yörüngesi kapak durağında, polaroid sarkacı iç sayfada. */
+.v3[data-dinlenme-rol="brosur-kapak"] .ic-br-yorunge {
   animation-play-state: running;
 }
-.v3[data-dinlenme="7"] .ic-sarkac-a,
-.v3[data-dinlenme="8"] .ic-sarkac-b,
-.v3[data-dinlenme="8"] .ic-sarkac-c {
+.v3[data-dinlenme-rol="brosur-sayfa"] .ic-sarkac-a {
   --ic-genlik: 1;
   animation-play-state: running;
   transition-duration: 900ms;
+}
+/*
+ * Sarkaç katmanı kalıcı (W2b): will-change yalnız dinlenmedeyken, iç sayfadan ayrılınca katman kalkıyor ve genlik
+ * 320 ms'de 0'a sönerken çevrilen iç sayfanın tamamı (polaroid fotoğrafıyla) her karede yeniden boyanıyordu.
+ */
+.v3 .ic-br .ic-sarkac-a {
   will-change: rotate;
 }
 
@@ -276,28 +403,37 @@
     font-size: 13px;
   }
 }
-/* görünürlük: etiketler birlikte 300 ms */
+/* görünürlük: etiketler birlikte 300 ms. Kimlik eşleşmesi (etiket k ↔ durak k), rol tablosundan bağımsız: 1–11. */
 .v3[data-etiket="1"] .v3-et[data-d="1"],
 .v3[data-etiket="2"] .v3-et[data-d="2"],
 .v3[data-etiket="3"] .v3-et[data-d="3"],
-.v3[data-etiket="4"] .v3-et[data-d="4"] {
+.v3[data-etiket="4"] .v3-et[data-d="4"],
+.v3[data-etiket="5"] .v3-et[data-d="5"],
+.v3[data-etiket="6"] .v3-et[data-d="6"],
+.v3[data-etiket="7"] .v3-et[data-d="7"],
+.v3[data-etiket="8"] .v3-et[data-d="8"],
+.v3[data-etiket="9"] .v3-et[data-d="9"],
+.v3[data-etiket="10"] .v3-et[data-d="10"],
+.v3[data-etiket="11"] .v3-et[data-d="11"] {
   opacity: 1;
   transition-duration: 300ms;
 }
-/* d4 spot (3,5 s): etkin olmayan bölge etiketleri %80 (metin rengi değişmez; %60'ta açık duvarda kayboluyordu) */
-.v3[data-etiket="4"]:is([data-spot="1"], [data-spot="2"], [data-spot="3"], [data-spot="4"]) .v3-et-bolge {
+/* anatomi spotu (3,5 s): etkin olmayan bölge etiketleri %80 (metin rengi değişmez; %60'ta açık duvarda kayboluyordu) */
+.v3[data-metin-rol="anatomi"]:is([data-spot="1"], [data-spot="2"], [data-spot="3"], [data-spot="4"]) .v3-et-bolge {
   opacity: 0.8;
 }
-.v3[data-etiket="4"][data-spot="1"] .v3-et-bolge[data-no="1"],
-.v3[data-etiket="4"][data-spot="2"] .v3-et-bolge[data-no="2"],
-.v3[data-etiket="4"][data-spot="3"] .v3-et-bolge[data-no="3"],
-.v3[data-etiket="4"][data-spot="4"] .v3-et-bolge[data-no="4"] {
+.v3[data-metin-rol="anatomi"][data-spot="1"] .v3-et-bolge[data-no="1"],
+.v3[data-metin-rol="anatomi"][data-spot="2"] .v3-et-bolge[data-no="2"],
+.v3[data-metin-rol="anatomi"][data-spot="3"] .v3-et-bolge[data-no="3"],
+.v3[data-metin-rol="anatomi"][data-spot="4"] .v3-et-bolge[data-no="4"] {
   opacity: 1;
 }
 
 /*
- * d5: etkin sütundan alt banda kılavuz çizgi (JS konumlar). Çizgi yalnız kısa ve metne değmiyorsa (≤ 0,35 ·
- * kısa kenar, çapa bandın dışında); değilse çapada nokta, çapa kırpımda/bant altındaysa hiçbiri (denetim A1-02).
+ * sutunlar (d5): etkin satırın çapasından bandın kenarına kılavuz çizgi (JS konumlar; çapalar manifestte
+ * ozel.sutunlar). Çizgi yalnız kısa ve metne değmiyorsa (≤ 0,35 · kısa kenar, çapa bandın dışında); değilse çapada
+ * nokta, çapa yoksa/kırpımda/bant altındaysa hiçbiri (denetim A1-02). Duvar durağında (d6) kılavuz yok (F turu, denetim
+ * D1-11): duvar yazısı zaten büyük, nokta glifin üstüne düşüp leke gibi görünüyordu; satır döngüsü sürer.
  */
 .v3-sutun-cizgi {
   position: absolute;
@@ -320,7 +456,7 @@
   box-shadow: 0 0 0 1px rgb(247 230 205 / 0.6);
   transform-origin: 50% 50%;
 }
-.v3:not([data-metin="5"]) .v3-sutun-cizgi {
+.v3:not([data-metin-rol="sutunlar"]) .v3-sutun-cizgi {
   opacity: 0 !important;
 }
 
@@ -347,13 +483,16 @@
     color 300ms linear,
     opacity 200ms linear;
 }
-/* d0, kapanış ve lombar kâğıdı görünürken (0→1, 1→0, 9→10, 10→9: beyaz kâğıt) okuma yok. */
-.v3:is([data-durak="0"], [data-durak="11"], [data-kagit="1"]) .v3-kadraj {
+/* Açılış (lombar), kapanış ve lombar kâğıdı görünürken (0→1, 1→0, dalış ve geri dalış: beyaz kâğıt) okuma yok. */
+.v3:is([data-rol="lombar"], [data-rol="kapanis"], [data-kagit="1"]) .v3-kadraj {
   opacity: 0;
 }
-/* Krem/ahşap duraklar (d5–d9) ve oraya giden geçişler: koyu metin, krem hale. */
-.v3:is([data-durak="5"], [data-durak="6"], [data-durak="7"], [data-durak="8"], [data-durak="9"])[data-faz="dur"] .v3-kadraj,
-.v3[data-faz="gecis"]:is([data-hedef="5"], [data-hedef="6"], [data-hedef="7"], [data-hedef="8"], [data-hedef="9"]) .v3-kadraj {
+/*
+ * Krem/ahşap duraklar (sutunlar, broşür) ve oraya giden geçişler: koyu metin, krem hale. Duvar durakları beyaz kalır:
+ * kadraj okumasının köşesi (sağ üst) orada karanlık hol (§12.3 poz A/B, "üstte karanlık hol").
+ */
+.v3:is([data-rol="sutunlar"], [data-rol="brosur-kapak"], [data-rol="brosur-sayfa"], [data-rol="brosur-arka"])[data-faz="dur"] .v3-kadraj,
+.v3[data-faz="gecis"]:is([data-hedef-rol="sutunlar"], [data-hedef-rol="brosur-kapak"], [data-hedef-rol="brosur-sayfa"], [data-hedef-rol="brosur-arka"]) .v3-kadraj {
   color: #28332f;
   -webkit-text-stroke-color: rgb(247 230 205 / 0.85);
   text-shadow: 0 0 4px rgb(247 230 205 / 0.8);
@@ -461,6 +600,14 @@
   --ikincil: #28332f;
   color: #28332f;
 }
+/* gece (emanet, d2; §12.4-3): #0B1A2E, metin satırlarında α ≥ 0,66. Yerleşimi aşağıda (rol emanet). */
+.v3-tema-gece {
+  --scrim: 11 26 46;
+  --a0: 0.8;
+  --a: 0.66;
+  --ikincil: #d6e2ee;
+  color: #fff;
+}
 
 /* tipografi (§5) */
 .v3-baslik {
@@ -532,9 +679,86 @@
  * kontrast geçse de metin-üstüne-metin dokusu kalıyordu (A1-11) → krem plato α 0,84.
  */
 @media not all and (min-aspect-ratio: 4/3) {
-  .v3-bant[data-d="5"] {
+  .v3-bant[data-rol="sutunlar"] {
     --a: 0.84;
   }
+}
+
+/*
+ * emanet (d2) bandı — iskelet (W1; görsel W2a tamamlar): dikeyde alt bant, scrim ekranın %60'ından başlar (bant +
+ * sönüm alt %40'ı kaplar), metin altta; yatayda sol altta (sağda değil: Türkiye haritasının doğusu ve emanet ışıkları
+ * sağ yarıda), aşağıdan ve soldan sönen scrim.
+ */
+@media (prefers-reduced-motion: no-preference) and (max-aspect-ratio: 4/3) {
+  .v3-bant[data-rol="emanet"] {
+    display: flex;
+    min-height: calc(40svh - var(--sonum));
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-aspect-ratio: 4/3) {
+  .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
+    top: auto;
+    right: auto;
+    left: 0;
+    width: min(44vw, 600px);
+    justify-content: flex-end;
+    padding: 0 28px calc(env(safe-area-inset-bottom, 0px) + 36px) 40px;
+  }
+  /*
+   * Elips (120% × 100%) kutunun sağ kenarına normalize 1/1,2 = 0,833'te değiyor: son durak 100%'deyken kenarda
+   * α ≈ 0,24 kalıyor, Levant üstünde dikey sert bir ton dikişi çiziyordu (F turu, denetim D1-04). Son durak 83%:
+   * sağ ve üst kenarda α 0; plato 60%'a kadar.
+   */
+  .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
+    top: calc(-1 * var(--sonum) - 40px);
+    right: calc(-1 * var(--sonum) - 40px);
+    left: 0;
+    background: radial-gradient(
+      120% 100% at 0% 100%,
+      rgb(var(--scrim) / var(--a0)),
+      rgb(var(--scrim) / var(--a)) 60%,
+      rgb(var(--scrim) / 0) 83%
+    );
+  }
+}
+/*
+ * Yatay telefonda (yükseklik ≤ 480) d2 bandı sağ altta (F turu, denetim D1-07): sol altta 03/04/05 numaraları bant
+ * başlığının ve EN satırının içinde, scrim altında kararıyordu. Sağ altta (Suriye çölü) yalnız 12 ve 09 var, ikisi de
+ * bandın üstünde. Scrim aşağıdan (doğrusal) ve soldan (maske) söner.
+ */
+@media (prefers-reduced-motion: no-preference) and (min-aspect-ratio: 4/3) and (max-height: 480px) {
+  .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
+    --sonum: 32px;
+    right: 0;
+    left: auto;
+    width: min(46vw, 400px);
+    padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 14px) 24px;
+  }
+  /* başlık tek satır: bant 12/09 ışıklarının altında kalsın */
+  .v3-bant[data-rol="emanet"] .v3-baslik {
+    max-width: none;
+    font-size: 22px;
+  }
+  .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
+    top: calc(-1 * var(--sonum));
+    right: 0;
+    left: calc(-1 * var(--sonum));
+    background: linear-gradient(
+      to top,
+      rgb(var(--scrim) / var(--a0)),
+      rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum)),
+      rgb(var(--scrim) / 0)
+    );
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--sonum));
+    mask-image: linear-gradient(to right, transparent, #000 var(--sonum));
+  }
+}
+
+/* İlk duvarın (d6) spot satırları: 3 iklim satırı, ikincil boy (≤ 2 satır). */
+.v3-duvar-satirlari {
+  margin-top: 12px;
 }
 
 /* d4 alt bant: etkin bölgenin kısa satırı (spot 3,5 s) */
@@ -595,14 +819,22 @@
   opacity: 1;
 }
 
-/* görünürlük: jestte 200 ms söner; klibin son 250 ms'sinde 350 ms giriş (yalnız opaklık) */
+/*
+ * görünürlük: jestte 200 ms söner; klibin son 250 ms'sinde 350 ms giriş (yalnız opaklık). Kimlik eşleşmesi (bant k ↔
+ * durak k), rol tablosundan bağımsız: 0–11 (bandı olmayan durakta eşleşecek öğe yok).
+ */
 .v3[data-metin="0"] .v3-bant[data-d="0"],
 .v3[data-metin="1"] .v3-bant[data-d="1"],
+.v3[data-metin="2"] .v3-bant[data-d="2"],
 .v3[data-metin="3"] .v3-bant[data-d="3"],
 .v3[data-metin="4"] .v3-bant[data-d="4"],
 .v3[data-metin="5"] .v3-bant[data-d="5"],
 .v3[data-metin="6"] .v3-bant[data-d="6"],
-.v3[data-metin="10"] .v3-bant[data-d="10"] {
+.v3[data-metin="7"] .v3-bant[data-d="7"],
+.v3[data-metin="8"] .v3-bant[data-d="8"],
+.v3[data-metin="9"] .v3-bant[data-d="9"],
+.v3[data-metin="10"] .v3-bant[data-d="10"],
+.v3[data-metin="11"] .v3-bant[data-d="11"] {
   opacity: 1;
   transition-duration: 350ms;
 }
@@ -618,7 +850,7 @@
 .v3-acilis::before {
   content: none;
 }
-.v3[data-metin="0"] .v3-acilis a {
+.v3[data-metin-rol="lombar"] .v3-acilis a {
   pointer-events: auto;
 }
 /* Logo: amblem merkezi ve yarıçapı T01'in 0. karesindeki diskle aynı (video uzayı, cover dönüşümü). */
@@ -820,6 +1052,141 @@
     bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     left: auto;
     text-align: right;
+  }
+}
+
+/*
+ * Yatay köşe bantları (F turu). Yatayda bant varsayılanı sağda tam boy; şu duraklarda sahnenin boş köşesine iner,
+ * scrim yalnız bandın arkasında (bir yönden doğrusal, öteki yönden maske ile söner; elips köşe sorunu yok, D1-04):
+ *  - duvar (d6/d7, D1-01): duvar baskısı tüm genişliği kaplıyor, sağ yarıdaki bant metni duvar yazısının üstüne
+ *    biniyordu → sağ alt, dağ şeridi/bank bölgesi (1280×800'de y > ~600). Başlık ikincil boyda (duvar zaten aynı
+ *    başlığı büyük gösteriyor; D1-12'nin ikinci seçeneği, yalnız yatayda), metin ≤ 560 px.
+ *  - anatomi (d4, D1-03): sağ-orta bant yeni ön cephe pankartının üstüne düşüyordu → sol üst (karanlık tavan/hol).
+ *  - dunya (d1/d11) yatay telefonda (D1-07): künye ("Antalya / Açılışa N gün") bant gövdesinin hemen solunda, aynı
+ *    hizadaydı → bant sağ kenarda ≤ 300 px, metin üstte.
+ */
+@media (min-aspect-ratio: 4/3) {
+  .v3-bant[data-rol="duvar"]:not(.v3-acilis) {
+    --sonum: 48px;
+    top: auto;
+    width: min(50vw, 640px);
+    justify-content: flex-end;
+    padding: 0 40px calc(env(safe-area-inset-bottom, 0px) + 28px);
+  }
+  /* yan sönüm (--yan) üst sönümden geniş: dar bir yan kenar yumuşak da olsa dikdörtgen yama gibi okunuyordu */
+  .v3-bant[data-rol="duvar"]:not(.v3-acilis)::before {
+    --yan: 120px;
+    top: calc(-1 * var(--sonum));
+    right: 0;
+    bottom: 0;
+    left: calc(-1 * var(--yan));
+    background: linear-gradient(
+      to top,
+      rgb(var(--scrim) / var(--a0)),
+      rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum)),
+      rgb(var(--scrim) / 0)
+    );
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--yan));
+    mask-image: linear-gradient(to right, transparent, #000 var(--yan));
+  }
+  .v3-bant[data-rol="duvar"] .v3-baslik {
+    max-width: none;
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .v3-bant[data-rol="duvar"] .v3-en {
+    margin-top: 2px;
+  }
+  .v3-bant[data-rol="duvar"] :is(.v3-spot-satir, .v3-govde) {
+    max-width: none;
+  }
+  .v3-bant[data-rol="duvar"] .v3-duvar-satirlari {
+    margin-top: 8px;
+  }
+
+  .v3-bant[data-rol="anatomi"]:not(.v3-acilis, .v3-bant-ek) {
+    --sonum: 56px;
+    bottom: auto;
+    right: auto;
+    left: 0;
+    width: min(50vw, 640px);
+    justify-content: flex-start;
+    padding: calc(env(safe-area-inset-top, 0px) + 36px) 40px 0;
+  }
+  .v3-bant[data-rol="anatomi"]:not(.v3-acilis, .v3-bant-ek)::before {
+    top: 0;
+    right: calc(-1 * var(--sonum));
+    bottom: calc(-1 * var(--sonum));
+    left: 0;
+    background: linear-gradient(
+      to bottom,
+      rgb(var(--scrim) / var(--a0)),
+      rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum)),
+      rgb(var(--scrim) / 0)
+    );
+    -webkit-mask-image: linear-gradient(to left, transparent, #000 var(--sonum));
+    mask-image: linear-gradient(to left, transparent, #000 var(--sonum));
+  }
+  .v3-bant[data-rol="anatomi"] .v3-baslik {
+    max-width: none;
+  }
+
+  /* Duvar durakları yatayda: kadraj okuması açık duvarın üstünde → koyu, halesiz (D1-15; d8–d10 ahşap zemindeki gibi). */
+  .v3[data-rol="duvar"][data-faz="dur"] .v3-kadraj,
+  .v3[data-faz="gecis"][data-hedef-rol="duvar"] .v3-kadraj {
+    color: #28332f;
+    -webkit-text-stroke-width: 0;
+    text-shadow: none;
+  }
+}
+@media (min-aspect-ratio: 4/3) and (max-height: 480px) {
+  /*
+   * Yatay telefonda duvar bandı sol altta: sağ altta d6'nın "İstanbul" satırı bandın altında kalıp başlığın arkasından
+   * okunuyordu (390 px yükseklikte duvar yazısı ekranın altına dek iniyor); sol altta yalnız saksı ve dağ şeridi var.
+   */
+  .v3-bant[data-rol="duvar"]:not(.v3-acilis) {
+    --a: 0.84;
+    right: auto;
+    left: 0;
+    width: min(52vw, 440px);
+    padding: 0 24px calc(env(safe-area-inset-bottom, 0px) + 12px) 20px;
+  }
+  .v3-bant[data-rol="duvar"]:not(.v3-acilis)::before {
+    --yan: 72px;
+    right: calc(-1 * var(--yan));
+    left: 0;
+    -webkit-mask-image: linear-gradient(to left, transparent, #000 var(--yan));
+    mask-image: linear-gradient(to left, transparent, #000 var(--yan));
+  }
+  .v3-bant[data-rol="duvar"] .v3-baslik {
+    font-size: 20px;
+    line-height: 24px;
+  }
+  .v3-bant[data-rol="duvar"] .v3-en {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .v3-bant[data-rol="duvar"] .v3-duvar-satirlari,
+  .v3-bant[data-rol="duvar"] .v3-govde {
+    margin-top: 4px;
+  }
+  .v3-bant[data-rol="duvar"] :is(.v3-spot-satir, .v3-govde) {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .v3-bant[data-rol="anatomi"]:not(.v3-acilis, .v3-bant-ek) {
+    width: min(50vw, 440px);
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 24px 0;
+  }
+  .v3-bant[data-rol="anatomi"] .v3-baslik {
+    font-size: 22px;
+  }
+
+  .v3-bant[data-rol="dunya"]:not(.v3-acilis) {
+    width: min(36vw, 300px);
+    justify-content: flex-start;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 44px);
   }
 }
 

@@ -2,7 +2,7 @@
 // altındaki render piksellerinden 4,5:1 için gereken scrim alfasını ölçer ve CSS'teki `--a` ile karşılaştırır.
 //
 //   node scripts/icinden/scrim-olc.mjs [--port 3100] [--kare D:/soft/cop31-varlik/render-son]
-//        [--esle l4=<klasör>,p6=<klasör>] [--adim 4] [--cikti .qa/icinden3/scrim.json]
+//        [--esle l4=<klasör>,p6=<klasör>] [--adim 4] [--cikti .qa/icinden3/scrim.json] [--duraklar 2=l2,6=p6]
 //        [--liste D:/soft/cop31-varlik/kodlama/render-son.json]
 //
 // Sunucu (`next start -p <port>`) açık olmalı. Her görünümde (390×844, 1280×800, 844×390) d1, d3, d4, d5, d6,
@@ -31,7 +31,11 @@ const ESLE = Object.fromEntries(
     .filter(Boolean)
     .map((s) => [s.slice(0, s.indexOf("=")), resolve(s.slice(s.indexOf("=") + 1))]),
 );
-const DURAKLAR = { 1: "l1", 3: "l3", 4: "l4", 5: "l5", 6: "p6", 10: "l1" };
+// --duraklar "2=l2,6=p6": ölçülecek durak → kare klibi (E turu numaralaması için; verilmezse aşağıdaki varsayılan).
+const DURAKLAR = argv.includes("--duraklar")
+  ? Object.fromEntries(arg("--duraklar", "").split(",").filter(Boolean).map((s) => s.split("=")).map(([k, v]) => [Number(k), v]))
+  : { 1: "l1", 3: "l3", 4: "l4", 5: "l5", 6: "p6", 10: "l1" };
+const SON_DURAK = Math.max(...Object.keys(DURAKLAR).map(Number));
 /** Yatay kırpımın y ofseti (master px), klip başına: kodla.mjs'in yazdığı listeden (`kirpimY`; döngü/poster sabit). */
 const LISTE = arg("--liste", "D:/soft/cop31-varlik/kodlama/render-son.json");
 const KIRPIM_Y = {};
@@ -119,7 +123,7 @@ for (const [ad, vp] of Object.entries(GORUNUMLER)) {
   await page.waitForFunction(() => !!window.__icinden3, null, { timeout: 30000 });
   await page.evaluate(() => document.fonts.ready);
   await sleep(1500);
-  for (let k = 1; k <= 10; k++) {
+  for (let k = 1; k <= SON_DURAK; k++) {
     await page.keyboard.press("ArrowDown");
     await sleep(150);
     await page.waitForFunction(() => window.__icinden3.faz() === "dur", null, { timeout: 15000 }).catch(() => {});

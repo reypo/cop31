@@ -2,26 +2,33 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { createStepper, easeInOutCubic, type Durak as AdimDurak, type Jest, type Stepper } from "./adim";
-import { BROSUR_GEOMETRI } from "./brosur-geometri";
+import { BROSUR_GEOMETRI, BROSUR_MS, brosurDuzMu, brosurGirisYayinla } from "./brosur-geometri";
 import { dSifirla, dYayinla } from "./d-yayin";
 import KadrajOkumasi, { okumaYaz } from "./KadrajOkumasi";
-import type { Boyut, IstemciManifest, KodekAd } from "./klipler";
+import type { Boyut, IstemciManifest, KodekAd, Nokta } from "./klipler";
 import Lombar, { delikYaz } from "./Lombar";
 import { kodekSec, Oynatici, type Kayit } from "./oynatici";
+import { dizinler, rolu } from "./rol";
 
 /**
- * /icinden v3 sahnesi (brief-icinden-3 §2.4, §9.5; oynatıcı docs/klip-oynatma.md). Sabit sahne (poster,
- * 3 video, yedek, lombar kâğıdı, broşür, etiketler, kadraj okuması) + belgede 11 durak bölümü (100svh,
- * görünmez çapa; metin bantları onların içinde `position: fixed`) + kapanış.
+ * /icinden v3 sahnesi (brief-icinden-3 §2.4, §9.5, §12.4; oynatıcı docs/klip-oynatma.md). Sabit sahne (poster,
+ * 3 video, yedek, lombar kâğıdı, broşür, etiketler, kadraj okuması) + belgede N durak bölümü (100svh, görünmez
+ * çapa; metin bantları onların içinde `position: fixed`) + kapanış (dizin N).
+ *
+ * Durak numaraları sabit DEĞİL: hepsi manifestin rol tablosundan (rol.ts `dizinler`; E turu, §12.4-1). Bugünkü
+ * tablo d0 lombar · d1 dunya · d2 emanet · d3 expo · d4 anatomi · d5 sutunlar · d6–d7 duvar · d8 brosur-kapak ·
+ * d9 brosur-sayfa · d10 brosur-arka · d11 dunya · 12 kapanış.
  *
  * Durum makinesi: DUR(k) → jest → GECIS(k→j) → DUR(j). Bir jest = bir geçiş; adım süresi = geçişin süresi
  * (klip + DOM ön/son evresi); geçiş sürerken jestler yok sayılır (ters geçiş yok, §9.5). Video geçişleri
- * Oynatici'de; DOM evreleri burada: d0→d1 logo sönmesi 0,3 s + amblem dairesinde ilk kare 0,3 s + lombar;
- * d5→d6 kesişme 200 ms + broşür FLIP 420 ms; d6–d9 sayfa çevirme 1,6 s (Brosur'a d yayını, v2 ölçeği k − 1);
- * d9→d10 broşür dalışı 0,6 s + fotoğraf → video 200 ms + T01 (delik arka kapakta ve kâğıtta).
+ * Oynatici'de (duvar durakları dahil: döngüsüz, gelen klibin son karesinde durur); DOM evreleri burada:
+ * lombar→dunya logo sönmesi 0,3 s + amblem dairesinde ilk kare 0,3 s + lombar; son duvar→brosur-kapak kesişme
+ * 200 ms + broşür FLIP 420 ms (+ giriş eğimi/gölgesi, brosurGirisYayinla); broşür durakları arası sayfa çevirme 2,0 / 1,8 s (Brosur'a d yayını; d = durak numarası);
+ * brosur-arka→dunya (dönüş) broşür dalışı 0,6 s + fotoğraf → video 200 ms + T01 (delik arka kapakta ve kâğıtta).
  *
  * React state YOK: her şey kök öznitelikleri (data-durak, data-faz, data-hedef, data-metin, data-etiket,
- * data-dinlenme, data-spot, data-kagit, data-dalis, data-kiosk) ve doğrudan stil yazımıyla. Reduced-motion'da
+ * data-dinlenme, data-spot, data-kagit, data-dalis, data-kiosk; rol eşleri data-rol, data-hedef-rol,
+ * data-metin-rol, data-dinlenme-rol — CSS yalnız bunlarla) ve doğrudan stil yazımıyla. Reduced-motion'da
  * hiçbir şey kurulmaz (CSS akış düzeni, video yok); oturum ortasında açılırsa sayfa yenilenir.
  * Activity (Next 16): gizlenince etkiler temizlenir (videolar durur, bloblar bırakılır, touch-action geri).
  *
@@ -31,7 +38,6 @@ import { kodekSec, Oynatici, type Kayit } from "./oynatici";
 
 const KIOSK_KAPANIS_MS = 9000;
 
-const DOM_SAYFA_MS = 1600;
 const FLIP_MS = 420;
 const KESIS_MS = 200;
 const DALIS_MS = 600;
@@ -87,7 +93,19 @@ export default function VideoSahne({
   }, [manifest]);
 
   return (
-    <div ref={kokRef} className="v3 ic-kok" data-durak="0" data-faz="dur" data-metin="0" data-etiket="-" data-dinlenme="-" data-spot="0">
+    <div
+      ref={kokRef}
+      className="v3 ic-kok"
+      data-durak="0"
+      data-rol={manifest.duraklar[0]?.rol}
+      data-faz="dur"
+      data-metin="0"
+      data-metin-rol={manifest.duraklar[0]?.rol}
+      data-etiket="-"
+      data-dinlenme="-"
+      data-dinlenme-rol="-"
+      data-spot="0"
+    >
       <div className="v3-sahne" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element -- poster katmanı: src JS'ten, LQIP arka planda */}
         <img data-v3-poster className="v3-poster" alt="" decoding="async" hidden />
@@ -143,10 +161,20 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   if (kiosk) kok.dataset.kiosk = "1";
   const posterKipi = azVeri(q);
   const D = m.duraklar;
+  /** Rol tablosu → durak numaraları (rol.ts). N: kapanış. */
+  const R = D.map((d) => d.rol);
+  const I = dizinler(R);
+  const N = I.N;
+  const ilkBrosur = I.kapak;
+  const sonBrosur = I.arka;
+  const brosurde = (j: number) => j >= ilkBrosur && j <= sonBrosur;
+  const brosurDuz = brosurDuzMu();
+  /** Kesişmenin kalktığı durak: broşür kapağından hemen önceki (son duvar). */
+  const kesisDurak = I.kapak - 1;
 
   let boyut = boyut0;
   let kodek = kodek0;
-  let k = 0; // bulunulan durak (11 = kapanış)
+  let k = 0; // bulunulan durak (N = kapanış)
   let faz: "dur" | "gecis" = "dur";
   const zamanlar = new Set<number>();
   const sonra = (ms: number, f: () => void) => {
@@ -175,7 +203,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       if (olaylar.length > 400) olaylar.splice(0, olaylar.length - 300);
       kok.dataset.engel = oy?.engel ? "1" : "0";
       // Kod çözme hatası dinlenmede geldiyse hemen H.264'e dön; geçişteyse varışta (varildi).
-      if (tur === "kodek-yedek-iste" && faz === "dur" && k <= 10) kodekUygula();
+      if (tur === "kodek-yedek-iste" && faz === "dur" && k < N) kodekUygula();
     },
   });
   const kodekUygula = () => {
@@ -194,9 +222,9 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     const G = geo();
     return [G.ox + p[0] * G.s, G.oy + p[1] * G.s] as const;
   };
-  const dunyaR = D[1].ozel?.dunyaR ?? [115];
+  const dunyaR = D[I.dunya]?.ozel?.dunyaR ?? [115];
   const lombar = () => {
-    const c = D[1].ozel?.dunyaC?.[boyut] ?? (boyut === "dikey" ? ([360, 512] as const) : ([640, 232] as const));
+    const c = D[I.dunya]?.ozel?.dunyaC?.[boyut] ?? (boyut === "dikey" ? ([360, 512] as const) : ([640, 232] as const));
     const G = geo();
     const [cx, cy] = ekran(c);
     const r0 = dunyaR[0] * G.s;
@@ -211,7 +239,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     return Math.max(L.r0 * Math.pow(R, 2.6), zaman);
   };
   /**
-   * Dalışta (d9 ↔ d10) broşürün lombar merkezinden en uzak köşesi (px): delik bundan büyükken broşür tamamen
+   * Dalışta (brosur-arka ↔ dönüş dunyası) broşürün lombar merkezinden en uzak köşesi (px): delik bundan büyükken broşür tamamen
    * deliğin içindedir → maskesi bir kez yazılır, sonraki karelerde yeniden yazılmaz (broşür katmanı yeniden
    * boyanmaz; visibility değiştirmek de yeniden boyatırdı). 0: kapalı.
    */
@@ -253,9 +281,9 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     const kk = w / BROSUR_GEOMETRI.sayfa.w;
     return { tx: x - BROSUR_GEOMETRI.sayfa.x * kk, ty: y - BROSUR_GEOMETRI.sayfa.y * kk, k: kk };
   };
-  /** t56 son karesindeki (= p6 plakasındaki) render kapağının ekran dikdörtgeni. */
+  /** t78 son karesindeki (= p8 plakasındaki) render kapağının ekran dikdörtgeni. */
   const bankoKutu = () => {
-    const q4 = D[6].ozel?.brosurDikdortgen?.[boyut];
+    const q4 = D[I.kapak]?.ozel?.brosurDikdortgen?.[boyut];
     if (!q4) return null;
     const p = q4.map((n) => ekran(n));
     return {
@@ -266,8 +294,8 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     };
   };
   /**
-   * d6–d9 okuma düzeni. p6 plakası broşürsüz (C turu, §11.1 S2-C 2): DOM broşürün altında render kapağı yok,
-   * örtme payı ve konum kaydırması gerekmez. Dikeyde ekranın ortası (üstte 52 px, altta d6 bandı için 148 px),
+   * Broşür durakları okuma düzeni. p8 plakası broşürsüz (C turu, §11.1 S2-C 2): DOM broşürün altında render kapağı
+   * yok, örtme payı ve konum kaydırması gerekmez. Dikeyde ekranın ortası (üstte 52 px, altta kapak bandı için 148 px),
    * yatayda sol %62'nin ortası (bant sağda, ≤ %38).
    */
   const okumaDonusum = (): Donusum => {
@@ -311,10 +339,10 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     k: a.k * Math.pow(b.k / a.k, e),
   });
   /**
-   * d6 ton eşlemesi (kapak-ton.py): render kapağının ışığı/AgX tonu (kâğıt grimsi, mavi soluk) DOM kapağa CSS
+   * brosur-kapak ton eşlemesi (kapak-ton.py): render kapağının ışığı/AgX tonu (kâğıt grimsi, mavi soluk) DOM kapağa CSS
    * filtresiyle verilir; t = 1 render tonu, 0 gerçek renkler (filtre kaldırılır). Kesişmede 1, FLIP'te 420 ms'de 0.
    */
-  const ton = D[6].ozel?.kapakTon;
+  const ton = D[I.kapak]?.ozel?.kapakTon;
   const tonYaz = (t: number) => {
     if (!ton || t <= 0.001) {
       brosurKutu.style.removeProperty("filter");
@@ -358,12 +386,45 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   };
 
   /* ---------------- metin, etiket, okuma, spot ---------------- */
+  /** Kök öznitelikleri: numara + rol eşi (CSS rol seçicileri; §12.4-1). "-" yok demek. */
+  const kokRol = (j: number) => rolu(R, j);
+  const durakYaz = (j: number) => {
+    kok.dataset.durak = String(j);
+    kok.dataset.rol = kokRol(j);
+    // Aynı rolün kaçıncısı (dunya: d1 → 1, d11 → 2; W2a ters yaylar, CSS `data-sira`).
+    kok.dataset.sira = String(R.slice(0, j).filter((r) => r === R[j]).length + 1);
+  };
+  const hedefYaz = (j: number | null) => {
+    if (j === null) {
+      delete kok.dataset.hedef;
+      delete kok.dataset.hedefRol;
+      return;
+    }
+    kok.dataset.hedef = String(j);
+    kok.dataset.hedefRol = kokRol(j);
+  };
+  /** Metin bandı ve sahne etiketleri birlikte (dunya→lombar dönüşünde yalnız bant: `etiket` false). */
+  const metinYaz = (j: number | "-", etiket = true) => {
+    kok.dataset.metin = String(j);
+    kok.dataset.metinRol = j === "-" ? "-" : kokRol(j);
+    if (etiket) kok.dataset.etiket = String(j);
+  };
+  const dinlenmeYaz = (j: number | "-") => {
+    kok.dataset.dinlenme = String(j);
+    kok.dataset.dinlenmeRol = j === "-" ? "-" : kokRol(j);
+  };
   const okuma = (j: number) => {
     const d = D[j];
     if (!d) return "";
     if (d.okumaDurak) return d.okumaDurak;
     return typeof d.okuma === "string" ? d.okuma : (d.okuma.at(-1) ?? "");
   };
+  /**
+   * Spot döngüsü: durağın bandındaki satır sayısı kadar (anatomi 4 bölge, sutunlar 12 sütun, ilk duvar 3 iklim
+   * satırı; satırsız durakta yok). Sayılar DOM'dan bir kez okunur: tablo değişince Icinden3'ün bandı belirler.
+   */
+  const spotSay = D.map((_, j) => kok.querySelectorAll(`.v3-bant[data-d="${j}"] :is(.v3-spot-satir, .v3-sutun-satir)`).length);
+  const spotAralik = (j: number) => (R[j] === "sutunlar" ? 4500 : 3500);
   let spotId = 0;
   let spotN = 0;
   const spotDurdur = () => {
@@ -372,17 +433,25 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     sutunCizgi.style.opacity = "0";
   };
   /**
-   * d5 etkin sütunun işareti (denetim A1-02). Çizgi çapadan bandın dış kenarına (dikeyde üst kenar, yatayda sol
-   * kenar, etkin satırın hizası) yalnız çapa bandın dışındaysa ve çizgi ≤ 0,35 · kısa kenarsa: uzun çizgi
-   * kompozisyonu boydan bölüyor, bant altındaki çapadan gelen çizgi metnin içinden geçiyordu. Uzunsa yalnız çapada
-   * nokta; çapa kırpımda, bandın içinde/altında ya da üst şeritteyse (güvenli alan, kadraj okuması hizası) hiçbiri;
-   * satır döngüsü her durumda sürer.
+   * Etkin satırın sahnedeki çapası (video px): sutunlar → ozel.sutunlar; yoksa null. Duvar durağında kılavuz yok (F
+   * turu, denetim D1-11: nokta glifin üstüne düşüyordu; ozel.duvarCapalari manifestte kalır, satır döngüsü sürer).
    */
-  const sutunCizgisi = (no: number) => {
+  const kilavuzCapa = (j: number, no: number): Nokta | null => {
+    if (R[j] === "sutunlar") return D[j]?.ozel?.sutunlar?.[boyut]?.[no - 1] ?? null;
+    return null;
+  };
+  /**
+   * Etkin satırın işareti (d5 sütun; denetim A1-02 kalıbı; duvarda yok, D1-11). Çizgi çapadan bandın dış kenarına
+   * (dikeyde üst kenar, yatayda sol kenar, etkin satırın hizası) yalnız çapa bandın dışındaysa ve çizgi ≤ 0,35 · kısa
+   * kenarsa: uzun çizgi kompozisyonu boydan bölüyor, bant altındaki çapadan gelen çizgi metnin içinden geçiyordu. Uzunsa
+   * yalnız çapada nokta; çapa yoksa (manifestte yok, kırpımda), bandın içinde/altında ya da üst şeritteyse (güvenli
+   * alan, kadraj okuması hizası) hiçbiri; satır döngüsü her durumda sürer.
+   */
+  const kilavuz = (j: number, no: number) => {
     sutunCizgi.style.opacity = "0";
-    const s = D[5].ozel?.sutunlar?.[boyut]?.[no - 1];
-    const bant = kok.querySelector<HTMLElement>('.v3-bant[data-d="5"] .v3-bant-ic');
-    const satir = bant?.querySelector<HTMLElement>(`.v3-sutun-satir[data-no="${no}"]`);
+    const s = kilavuzCapa(j, no);
+    const satir = kok.querySelector<HTMLElement>(`.v3-bant[data-d="${j}"] :is(.v3-sutun-satir, .v3-spot-satir)[data-no="${no}"]`);
+    const bant = satir?.closest<HTMLElement>(".v3-bant-ic");
     if (!s || !bant || !satir) return;
     const [x, y] = ekran(s);
     const W = sahne.clientWidth;
@@ -415,57 +484,51 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   };
   const spotBaslat = (j: number) => {
     spotDurdur();
-    const say = j === 4 ? 4 : j === 5 ? 12 : 0;
+    const say = spotSay[j] ?? 0;
     if (!say) return;
-    const aralik = j === 4 ? 3500 : 4500;
+    const aralik = spotAralik(j);
     spotN = 0;
     const adim = () => {
       spotN = (spotN % say) + 1;
       kok.dataset.spot = String(spotN);
-      if (j === 5) sutunCizgisi(spotN);
+      kilavuz(j, spotN);
       spotId = sonra(aralik, adim);
     };
     spotId = sonra(600, adim);
   };
   let dinlenmeId = 0;
-  /** d0 bandı d ≠ 0'da görünmez: içindeki bağlantı Tab sırasından çıkar (denetim A2-06; odak görünmez öğeye gitmesin). */
+  /** Lombar bandı başka durakta görünmez: içindeki bağlantı Tab sırasından çıkar (denetim A2-06). */
   const geriOdak = (j: number) => {
-    if (geriLink) geriLink.tabIndex = j === 0 ? 0 : -1;
+    if (geriLink) geriLink.tabIndex = j === I.lombar ? 0 : -1;
   };
   const dinlen = (j: number) => {
-    kok.dataset.durak = String(j);
+    durakYaz(j);
     kok.dataset.faz = "dur";
-    delete kok.dataset.hedef;
-    kok.dataset.metin = String(j);
-    kok.dataset.etiket = String(j);
+    hedefYaz(null);
+    metinYaz(j);
     geriOdak(j);
     iptalEt(dinlenmeId);
-    dinlenmeId = sonra(400, () => (kok.dataset.dinlenme = String(j)));
+    dinlenmeId = sonra(400, () => dinlenmeYaz(j));
     okumaYaz(kadrajEl, okuma(j));
     spotBaslat(j);
   };
   /** Ekran okuyucuya yeni durağın başlığı (sr-only h1/h2; yalnız jestle varışta). */
   const duyur = (j: number) => {
-    const b = j <= 10 ? kok.querySelector<HTMLElement>(`#v3-b${j}`)?.textContent : "";
+    const b = j < N ? kok.querySelector<HTMLElement>(`#v3-b${j}`)?.textContent : "";
     if (canli && b) canli.textContent = b;
   };
   const gecisBasi = (hedef: number) => {
     faz = "gecis";
     kok.dataset.faz = "gecis";
-    kok.dataset.hedef = String(hedef);
-    kok.dataset.metin = "-";
-    kok.dataset.etiket = "-";
-    kok.dataset.dinlenme = "-";
+    hedefYaz(hedef);
+    metinYaz("-");
+    dinlenmeYaz("-");
     geriOdak(-1);
     iptalEt(dinlenmeId);
     spotDurdur();
     kioskDurdurZaman();
   };
-  const metinGelsin = (j: number, ms: number) =>
-    sonra(ms, () => {
-      kok.dataset.metin = String(j);
-      kok.dataset.etiket = String(j);
-    });
+  const metinGelsin = (j: number, ms: number) => sonra(ms, () => metinYaz(j));
   /** Geçişin klibine göre kadraj okuması: gelen dizinin karesi (geri yönde tersten). */
   const okumaKare = (hedefDizi: number, f: number, n: number, ters: boolean) => {
     const o = D[hedefDizi]?.okuma;
@@ -479,27 +542,33 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     tonYaz(0);
     brosurKapsam = 0;
     brosurMaskeSabit = false;
-    if (j >= 6 && j <= 9) {
+    if (brosurde(j)) {
       brosurEl.hidden = false;
       brosurEl.style.opacity = "1";
       delikYaz(brosurEl, null);
       arkaOpak(1);
       donusumYaz(okumaDonusum());
-      dYayinla(j - 1, false);
-    } else if (j === 5 || j === 10) {
-      // Ön ısıtma (v2 KAGIT_GIRIS kalıbı): broşür, ilk görüneceği yerde neredeyse görünmez (0,003) boyanır; d5→d6'da
+      dYayinla(j, false);
+      brosurGirisYayinla(1);
+    } else if (j === kesisDurak || j === I.donus) {
+      // Ön ısıtma (v2 KAGIT_GIRIS kalıbı): broşür, ilk görüneceği yerde neredeyse görünmez (0,003) boyanır; kesişmede
       // ilk görünme ve FLIP sonu yeniden raster karesi takılmasın (ölçüldü: 4× CPU mobilde 195 + 506 ms uzun kare).
-      // d10'da arka kapak dalış dönüşümünde (10→9'un ilk boyaması klibin ortasına düşüp 1 kare düşürüyordu, B turu).
-      // Varıştan 800 ms sonra (döngü başladıktan sonra; varış karesine binmesin: ölçüldü 136 ms).
+      // Dönüş dunyasında arka kapak dalış dönüşümünde (geri dalışın ilk boyaması klibin ortasına düşüp 1 kare
+      // düşürüyordu, B turu). Varıştan 800 ms sonra (döngü başladıktan sonra; varış karesine binmesin: ölçüldü 136 ms).
+      const once = j === kesisDurak;
       brosurEl.hidden = true;
       sonra(800, () => {
         if (k !== j || faz !== "dur") return;
-        dYayinla(j === 5 ? 4 : 8, false); // d5: kapak ve sayfa 1 görselleri önden insin; d10: arka kapak
+        // Önce oku, sonra yaz (denetim D2-03): dönüşüm sahne ölçüsünü okur (geo()); hidden=false'tan sonra okunursa
+        // broşürün bütün alt ağacı için zorunlu stil + yerleşim (4× CPU'da ~75 ms) aynı geri çağrıda yapılıyordu.
+        const t = once ? okumaDonusum() : dalisDonusum();
+        dYayinla(once ? ilkBrosur - 1 : sonBrosur, false); // önce: kapak ve sayfa görselleri önden insin; dönüş: arka kapak
         brosurEl.hidden = false;
         delikYaz(brosurEl, null);
-        arkaOpak(j === 5 ? 1 : 0);
+        arkaOpak(once ? 1 : 0);
         brosurEl.style.opacity = "0.003";
-        donusumYaz(j === 5 ? okumaDonusum() : dalisDonusum());
+        donusumYaz(t);
+        brosurGirisYayinla(once ? 0 : 1); // kesişme karesinin hâli (eğim 0, gölge 24 px) önceden boyansın
       });
     } else {
       brosurEl.hidden = true;
@@ -510,7 +579,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     k = j;
     faz = "dur";
     delete kok.dataset.dalis;
-    if (j === 0) {
+    if (j === I.lombar) {
       kagitGoster(1);
       delikYaz(kagit, null);
     } else kagitGoster(null);
@@ -520,31 +589,30 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
 
   /* ---------------- adım ---------------- */
   const varildi = (j: number) => {
-    if (oy.kodekBekliyor && j <= 10) kodekUygula();
+    if (oy.kodekBekliyor && j < N) kodekUygula();
     durakKur(j);
     duyur(j);
     if (olcBekliyor) yenidenOlc();
     kioskPlanla();
   };
-  /** Kapanış durağı (11): videolar ve bloblar bırakılır. */
+  /** Kapanış durağı (N): videolar ve bloblar bırakılır. */
   const kapanisKur = () => {
     oy.durdur();
-    k = 11;
+    k = N;
     faz = "dur";
-    kok.dataset.durak = "11";
+    durakYaz(N);
     kok.dataset.faz = "dur";
-    kok.dataset.metin = "-";
-    kok.dataset.etiket = "-";
-    kok.dataset.dinlenme = "-";
-    delete kok.dataset.hedef;
-    geriOdak(11);
+    metinYaz("-");
+    dinlenmeYaz("-");
+    hedefYaz(null);
+    geriOdak(N);
   };
 
   const adim = (from: number, to: number, dir: 1 | -1, jest: Jest): number | false => {
     if (faz !== "dur" || from !== k) return false;
     // kapanış
-    if (to === 11) {
-      gecisBasi(11);
+    if (to === N) {
+      gecisBasi(N);
       okumaYaz(kadrajEl, "");
       sonra(1000, () => {
         kapanisKur();
@@ -553,77 +621,78 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       });
       return 1000;
     }
-    if (from === 11) {
-      gecisBasi(10);
-      oy.basla(10);
-      metinGelsin(10, 1000 - METIN_ONCE_MS);
-      sonra(1000, () => varildi(10));
+    if (from === N) {
+      gecisBasi(N - 1);
+      oy.basla(N - 1);
+      metinGelsin(N - 1, 1000 - METIN_ONCE_MS);
+      sonra(1000, () => varildi(N - 1));
       return 1000;
     }
     if (oy.durum !== "dur") return false;
     gecisBasi(to);
 
-    // d0 → d1: logo sönmesi (CSS, 300 ms) → amblem dairesinde ilk kare (300 ms) → T01 + lombar
-    if (from === 0 && to === 1) {
+    // lombar → dunya (d0 → d1): logo sönmesi (CSS, 300 ms) → amblem dairesinde ilk kare (300 ms) → T01 + lombar
+    if (from === I.lombar && to === I.dunya) {
       const L = lombar();
       kagitGoster(1);
       kagitDelik(0.97 * L.r0, 1);
-      const v = oy.gec(1, 1, jest.tur, jest.t, {
+      const v = oy.gec(to, 1, jest.tur, jest.t, {
         oncesiMs: 2 * LOGO_MS,
         kare: (f, n) => {
           kagitDelik(delikR(f));
-          okumaKare(1, f, n, false);
+          okumaKare(to, f, n, false);
         },
         varis: () => {
           kagitGoster(null);
-          varildi(1);
+          varildi(to);
         },
       });
       sonra(LOGO_MS, () => {
-        oy.onizle(1, 1);
+        oy.onizle(to, 1);
         tween(LOGO_MS, (e) => kagitDelik((0.97 + 0.03 * easeOutCubic(e)) * L.r0, 1 - e));
       });
       const T = 2 * LOGO_MS + v;
-      metinGelsin(1, T - METIN_ONCE_MS);
+      metinGelsin(to, T - METIN_ONCE_MS);
       return T;
     }
-    // d1 → d0: r10 (delik daralır) → video → beyaz (300 ms) → logo (300 ms)
-    if (from === 1 && to === 0) {
+    // dunya → lombar (d1 → d0): r10 (delik daralır) → video → beyaz (300 ms) → logo (300 ms)
+    if (from === I.dunya && to === I.lombar) {
       const L = lombar();
       kagitGoster(1);
       kagitDelik(L.kose);
-      const v = oy.gec(0, -1, jest.tur, jest.t, {
+      const v = oy.gec(to, -1, jest.tur, jest.t, {
         kare: (f, n) => {
           kagitDelik(delikR(n - 1 - f));
-          okumaKare(1, f, n, true);
+          okumaKare(from, f, n, true);
         },
         varis: () => {
           kagitDelik(L.r0);
           tween(LOGO_MS, (e) => kagitDelik(L.r0, e), () => {
             oy.gizle(0);
             delikYaz(kagit, null);
-            kok.dataset.metin = "0";
-            sonra(LOGO_MS, () => varildi(0));
+            metinYaz(to, false);
+            sonra(LOGO_MS, () => varildi(to));
           });
         },
       });
       okumaYaz(kadrajEl, "");
       return v + 2 * LOGO_MS;
     }
-    // d5 → d6: t56 → [DOM kapak, render tonunda, son karenin dikdörtgeninde] 200 ms kesişme → FLIP okuma
-    // boyutuna 420 ms + ton eşlemesi (render tonu → gerçek renkler). Yatay kırpımda dikdörtgen ekrandan taşıyorsa
-    // DOM kapak da aynı (kırpılmış) konumdan başlar: ekran() kırpım dışını da çevirir.
-    if (from === 5 && to === 6) {
-      const v = oy.gec(6, 1, jest.tur, jest.t, {
-        kare: (f, n) => okumaKare(6, f, n, false),
+    // son duvar → brosur-kapak (d7 → d8): t78 → [DOM kapak, render tonunda, son karenin dikdörtgeninde] 200 ms
+    // kesişme → FLIP okuma boyutuna 420 ms + ton eşlemesi (render tonu → gerçek renkler). Yatay kırpımda dikdörtgen
+    // ekrandan taşıyorsa DOM kapak da aynı (kırpılmış) konumdan başlar: ekran() kırpım dışını da çevirir.
+    if (from === kesisDurak && to === ilkBrosur) {
+      const v = oy.gec(to, 1, jest.tur, jest.t, {
+        kare: (f, n) => okumaKare(to, f, n, false),
         varis: () => {
-          dYayinla(5, false);
+          dYayinla(ilkBrosur, false);
           brosurEl.hidden = false;
           delikYaz(brosurEl, null);
           arkaOpak(1);
           const a = bankoDonusum();
           donusumYaz(a);
           tonYaz(1);
+          brosurGirisYayinla(0);
           brosurEl.style.opacity = "0";
           oy.gizle(KESIS_MS);
           tween(KESIS_MS, (e) => (brosurEl.style.opacity = e.toFixed(3)), () => {
@@ -633,31 +702,33 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
               (e) => {
                 donusumYaz(ara(a, b, easeOutCubic(e)));
                 tonYaz(1 - e);
+                brosurGirisYayinla(e);
               },
-              () => varildi(6),
+              () => varildi(to),
             );
           });
         },
       });
       const T = v + KESIS_MS + FLIP_MS;
-      metinGelsin(6, T - METIN_ONCE_MS);
+      metinGelsin(to, T - METIN_ONCE_MS);
       return T;
     }
-    // d6 → d5: FLIP geri 420 ms (gerçek renkler → render tonu) → kesişme 200 ms → r65
-    if (from === 6 && to === 5) {
+    // brosur-kapak → son duvar (d8 → d7): FLIP geri 420 ms (gerçek renkler → render tonu) → kesişme 200 ms → r87
+    if (from === ilkBrosur && to === kesisDurak) {
       const a = okumaDonusum();
       const b = bankoDonusum();
       tween(FLIP_MS, (e) => {
         donusumYaz(ara(a, b, easeInOutCubic(e)));
         tonYaz(e);
+        brosurGirisYayinla(1 - e);
       });
-      const v = oy.gec(5, -1, jest.tur, jest.t, {
+      const v = oy.gec(to, -1, jest.tur, jest.t, {
         oncesiMs: FLIP_MS + KESIS_MS,
-        kare: (f, n) => okumaKare(6, f, n, true),
-        varis: () => varildi(5),
+        kare: (f, n) => okumaKare(from, f, n, true),
+        varis: () => varildi(to),
       });
       sonra(FLIP_MS, () => {
-        oy.onizle(5, -1, KESIS_MS);
+        oy.onizle(to, -1, KESIS_MS);
         tween(KESIS_MS, (e) => (brosurEl.style.opacity = (1 - e).toFixed(3)), () => {
           brosurEl.hidden = true;
           brosurEl.style.opacity = "1";
@@ -665,23 +736,26 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
         });
       });
       const T = FLIP_MS + KESIS_MS + v;
-      metinGelsin(5, T - METIN_ONCE_MS);
+      metinGelsin(to, T - METIN_ONCE_MS);
       return T;
     }
-    // d6 ↔ d7 ↔ d8 ↔ d9: DOM sayfa çevirme 1,6 s (Brosur v2: d yayını k − 1 → j − 1)
-    if (from >= 6 && from <= 9 && to >= 6 && to <= 9) {
+    // broşür durakları arası (d8 ↔ d9 ↔ d10): DOM sayfa çevirme 2,0 / 1,8 s (Brosur'a d yayını: from → to, d = durak no)
+    if (brosurde(from) && brosurde(to)) {
       oy.gec(to, dir, jest.tur, jest.t);
-      const d0 = from - 1;
-      const d1 = to - 1;
-      tween(DOM_SAYFA_MS, (e) => dYayinla(d0 + (d1 - d0) * e, e < 1), () => {
+      const d0 = from;
+      const d1 = to;
+      // Süre (§12.4-5): kapak ↔ iç sayfa 2,0 s, iç sayfa ↔ arka 1,8 s; `?brosur=duz` 1,6 s.
+      const sure = brosurDuz ? BROSUR_MS.duz : Math.min(from, to) === ilkBrosur ? BROSUR_MS.kapakSayfa : BROSUR_MS.sayfaArka;
+      tween(sure, (e) => dYayinla(d0 + (d1 - d0) * e, e < 1), () => {
         oy.domVaris(to);
         varildi(to);
       });
-      metinGelsin(to, DOM_SAYFA_MS - METIN_ONCE_MS);
-      return DOM_SAYFA_MS;
+      metinGelsin(to, sure - METIN_ONCE_MS);
+      return sure;
     }
-    // d9 → d10: broşür dalışı 0,6 s (kâğıt arkada belirir) → fotoğraf → video 200 ms → T01, delik büyür
-    if (from === 9 && to === 10) {
+    // brosur-arka → dönüş dunyası (d10 → d11): broşür dalışı 0,6 s (kâğıt arkada belirir) → fotoğraf → video
+    // 200 ms → T01, delik büyür
+    if (from === sonBrosur && to === I.donus) {
       const a = okumaDonusum();
       const b = dalisDonusum();
       const L = lombar();
@@ -695,35 +769,35 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
         kagitGoster(Math.min(1, e * 1.6));
         arkaOpak(1 - Math.min(1, e * 2));
       });
-      const v = oy.gec(10, 1, jest.tur, jest.t, {
+      const v = oy.gec(to, 1, jest.tur, jest.t, {
         oncesiMs: DALIS_MS + KESIS_MS,
         kare: (f, n) => {
           kagitDelik(delikR(f));
-          okumaKare(10, f, n, false);
+          okumaKare(to, f, n, false);
         },
         varis: () => {
           brosurEl.hidden = true;
           delikYaz(brosurEl, null);
           arkaOpak(1);
           kagitGoster(null);
-          varildi(10);
+          varildi(to);
         },
       });
       sonra(DALIS_MS, () => {
-        oy.onizle(10, 1);
+        oy.onizle(to, 1);
         tween(KESIS_MS, (e) => kagitDelik(L.r0, 1 - e));
       });
       const T = DALIS_MS + KESIS_MS + v;
-      metinGelsin(10, T - METIN_ONCE_MS);
+      metinGelsin(to, T - METIN_ONCE_MS);
       return T;
     }
-    // d10 → d9: r10 (delik daralır) → video → fotoğraf 200 ms → broşür okuma boyutuna 0,6 s
-    if (from === 10 && to === 9) {
+    // dönüş dunyası → brosur-arka (d11 → d10): r10 (delik daralır) → video → fotoğraf 200 ms → broşür okuma boyutuna 0,6 s
+    if (from === I.donus && to === sonBrosur) {
       const L = lombar();
       const a = dalisDonusum();
       const b = okumaDonusum();
       brosurKapsam = kapsamOlc(a);
-      dYayinla(8, false);
+      dYayinla(sonBrosur, false);
       kok.dataset.dalis = "1";
       brosurEl.hidden = false;
       brosurEl.style.opacity = "1";
@@ -731,10 +805,10 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       donusumYaz(a);
       kagitGoster(1);
       kagitDelik(L.kose);
-      const v = oy.gec(9, -1, jest.tur, jest.t, {
+      const v = oy.gec(to, -1, jest.tur, jest.t, {
         kare: (f, n) => {
           kagitDelik(delikR(n - 1 - f));
-          okumaKare(10, f, n, true);
+          okumaKare(from, f, n, true);
         },
         varis: () => {
           kagitDelik(L.r0);
@@ -747,15 +821,15 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
               donusumYaz(ara(a, b, easeInOutCubic(e)));
               kagitGoster(1 - e);
               arkaOpak(Math.max(0, e * 2 - 1));
-            }, () => varildi(9));
+            }, () => varildi(to));
           });
         },
       });
       const T = v + KESIS_MS + DALIS_MS;
-      metinGelsin(9, T - METIN_ONCE_MS);
+      metinGelsin(to, T - METIN_ONCE_MS);
       return T;
     }
-    // d1 … d5 arası klipli geçişler (ileri ve geri)
+    // dunya … son duvar arası klipli geçişler (ileri ve geri; d1 … d7; duvar durakları döngüsüz, son karede durur)
     const ters = dir < 0;
     const v = oy.gec(to, dir, jest.tur, jest.t, {
       kare: (f, n) => okumaKare(ters ? from : to, f, n, ters),
@@ -785,13 +859,18 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   olc();
 
   /* ---------------- kiosk (?auto=1) ---------------- */
-  // Tur: d0 → … → d10 → kapanış (atıflar görünür; OSM/Copernicus atfı kamusal ekranda zorunlu, denetim A3-01) →
-  // beyaza sönüp başa. Ziyaretçi kapanışa inse de 30 s sonra buradan başa döner (A2-03). d4 dinlenmesi dört bölgenin
-  // hepsini 3,5 s gösterir (A1-07: dördüncü bölge ilerlemeyle aynı anda düşüyordu).
+  // Tur: d0 → … → son durak → kapanış (atıflar görünür; OSM/Copernicus atfı kamusal ekranda zorunlu, denetim A3-01) →
+  // beyaza sönüp başa. Ziyaretçi kapanışa inse de 30 s sonra buradan başa döner (A2-03). Spot satırlı durak her satırı
+  // bir kez gösterir (anatomi 4 × 3,5 s, A1-07; ilk duvar 3 × 3,5 s = 11,1 s, §12.1); sutunlar 12 satırın 3'ünü
+  // (3 × 4,5 s); satırsız durak 5 s.
   let kioskId = 0;
   let kioskDuraklat = false;
   let kioskDevamId = 0;
-  const dinlenmeMs = (j: number) => (j === 4 ? 600 + 4 * 3500 : j === 5 ? 600 + 3 * 4500 : j >= 11 ? KIOSK_KAPANIS_MS : 5000);
+  const dinlenmeMs = (j: number) => {
+    if (j >= N) return KIOSK_KAPANIS_MS;
+    const say = Math.min(spotSay[j] ?? 0, R[j] === "sutunlar" ? 3 : Infinity);
+    return say ? 600 + say * spotAralik(j) : 5000;
+  };
   const kioskDurdurZaman = () => iptalEt(kioskId);
   const kioskBasaDon = () => {
     perde.style.transition = "opacity 600ms ease";
@@ -807,17 +886,17 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   const kioskPlanla = () => {
     if (!kiosk || kioskDuraklat) return;
     iptalEt(kioskId);
-    if (k >= 11) {
+    if (k >= N) {
       // Kapanış ekrandan uzunsa atıflara (sona) yumuşak kaydır.
-      const st = duraklar[11];
+      const st = duraklar[N];
       if (st && st.end - st.start > 1)
         sonra(1500, () => {
-          if (k >= 11 && !kioskDuraklat) window.scrollTo({ top: st.end, behavior: "smooth" });
+          if (k >= N && !kioskDuraklat) window.scrollTo({ top: st.end, behavior: "smooth" });
         });
     }
     kioskId = sonra(dinlenmeMs(k), () => {
       if (faz !== "dur" || kioskDuraklat) return;
-      if (k <= 10) {
+      if (k < N) {
         if (!stepper.adimAt(1)) kioskPlanla();
         return;
       }
@@ -845,7 +924,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     yerles: (i) => {
       // Tarayıcının kendi kaydırması (kaydırma çubuğu, bul, Home/End, odak): klipsiz o durağa.
       if (faz !== "dur" || i === k) return;
-      if (i >= 11) {
+      if (i >= N) {
         okumaYaz(kadrajEl, "");
         spotDurdur();
         kapanisKur();
@@ -867,7 +946,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   duraklar.forEach((s, i) => {
     if (Math.abs(s.start - y0) < Math.abs(duraklar[k0].start - y0)) k0 = i;
   });
-  if (k0 >= 11) {
+  if (k0 >= N) {
     kapanisKur();
     kioskPlanla();
   } else {
@@ -904,9 +983,9 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
           boyut = yeni;
           oy.boyutDegis(yeni, kd);
           kodek = oy.kodek;
-          if (k <= 10) durakKur(k);
+          if (k < N) durakKur(k);
         });
-      } else if (k >= 6 && k <= 9) donusumYaz(okumaDonusum());
+      } else if (brosurde(k)) donusumYaz(okumaDonusum());
     });
   }
   window.addEventListener("resize", yenidenOlc);
@@ -926,16 +1005,19 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     stops: () => duraklar,
     kiosk: () => ({ aktif: kiosk, duraklat: kioskDuraklat }),
     kayitlar: () => oy.olaylar.map((x: Kayit) => ({ ...x })),
-    // Dikiş ölçümü (W-B2): lombar/broşür geometrisi ve d6 kesişmesinin DOM yarısı (kapak banko dikdörtgeninde,
-    // render tonunda t). Durumu değiştirir; yalnız ölçüm betiği çağırır.
+    // Dikiş ölçümü (W-B2): lombar/broşür geometrisi ve kapak kesişmesinin DOM yarısı (kapak banko dikdörtgeninde,
+    // render tonunda t). Durumu değiştirir; yalnız ölçüm betiği çağırır. dizinler/roller: rol tablosu (E turu).
     geometri: () => ({ lombar: lombar(), banko: bankoDonusum(), okuma: okumaDonusum(), dalis: dalisDonusum(), geo: geo() }),
+    dizinler: () => I,
+    roller: () => R,
     kapakKes: (t: number) => {
-      dYayinla(5, false);
+      dYayinla(ilkBrosur, false);
       brosurEl.hidden = false;
       delikYaz(brosurEl, null);
       arkaOpak(1);
       donusumYaz(bankoDonusum());
       tonYaz(t);
+      brosurGirisYayinla(0);
       brosurEl.style.opacity = "1";
     },
   };

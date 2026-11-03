@@ -1113,3 +1113,478 @@ dört koşuda 0.
    Katı 1,8 MB d2'de yine aşılıyor (HEVC hariç) — istisna kalıcı.
 5. **Teslim.** D turu commit edilir ve `origin/main`'e gönderilir. Sonraki iş gerçek cihaz testi ve müşteri yanıtları
    (onay-listesi §14.1); yeni render turu planlanmıyor.
+
+## 12. E turu kararları (orkestratör; bağlayıcı — §9/§11 ile çelişirse bu bölüm geçerli)
+
+Tarih: 3 Kasım 2026. Bu bölüm kullanıcının dört maddelik revizyon isteğini karşılıyor. Temel jürinin kazananı olan "anlatı-önce" önerisi (12 durak, 2 duvar durağı, DOM 3B broşür). Diğer iki önerinin şu fikirleri de eklendi: ışık devri, ön cephe pankartı, 3/4 duvar kadrajı, ölçülebilir hata düzeltmeleri, broşür perf sınırları ve ölçülmüş broşür tasarrufu.
+
+Bu bölüm şu eski kararları değiştirir:
+- §2.3 d1 "nabız yok" → tek seferlik varış halkasına izin.
+- §9.1 d2 "nefes durağı, başlık yok" → Türkiye durağı, alt bantla.
+- §9.1 durak sayısı 11 → 12.
+- Icinden3.tsx:26 "parti içeriği yalnız broşürde (d ≥ 6)" → **d1–d3 ve d11'de parti içeriği yok; stant içi (d4–d10) serbest.**
+- §11.2-2 CRF tablosu → §12.5.
+
+Değişmeyenler: kilitli adımlama, "yalnız kaydırma", geçişler 1,6–2,8 s, döngülerde kamera sabit, lombar/Droste, logo kuralları, lisans listesi, render'da insan figürü yok.
+
+### 12.0 İstek okuması → karar
+
+| # | Kullanıcının sözü | Okuma | Karar |
+|---|---|---|---|
+| 1 | "12.100 km kadrajında Antalya fazla basit ve sade" | Antalya'yı buluşma noktası yapan hiçbir şey görünmüyor: 3 px nokta + 12 px yazı, l1 neredeyse fotoğraf (kareler arası fark 0,115/255). | Video **değişmez**. d1'e DOM katmanı gelir: 27 COP ev sahibi kentinden Antalya'ya ışık yayları, tek seferlik varış halkası, iki satırlı künye. d11'de aynı yaylar ters yönde. 0 GPU, 0 video baytı. İlk yükleme, lombar ve ana sayfa kartı korunur. |
+| 2a | "1.300 km'de gereksiz bilgiler… boş, detaysız, yüzeysel" | Gereksiz olan atlas etiketleri (Akdeniz/Anadolu/Kıbrıs). Boşluk hem içerikte (başlık yok) hem görselde: kadrajın %40'ı Mısır çölü, rölyef yok, 3 emanet alanı kadraj dışında. | Etiketler kalkar. Kadraj **tüm Türkiye'ye** döner (nadir, ~1.700 km). GEBCO rölyefi eklenir. 12 emanet DOM ışığı kronolojik sırayla yanar ve Antalya'ya bağlanır. Alt banda başlık ve gövde gelir. t12, l2, t23 yeniden render edilir. |
+| 2b | "bu kısımlarda animasyon hataları mevcut" | Hem tasarım eleştirisi hem gerçek kusurlar: t12 k16–28'de kopuk turuncu hale ve ışık çizgileri; t23 k16–30'da körfezdeki dikdörtgen yama sınırı. | İki kusur aynı render'da ölçütle düzeltilir (§12.6). g-1→2 ve g-2→3 kontak sayfaları (bugün yok) **E0'da** çekilir ve teslimle kullanıcıya gösterilir. t23 k56 gri bulut perdesi ve d1 üst kenarındaki sepya leke bu turda değişmez; kullanıcı işaret ederse F turu. |
+| 3 | "bilgileri broşüre gömmektense standın duvarlarını dolduralım, oraları gezdirelim" | Bilgi broşür ile duvarlar arasında bölüşülecek ("da"). Duvarlarda durulacak, yani en az iki duraklık sınırlı bir tur. | Arka ve sol duvar iç yüzleri ile ön cephe dış yüzü basılır. İki yeni durak: **d6 İklim Eylemleri** (arka duvar) ve **d7 Sen de söz ver** (sol duvar). Broşürdeki 11/12 sayfası ve kapak bandındaki sayılar satırı duvarlara taşınır. Gezinti geçiş kliplerinde yaşanır. |
+| 4 | "broşürün animasyonu çok basit" | Sayfa çevirme düz scaleX; kâğıt hissi yok. | Broşür DOM'da kalır ve **3 sayfa korunur** (1/12, 8/12, 12/12). Yeni öğeler: perspective() + rotateY menteşe, ışık ve gölge katmanları, kalkma, gerçek başlıklı en çok 3 hayalet sayfa, "50+" sayacı. Polaroid dalışı ve Droste kapanışı aynen. Blender kâğıt kıvrımı yok. |
+
+**Bu turda yapılmayanlar (karar):**
+- **Yıldız:** §2.1'e aykırı, parlak pozda fiziksel olarak görünmez.
+- **Eğik d2 ufku:** limb hale kusuru 4 s boyunca durağan görünürdü; kuzey uzvu kutup gecesinde kalıyor; t23'te ln aralığı +%9 ve lens değişikliği dikiş riskini artırıyor. Kullanıcı "hâlâ düz" derse F turunda önizlemeyle denenir.
+- **Blender'da yay, ışık sütunu ya da boncuk:** liste değişince yeniden render gerekir, ilk yüklemeye biner, klişe riski var.
+- **Blender broşür (c89 ya da sayfa kıvrımı):** +0,34–1,8 MB, broşürü küçültüyor.
+- **Bütçe dışı kalanlar:** amfi duvarı, l6/l7 duvar döngüleri, global geri klip CRF 36.
+- **d1 videosuna dokunmak:** sepya leke düzeltmesi ilk yüklemeyi, lombarı ve kartı etkiler.
+- **d1 "mercek":** d3'ün ödülünü önceden açar.
+- **Fotoğraf yasakları:** insanlı ya da Cumhurbaşkanlı fotoğraf baskısı yok; gencIklimPanel hiçbir koşulda kullanılmaz (fonunda COP31 logosu var); fidanDikimiGencler kullanılmaz (çocuk var).
+- **d4/d5 bantlarını duvara gömmek:** okunurluk ve erişilebilirlik bozulur, her düzeltme yeniden render ister.
+
+### 12.1 Durak listesi
+
+**Numaralama kararı: yeniden numaralandırılır (d0–d11 + kapanış); d5a/d5b gibi ara adlar yok.**
+
+Gerekçe: adim.ts bölüm dizini, `data-adim` ve `data-dinlenme` seçicileri, manifest `id`, kodla.mjs'teki `r${klip[2]}${klip[1]}` türetmesi ve ölçüm betikleri tamsayı dizin varsayıyor. "d5a" bunların hepsine özel durum ekler.
+
+Yeniden numaralama tek seferlik bir göç. Bu turda durak tablosu veriye taşınıyor (`rol` alanı, §12.4), bu yüzden bir sonraki eklemenin bedeli düşük olur. Video taşıyan en büyük durak d8 olduğu için klip adları tek haneli kalır. kodla.mjs yine de açık ad tablosuna geçer.
+
+| id | Durak (okuma) | Kaynak | Gelen geçiş | Döngü | Metin bandı | Poster |
+|---|---|---|---|---|---|---|
+| d0 | Açılış | DOM logo | — | — | değişmez | — |
+| d1 | Dünya (~12.100 km) | S1 (değişmez) + DOM yaylar/künye | t01 1,8 s (+0,6 s DOM), değişmez | l1 4 s, değişmez | üst, uzay, değişmez | p1 |
+| d2 | Türkiye (~1.700 km) | **S1-E** + DOM 12 emanet | **t12** 2,0 s YENİ | **l2** 4 s YENİ | **alt, YENİ** | **p2** YENİ |
+| d3 | Antalya Expo (~1,4 km) | S1 | **t23** 2,8 s YENİ (zamanlama C turu) | l3 5 s (yalnız yeniden kodlama) | değişmez | p3 |
+| d4 | Stant anatomisi (~24 m) | S1 + **S2-E** | t34 2,4 s (**t34b** YENİ) | **l4** 4 s YENİ | üst; gövde cümlesi d2'ye taşınır | **p4** YENİ |
+| d5 | Buradasın, bugün (~3 m) | S2 | **t45** 2,0 s YENİ | l5, değişmez | değişmez | p5 |
+| d6 | **İklim Eylemleri** (arka duvar, ~3 m) | **S2-E** | **t56** 2,0 s YENİ (yeni anlam) | yok, son kare durur | alt, krem, 3 spot satırı | **p6** YENİ (son-kare) |
+| d7 | **Sen de söz ver** (sol duvar, ~3 m) | **S2-E** | **t67** 1,6 s YENİ | yok | alt, krem | **p7** YENİ (son-kare) |
+| d8 | Broşür kapağı, "sayfa 1/12" | DOM | **t78** 2,2 s YENİ + 200 ms kesişme + 420 ms FLIP | DOM | %12 alt; sayılar satırı çıkar | **p8** = eski p6 plakası |
+| d9 | Buluşmalar · Şölen, "sayfa 8/12" | DOM | DOM 2,0 s (menteşe + hayaletler + dalış) | DOM | — | p8 |
+| d10 | Arka kapak, "sayfa 12/12" | DOM | DOM 1,8 s | DOM | — | p8 |
+| d11 | Ortak evimiz | S1 + DOM ters yaylar | DOM 0,6 s + t01 tekrarı | l1 | üst, uzay, değişmez | p1 |
+| — | Kapanış | DOM | — | — | atıflara "Stant görünümü temsilîdir." eklenir | — |
+
+- **Geri klipler:** r10, r21, r32, r43, r54, r65 (yeni), r76, r87 (eski t56'nın yerine). d11→d10 için r10.
+- **Kalkanlar:** eski d8 "sayfa 11/12" (İklim) arka duvara taşınır.
+- **Kiosk turu:** 106,5 s → ~120 s. Eklenenler: t56 2,0 + d6 11,1 (600 + 3 × 3.500) + t67 1,6 + d7 5,0 + çevirmeler +0,6. Düşenler: iklim sayfası −6,6, t78 −0,2.
+
+### 12.2 S1-E (Cycles OptiX 1920², D turu ayarları, `--kilit`)
+
+**d1: render yok.**
+- Yeni `scripts/blender/s1/yaylar.py` (GPU yok) kamera.py D1 pozuyla yay çapalarını üretir: KM.projeksiyon, 24 nokta/yay, yükseklik = yay uzunluğu × 0,12 (en çok 900 km), ışın–küre testiyle uzuv arkası kırpımı. Çıktı `render-son/yaylar.json` ({dikey, yatay}; d1 ve d11 aynı). Ayrı fragman, çünkü l1.json'u sahne.py yeniden yazıyor.
+- **Kent listesi:** COP1–COP30 ev sahibi 27 kent, tekilleştirilmiş: Berlin, Cenevre, Kyoto, Buenos Aires, Bonn, Lahey, Marakeş, Yeni Delhi, Milano, Montreal, Nairobi, Bali, Poznań, Kopenhag, Cancún, Durban, Doha, Varşova, Lima, Paris, Katowice, Madrid, Glasgow, Şarm El-Şeyh, Dubai, Bakü, Belém.
+  - Ad yazılmaz. Koordinatlar elle girilir (olgu verisi).
+  - Avrupa'daki kısa yaylar seyreltilmez: gerçek bir ev sahibini çıkarmak editoryal bir eksiltme olurdu.
+- Antalya çapası değişmez: dikey (386,5; 758,1), yatay (666,5; 478,1).
+- Yıldız yok.
+
+**d2: yeniden hedefleme.**
+- `kamera.py` D2 (satır 144): G = (38,75; 34,66; 0), d = 2.000 km, p −90, 24 mm. Kadraj 1.687 km.
+  - 12 alan dikeyde x 118–597, y 520–748; yatayda x 398–877, y 240–468.
+  - t12/t23 formülleri D2'ye bağlı. t23'te yanal kayma 358 → 393 km; C turu zamanları aynen (T23_FA 40, T23_VARIS 78, tohum 78–83, bulut perdesi).
+- `hazirla.py` (CPU ~8 dk):
+  - C1_ENLEM/C1_BOYLAM 22–54 K / 16–48 D, ardından `hazirla.py c1` (RAM +~80 MB). Yeni şerit (46–54 K, 44–48 D) yalnız alt < 6.000 km'de karışır (ortam `c1_ek_k`), böylece t12[0] l1 ile özdeş kalır.
+  - Yeni `rolyef()`: GEBCO C1 30″, 34–44 K / 24–46 D, 1,2 px Gauss, 16 bit → `s1/tex/rolyef_tr.png`.
+  - **Körfez yaması:** s2-bolge yamasına 3 km kenar alfası + 10 km halkada BMNG'ye histogram eşleme.
+- `sahne.py`:
+  - Dünya malzemesine (263–292) ShaderNodeBump → Normal, güç 0,2. `rolyef_k` = ss(alt; 9.000 → 4.000 km) × ss(alt; 300 → 600 km), yani D1'de ve arazi devrinde 0.
+  - **Hale:** atmosfer hale çarpanı irtifaya bağlanır, 1 (≥ 12.000 km) → 0,6 (≤ 8.000 km). t12 deklanşörü 0,5 → 0,3. Önizlemede şerit sürerse aynı turda kabuk H'si irtifaya bağlanır (+3 dk önizleme).
+  - CAPALAR p2 (1106–1113) = 12 emanet (emanet.ts lat/lng) + Antalya. Akdeniz/Anadolu/Kıbrıs çıkar, KIMLIK güncellenir.
+  - Bulut: değişmez (aynı tohum). Deniz parıltısı: yok; ayna noktası 27 K 19 D'de, Libya'da, kadraj dışında.
+- **Önizleme** EEVEE 960² (~3 dk): rölyefte çift gölge (BMNG'de pişmiş kuzeybatı gölgesi var; gerekirse güç 0,15), kuzey kenarda doku sınırı, körfez, 12 alanın konumu.
+- **Son render:** t12 60 kare 5,1 dk + l2 120 kare 10,8 dk + t23 84 kare 13,1 dk + bump payı ~2 dk = **~31 dk**. Önizlemeyle **S1 ≈ 34 dk GPU**.
+- **Değişmeyenler:** t01, l1, p1, l3, p3, kart, lombar.
+
+### 12.3 S2-E (EEVEE TAA 64 1920², son.sh)
+
+**Duvar dokuları** (`dokular.mjs` `isler` listesine eklenir; Playwright; **500 px/m**):
+- Master'da duvar en çok ~280 px/m görülüyor; 500 px/m bunun 1,8 katı. 600 px/m'ye göre VRAM %30 düşük.
+- Fontlar Lora ve Montserrat (OFL). Büyük harfler metnin kendisine yazılır (TR()); `uppercase` kullanılmaz.
+
+| Dosya | Yüzey | px | İçerik |
+|---|---|---|---|
+| `duvar-arka.png` | arka_kapali iç yüzü, x −7,38…−1,80 × z 0–4 | 2.790 × 2.000 | Krem #F7E6CD zemin; z 0–0,95 koyu yeşil #28332F dağ silueti (GEBCO Toros kesiti, 37 K). **Telefon penceresi** (x −7,0…−3,95): "İklim Eylemleri" (Lora 600, büyük harf 0,26 m, z 3,0–3,3) + "Climate Action" (Lora italik 0,14 m). Solda "300" (Lora 700, 0,60 m) / "fidan" (0,20 m) / "Hatıra Ormanı · 2025" (0,14 m). Sağda hatiraOrmaniTabela 4:3, 1,30 × 0,98 m, 4 cm paspartu, altında "Genç İklim" (0,20 m) / "21-23 Ağustos 2026 · İstanbul" (0,14 m; content.ts:109 noktalama sınırından bölündü). Pencere dışında (x −3,9…−1,8): "Fidan dikimi ve orman temizliği etkinlikleri" (0,16 m) + "#YaniBanaEmanet". |
+| `duvar-sol.png` | sol_kapali iç yüzü, y −0,50…4,83 | 2.665 × 2.000 | Dağ silueti köşeden kesintisiz. z 2,25–3,25: "1.000.000+" (0,42 m) / "Genç Üye" (0,18 m), "81 İl · 922 İlçe" (0,20 m), content.ts:22–24. Ekran alanı boş bırakılır. |
+| `ekran-soz.png` | sol duvarda 2 × 50″ emisyonlu panel (2 × 1,11 × 0,62 m, 4 cm ara, y 1,05…3,31, z 1,20–1,82; PDF s.2 düzeni, ölçü temsilî) | 1.110 × 620 (× 2) | Yalnız "Sen de söz ver." (kioskEkran dili, #17241D zemin). Sayı ve çubuk yok. |
+| `cephe-on.png` | on_kapali dış yüzü, x 1,95…7,5 | 2.775 × 2.000 | PDF s.4 büyük giriş pankartı: krem zemin, Toros silueti, "İklim, doğa, sıfır atık bize miras." · "#YaniBanaEmanet" · "GençİKlim – 12.000 Yıllık Emanet – İçeride →" (stant.ts:77–79, birebir). Logo yok. |
+
+**Okunurluk kuralı** (telefon, 18 mm):
+- Başlık büyük harfi ≥ 40 video px, rakam ≥ 60 video px, ikincil satır ≥ 24 video px (≥ 16 CSS px).
+- Bunun altına düşen her şey yalnız DOM'da.
+- Duvarda paragraf yok.
+
+**Yerleşim ve ışık:**
+- `panel_doku` 5 mm panel olarak duvarın parca'sına bağlanır (d_arka, d_sol, d_on); patlatma ve montaj korunur.
+- **Duvar yıkama spotları** (siyah kol + gövde modeli, z 4,25, duvardan 0,7 m açıkta, 3.000 K, koni 35°, blend 0,6, hedef z 2,0):
+  - kuzey: x −6,6 / −4,9 / −3,2;
+  - batı: y 0,6 / 1,95 / 3,3.
+- `isik_durum` iki yeni anahtar alır: **`kuzey`** ve **`bati`**. d4'te (patlatılmış), montajda, l5 boyunca ve banko anında 0. Patlatılmış baskıları d4'te yumuşak kutu aydınlatır.
+- Mevcut `duvar` anahtarına ve spotlarına dokunulmaz. Böylece t56[0] ≡ l5[0] ve t78 sonu ≡ eski t56[71] kalır.
+
+**Pozlar:**
+- **A (d6):** (−4,30; 1,90; 1,55), ψ −18°, φ +4°, 18 mm; 3/4 galeri açısı.
+  - Telefonda arka duvar x −7,0…−3,95, duvar y %16–80, üstte karanlık hol.
+  - Yatayda başlık kadrajda (kirpimY 420 kalır).
+  - Kiosk, sütunlar ve kanopi kadraj dışında.
+- **B (d7):** (−4,75; 1,60; 1,55), ψ −80° (10° kuzeye eksen dışı), φ +4°, 18 mm.
+  - Telefonda duvar y ≈ 0,9…3,4.
+  - Sol bank sağ altta ön planda; totem arkada, kadraj dışında.
+
+| Klip | Süre / kare | Yol |
+|---|---|---|
+| **t56** | 2,0 s / 60 | P5 (−1,38; 0,05; 2,65; ψ 0; φ −78; 18 mm) → u 0–0,30: baş kalkar (φ −78 → −6), z → 1,75, (−1,75; 1,25)'e → u 0,30–0,60: **120° sütun aralığı** (−2,41; 2,51; 1,60); krom yok; iki yanda ≥ 0,30 m pay; sütunlar ön planı siler → u 0,60–1: batıya kayma + 0,6 m geri çekilme, A'ya (ψ −27 → −18). Son 0,25 s yumuşak iniş. `kuzey` u 0,55–0,95'te 0 → 1. Deklanşör 0,35. |
+| **t67** | 1,6 s / 48 | A → B: 0,54 m kayma + 62° sola pan (easeInOutSine). Dağ şeridi köşede kesintisiz akar. `kuzey` 1 → 0,3, `bati` 0,15 → 1. Deklanşör 0,35. |
+| **t78** | 2,2 s / 66 | B → (−6,00; 0,40; 1,62) → (−6,00; −1,60; 1,62): totem ile batı duvarı arasından, iki yanda ≥ 0,95 m. → Dn (−4,28; −3,03; 1,62) → **eski t56 kuyruğu birebir** (E → son, ψ −150, φ −90, 85 mm, D_SON 0,955 m, odak mantığı). `bati` ve `kuzey` u 0,25–0,60'ta 0'a iner. Son karede `isik_durum` eski t56[71] ile aynı (rotunda nefes fazı dahil). |
+
+- Çarpışma payı (sütun R 2,10, kanopi R 2,25, totem, sol bank, kiosk) ≥ 0,25 m; betikle denetlenir (GPU yok).
+- **Posterler:** p6 = t56 master son karesi; p7 = t67 son karesi (yeni `son-kare` tipi); p8 = eski p6 plakası (yeniden render yok); p4 yeniden.
+- `json_yaz`: brosur_dikdortgen → t78. p6 çapaları: `fidan` ("300"), `genc_iklim`, `orman` (dağ şeridi). d6/d7'de `kadraj()` hedefi duvar düzlemi. `KLIPLER` ve son.sh güncellenir.
+- **Broşür:** render yok.
+- **Önizleme** 960² (~6 dk): okunurluk, ışık havuzları, sütun silmesi, t78 son kare, **VRAM tepesi ≤ 7,6 GB**.
+- **Son render:**
+
+| Klip | Kare | s/kare | GPU |
+|---|---|---|---|
+| t34b | 24 | 3,56 | 1,4 dk |
+| l4 | 120 | 3,66 | 7,3 dk |
+| t45 | 60 | 5,64 | 5,6 dk |
+| t56 | 60 | 5,4 | 5,4 dk |
+| t67 | 48 | 5,4 | 4,3 dk |
+| t78 | 66 | 5,35 | 5,9 dk |
+
+  Toplam 29,9 dk; yıkama ışığı payı ×1,08 → ~32 dk. Önizlemeyle **S2 ≈ 38 dk GPU**. Ardından parlama.py + t34-birlestir.py.
+- **Değişmeyenler:** l5, p5, p8.
+
+**GPU toplamı ≈ 72 dk** (S1 34 + S2 38).
+
+### 12.4 DOM / W-E
+
+Kod yazmadan önce: `node_modules/next/dist/docs` içindeki ilgili rehber okunur (Next 16). Port 3000'e dokunulmaz; ölçüm `next start -p 3100` ile yapılır.
+
+1. **Durak tablosu veriye taşınır.**
+   - Her durağa `rol` alanı: lombar, dunya, emanet, expo, anatomi, sutunlar, duvar, brosur-kapak, brosur-sayfa, brosur-arka.
+   - Rol okuyacak yerler: VideoSahne'deki ~34 sabit satır (5→6 kesişme dalı, 6↔9 DOM dalı, `to === 11`, `j <= 10`, spot ve dinlenme tabloları, D[1]/D[5]/D[6]), icinden3.css seçicileri (`data-rol`), Brosur dizinleri (SAYFA_DURAK, ESLESME_D, LOGO_D, ARKA_SONUM_D, KAGIT_GIRIS, CIZELGE).
+   - Hepsi tek bir tablodan türetilir. Kapanış dizini N'den hesaplanır.
+2. **d1 (yeni `DunyaYaylari.tsx`, sunucu SVG):**
+   - viewBox 720×1280 / 1280×720, `xMidYMid slice` (object-fit:cover ile birebir).
+   - Varıştan 400 ms sonra, uzaktan yakına 40 ms kademeyle bir kez çizilir; toplam ≤ 1,6 s.
+   - Görünüm: 1,25 px, #FFC266 → #FFF1DC (Antalya ucu), opaklık kökte 0 → Antalya'da 0,8. Dinlenmede 0,55'te durur; jestte 200 ms'de söner.
+   - Antalya: 7 px çekirdek + #FFC266 hale. ~1,4 s'de çift halka bir kez genişler (6 → 34 px, 1,1 s, yalnız transform/opacity).
+   - **Künye** (SahneEtiketleri'nde yeni `kunye` türü): 18 px kılavuz çizgi, "Antalya" (Montserrat 600, 14 px), ikinci satır Lora italik 13 px.
+     - SSR'da "9–20 Kasım 2026" yazar. Mount sonrası Europe/Istanbul tarihine göre: 9 Kasım öncesi "Açılışa N gün", 9–20 Kasım "COP31 · N. gün", sonrasında SSR metni kalır.
+     - Sunucuda Date kullanılmaz.
+   - 3 px nokta kalkar. d11'de yaylar Antalya'dan uzva doğru 1,6 s'de çizilir.
+3. **d2:**
+   - Yeni `emanet` etiket türü: 6 px dönem renkli çekirdek (donemler[].renk) + 1,5 px beyaz halka + 3 px rgba(0,0,0,.45) hale. Numara Lora 700, lining + tabular, 13 px. Ad yok.
+   - Çakışan çiftler (06/07, 04/05/Antalya) için manifest'te ofset tablosu; 05'in numarası Expo noktasının soluna.
+   - Varış dizisi: 11 dilim, kronolojik (12 → 2 → 3 → 4 → 5 → 6 → 7+8 → 9 → 10 → 11 → 1), 120 ms arayla. Ardından 1,4–2,4 s arasında her ışıktan Antalya'ya 1 px dönem renkli bağ (`ozel.baglar`), dinlenmede %35. Sonra durağan; spot döngüsü yok (d5 tekrar edilmez).
+   - **Bant** (alt, #0B1A2E, %60'tan; metin satırlarında α ≥ 0,66; yatayda sol altta):
+     - başlık `stant.girisMetni[0]` "12.000 yıl önceden bugüne.";
+     - EN "From 12,000 years ago to today." (`data-onay="en"`);
+     - gövde `stant.girisMetni[1]`, d4'ten taşınır; d4'te başlık, EN, hashtag ve bölge spotları kalır.
+   - Okuma "kadraj ~1.700 km". Bolum başlığı "Türkiye: 12.000 yıl önceden bugüne".
+4. **d6 ve d7 Bolum'leri:**
+   - **d6:** alt krem bant (#F7E6CD, α ≥ 0,70, metin #28332F). Başlık "İklim Eylemleri", EN "Climate Action". 3 spot satırı `iklim.items[0..2]` birebir, 600 + 3 × 3.500 ms. Etkin satırdan p6 çapasına 1 px kılavuz (d5 sutunCizgisi kalıbı).
+   - **d7:** başlık "Sen de söz ver.", EN "Make your pledge too.", gövde `genclikKollari.subtitle`. Spot yok; dinlenme 5 s.
+   - Duvara basılan her yazının sr-only eşi vardır. ALT[6] ve ALT[7] yazılır.
+   - d8 kapak bandındaki `sayilar` satırı kalkar.
+5. **Broşür (Brosur.tsx):**
+   - SAYFALAR ["kapak", "bulusma", "arka"]. İklim sayfası ve iki polaroidi /icinden'den çıkar; /brosur değişmez.
+   - **Giriş:** FLIP süresi 420 ms kalır; aynı süre içinde perspective(1800px) rotateX(−7° → 0) ve gölge 24 → 34 px.
+   - **cevir() menteşe:**
+     - perspective(2000px) rotateY(0 → −90°), origin sırtta; kalkışta ±1,2° rotateX.
+     - Koyulaşma katmanı 0,45·sinθ; sırt parlak şeridi θ 20–50°'de 0,25.
+     - Alttaki sayfada gölge: genişlik W·cosθ, opaklık 0,35·sinθ. θ > 75°'de 120 ms'de söner.
+     - Her çevirmede broşür bütün olarak kalkar: translateY(−6 px) scale(1,012), 0–0,15 s.
+     - preserve-3d yok; filter ve mask dinlenmede kapalı.
+   - **Hayaletler**, çevirme başına en çok 3; yarım boyutta yerleşip scale(2) ile büyütülür (raster ¼); içerik yalnız başlık çipi + pageNo:
+     - d8→d9 (2,0 s): 2 "İçindekiler", 4 "Başkan'ın Mesajı", 6 "Cumhurbaşkanımızın Gençlik Vizyonu". 0,45–1,30 s akar; ardından polaroid dalışı + 100.000+ sayacı + yeni "50+" (0 → 50).
+     - d9→d10 (1,8 s): 9 "Gençlik Şölenleri", 10 "Kapanış Konuşması", 11 "İklim Eylemleri". 12/12 öğeleri 120 ms aralıklarla gelir.
+     - Isınma: d8 varışında 0,003 opaklık.
+   - Yedek: `?brosur=duz` (eski scaleX).
+   - Polaroid sarkacı ve kapak yörüngesi aynen.
+6. **KadrajOkumasi:** "sayfa n/12" hayaletlerle adım adım akar (2…7 → 8; 9…11 → 12).
+7. **Kapanış:** atıflara "Stant görünümü temsilîdir." eklenir; müşteri baskıyı teyit ederse çıkarılır.
+8. **Reduced-motion ve poster kipi:**
+   - Reduced-motion: d1, d2 ve d11 posterlerinin üstünde statik SVG (yaylar, işaretler, bağlar, künye; halka yok). d6/d7 için poster + bant + tam liste; iklim listesi d6 altında. Broşür kartları kapak, 8/12, 12/12; menteşe yok.
+   - Poster kipi (Save-Data, 2g/3g): 900 ms poster sönmesi; DOM menteşe kalır.
+9. **klipler.ts / manifest şeması (W1 ile K0 arasında sözleşme; `surum: 2`):**
+   - `Durak.rol`: `"lombar" | "dunya" | "emanet" | "expo" | "anatomi" | "sutunlar" | "duvar" | "brosur-kapak" | "brosur-sayfa" | "brosur-arka"`. Oynatıcı, CSS ve Brosur dizinleri yalnız `rol`'den ve tablo sırasından türetilir; `id` "d0"…"d11" kalır.
+   - `Etiket.tur` += `"kunye" | "emanet"`; `emanet` etiketinde `no` (1–12), `donem` (emanet.ts dönem anahtarı), isteğe bağlı `dx`/`dy` (video px ofset); `metin` boş (ad yazılmaz). `kunye` etiketinde `metin` SSR satırı ("9–20 Kasım 2026").
+   - `Ozel.yaylar?: Record<Boyut, readonly (readonly Nokta[])[]>` — her yay video px'te ≤ 24 nokta, uzuv arkası kırpılmış, son nokta Antalya; d1 ve d11'de aynı veri (manifest-birlestir `render-son/yaylar.json`'dan okur). `istemciManifesti` `etiketler` gibi `ozel.yaylar`'ı da siler.
+   - `Ozel.duvarCapalari?: readonly { ad: string; dikey: Nokta; yatay: Nokta }[]` — d6 kılavuz çizgileri için p6 çapaları (`fidan`, `genc_iklim`, `orman`).
+   - d6/d7: `tur: "klip"`, `dongu: null`, `poster` son-kare, `okuma` kare kare (gelen geçiş), `okumaDurak` "arka duvar · ~3 m" / "sol duvar · ~3 m".
+   - Klip adları: t56, t67, t78 (ileri), r65, r76, r87 (geri); posterler p6, p7 (son-kare), p8 (eski p6 plakası, dosya aynı). `brosurDikdortgen`/`kapakTon` D[8] (rol `brosur-kapak`).
+   - **Sahiplik:** `klipler.ts`, `manifest-birlestir.mjs`, `docs/klipler-sema.md` → W1; `kodla.mjs`, `kodlama-dogrula.py`, `kapak-ton.py`, `t34-birlestir.py` → K0. İki taraf da bu maddeyi okur, birbirinin dosyasına dokunmaz.
+10. **Bütçe:** rota JS 17,8 → ~20,5 kB gz (≤ 50 ✓); HTML +6–9 kB gz.
+
+### 12.5 K-E kodlama
+
+**CRF politikası** (H.264 / HEVC / AV1; yalnız değişenler yeniden kodlanır):
+
+| Grup | H.264 | HEVC | AV1 | Not |
+|---|---|---|---|---|
+| İleri taban (t12, t45) | 23 | 25 | 30 | değişmez |
+| t23 / t34 | 26 | 27 | 32 / 34 | değişmez |
+| **Duvar ileri** t56, t67, t78 | 23 | 25 | **32** | AV1 +2 (oturum bütçesi) |
+| Döngü l4 | 23 | 25 | 30 | |
+| **l2** | 23 | 25 | **32** | AV1 368 kB, H.264'ten büyük |
+| **l3** (yalnız yeniden kodlama, dikey + yatay) | 23 | 25 | **34** | 32'de VMAF 97,1 ölçülmüştü |
+| Geri taban r21, r43, r54 | 26 | 28 | 34 | |
+| **r32** | **27 → 26,5 (F, §12.10)** | 28 | 34 | H.264 d3 penceresi için; 27'de VMAF 89,8 < 90 |
+| r21 (F) | **27** | 28 | 34 | F: yatay H.264 d2 penceresi 2,504 → 2,454 |
+| **Duvar geri** r65, r76, r87 | 26 | 28 | **36** | AV1 +2 |
+
+- **Posterler:** p2 ve p4 q80. p6/p7 için q80'e göre ΔE00 ≤ +1,0 kalan en düşük kalite (q68–80), hedef ≤ 60 kB dikey. **E teslimi q80 (§12.6 başlık bölgesi sınırı öncelikli; "oto" q68'i seçip ΔE00 2,13–2,30 veriyordu); F'den beri `kodla.mjs` tabanı p6/p7 80 (§12.10).** p8 = eski p6 dosyası, yeniden kodlanmaz.
+- **Yeniden kodlanmayanlar:** t01, l1, r10, p1, p3, l5, p5, kart.
+- **kodla.mjs:** açık ad tablosu, `son-kare` poster tipi. **manifest-birlestir:** 12 durak + rol; `D.gelen === "t56"` → "t78"; brosurDikdortgen/kapakTon D[8]; ETIKET d1 `kunye`, d2 `emanet` ×12 + Antalya; ozel.yaylar/baglar/duvarCapalari. **kapak-ton.py:** girdi t78 son karesi. **kodlama-dogrula.py:** HEDEF zinciri ve aralıklar yeni zincire göre.
+
+**Bayt tahmini** (AV1 dikey kB; D ölçümünden ölçeklendi; duvar klipleri t45/t56 kB/s oranından):
+
+| Kalem | D → E | Δ |
+|---|---|---|
+| S1: t12 470→490, l2 368→345, t23 1.281→1.350, r21 359→374, r32 1.127→1.187, p2 68→78 | | +153 |
+| S2-C1: t34 1.042→1.077, r43 1.003→1.031, l4 210→245, p4 45→53, t45 602→647, r54 473→505 | | +183 |
+| Duvar: t56 356, r65 278, p6 60, t67 285, r76 222, p7 60, t78 343, r87 267, p8 25 (eski t56 + r65 + p6: 692) | 692 → 1.896 | +1.204 |
+| l3 CRF 34 | 498 → 448 | −50 |
+| Broşür iklim görselleri (ölçülmüş: fidanDikimiEkip 104 + copToplamaOrman 200) | | −305 |
+| DOM (HTML/JS) | | +10 |
+
+**Bütçe karşılaştırması:**
+- **AV1 tam tur oturumu: 10,76 → ~11,96 MB** (aralık 11,6–12,3; sınır ≤ 12,0). Sınırda; kapı §12.7-1.
+- **Dikey set:** AV1 ~10,98 · H.264 ~13,0 · HEVC ~10,1 MB (≤ 15 ✓).
+
+| Durak | Kritik yol (ileri + döngü + poster) | Pencere (+ geri) |
+|---|---|---|
+| d1 | 0,91 ✓ | 1,09 ✓ |
+| d2 | AV1 1,97 / H.264 1,94 / yatay AV1 2,06 (≤ 2,1 ✓) | 2,34 / 2,41 ✓ |
+| d3 | 1,38 ✓ | AV1 2,56 (istisna ≤ 2,6 ✓) / H.264 2,48 (≤ 2,5 ✓) |
+| d4 | 0,84 ✓ | 1,87 ✓ |
+| d5 | 0,42 ✓ | 0,92 ✓ |
+| d6 | 0,35 ✓ | 0,62 ✓ |
+| d7 | 0,65 (broşür görselleri dahil) ✓ | 0,87 ✓ |
+| d8–d10 | ≤ 0,03 ✓ | r87 0,27 ✓ |
+
+- **İlk yükleme:** AV1 tanım 1,90 → ~1,93; H.264 W 2,26 → ~2,30 (≤ 2,5 ✓).
+- **CPU süresi:** ~25 dk kodlama + ~10 dk VMAF ve doğrulama.
+
+### 12.6 Kabul ölçütleri
+
+**Dikişler** (master ΔE00 ≤ 0,3; kodlanmışta ≤ 3):
+- S1: t12[0]↔l1[0], t12[59]↔l2[0], l2 döngüsü, l2[0]↔t23[0], t23[83]↔l3[0].
+- S2: t34 47↔48 fark 0, t34[71]↔l4[0], l4 döngüsü, t45[59]↔l5[0], l5[0]↔t56[0], t56[59]↔t67[0], t67[47]↔t78[0].
+- **t78[65] ↔ eski t56[71] ≤ 0,05**: p8, brosur_dikdortgen, renk.py RECT ve kapakTon'un yeniden kullanım koşulu.
+
+**Eşleşmeler:**
+- Kapak DOM↔video −0,5…0,5 px.
+- d10→d11 dalışı 0 px; lombar ≤ 2 px.
+
+**Hata düzeltmeleri:**
+- Körfez yaması: t23 k24 master'da sınır sıçraması 2,3/255 → **≤ 0,5/255**.
+- t12 k10–30: radyal kesitte disk kenarı ile hale tepesi arasında ≥ 3/255'lik çukur yok (kopuk şerit yok).
+- Katara: §11.8-1 (±10/255).
+- t23 kare 0–60 luma ≥ %20.
+
+**Rölyef:** d2 posterinde sırt gölgeleri güneşin geldiği yön olan güneybatıyla tutarlı; ters gölge yok (gözle + kontak).
+
+**Bayt:** §12.5 sınırları. Ölçüm: mobile-av1 4G, önbellek kapalı, oturum ≤ 12,00 MB; 5 set × kritik/pencere/ilk yükleme/set.
+
+**VMAF:**
+- Her dosyada ortalama ≥ 90.
+- l3 CRF 34 ≥ 93.
+- Duvar klipleri ortalama ≥ 90 ve en kötü kare ≥ 80.
+- Kodlanmış p6/p7 ve t56/t67 son karelerinde başlık/rakam bölgesinde master'a göre ΔE00 ortalaması ≤ 2.
+
+**Okunurluk** (p6/p7, dikey): başlık büyük harfi ≥ 40, rakam ≥ 60, ikincil ≥ 24 video px.
+
+**Perf** (prod, 4× CPU, 24 adım 0→11→0, mobil dokunma + masaüstü tekerlek, 2 + 2 koşu):
+- fps ≥ 59,5; uzun kare (> 50 ms) ≤ 3; düşen kare ≤ 1/1.000.
+- Yay/emanet varış penceresinde boyama ≤ 4 ms p95 ve kare ≤ 33 ms p95.
+- Menteşenin ilk karesi ≤ 33 ms; çevirme penceresinde uzun kare 0; katman belleği artışı ≤ 15 MB.
+
+**Diğer:**
+- Scrim ≥ 4,5:1 (scrim-olc: d2, d6, d7).
+- WebKit stale/tuzak (apple.mjs) geçer.
+- Kiosk turu 115–125 s.
+- S2 VRAM tepesi ≤ 7,6 GB.
+- Kontak sayfaları: g-1→2, 2→3, 5→6, 6→7, 7→8, 8→9, 9→10.
+
+### 12.7 Riskler ve geri dönüş planı
+
+| # | Risk | Tetik | Geri dönüş |
+|---|---|---|---|
+| 1 | AV1 oturumu aşar | Ölçüm > 12,00 MB | (a) r65/r76/r87 AV1 CRF 37 + t67 AV1 33 (VMAF ≥ 90 ve okunurluk tutarsa; ~−55 kB). (b) Hâlâ > 12,00 → **K3:** d7 kalkar, t67 + t78 yerine A → banko tek klip, B duvarının önünden (2,6 s, 78 kare, ~7 dk GPU). Durak sayısı 11'e iner (rol tablosu sayesinde manifest ve Bolum değişikliği), ~−0,5 MB. |
+| 2 | t12[0]↔l1[0] tutmaz | > 0,3 | `c1_ek_k` ve `rolyef_k` rampaları D1'de 0'a sabitlenir; yine tutmazsa C1 genişletmesi yalnız alt < 3.000 km. |
+| 3 | t23[83]↔l3[0] tutmaz (yama) | > 0,3 | Yama kenar alfası Expo çevresinde 0; tutmazsa l3 yeniden render (~12 dk). |
+| 4 | t78 sonu eski t56'dan sapar (duvar yansıması) | > 0,05 | p8 plakası yeniden (1 kare) + kapak-ton + RECT + FLIP ölçümü (+~5 dk). |
+| 5 | Kamera çarpması ya da aşırı bulanıklık | Pay < 0,25 m ya da önizlemede iz | t56 2,2 s (+~35 kB); t67 pan 55°'ye iner. |
+| 6 | Rölyefte çift gölge | Önizleme | Güç 0,15; sürerse rölyef kapalı (−~60 kB). |
+| 7 | Menteşe ya da hayalet perf | Ölçüt dışı | Hayalet 3 → 1, ardından `?brosur=duz`. |
+| 8 | SVG yay boyaması | > 4 ms p95 | Önceden çizili yollar + yalnız opaklık kademesi. |
+| 9 | VRAM | > 7,6 GB | Duvar dokuları 400 px/m; yıkama spotlarında gölge çözünürlüğü yarıya. |
+| 10 | Yeniden numaralamada atlanan dizin | stale/tuzak ya da kiosk | Rol tablosundan türetme; eksik seçici tek tabloda düzeltilir. |
+| 11 | Müşteri duvarda parti içeriğini reddeder | §12.8 yanıtı | B duvarında yalnız ekran + dağ şeridi kalır; dokular + t34b/l4/t45/t67/t78 yeniden (~30 dk GPU). |
+| 12 | Kullanıcı E0'da başka kusur gösterir | Teslim sonrası | F turu (ör. sepya leke: t01 + l1 +7 dk, lombar ve kart yeniden ölçülür). |
+
+Gerçek iPhone testi açık kalır; memory'deki madde kapatılmaz.
+
+### 12.8 Müşteriye sorular (onay-listesi §14.1'e)
+
+1. Arka duvar ("İklim Eylemleri / 300 fidan / Genç İklim"), sol duvar ("1.000.000+ / 81 / 922", iki ekranda "Sen de söz ver.") ve ön cephe giriş pankartı gerçek standa basılacak mı? Yanıt gelene kadar kapanışta "Stant görünümü temsilîdir." satırı durur.
+2. Gençlik Kolları sayıları ve Üsküdar GK Hatıra Ormanı, d4'ten itibaren duvarda görünüyor. Uygun mu?
+3. Giriş pankartı PDF'te başka bir cephede. Ön cepheye uyarlanması uygun mu? Cephelere AK Parti GK logosu konsun mu (şu an yok)?
+4. Duvarda yalnız Hatıra Ormanı tabelası var (insansız). İnsanlı fidan ya da orman karelerinin duvara basılmasını ister misiniz?
+5. Yeni metinler: d2 "12.000 yıl önceden bugüne." (totem satırı kısmen okundu) ve "From 12,000 years ago to today."; "Climate Action"; "Sen de söz ver." (PDF'te yok) ve "Make your pledge too."; girisMetni[1]'in d4'ten d2'ye taşınması.
+6. d1'deki yaylar 1995–2025 COP ev sahibi 27 kentten çiziliyor (adsız). Künyede "Açılışa N gün / COP31 · N. gün" satırı var. Uygun mu?
+7. d2 haritasında 02, 10 ve 12 numaralı alanlar (PDF'te yok) belirgin görünüyor. Belgrad 1 / Göbeklitepe 12 numaralandırması doğru mu?
+8. İklim sayfası (11/12) broşür turundan çıkıp arka duvara taşındı. Hayalet sayfalarda "Cumhurbaşkanımızın Gençlik Vizyonu" başlığı görünüyor. Uygun mu?
+9. "Genç İklim" (content.ts) ile pankarttaki "GençİKlim" aynı program mı? Duvarda hangi yazım kullanılsın?
+
+### 12.9 Orkestratör kararları (3 Kasım 2026, ~15.15) ve iş kırılımı
+
+1. **Paket:** jüri kazananı "anlatı-önce" (ağırlıklı 7,68 / 6,93; bütçe jürisi "DOM-önce"yi 7,05 ile öne aldı) + aşılar:
+   ışık devri (`kuzey`/`bati`), ön cephe pankartı, 3/4 duvar kadrajı, ölçülebilir hata ölçütleri, E0 kontak sayfaları,
+   ters yaylar d11, ölçülmüş broşür tasarrufu. Yıldız, Blender yay/sütun, Blender broşür, eğik d2, global CRF 36 **reddedildi**.
+2. **Numaralama:** d0–d11 yeniden numaralanır; durak tablosu `rol` ile veriye taşınır (§12.4-1, §12.4-9). Geçici "d5a" yok.
+3. **Bütçe kapısı:** ölçülen mobil AV1 oturumu ≤ 12,00 MB. Aşarsa §12.7-1 (a) merdiveni F turunda uygulanır; (b) K3 (d7'nin
+   kalkması) **orkestratör kararıdır**, ajanlar kendiliğinden uygulamaz.
+4. **Render yedekleri:** S1 t12/l2/t23 ve S2 t34b/l4/t45/t56/p6 D master'ları `render-son-d\` altına **kopyalanır**
+   (sabit bağ değil; §11.8 tuzağı). Eski p6 plakası master'ı `p8` adıyla taşınır (S2c).
+5. **Sahiplik ve portlar:** W1 3100, W2a 3101, W2b 3102, D/M 3103 (ve W bitince 3100). Port 3000 kullanıcının; dokunulmaz.
+   GPU işleri yalnız S1b ve S2c; ikisi de `.gpu-kilit` protokolüyle (brief §9.3) ve asla eş zamanlı değil.
+6. **Teslim:** D-E kapısı (bütçe, perf, dikiş, okunurluk, scrim, stale/tuzak) geçince orkestratör doğrular, commit eder,
+   `origin/main`'e gönderir; Vercel kullanıcıda.
+
+| Ajan | İş | Bağımlılık |
+|---|---|---|
+| **E0** | Mevcut D setinden (master PNG + kodlanmış dikey AV1) t12 k10–30, t23 k16–60, d1 üst kenar kontak sayfaları → `.qa/icinden3/e0/`; kuşkulu kareleri işaretler | yok |
+| **S1a** (CPU) | `yaylar.py` → `render-son/yaylar.json`; `kamera.py` D2; `hazirla.py` (c1 genişletme, rölyef, körfez yaması); `sahne.py` CAPALAR p2, bump, hale; `--sadece_json` ile d2 çapaları | yok |
+| **S1b** (GPU) | EEVEE önizleme 960² → kusur denetimi → Cycles son t12/l2/t23 → dikişler, §12.6 ölçütleri | S1a |
+| **S2a** (CPU) | `dokular.mjs` 4 doku (500 px/m) → `D:\soft\cop31-varlik\s2\doku\` | yok |
+| **S2b** (CPU) | `sahne.py`: paneller, 6 yıkama spotu, `kuzey`/`bati`, t56/t67/t78 kameraları, KLIPLER, json_yaz, p6/p7 son-kare, çarpışma betiği, son.sh/onizleme.sh | yok (doku adları §12.3) |
+| **S2c** (GPU) | eski p6 → p8; önizleme 960² (VRAM, okunurluk, ışık, t78 sonu ≡ eski t56[71]) → son render (t34b, l4, t45, t56, t67, t78, p4, p6, p7) → parlama + t34-birlestir → dikişler | S2a, S2b |
+| **W1** | Rol tablosu göçü, şema (§12.4-9), `manifest-birlestir.mjs`, geçici 12 duraklı `klipler.json` (eski dosyalarla), d6/d7 Bolum'leri, kiosk, Home/End, reduced/poster kipi, kapanış satırı, `klipler-sema.md` | yok |
+| **W2a** | `DunyaYaylari.tsx`, `kunye`/`emanet` etiketleri, varış dizileri ve bağlar, d2 bandı, d11 ters yaylar, reduced statik SVG | W1, S1a |
+| **W2b** | `Brosur.tsx` menteşe, hayaletler, kalkma, gölge, "50+" sayacı, `?brosur=duz`, SAYFALAR 3, KadrajOkumasi sayfa akışı | W1 |
+| **K0** (CPU) | `kodla.mjs` açık ad tablosu + son-kare + §12.5 CRF; `kodlama-dogrula.py` zinciri; `kapak-ton.py` t78 | yok |
+| **K1** | S1 klipleri + r21/r32 + l3 (AV1 34) + p2; VMAF | S1b, K0 |
+| **K2** | S2 klipleri + geri + p4/p6/p7 + p8; kapak-ton; `manifest-birlestir` (son); `kodlama-dogrula`; VMAF; bayt tablosu; artık dosya temizliği | S2c, K1, W1 |
+| **D1 / D2 / D3 / M** | Tasarım-görsel · motor-perf-WebKit · içerik-lisans-depo denetimleri; M: 4G bayt (5 set), perf, kiosk, scrim, dikiş, kontak sayfaları | K2, W2a, W2b |
+| **F** | Site/kodlama düzeyinde düzeltmeler; render gerektirenler orkestratöre | D1–D3, M |
+| **M2** | F sonrası yeniden ölçüm (perf, stale/tuzak, bayt, tsc/eslint/build) | F |
+
+GPU sırası beklenen: S1 önizleme (3 dk) → S2 önizleme (6 dk) → S1 son (31 dk) → S2 son (32 dk); toplam ~75 dk.
+Tahmini duvar saati 4,5–5 saat.
+
+
+### 12.10 E turu sonucu (D1/D2/D3/M denetimi + F düzeltmeleri, 3 Kasım 2026)
+
+Ortam: prod (`COP_DIST=.next-e next build`, `next start -p 3100`), Chrome headless (playwright-core), gerçek cihaz değil.
+MB = 10^6 bayt. "M" = F öncesi ölçüm (`.qa/icinden3/e/olcum-M.json`); "F" = F düzeltmelerinden sonra (`.qa/icinden3/e/f/`).
+
+**1. Kapılar**
+
+| Kapı | M (F öncesi) | F sonrası | |
+|---|---|---|---|
+| mobile-av1 tam tur oturumu ≤ 12,00 MB (4G) | 11,953 (×2) | AV1 dosyası değişmedi; hesap 11,953 | ✓ (§12.7-1 merdiveni gerekmedi) |
+| İlk yükleme ≤ 2,5 | AV1 1,798–1,942 · H.264 2,038–2,252 | aynı | ✓ |
+| Kritik yol ≤ 1,8 (d2 ≤ 2,1) | maks 2,045 (d2) | aynı | ✓ |
+| Pencere ≤ 2,5 (AV1 d3 ≤ 2,6) | **yatay H.264 d2 2,504 ✗** | r21 H.264 CRF 27: yatay d2 **2,454**, dikey d2 2,406; r32 CRF 26,5 ile H.264 d3 2,423 / 2,428 | ✓ |
+| Set ≤ 15 / kodek | maks 12,695 (dikey H.264) | 12,714 | ✓ |
+| VMAF her dosya ort. ≥ 90 | **r32 H.264 89,83 / 89,54 ✗** | r32 H.264 CRF 26,5: **91,07 / 90,93** (en kötü kare 78,58 / 78,96); r21 H.264 CRF 27: 92,30 / 92,17 | ✓ |
+| Dikiş (kodlanmış ≤ 3) | ✓ | r21/r32 geri dikişleri yeniden: son ↔ varış posteri 1,66–2,38, son ↔ döngü 0. kare 1,14–2,15 | ✓ |
+| Scrim ≥ 4,5:1 | 33/33 | 12/12 (d2, d4, d6, d7 × 390×844, 1280×800, 844×390; yeni yerleşimler). En dar pay: D d7 0,048, m d7 0,049, D d6 0,052 | ✓ |
+| d2 yatay scrim dikişi (D1-04) | x 706→708 luma adımı +22,8 (satır 720–780) | +2,5 (scrim gizliyken de +2,5) | ✓ |
+| Kapak / lombar / kiosk | ✓ (0,004 px · ≤ 0,76 px · 120,1 s) | F bunlara dokunmadı (kiosk turu yalnız ileri geçiş kullanır) | ✓ (M2 yeniden ölçmeli) |
+| Perf düşen kare ≤ 1/1.000 | **mobil 3, masaüstü 4 / 1.044 ✗** (tek koşu, eşzamanlı yük) | 4× CPU, 0→11→0, 22 adım, 2 + 2 koşu (`perf-F1/-F2`): mobil dokunma **0 ve 2** / 1.044, masaüstü tekerlek **2 ve 5** / 1.044. Düşenler ileri kliplerde de (1→2, 2→3) ve r10'da (11→10, 1→0; hız 1,0'da da) | ✗ (4 koşunun 3'ü; §3) |
+| Perf fps / > 50 ms kare | 59,9 / mobil 1 (7→8) | fps 59,8–59,9; > 50 ms kare mobil 1 + 1 (7→8: 59 / 70 ms), masaüstü 0 + 2 (7→6: 53 / 57 ms) | ✓ |
+| Katman belleği artışı ≤ 15 MB (3b − duz) | d8 +10,73 … d9 +13,18 | d8 +12,01 · 8→9 +12,42 · d9 +12,18 · 9→10 +5,54 · d10 +5,51 (koyulaşma gradyanı + hayalet düzeni dahil) | ✓ |
+| Rota JS ≤ 50 kB gz | 23,0 | **20,9** (data.ts istemci paketinden çıktı, D2-04) | ✓ |
+| HTML gz (bütçe +6–9 kB, D'ye göre) | 54,9 (+12,3) | 55,5 (+12,9; hayalet düzeni +0,6) | ✗ (orkestratör kararı, aşağıda) |
+| eslint (argümansız, tüm proje) | 577 dosya, 979 hata (`.next-*` derleme çıktısı) | 83 dosya, 0 hata, 0 uyarı | ✓ |
+| tsc / build | ✓ | ✓ | ✓ |
+
+**2. F'de değişenler** (bulgu id'leriyle; ayrıntı F raporu):
+- Yatay bant yerleşimleri (icinden3.css "yatay köşe bantları"): d6/d7 duvar bandı sağ altta, dağ şeridi/bank üstünde
+  (yatay telefonda sol altta, `--a` 0,84), başlık ikincil boy (28 px; telefonda 20 px), metin ≤ 560 px (D1-01, D1-12'nin
+  ikinci seçeneği yalnız yatayda). d4 bandı sol üstte (D1-03). Yatay telefonda d1 bandı sağda ≤ 300 px ve üstte, d2 bandı
+  sağ altta, başlık tek satır (D1-07). Scrim'ler bir yönden doğrusal + öteki yönden maske (elips köşe sorunu yok).
+- d2 yatay scrim elipsi son durak 83% (D1-04). Yatay duvar duraklarında kadraj okuması koyu, halesiz (D1-15).
+- Duvar durağında kılavuz yok (D1-11; `ozel.duvarCapalari` manifestte kalır, §12.4-4'ten sapma).
+- d1 varış halkası tek, 2,1 s'de, #FFF1DC 2 px, 6 → 48 px (D1-05). d2 Antalya işareti d1'in 7 px çekirdeği (D1-06).
+- Broşür: sayaçlar dalış bir kez bitince kilitli (geride akmaz), ileride son değerin %60'ından, "+" baştan; "50+" dalışın
+  ikinci yarısına dek görünmez (D1-08). Hayaletlerde soyut düzen (gri çubuklar + görsel bloğu), koyulaşma sırttan kenara
+  gradyan (0,15 → 0,5·sinθ; 1/40 genişlikte boyanıp gerilir), geride arka kapak öğeleri son hayalet örtene dek tam (D1-09).
+- `hizGeri` 1,25 → 1 (D2-01): geri geçişler %25 uzun (ölçülen: 7→6 1,62 s, 11→10 / 1→0 1,82–1,84 s, 3→2 2,82 s, 8→7
+  2,84–2,85 s). Künye satırı dakikada bir yeniden okunur (D2-02). Broşür ön ısıtmasında önce okuma sonra yazma (D2-03-1).
+- r21 H.264 CRF 27, r32 H.264 CRF 26,5 (M-1, M-2; `kodla.mjs` CRF_TABLO); POSTER_Q_TABAN p6/p7 80 (D3-03).
+- d4 `oyun` etiketi yalnız yatay (D1-14). `data-onay="en"` d6 duvar kopyasında (D2-08/D3-07). ALT.anatomi (D3-10).
+
+**3. Tutmayanlar ve açık kalanlar**
+- Düşen kare ölçütü (≤ 1/1.000) headless Chrome'da 4× CPU'da tutmuyor: F'de 4 koşuda 0, 2, 2, 5 / 1.044 (M: 3, 4). `hizGeri` 1,0 geri kliplerdeki sistematik 1 kareyi kaldırdı (D2: 1× CPU'da 8/1.044 → 0/1.044); kalan düşüşler ileri ve geri kliplere dağınık (headless çözücü + 4× kısıt; tahmin). Orkestratör: ölçüt 1× CPU'da ya da gerçek cihazda ölçülsün veya headless 4× için yeniden tanımlansın. Stale (gecikme 0/1/2) 3/3, tuzak senaryolarının hepsi geçti; yedek 0, konsol hatası 0.
+- HTML gz D'ye göre +12,9 kB (bütçe +6–9). Orkestratör: bütçeyi +13 kB'a çekmek ya da reduced statik katmanlarını
+  (1,44 kB gz) yalnız reduced kipinde üretmek.
+- D2-03: (1) uygulandı; (2) broşürün `display:none` yerine `content-visibility:hidden`/`visibility:hidden` tutulması
+  uygulanmadı (görsel kapıları ve her adımda stil yeniden hesabı riski; ayrı ölçüm ister). F ölçümü (`iz78 --varis 7`, 4× CPU mobil, 2 koşu): zorunlu yerleşim kalktı, ama aynı yerleşim bir sonraki karenin yaşam döngüsüne kaydı: d7 varış +814 / +809 ms'de 101,2 / 233,2 ms kare (Layout 79 / 161 ms; D2'de 82–85 ms). Yani (1) maliyeti kaldırmadı; dinlenme takılması sürüyor (kapı ölçütü yalnız geçiş pencerelerini sayıyor). (2) M2/orkestratör adayı.
+- Render gerektirenler (bu turda yapılmadı): D1-02 (d7 "1.000.000+" ve yatay telefonda d6 başlığı üstten kesik → B pozu
+  φ +7° ya da z +0,15 m; t67 kuyruğu + p7 + t78 başı, ~5 dk GPU, t78 dikişi yeniden), D1-10 (d6 dikey "Genç İklim" bloğu
+  fotoğraf altyazısı gibi; doku + t56/p6/t67, ~10 dk GPU), D1-16 (t12 sepya leke, d2 dikey kadraj; kabul/F adayı).
+- Gerçek iPhone testi açık (D2-10).
+
+**4. Uygulama sapmaları (D3-09) ve notlar**
+1. Broşür girişi: eğim 0 → −7° → 0 (girisEgri, e = 1/3'te tepe); brief §12.4-5 "−7° → 0" yazıyordu.
+2. p6/p7 posterleri q80 (§12.5 "oto" kuralı §12.6 başlık bölgesi ΔE00 ≤ 2 sınırını bozuyordu; §12.6 öncelikli). F'den beri
+   `kodla.mjs` tabanı da 80.
+3. `ozel.baglar` manifest alanı yok: d2 bağları EmanetIsiklari'nde etiket konumlarından sunucuda çizilir (§12.4-3, -9).
+4. Hayalet ısınması d8'de değil, son duvarın (d7) ön ısıtmasında başlar (kesişme karesinde raster olmasın).
+5. Duvarda kılavuz yok (F, D1-11); geri klipler 1,0 hızla (F, D2-01); d4 `oyun` etiketi yalnız yatay (F, D1-14).
+6. Kapanış bölümü "AK kimliği yalnız d0 üst şeridi + stant içi" kuralından muaf (v2'den beri; logolar, kurum adı, alıntı;
+   D3-13). d1–d3 ve d11'de parti öğesi 0.
+7. CSS kimlik eşleşmeleri (`data-etiket` / `data-metin` 0–11) elle yazılı: N > 12 olursa (yeni durak) icinden3.css'te
+   iki listeye satır eklenmeli (D2-07; §12.7-10). TS tarafı rol tablosundan türer.
+8. QA yöntemi (D1-17): geçiş ortası kareleri CDP `Page.startScreencast` ile alınmalı; `page.screenshot` programatik
+   kaydırmada üst/alt beyaz bant üretir (sitede yok).
+9. Poster kipinde adım kilidi klip süresi kadar (1,0–2,9 s), sönme 900 ms (D2-09): brief metni mi, kod mu düzelecek,
+   orkestratör kararı.
+
+### 12.11 Orkestratör kapanış kararları (3 Kasım 2026, ~20.30; E turu commit'inden önce)
+
+Aşağıdakiler §12.6/§12.10'daki açık kapıları kapatır; §12.6 ile çelişirse bu bölüm geçerli.
+
+1. **Düşen kare ölçütü** (§12.6 "≤ 1/1.000"): kapı **1× CPU'da ya da gerçek cihazda** ölçülür (M2: 0/1.044 + 0/1.044). 4× CPU
+   headless sonucu bilgi satırıdır (M2: 1, 2, 1, 6 / 1.044; F: 0, 2, 2, 5; toplam ≈ 2,4‰). Gerekçe: düşüşler ileri ve geri
+   kliplere dağınık, hız 1,0'da da var, 1× CPU'da sıfır; headless çözücü + 4× kısıt kaynaklı (tahmin). fps ≥ 59,5 ve
+   > 50 ms kare ≤ 3 kapıları 4× CPU'da kalır (ikisi de ✓).
+2. **HTML gz bütçesi**: D'ye göre **+13 kB** (ölçülen 55,5 kB, +12,9). Reduced statik katmanları (1,44 kB gz) her kipte
+   üretilmeye devam eder (reduced kipinde ilk boyama için gerekli; ayrı üretim rota JS'ine koşul ekler).
+3. **Geri geçiş süresi**: `hizGeri` 1,0 ile 3→2 2,82–2,84 s ve 8→7 2,85 s **kabul**; sınır geri geçişler için "≤ 2,9 s"
+   olarak okunur (+0,02–0,05 s algılanmaz). Zaman sıkıştırarak yeniden kodlama (D2-01-b) reddedildi: VMAF ve bayt
+   yeniden ölçümü ister, kazanç yalnız 0,05 s.
+4. **D1-12**: duvar duraklarında DOM bandı dikeyde olduğu gibi kalır (başlık + özet; duvar yazısının okunur ve
+   erişilebilir eşi). Yatayda F'nin ikincil boyu geçerli.
+5. **D2-09**: kod kalır; brief metni düzeltildi: poster kipinde adım kilidi klip süresi kadar (1,0–2,9 s), çapraz sönme
+   900 ms.
+6. **D3-06**: hayalet sayfa başlıklarının kaynağı `src/components/brosur/data.ts` (aynı metin; §12.4-5 ile birebir)
+   **izinli istisna**; başlıklar sunucuda prop olarak verilir (D2-04), istemci paketine girmez.
+7. **D3-05**: `/icinden` temiz. `gencIklimPanel` ve `fidanDikimiGencler` öteki rotalarda (/dunya, /fidan, /nabiz, /brosur;
+   5fa0394'ten beri) kullanılıyor; E kapsamı dışında, kullanıcıya soru olarak raporlandı.
+8. **D2-03-2** (broşürü `display:none` dışında tutmak) uygulanmadı: d7/d11 dinlenmesindeki 101/233 ms kare geçiş
+   penceresi dışında, kapı değil; ayrı ölçüm turu ister.
+9. **D3-14**: E ölçüm araçları oturum scratchpad'inde kaldı (W1 harness `icinden3.mjs`, D2 harness, M `butce-e.py`,
+   `kapak-piksel.mjs`, F `fqa.mjs`/`bellek2.mjs`/`iz78.mjs`, M2 `apple-ic.mjs`/`poster.mjs`/`shots.mjs`). Depoya taşıma
+   sonraki tur.
+10. **Render gerektirenler → E2 turu** (bu commit'ten sonra, ayrı commit): **D1-02** d7 "1.000.000+" üstten kesik
+    (1280×800 ve 1920×1080'de de; kiosk yatay) → B pozu (ve gerekirse A) yukarı; t56?/t67/p7/t78 yeniden render; t78[65]
+    ≡ eski t56[71] korunur; kodlama t56/r65/p6/t67/r76/p7/t78/r87 + manifest + bütçe (pay 45 kB; gerekirse §12.7-1 (a)).
+    Aynı turda CSS: 1280×800 d3 scrim kenarı x≈650 kırık çizgi (yumuşak durak). **D1-10** ve **D1-16** kabul; onay
+    listesinde soru.
+11. **Commit**: `git add -A src scripts docs public/icinden .gitignore next.config.ts eslint.config.mjs`; 68 eski D medya
+    dosyası silinir, 92 yeni E dosyası eklenir; `.next-*`, `tsconfig.next-*.json`, `.qa/` izlenmez.

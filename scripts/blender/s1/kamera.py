@@ -140,8 +140,10 @@ D1 = dict(G=(33.0, 27.0, 0.0), d=21_900_000.0 - R, h=0.0, p=-90.0, ox=0.0, oy=ma
 # t01 başı: aynı enlem, 30° batıda (kamera eksen çevresinde 30° doğuya döner); disk merkezi (960, 768), çap 345 px
 T01_BAS = dict(G=(33.0, -3.0, 0.0), d=None, h=0.0, p=-90.0, ox=0.0,
                oy=-math.degrees(math.atan((960 - 768) / fpx(35))), lens=35.0)
-# d2 (P2): Akdeniz, ~1.500 km, nadire yakın, 24 mm (brief §9.1)
-D2 = dict(G=(34.0, 29.2, 0.0), d=1_500_000.0, h=0.0, p=-88.0, ox=0.0, oy=0.0, lens=24.0)
+# d2 (P2), E turu (brief §12.2): tüm Türkiye, nadir, d 2.000 km, 24 mm → dikey kadraj 1.687 km; 12 emanet alanı
+# dikeyde x 118–597, y 520–748. t12/t23 formülleri D2'ye bağlı (t23 yanal kayma 358 → 393 km; C turu zamanları aynen).
+# D turu: G = (34,0; 29,2; 0), d 1.500 km, p −88 (Akdeniz).
+D2 = dict(G=(38.75, 34.66, 0.0), d=2_000_000.0, h=0.0, p=-90.0, ox=0.0, oy=0.0, lens=24.0)
 # d3 (P3), B turu (orkestratör kararı 4): yerden 900 m, 35 mm (dikey hFOV 32,2°), azimut 60° (D400 hattının üstü),
 # bakış 240°; hol merkezine yatay 2,3 km. Ölçüm (d3hesap): Expo alanı dikey kırpımın %24,5'i, y %52; y %68'deki yer
 # 1,53 km (ön plan > 1,5 km), alt kenar 0,82 km; güneş kadrajın üstünde (dışarıda), kent y %23, körfez y %21.

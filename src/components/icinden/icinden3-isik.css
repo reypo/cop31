@@ -1,0 +1,357 @@
+/*
+ * /icinden v3 — E turu ışık katmanı (W2a; brief-icinden-3 §12.0-1/2a, §12.4-2/3/8): d1 ışık yayları + Antalya künyesi,
+ * d2 emanet ışıkları + bağlar, d11 ters yaylar, reduced-motion statik katmanı. Icinden3'te icinden3.css'ten SONRA
+ * yüklenir. Animasyon yalnız opacity/transform (SVG'de yay/bağ başına opaklık kademesi; ölçüm: W2a raporu).
+ *
+ * Zamanlama kök özniteliklerinden (VideoSahne): varış = `data-faz="dur"` ile `data-rol` aynı anda yazılır, jest anında
+ * `data-faz="gecis"` olur. Animasyon varışta baştan başlar; jestte animasyon kalkar, öğe dinlenme hâline döner ve
+ * kap 200 ms'de söner. d1/d11 ayrımı `data-sira` (aynı rolün kaçıncısı).
+ */
+
+/* ------------------------------ video uzayı SVG'si ------------------------------ */
+/* Master karesi (1280² video px): sol üstü dikeyde (−280, 0), yatayda (0, −280) video px; cover dönüşümü .v3-et ile aynı. */
+.v3-yaylar,
+.v3-baglar {
+  position: absolute;
+  inset: 0;
+}
+.v3-vsvg {
+  --ox: var(--oxd);
+  --oy: var(--oyd);
+  position: absolute;
+  top: calc(50% + (var(--oy) - var(--cy)) * var(--s));
+  left: calc(50% + (var(--ox) - var(--cx)) * var(--s));
+  width: calc(1280 * var(--s));
+  height: calc(1280 * var(--s));
+  overflow: visible;
+}
+@container (min-aspect-ratio: 4/3) {
+  .v3-vsvg {
+    --ox: var(--oxy);
+    --oy: var(--oyy);
+  }
+}
+/* yay yolu tanımları (d1 bölümünde; görünmez) */
+.v3-tanim {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ------------------------------ d1 / d11 ışık yayları ------------------------------ */
+.v3-yaylar,
+.v3-yay-merkez,
+.v3-baglar {
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+.v3[data-rol="dunya"][data-faz="dur"] :is(.v3-yaylar, .v3-yay-merkez),
+.v3[data-rol="emanet"][data-faz="dur"] .v3-baglar {
+  opacity: 1;
+  transition: none;
+}
+.v3[data-rol="dunya"][data-faz="dur"] .v3-yay-merkez {
+  transition: opacity 300ms linear;
+}
+/* `<use>` kopyası yolun tanımdaki atasından (g) miras almaz: dolgu/çizgi özellikleri kullanan SVG'de. */
+.v3-yaylar svg,
+.v3-azalt-svg {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+/* dinlenme: 0,55 (çizim sırasında 1; çizim bitince 400 ms'de iner) */
+.v3-yaylar svg {
+  opacity: 0.55;
+}
+.v3[data-rol="dunya"][data-faz="dur"] .v3-yaylar svg {
+  animation: v3-yay-sonum 400ms ease-in-out 2000ms both;
+}
+/*
+ * Çizim yöntemi (brief §12.7-8, W2a ölçümü, 4× CPU, 390×844 @3): önceden çizili yollar + yay başına yalnız opaklık
+ * kademesi. Varış penceresinde (3 s) ana iş parçacığı boyaması 14–24 olay / 5–11 ms toplam (animasyonsuz tabanla
+ * aynı); stroke-dashoffset çizimi her karede boyuyordu: 135–215 olay / 39–82 ms (ikisi de p95 ≤ 1,1 ms). Ayrıca
+ * dashoffset, ekran px'inde 1,25'lik çizgi (non-scaling-stroke) ile çalışmıyor (kesik deseni ekran uzayında).
+ * d1: varıştan 400 ms sonra uzaktan yakına 40 ms kademe, yay başına 560 ms (27 yay: 400 → 2.000 ms, 1,6 s).
+ */
+.v3[data-rol="dunya"][data-faz="dur"] .v3-yaylar path {
+  animation: v3-yay-belir 560ms cubic-bezier(0.33, 0, 0.2, 1) calc(400ms + var(--i) * 40ms) both;
+}
+/* d11: Antalya'dan uzva, yakından uzağa (aynı süre) */
+.v3[data-rol="dunya"][data-sira="2"][data-faz="dur"] .v3-yaylar path {
+  animation-delay: calc(400ms + (var(--n) - 1 - var(--i)) * 40ms);
+}
+@keyframes v3-yay-belir {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes v3-yay-sonum {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+/* Antalya merkezi: 7 px çekirdek + #FFC266 hale; d1'de 2,1 s'de tek halka bir kez (6 → 48 px, 1,2 s). d2'de aynı çekirdek
+   Antalya etiketinde (SahneEtiketleri `v3-et-cekirdekli`, denetim D1-06). */
+.v3-yay-merkez {
+  --x: var(--xd);
+  --y: var(--yd);
+  position: absolute;
+  top: calc(50% + (var(--y) - var(--cy)) * var(--s));
+  left: calc(50% + (var(--x) - var(--cx)) * var(--s));
+  width: 0;
+  height: 0;
+}
+@container (min-aspect-ratio: 4/3) {
+  .v3-yay-merkez {
+    --x: var(--xy);
+    --y: var(--yy);
+  }
+}
+.v3-yay-cekirdek {
+  position: absolute;
+  top: -3.5px;
+  left: -3.5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff1dc;
+  box-shadow:
+    0 0 5px 2px rgb(255 194 102 / 0.7),
+    0 0 14px 6px rgb(255 194 102 / 0.28);
+}
+/* d2 Antalya etiketi çekirdekle (denetim D1-06): ad çekirdeğin halesinin dışında başlar. */
+.v3-et-cekirdekli .v3-et-metin {
+  transform: translate(min(10px, calc(100cqw - 8px - var(--lx) - 100%)), -50%);
+}
+@supports not (width: 1cqw) {
+  .v3-et-cekirdekli .v3-et-metin {
+    transform: translate(min(10px, calc(100vw - 8px - var(--lx) - 100%)), -50%);
+  }
+}
+/*
+ * Varış halkası (F turu, denetim D1-05): tek halka, yaylar dinlenme opaklığına indikten sonra (2,1 s; v3-yay-sonum
+ * 2,0–2,4 s), #FFF1DC 2 px, 6 → 48 px. 1,4 s / 1,5 px #FFC266 çift halka yayların en parlak penceresine düşüyor ve
+ * aynı renkteki ışınlar arasında seçilmiyordu. Yalnız transform/opacity.
+ */
+.v3-yay-halka {
+  position: absolute;
+  top: -24px;
+  left: -24px;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #fff1dc;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.125);
+}
+.v3[data-rol="dunya"][data-sira="1"][data-faz="dur"] .v3-yay-halka {
+  animation: v3-halka 1200ms cubic-bezier(0.2, 0.6, 0.3, 1) 2100ms both;
+}
+@keyframes v3-halka {
+  from {
+    opacity: 1;
+    transform: scale(0.125);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* ------------------------------ d1 künye ------------------------------ */
+/* 18 px kılavuz (çekirdekten kuzeydoğuya; yayların seyrek olduğu yön), "Antalya" + Lora italik ikinci satır */
+.v3-kunye-cizgi {
+  position: absolute;
+  top: -0.5px;
+  left: 0;
+  width: 18px;
+  height: 1px;
+  background: rgb(255 241 220 / 0.9);
+  transform: rotate(-55deg) translateX(6px);
+  transform-origin: 0 50%;
+}
+.v3-kunye-metin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 1.2;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.55);
+}
+.v3-et-kunye .v3-kunye-metin {
+  /* çizginin ucunda (≈ 14, −20 px), sağ kenar ekrandan ≥ 8 px içeride */
+  transform: translate(min(15px, calc(100cqw - 8px - var(--lx) - 100%)), calc(-100% - 18px));
+}
+.v3-kunye-ad,
+.v3-kunye-alt {
+  display: block;
+}
+.v3-kunye-ad {
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.v3-kunye-alt {
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ------------------------------ d2 emanet ışıkları ------------------------------ */
+/* 6 px dönem renkli çekirdek + 1,5 px beyaz halka + 3 px hale; numara Lora 700 lining/tabular 13 px; ad yok. */
+.v3-em-isik {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+.v3[data-rol="emanet"] .v3-em-isik {
+  opacity: 1;
+}
+/* varış dizisi: 11 dilim kronolojik (dönem sırası; `--i`), 120 ms arayla */
+.v3[data-rol="emanet"][data-faz="dur"] .v3-em-isik {
+  animation: v3-em-yan 360ms cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--i) * 120ms) both;
+}
+@keyframes v3-em-yan {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+.v3-em-cekirdek {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--renk);
+  box-shadow:
+    0 0 0 1.5px #fff,
+    0 0 3px 3px rgb(0 0 0 / 0.45);
+}
+/* numara çekirdekten (dx, dy) video px yönünde, çekirdeğe bakan kenarıyla (+4 px boşluk) */
+.v3-em-no {
+  position: absolute;
+  top: calc(var(--dy, 0) * var(--s) + var(--sy, 0) * 4px);
+  left: calc(var(--dx, 10) * var(--s) + var(--sx, 1) * 4px);
+  transform: translate(calc((var(--sx, 1) - 1) * 50%), calc((var(--sy, 0) - 1) * 50%));
+  color: #fff;
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.6);
+}
+
+/* bağlar: 1,4–2,4 s (dilim başına 50 ms, 500 ms çizim), sonra %35 */
+.v3-baglar svg {
+  opacity: 0.35;
+}
+.v3[data-rol="emanet"][data-faz="dur"] .v3-baglar svg {
+  animation: v3-bag-sonum 400ms ease-in-out 2400ms both;
+}
+.v3[data-rol="emanet"][data-faz="dur"] .v3-baglar path {
+  animation: v3-yay-belir 500ms cubic-bezier(0.33, 0, 0.2, 1) calc(1400ms + var(--i) * 50ms) both;
+}
+@keyframes v3-bag-sonum {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* ------------------------------ reduced-motion: statik katman (halka yok) ------------------------------ */
+.v3-azalt-isik {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v3-azalt-isik {
+    --s: 0.6px;
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .v3-azalt-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.55;
+  }
+  .v3-azalt-bag {
+    opacity: 0.35;
+    stroke-width: 1;
+  }
+  .v3-azalt-svg-y {
+    display: none;
+  }
+  /* video px → posterin yüzdesi (dikey 720×1280, yatay 1280×720; SahneEtiketleri ile aynı değişkenler) */
+  .v3-azalt-nokta {
+    --px: calc(var(--xd) / 720 * 100%);
+    --py: calc(var(--yd) / 1280 * 100%);
+    position: absolute;
+    top: var(--py);
+    left: var(--px);
+    width: 0;
+    height: 0;
+  }
+  .v3-azalt-isik .v3-em-isik {
+    opacity: 1;
+  }
+  .v3-azalt-yapi {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    color: #fff;
+    font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transform: translateY(-50%);
+    paint-order: stroke fill;
+    -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
+    text-shadow: 0 0 3px rgb(0 0 0 / 0.55);
+  }
+  .v3-azalt-kunye .v3-kunye-metin {
+    transform: translate(15px, calc(-100% - 18px));
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-aspect-ratio: 4/3) {
+  .v3-azalt-svg-d {
+    display: none;
+  }
+  .v3-azalt-svg-y {
+    display: block;
+  }
+  .v3-azalt-nokta {
+    --px: calc(var(--xy) / 1280 * 100%);
+    --py: calc(var(--yy) / 720 * 100%);
+  }
+}

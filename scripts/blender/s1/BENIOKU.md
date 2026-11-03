@@ -10,6 +10,7 @@ Bağlayıcı belge: `docs/brief-icinden-3.md` §9. Klipler: `t01` (54), `l1` (12
 | `geo.py` | Küresel Dünya (R 6371008,8), Expo teğet ENU çerçevesi, eqc dönüşümleri |
 | `gunes.py` | NOAA güneş konumu (`python -X utf8 gunes.py 2026-11-09T13:00`) |
 | `kamera.py` | Analitik kamera yolları, easing (§2.1), disk/kadraj hesapları |
+| `yaylar.py` | E turu: d1/d11 yayları (COP1–30 ev sahibi 27 kent → Antalya) → `render-son/yaylar.json` ve `src/lib/cop-kentleri.ts`; `emanet_oku()` (emanet.ts) |
 | `sahne.py` | Blender sahnesi + render + `<klip>.json` (§9.3). `--engine EEVEE|CYCLES`, `--onizleme`, `--res`, `--klip`, `--kareler`, `--saat` (UTC), `--sadece_json` |
 | `calis.py` | Blender'ı çalıştırır, RAM/VRAM tepe ölçer, `--kilit` ile GPU kilidi (§9.3) |
 | `kontak.py` | Kontak sayfaları, poster önizlemeleri (işaretli + `-temiz` tam boy), 720p mp4, ölçümler (`_onizleme/s1-olcum.json`: dikiş ΔE00, döngü kapanışı, parlama, metin bandı) |
@@ -233,3 +234,70 @@ l1/l2'de ise B master'ından gürültü düzeyinde farklı. Ortalama renk aynı,
 teşhis kopyası da B'yi üretemedi. Yani B'nin l1/l2'si, döngü sabit tohumundan önceki ve bugün elde olmayan bir kod
 durumuyla render edilmişti. Döngüler artık gerçekten sabit tohumlu. Ardışık fark l1'de 0,259'dan 0,115/255'e, l2'de
 0,325'ten 0,205'e indi. Döngü kapanışı l1'de 0,257'den 0,111'e, l2'de 0,309'dan 0,188'e indi.
+
+## E turu (brief §12.2, S1a: CPU hazırlık; render yok)
+
+- `kamera.py` D2: G (38,75 K; 34,66 D; 0), d 2.000 km, p −90, 24 mm → dikey kadraj 1.687,5 km (D: 34,0/29,2,
+  1.500 km, p −88). t12/t23 formülleri D2'den okur; t23 yanal kayma 358,2 → 392,8 km; C zamanları aynen (T23_FA 40,
+  T23_VARIS 78, sabit tohum 78–83, perde 57). t12[0] ve t23[83] kamerası D ile bayt bayt aynı (json).
+- `yaylar.py`: D1 pozuyla 27 kentten Antalya'ya büyük daire yayı, H = uzunluk × 0,12 (≤ 900 km), h(t) = H·sin πt;
+  481 noktada ışın–küre testi, Antalya'da biten görünür parça 24 noktaya; uzuv girişi ikiye bölmeyle. 20 yay kentten,
+  7 yay uzuvdan (Kyoto, Buenos Aires, Montreal, Bali, Cancún, Lima, Belém); uzuv giriş noktaları disk merkezine
+  572,3–574,6 px (disk r 574,7). Antalya dikey (386,5; 758,1), yatay (666,5; 478,1).
+- `hazirla.py c1`: C1 22–54 K / 16–48 D (7.680², 16,2 MB JPEG; D: 6.720×5.760, 8,7 MB). Eski kutunun içi bayt bayt aynı
+  (yalnız eski kuzey kenarının 48 px'lik bandında 1.676 px, en çok 14/255; 1,5° kenar geçişinin dışı 0 px). `c1_su.png`
+  3.840² (16 px fark, hepsi eski kenarda). `c1_yama.json` `eski` kutusunu taşır; `sahne.py` yeni şeridi `c1_ek_k`
+  (ss(alt; 6.000 → 4.500 km); t12 kare 29–33) ile karıştırır, D1'de eski kenar ağırlığı. Yedek: `*.d-yedek.*`.
+- `hazirla.py rolyef`: GEBCO_08 C1 30″ 34–44 K / 24–46 D (2.640×1.200), σ 1,2 px, 16 bit (8 bit × 257) →
+  `rolyef_tr.png` + `rolyef_tr.json`. `sahne.py` Dunya malzemesinde ShaderNodeBump (dünya metresi): güç
+  `--rolyef_guc` 0,2 · `rolyef_k` · kutu kenarında 1° geçiş; `--rolyef_mesafe` 40.000 m (yükseklik 1,0 ≈ 6.783 m →
+  ×5,9 abartı; tahmin, önizlemede ayarlanır). `rolyef_k` = ss(alt; 9.000 → 4.000 km) · ss(alt; 300 → 600 km):
+  t12 kare 21–35'te açılır, t23 kare 24–29'da kapanır; D1'de 0.
+- Hale: atmosfer halesi × `hale_k` = 0,6 + 0,4 · ss(alt; 8.000 → 12.000 km) (t12 kare 14–22). t12 deklanşörü 0,3.
+- Körfez yaması: t23 k16–30'daki dikdörtgen sınır **arazi ağının ±110 km kenarı** (S2 bölge yaması değil; ölçüldü:
+  t23 k24 güney kenarında deniz B 38 → 50,6/255, G 8,8 → 16,6; arazi denizi `dkol` ×0,75 + ayrı BSDF). Arazi
+  malzemesinde kenardan 3–13 km ve denizde Expo'dan 55–95 km gölgelendirme küre malzemesinin eşdeğerine geçer (aynı
+  renk/su, pürüz 0,85/0,22, speküler 0,2/0,7, küre normali + rölyef); en dış 3 km alfa ile saydam. Expo'dan < 55 km ve
+  kara 55–95 km değişmez (l3 yeniden render edilmiyor).
+- CAPALAR p2 = `emanet01`…`emanet12` (emanet.ts) + `antalya`; json'da `etiketler` (`emanet`: no, donem, metin "",
+  dx/dy 04, 05, 06, 07; `kunye`: "9–20 Kasım 2026"; p1'de de Antalya künyesi).
+
+```
+python -X utf8 -P yaylar.py                                    # ~1 sn → render-son/yaylar.json, src/lib/cop-kentleri.ts
+python -X utf8 -P hazirla.py c1                                # 20,9 sn, RSS tepe 2,25 GiB
+python -X utf8 -P hazirla.py rolyef                            # 1,7 sn, RSS tepe 0,12 GiB
+D:/soft/cop31-varlik/blender/blender-5.2.3-windows-x64/blender.exe -b --factory-startup -P sahne.py -- --klip l1,t12,l2,t23 --sadece_json --cikis D:/soft/cop31-varlik/s1/e_json
+```
+
+### S1b: önizleme, düzeltmeler, Cycles son render (brief §12.2, §12.6)
+
+Yedek: `render-son-d/{t12,l2,t23}/` + `.json` (robocopy **kopya**, sabit bağ değil; 60/120/84 dosya, boyutlar birebir) ve
+`render-son-d/_onizleme/s1-*` (24 dosya; `kontak.py olc` bu tur çalıştırılmadı, `s1-olcum.json` D bloğuyla duruyor).
+Geri almak için `render-son-d` içeriğini `render-son`'a kopyala.
+
+Önizlemede bulunup `sahne.py`'de düzeltilenler:
+
+- **Kopuk hale** (t12): hale (`Atmosfer` kabuğu) gece yanına güneş·uzuv −0,25'e kadar uzanıyordu. Yüzey kararınca turuncu
+  yay uzayda süzülüyordu. Yeni ortam anahtarı `hale_ic_k` = ss(alt; 15.450 → 13.450 km) · ss(alt; 1.000 → 1.900 km):
+  l1 irtifasında (15.529 km) 0, t12 k10'da 1. 1'ken iki şey olur: dış hale gece sınırı `--hale_ic_lo` −0,04'e çekilir,
+  uzvun içine dış haleyle sürekli bir pus bandı eklenir (`--hale_ic_A` 0,7 · exp(−(1 − b)/`--hale_ic_H` 0,02); yön ve
+  renk uzuv azimutundan). `hale_ic_k` = 0'da kabuk eskisiyle aynı: t12[0]↔l1[0] 0,0885, D ile aynı. 2. tur denemesi,
+  yani disk parıltısının yönünü de uzuv azimutuna bağlamak, l2'yi ΔE00 2,27 değiştirdi ve geri alındı.
+- **Körfez kenarı** (t23 k16–30): S1a'nın küre eşdeğeri halkası rengi eşitledi, ancak 3 km'lik yarı saydam dış halka iki
+  kez sayılıyordu. Hem altındaki küreyi gölgeliyor hem de o gölgeli kürenin üstünden görünüyordu. Sonuç 3–6 px'lik bir
+  koyu çizgiydi (−4/255). Düzeltme: Arazi malzemesinde gölge ışınları (`Is Shadow Ray`) için halka tümüyle saydam
+  (kenar 2.990 → 3.000 m). Kamera ışınları ve iç kısım değişmedi; t23[83]↔l3[0] 0,0312.
+- Teşhis bayrağı `--teshis_bulut_yok`: bulut kabuğu render'a girmez. Yalnız ölçüm için kullanılır, son render'da yok.
+
+Son render (D ayarları + yukarıdakiler; Cycles 1920², uyarlamalı, 64/32 örnek, OIDN, deklanşör t12 0,3 / t23 0,25):
+t12 310 sn (kare medyanı 5,87 sn), l2 697 sn (5,74), t23 849 sn (8,05; en çok 25,2). Toplam 30,9 dk. Önizleme ve
+testlerle birlikte bu turda 37,2 dk GPU harcandı. RAM tepe RSS 3,56–4,26 GB, VRAM makine tepesi 5,13–5,65 GB.
+Ölçümler `render-son/_onizleme/s1-e-olcum.json`, kontak sayfaları `_onizleme/s1-e-{g12,g23,hale,korfez,p2,rolyef}.png`.
+Ölçüm betikleri depo dışında (oturum scratchpad'i `s1b/`): `hale_olc.py` (E0 ölçütü + bant20), `korfez.py`, `katara.py`,
+`rolyef_yon.py`, `olc_son.py`.
+
+```
+python -X utf8 -P calis.py --kilit --etiket e_onizleme -- --klip t12,l2,t23 --res 960 --onizleme --kareler "t12:0,10,14,16,18,20,22,24,26,28,30,34,40,59;l2:0,60,119;t23:0,10,16,20,24,28,30,40,60,83" --cikis D:/soft/cop31-varlik/s1/e_onizleme
+python -X utf8 -P calis.py --kilit --etiket e_son_<klip> -- --klip <klip> --engine CYCLES --res 1920 --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/e_son_olcum.jsonl
+#   sırayla t12, l2, t23: klip başına ayrı süreç ve kilit, aralarda 25 sn
+```

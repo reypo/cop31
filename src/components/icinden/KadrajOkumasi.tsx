@@ -15,6 +15,13 @@ export function okumaYaz(el: HTMLElement | null, deger: number | string | null |
   if (el.textContent !== metin) el.textContent = metin;
 }
 
+/**
+ * Broşür sayfa okuması ("sayfa 8/12"; manifestteki okumaDurak metinleriyle aynı biçim). Sayfa çevirmede Brosur, hayalet
+ * sayfalar geçerken ara numaraları bununla yazar (§12.4-6: 2…7 → 8; 9…11 → 12); varışta VideoSahne durağın metnini yazar.
+ */
+export const BROSUR_SAYFA_SAYISI = 12;
+export const sayfaOkumasi = (n: number) => `sayfa ${n}/${BROSUR_SAYFA_SAYISI}`;
+
 /** Kadraj okuması (istemcide; klipler.ts'i, dolayısıyla manifest JSON'unu istemci paketine çekmemek için burada): "kadraj ~12.100 km", "~2,3 km", "~19 m", "~14 cm". */
 export function kadrajMetni(m: number): string {
   const tr = (v: number, b = 0) => v.toLocaleString("tr-TR", { maximumFractionDigits: b });

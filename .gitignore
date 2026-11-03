@@ -16,6 +16,9 @@
 # next.js
 /.next/
 /out/
+# paralel ajan derlemeleri (COP_DIST=.next-<ajan>; next.config.ts) ve onların tsconfig kopyası
+.next-*/
+tsconfig.next-*.json
 
 # production
 /build

@@ -1,20 +1,73 @@
 #!/usr/bin/env bash
 # S2 son render: EEVEE 1920² TAA 64, PNG 16 bit → D:/soft/cop31-varlik/render-son/<klip>/k_%04d.png (0'dan) + <klip>.json.
 # Her klip GPU kilidiyle (sahne.py --kilit; 10 s'de bir dener). t34b: ham/ (t34 kare 48–71) → parlama.py → k_0000–k_0023.
-# VRAM: nvidia-smi kart toplamı 250 ms'de bir (render-son/_onizleme/s2-vram-<klip>.csv). Süre: s2-son.jsonl.
-# C turu (brief §11): klipler arasında ≥ 20 s boşluk (öteki ajan kilidi yakalayabilsin; B'de 62 dk açlık);
-# p6 broşürsüz (--yigin 0; §11.1 S2-C 2). t34b/k_*.png K'nin render-son/t34/ dizinine sabit bağlı (hard link):
-# parlama.py yazmadan önce yalnız t34b'deki adlar silinir, t34/ eski içeriğini korur (K yeniden kurar).
-# Kullanım: bash scripts/blender/s2/son.sh [klip ...]   (varsayılan: t34b l4 t45 l5 t56 p6)
+# VRAM: nvidia-smi kart toplamı 250 ms'de bir (render-son/_onizleme/s2-vram-<klip>.csv); klip sonunda tepe / boşta özeti
+# [VRAM] satırı ve s2-vram.txt (eşik §12.6: tepe ≤ 7,6 GiB = 7.782 MiB). Süre: s2-son.jsonl.
+# C turu (brief §11): klipler arasında ≥ 20 s boşluk (öteki ajan kilidi yakalayabilsin; B'de 62 dk açlık).
+# t34b/k_*.png K'nin render-son/t34/ dizinine sabit bağlı (hard link): parlama.py yazmadan önce yalnız t34b'deki adlar
+# silinir, t34/ eski içeriğini korur (K yeniden kurar).
+# E turu (brief §12.3, §12.9-4): klipler t34b l4 t45 t56 t67 t78 (l5/p5 değişmez). Posterler:
+#   p6 = t56 son karesi (k_0059), p7 = t67 son karesi (k_0047): "son-kare" — render yok, kopya + <p>.json (tip son-kare);
+#   p8 = eski p6 plakası: render yok; S2c ÖNCE render-son/p6 → render-son/p8 taşır (ve p6.json → p8.json); son.sh p8.json'u
+#   tip "plaka" ile yeniden yazar. p8 yoksa p6 kopyası YAPILMAZ (eski plaka ezilmesin).
+#   p4 = l4[0] ("dongu"; kodla.mjs tablosu) — ayrıca render yok.
+# Dokular: duvar-arka / duvar-sol / ekran-soz / cephe-on (S2a) yoksa son render reddedilir (S2_GECICI=1 ile geçilir).
+# Ortam: S2_EK="--yikama_w 300 …" (sahne.py'ye ek argüman), S2_BOSLUK (s), S2_GECICI=1.
+# Kullanım: bash scripts/blender/s2/son.sh [klip ...]   (varsayılan: t34b l4 t45 t56 t67 t78)
 set -uo pipefail
 KOK="$(cd "$(dirname "$0")/../../.." && pwd)"
 B=/d/soft/cop31-varlik/blender/blender-5.2.3-windows-x64/blender.exe
 R=/d/soft/cop31-varlik/render-son
+DOKU=/d/soft/cop31-varlik/s2/doku
 O=$R/_onizleme
 LOG=$O/s2-son.jsonl
 BOSLUK=${S2_BOSLUK:-20}   # klipler arası bekleme (s), kilit bırakıldıktan sonra
+EKG=${S2_EK:-}
+VRAM_ESIK=7782            # MiB (7,6 GiB)
 mkdir -p $O
-KLIPLER=${*:-"t34b l4 t45 l5 t56 p6"}
+KLIPLER=${*:-"t34b l4 t45 t56 t67 t78"}
+
+eksik=""
+for d in duvar-arka.png duvar-sol.png ekran-soz.png cephe-on.png; do [ -f "$DOKU/$d" ] || eksik="$eksik $d"; done
+if [ -n "$eksik" ] && [ "${S2_GECICI:-0}" != "1" ]; then
+  echo "[HATA] S2a dokuları eksik:$eksik ($DOKU). Son render yapılmadı (geçici düz renkle zorlamak için S2_GECICI=1)."
+  exit 2
+fi
+
+sahne() {   # sahne.py çağrısı (render ya da yalnız json); süzülmüş günlük
+  "$B" -b --factory-startup -P "$KOK/scripts/blender/s2/sahne.py" -- "$@" $EKG 2>&1 \
+    | grep --line-buffered -E "^\[(P4|OZET|JSON|KILIT|DOKU|UYARI|SON-KARE)\]|Traceback|Error" | grep --line-buffered -vE "KILIT\] dolu" \
+    | awk '{print strftime("%H:%M:%S"), substr($0, 1, 400); fflush()}'   # S2c: zaman damgası (VRAM penceresi için)
+}
+
+vram_ozet() {   # $1 klip. S2c: pencere = bu koşunun kilit süresi (günlükteki "[KILIT] alındı" → "bırakıldı"); öncesi boşta
+  local f=$O/s2-vram-$1.csv g=$O/s2-gunluk-$1.txt t0="" t1=""
+  [ -s "$f" ] || { echo "[VRAM] $1: örnek yok"; return; }
+  if [ -s "$g" ]; then t0=$(grep "\[KILIT\] alındı" "$g" | tail -1 | cut -c1-8); t1=$(grep "\[KILIT\] bırakıldı" "$g" | tail -1 | cut -c1-8); fi
+  awk -F', ' -v k="$1" -v e=$VRAM_ESIK -v t0="$t0" -v t1="$t1" '{s=substr($1, 12, 8); m=$2+0}
+    t0 != "" && s < t0 {b=m; next}  t1 != "" && s > t1 {next}  {n++; if (b == "") b=m; if (m > t) t=m}
+    END{d=(t<=e)?"✓":"✗"; printf "[VRAM] %s tepe %d MiB (%.2f GiB), boşta %d MiB, render payı %d MiB, eşik %d MiB %s; pencere %s–%s, %d örnek\n",
+        k, t, t/1024, b, t-b, e, d, (t0 == "" ? "tümü" : t0), (t1 == "" ? "son" : t1), n}' "$f" \
+    | tee -a $O/s2-vram.txt
+}
+
+son_kare() {   # $1 poster, $2 kaynak klip, $3 kaynak kare
+  local src=$R/$2/k_$(printf %04d $3).png
+  if [ ! -f "$src" ]; then echo "[HATA] $1: $src yok"; return; fi
+  if [ "$1" = "p6" ] && [ ! -d "$R/p8" ]; then
+    echo "[HATA] p6: render-son/p8 yok — eski p6 plakası henüz taşınmamış (S2c: mv render-son/p6 render-son/p8). p6 kopyası atlandı."
+    return
+  fi
+  mkdir -p $R/$1
+  rm -f $R/$1/k_*.png
+  cp "$src" $R/$1/k_0000.png
+  sahne --klip $1 --kok $R --yalniz_json
+  echo "[SON-KARE] $1 ← $2/k_$(printf %04d $3).png"
+}
+
+# p8 (eski p6 plakası) json'u: dizin taşındıysa tip "plaka" ile yaz
+if [ -d "$R/p8" ]; then sahne --klip p8 --kok $R --yalniz_json --yigin 0; else echo "[UYARI] render-son/p8 yok (S2c taşıması bekleniyor)"; fi
+
 ILK=1
 for k in $KLIPLER; do
   if [ $ILK -eq 0 ]; then
@@ -22,15 +75,15 @@ for k in $KLIPLER; do
     sleep $BOSLUK
   fi
   ILK=0
-  EK=""
-  [ "$k" = "p6" ] && EK="--yigin 0"
   nvidia-smi --query-gpu=timestamp,memory.used,utilization.gpu --format=csv,noheader -lms 250 > $O/s2-vram-$k.csv &
   NV=$!
-  echo "[BASLA] $k $(date +%H:%M:%S) $EK"
+  echo "[BASLA] $k $(date +%H:%M:%S)"
   touch $O/.s2-basla-$k
-  "$B" -b --factory-startup -P "$KOK/scripts/blender/s2/sahne.py" -- --klip $k --kok $R --json --kilit --log $LOG $EK 2>&1 \
-    | grep -E "^\[(P4|OZET|JSON|KILIT)\]|Traceback|Error" | grep -vE "KILIT\] dolu" | cut -c1-400
+  # S2c: eski kareler kalmasın (D'de t56 72 kareydi, E'de 60; yedek render-son-d\). t34b ham/'a yazar, parlamada temizlenir.
+  [ "$k" != "t34b" ] && rm -f $R/$k/k_*.png
+  sahne --klip $k --kok $R --json --kilit --log $LOG | tee $O/s2-gunluk-$k.txt
   kill $NV 2>/dev/null || true
+  vram_ozet $k
   if [ "$k" = "t34b" ]; then
     if [ "$(find $R/t34b/ham -name 'k_00[4-7]?.png' -newer $O/.s2-basla-$k | wc -l)" -eq 24 ]; then   # bu koşunun 24 karesi
       rm -f $R/t34b/k_*.png   # sabit bağı kopar (t34/ dokunulmaz)
@@ -39,8 +92,12 @@ for k in $KLIPLER; do
       echo "[HATA] t34b ham/ eksik; parlama atlandı"
     fi
   fi
-  if [ "$k" != "p6" ]; then
-    python -X utf8 -P "$KOK/scripts/blender/s2/kontak.py" kontak $k --kaynak $R/$k --cikis $O/s2-$k.jpg --baslik "son render EEVEE TAA 64" --mp4 0
-  fi
+  [ "$k" = "t56" ] && son_kare p6 t56 59
+  [ "$k" = "t67" ] && son_kare p7 t67 47
+  # S2c (E, ölçüldü): EEVEE dizide son kareyi önceki kareye bağlı işliyor (64→65 kamera hâlâ ~3,5 mm/kare iniyor):
+  # dizideki t78[65] ↔ eski t56[71] ΔE00 0,187 (✗ > 0,05); tek başına işlenen t78[65] 0,0073 ✓ (eski t56[71] de böyle).
+  # p8 plakası, brosur_dikdortgen, renk.py RECT ve kapakTon eski t56[71]'e bağlı → son kare ayrı oturumda yeniden işlenir.
+  if [ "$k" = "t78" ]; then sleep 5; sahne --klip t78 --kareler 65 --kok $R --kilit --log $LOG; echo "[SON-KARE] t78[65] tek kare yeniden"; fi
+  python -X utf8 -P "$KOK/scripts/blender/s2/kontak.py" kontak $k --kaynak $R/$k --cikis $O/s2-$k.jpg --baslik "son render EEVEE TAA 64" --mp4 0
   echo "[BITTI] $k $(date +%H:%M:%S)"
 done

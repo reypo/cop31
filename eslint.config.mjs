@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Paralel ajan derlemeleri (COP_DIST=.next-<ajan>, next.config.ts; denetim D3-01).
+    ".next-*/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

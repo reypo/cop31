@@ -27,6 +27,7 @@ sys.path.insert(0, HERE)
 import geo  # noqa: E402
 from geo import R, LAT0, LON0, KX, KY, M_ENU, DUNYA_MERKEZ, YER_ALCALT  # noqa: E402
 import kamera as KM  # noqa: E402
+from yaylar import emanet_oku  # noqa: E402
 from gunes import gunes  # noqa: E402
 from ortak import D, ag_olustur, kure_ag, temizle, emisyon_ornekleme  # noqa: E402
 
@@ -60,10 +61,18 @@ ap.add_argument("--poz_rampa", default="30e3,400e3")          # uzay pozlaması 
 # geçişlerde sabit tohumlu kareler (l3 ile aynı tohum 31): t23'ün durgun son 6 karesi, t34a'nın ilk 3 karesi
 ap.add_argument("--sabit_tohum", default="t23:78-83;t34a:0-2")
 ap.add_argument("--exr", action="store_true")                 # teşhis: her kareyi ayrıca doğrusal EXR (pozlamasız) yaz
+# E turu (brief §12.2)
+ap.add_argument("--rolyef_guc", type=float, default=0.2)      # Dunya ShaderNodeBump gücü (çift gölgede 0,15; 0 = kapalı)
+ap.add_argument("--rolyef_mesafe", type=float, default=40000.0)   # yükseklik 1,0 ↔ m (GEBCO 8 bit 255 ≈ 6.783 m → ×5,9 abartı; TAHMİN, önizlemede ayarla)
+# E turu S1b: kopuk hale düzeltmesi (hale_ic_k ile; l1'de 0)
+ap.add_argument("--hale_ic_lo", type=float, default=-0.04)   # hale/pus gece sınırı (güneş·uzuv yönü); eski −0,25
+ap.add_argument("--hale_ic_H", type=float, default=0.02)     # uzuv içi pus ölçeği (1 − b)
+ap.add_argument("--hale_ic_A", type=float, default=0.7)      # uzuv içi pus genliği (dış hale tepesine göre)
+ap.add_argument("--teshis_bulut_yok", action="store_true")   # yalnız teşhis: bulut kabuğu küçültülür
 a = ap.parse_args(argv)
 B_YAKIN = a.yakin == "B"
 ORNEK = {"l1": 32, "l2": 32}                                  # döngülerde maks örnek (diğerleri 64)
-DEKLANSOR = {"t23": 0.25, "t34a": 0.25}                       # diğerleri 0,5
+DEKLANSOR = {"t12": 0.3, "t23": 0.25, "t34a": 0.25}            # diğerleri 0,5 (E turu: t12 0,5 → 0,3, hale şeridi)
 T0 = time.perf_counter()
 TEX = os.path.join(a.varlik, "s1", "tex")
 CIKIS = a.cikis or os.path.join(a.varlik, "render")
@@ -133,6 +142,14 @@ AR_XS = AR_L * np.sinh(AR_A * np.linspace(-1, 1, AR_N)) / math.sinh(AR_A)
 _c1 = json.load(open(os.path.join(TEX, "c1_yama.json")))
 C1LA0, C1LA1 = _c1["enlem"]; C1LO0, C1LO1 = _c1["boylam"]
 C1W, C1H = C1LO1 - C1LO0, C1LA1 - C1LA0
+# E turu: C1 22–54 K / 16–48 D; D turu kutusu (22–46 K / 16–44 D) c1_ek_k = 0'da (alt ≥ 6.000 km, D1) aynı ağırlıkla
+_c1e = _c1.get("eski", _c1)
+C1E_LA0, C1E_LA1 = _c1e["enlem"]; C1E_LO0, C1E_LO1 = _c1e["boylam"]
+_rf_yol = os.path.join(TEX, "rolyef_tr.json")
+_rf = json.load(open(_rf_yol)) if os.path.exists(_rf_yol) else None
+if _rf:
+    RFLA0, RFLA1 = _rf["enlem"]; RFLO0, RFLO1 = _rf["boylam"]
+    RFW, RFH = RFLO1 - RFLO0, RFLA1 - RFLA0
 
 
 def yer_z(x, y):
@@ -243,6 +260,20 @@ def malzeme(ad):
     return m, D(m.node_tree)
 
 
+def rolyef_tumsek(d, vr, normal=None):
+    """E turu (brief §12.2): GEBCO rölyefi (rolyef_tr.png, 16 bit, Non-Color) → ShaderNodeBump. Güç = rolyef_guc ·
+    rolyef_k (irtifa: ss(9.000 → 4.000 km) · ss(300 → 600 km); D1'de ve arazi devrinde 0) · kutu kenarında 1° yumuşak
+    geçiş. Mesafe dünya metresinde (Cycles BumpNode nesne uzayı değil). vr: kutu UV'si [0,1]² (s doğu, t kuzey)."""
+    rf = resim(d, "rolyef_tr.png", False, vr, "CLIP")
+    wr = kenar_agirlik(d, vr, 1.0 / RFW, 1.0 / RFH)
+    bm_ = d("ShaderNodeBump", i_Distance=a.rolyef_mesafe)
+    d.b(d.math("MULTIPLY", d.math("MULTIPLY", attr(d, "rolyef_k"), wr), a.rolyef_guc), bm_.inputs["Strength"])
+    d.b(rf.outputs["Color"], bm_.inputs["Height"])
+    if normal is not None:
+        d.b(normal, bm_.inputs["Normal"])
+    return bm_.outputs["Normal"]
+
+
 # ------------------------------------------------------------------ hangi parçalar gerekli
 uzay_klip = {"t01", "l1", "t12", "l2", "t23"}
 kure_gerek = (a.kure == 1) or (a.kure == -1 and any(k in uzay_klip for k in klipler)) or a.sadece_json
@@ -272,6 +303,12 @@ if kure_gerek and not a.sadece_json:
     v1 = esle(d, uv, 360 / C1W, 180 / C1H, (-180 - C1LO0) / C1W, (-90 - C1LA0) / C1H)
     c1 = resim(d, "c1_yama.jpg", True, v1); c1s = resim(d, "c1_su.png", False, v1)
     w1 = kenar_agirlik(d, v1, 1.5 / C1W, 1.5 / C1H)
+    if (C1E_LA0, C1E_LA1, C1E_LO0, C1E_LO1) != (C1LA0, C1LA1, C1LO0, C1LO1):
+        # E turu: yeni şerit (46–54 K, 44–48 D) yalnız alt < 6.000 km'de (c1_ek_k); D1'de eski kutunun kenar ağırlığı
+        ew, eh = C1E_LO1 - C1E_LO0, C1E_LA1 - C1E_LA0
+        v1e = esle(d, v1, C1W / ew, C1H / eh, (C1LO0 - C1E_LO0) / ew, (C1LA0 - C1E_LA0) / eh)
+        w1e = kenar_agirlik(d, v1e, 1.5 / ew, 1.5 / eh)
+        w1 = d.karistir(attr(d, "c1_ek_k"), w1e, w1, "FLOAT")
     hs1 = d("ShaderNodeHueSaturation", i_Saturation=1.15, i_Value=1.0); d.b(c1.outputs["Color"], hs1.inputs["Color"])
     col = d.karistir(w1, col, hs1.outputs["Color"]); su = d.karistir(w1, su, c1s.outputs["Color"], "FLOAT")
     # Sentinel-2 bölge yaması (±76,8 km, eqc doğrusal → UV doğrusal)
@@ -283,6 +320,9 @@ if kure_gerek and not a.sadece_json:
     d.b(col, bs.inputs["Base Color"])
     d.b(d.karistir(su, 0.85, 0.22, "FLOAT"), bs.inputs["Roughness"])
     d.b(d.karistir(su, 0.2, 0.7, "FLOAT"), bs.inputs["Specular IOR Level"])
+    if _rf and a.rolyef_guc > 0:
+        vr = esle(d, uv, 360 / RFW, 180 / RFH, (-180 - RFLO0) / RFW, (-90 - RFLA0) / RFH)
+        d.b(rolyef_tumsek(d, vr), bs.inputs["Normal"])
     geo_ = d("ShaderNodeNewGeometry")
     nl = d.vmath("DOT_PRODUCT", geo_.outputs["Normal"], Lt)
     gecef = d.aralik(nl, 0.06, -0.20)
@@ -328,6 +368,7 @@ if kure_gerek and not a.sadece_json:
     P, I = psc.outputs[0], geo_.outputs["Incoming"]
     b = d.vmath("LENGTH", d.vmath("CROSS_PRODUCT", P, I))
     hale = d.math("EXPONENT", d.math("DIVIDE", d.math("SUBTRACT", b, 1.0), -H))
+    hale = d.math("MULTIPLY", hale, attr(d, "hale_k"))        # E turu: 1 (≥ 12.000 km) → 0,6 (≤ 8.000 km)
     disk = d.math("MULTIPLY", d.math("POWER", b, 8.0), 0.3)
     ishale = d.math("GREATER_THAN", b, 1.0)
     f = d.karistir(ishale, disk, hale, "FLOAT")
@@ -335,7 +376,11 @@ if kure_gerek and not a.sadece_json:
     C = d.vmath("SUBTRACT", P, sn.outputs["Vector"])
     yon = d.karistir(ishale, geo_.outputs["Normal"], d.vmath("NORMALIZE", C), "VECTOR")
     dl = d.vmath("DOT_PRODUCT", yon, Lt)
-    gunf = d.aralik(dl, -0.25, 0.10)
+    # E turu S1b (kopuk hale, brief §12.6): hale_ic_k > 0 iken hale gece yanına −0,25 yerine --hale_ic_lo'ya kadar uzanır
+    # (yüzey kararmışken uzayda süzülen turuncu yay kalkar); hale_ic_k = 0 (l1 irtifası) → eski hale bayt bayt aynı.
+    # (2. tur denemesi — disk parıltısını da uzuv azimutuna bağlamak — l2'yi ΔE00 2,27 değiştirdi, geri alındı.)
+    hic = attr(d, "hale_ic_k")
+    gunf = d.karistir(hic, d.aralik(dl, -0.25, 0.10), d.aralik(dl, a.hale_ic_lo, 0.12), "FLOAT")
     renk = d.karistir(d.aralik(dl, -0.20, 0.06), (1.0, 0.42, 0.16), (0.30, 0.55, 1.0))
     renk = d.karistir(ishale, (0.30, 0.55, 1.0), renk)
     gunf = d.math("MAXIMUM", d.math("MULTIPLY", gunf, ishale), d.math("MULTIPLY", d.aralik(dl, -0.05, 0.25), d.math("SUBTRACT", 1.0, ishale)))
@@ -344,7 +389,18 @@ if kure_gerek and not a.sadece_json:
     em = d("ShaderNodeEmission"); d.b(renk, em.inputs["Color"]); d.b(guc, em.inputs["Strength"])
     tr = d("ShaderNodeBsdfTransparent")
     add = d("ShaderNodeAddShader"); d.b(tr.outputs[0], add.inputs[0]); d.b(em.outputs[0], add.inputs[1])
-    d.b(add.outputs[0], out.inputs["Surface"])
+    # E turu S1b: uzvun içinde hale ile sürekli pus bandı (disk kenarı ile hale tepesi arasındaki koyu çukuru doldurur).
+    # Yön = ışının merkeze en yakın noktası (uzuv azimutu; b = 1'de dış haleyle aynı), genlik exp(−(1 − b)/H_ic).
+    dlC = d.vmath("DOT_PRODUCT", d.vmath("NORMALIZE", C), Lt)
+    gC = d.aralik(dlC, a.hale_ic_lo, 0.12)
+    renkC = d.karistir(d.aralik(dlC, -0.20, 0.06), (1.0, 0.42, 0.16), (0.30, 0.55, 1.0))
+    fin = d.math("EXPONENT", d.math("DIVIDE", d.math("SUBTRACT", b, 1.0), a.hale_ic_H))
+    fin = d.math("MULTIPLY", d.math("MULTIPLY", fin, d.math("SUBTRACT", 1.0, ishale)), attr(d, "hale_k"))
+    guc2 = d.math("MULTIPLY", d.math("MULTIPLY", d.math("MULTIPLY", fin, gC), on), 1.3 * a.hale_ic_A)
+    guc2 = d.math("MULTIPLY", guc2, hic)
+    em2 = d("ShaderNodeEmission"); d.b(renkC, em2.inputs["Color"]); d.b(guc2, em2.inputs["Strength"])
+    add2 = d("ShaderNodeAddShader"); d.b(add.outputs[0], add2.inputs[0]); d.b(em2.outputs[0], add2.inputs[1])
+    d.b(add2.outputs[0], out.inputs["Surface"])
     OB["atmosfer"] = atm
     log("küre, bulut, atmosfer kuruldu")
 
@@ -377,6 +433,7 @@ if not a.sadece_json:
     hsc = d("ShaderNodeHueSaturation", i_Saturation=1.15, i_Value=1.0); d.b(cc.outputs["Color"], hsc.inputs["Color"])
     col = d.karistir(wb, hsc.outputs["Color"], cb_.outputs["Color"]); col = d.karistir(wg, col, cg.outputs["Color"])
     su = d.karistir(wb, scc.outputs["Color"], sb.outputs["Color"], "FLOAT"); su = d.karistir(wg, su, sg.outputs["Color"], "FLOAT")
+    col_kure, su_kure = col, su          # E turu: küre (Dunya) malzemesiyle aynı renk ve su (yumuşak) — kenar halkası
     su = d.aralik(su, 0.35, 0.65)
     # yakın ayrıntı: 3 km içinde ±%9 değer gürültüsü (10 m pikselin içini kırar)
     cd_ = d("ShaderNodeCameraData")
@@ -431,7 +488,37 @@ if not a.sadece_json:
     d.b(d.math("ADD", 0.12, d.math("MULTIPLY", rzf, 0.16)), deniz.inputs["Roughness"])
     d.b(d.math("ADD", 0.25, d.math("MULTIPLY", rzf, 0.6)), deniz.inputs["Specular IOR Level"])
     mx = d("ShaderNodeMixShader"); d.b(su, mx.inputs[0]); d.b(kara.outputs[0], mx.inputs[1]); d.b(deniz.outputs[0], mx.inputs[2])
-    d.b(pusla(d, mx.outputs[0]), out.inputs["Surface"])
+    # E turu körfez yaması (brief §12.2, §12.6): t23 k16–30'daki dikdörtgen sınır arazi ağının ±110 km kenarı (ölçüldü:
+    # t23 k24 güney kenarında deniz B 38 → 50,6/255; arazi denizi dkol ×0,75 ve ayrı BSDF, küre denizi ×1). Kenar halkasında
+    # (kenardan 3–13 km) ve denizde Expo'dan 55–95 km'de gölgelendirme küre (Dunya) malzemesinin eşdeğerine geçer (aynı C1/S2
+    # rengi, pürüz 0,85/0,22, speküler 0,2/0,7, küre normali + rölyef); en dış 3 km saydam (alfa) → küre görünür. Kara
+    # 55–95 km'de değişmez (Beydağları l3'te görünüyor; l3 yeniden render edilmiyor). Expo'dan < 55 km hiçbir şey değişmez.
+    kure = d("ShaderNodeBsdfPrincipled")
+    d.b(col_kure, kure.inputs["Base Color"])
+    d.b(d.karistir(su_kure, 0.85, 0.22, "FLOAT"), kure.inputs["Roughness"])
+    d.b(d.karistir(su_kure, 0.2, 0.7, "FLOAT"), kure.inputs["Specular IOR Level"])
+    gk = d("ShaderNodeNewGeometry")
+    kn = d.vmath("NORMALIZE", d.vmath("ADD", gk.outputs["Position"], (0.0, 0.0, R)))
+    if _rf and a.rolyef_guc > 0:
+        vre = esle(d, eq, 1 / (RFW * KX), 1 / (RFH * KY), (LON0 - RFLO0) / RFW, (LAT0 - RFLA0) / RFH)
+        kn = rolyef_tumsek(d, vre, kn)
+    d.b(kn, kure.inputs["Normal"])
+    sk_ = d("ShaderNodeSeparateXYZ"); d.b(eq, sk_.inputs[0])
+    kenar = d.math("SUBTRACT", float(AR_L), d.math("MAXIMUM", d.math("ABSOLUTE", sk_.outputs["X"]), d.math("ABSOLUTE", sk_.outputs["Y"])))
+    w_kenar = d.aralik(kenar, 13000.0, 3000.0)
+    w_r = d.math("MULTIPLY", d.aralik(d.vmath("LENGTH", eq), 55000.0, 95000.0), su)
+    mk = d("ShaderNodeMixShader"); d.b(d.math("MAXIMUM", w_kenar, w_r), mk.inputs[0])
+    d.b(mx.outputs[0], mk.inputs[1]); d.b(kure.outputs[0], mk.inputs[2])
+    tr_ = d("ShaderNodeBsdfTransparent")
+    # S1b: gölge ışınları için saydam halka tümüyle saydam (yarı saydam halka hem altındaki küreyi gölgeliyor hem de
+    # onun üstünden görülüyordu → t23 k24 güney kenarında 3–6 px'lik −4/255 koyu çizgi; ölçüldü). İç kısım (kenar ≥ 3 km)
+    # kamera ve gölge ışınlarında aynen opak.
+    lp_ = d("ShaderNodeLightPath")
+    a_kam = d.aralik(kenar, 0.0, 3000.0)
+    a_gol = d.aralik(kenar, 2990.0, 3000.0, tip="LINEAR")
+    ma = d("ShaderNodeMixShader"); d.b(d.karistir(lp_.outputs["Is Shadow Ray"], a_kam, a_gol, "FLOAT"), ma.inputs[0])
+    d.b(tr_.outputs[0], ma.inputs[1]); d.b(pusla(d, mk.outputs[0]), ma.inputs[2])
+    d.b(ma.outputs[0], out.inputs["Surface"])
     OB["arazi"] = arazi
     log("arazi", len(me.vertices), "köşe")
 
@@ -1010,6 +1097,13 @@ def ortam(klip, f, st):
         "gok_k": 1.0 - ss(alt, 25e3, 120e3),
         "bulut_k": ss(alt, 60e3, 250e3),
         "yerel_bulut_k": 0.0, "parlama_k": 0.0, "perde_k": 0.0, "isik_k": 0.0, "saat_bulut": 0.0, "saat_su": 0.0,
+        # E turu (brief §12.2): rölyef yalnız d2 bandında (D1'de ve arazi devrinde 0), C1 yeni şeridi alt < 6.000 km,
+        # atmosfer halesi 1 (≥ 12.000 km) → 0,6 (≤ 8.000 km)
+        "rolyef_k": ss(alt, 9.0e6, 4.0e6) * ss(alt, 300e3, 600e3),
+        "c1_ek_k": ss(alt, 6.0e6, 4.5e6),
+        "hale_k": 0.6 + 0.4 * ss(alt, 8.0e6, 12.0e6),
+        # S1b: kopuk hale düzeltmesi l1 irtifasında (15.529 km) 0 → t12 k10 (13.475 km) 1; 1.000 km altında yine 0
+        "hale_ic_k": ss(alt, 15.45e6, 13.45e6) * ss(alt, 1.0e6, 1.9e6),
     }
     if klip == "t23":
         o["yerel_bulut_k"] = ss(f, 36, 50) * (1 - ss(f, 66, 76))
@@ -1103,9 +1197,16 @@ def anahtarla():
 
 
 # ------------------------------------------------------------------ JSON fragmanları (brief §9.3)
+# E turu (brief §12.2, §12.4-9): p2 = 12 emanet alanı (src/lib/emanet.ts; ad yazılmaz) + Antalya künyesi; atlas
+# etiketleri (Akdeniz, Anadolu, Kıbrıs) kalktı.
+EMANET = emanet_oku()
+KUNYE_SSR = "9–20 Kasım 2026"
+# numaranın çekirdek merkezine göre video px ofseti (dikey ve yatayda aynı ölçek); dx < 0 → numara solda (bitişi çekirdeğe
+# 10 px). Çakışanlar (l2 kare 0, dikey px): 05↔Antalya 10,2, 05↔Expo 13,5, 06↔07 44,2, 04↔05 52,5.
+EMANET_OFSET = {4: (-10.0, -6.0), 5: (-10.0, 0.0), 6: (10.0, 0.0), 7: (-10.0, 0.0)}
 CAPALAR = {
     "p1": {"Antalya": (36.8969, 30.7133, 30.0)},
-    "p2": {"Akdeniz": (33.6, 27.6, 0.0), "Anadolu": (38.7, 32.2, 1000.0), "Kıbrıs": (35.12, 33.25, 300.0),
+    "p2": {**{f"Emanet {e['no']:02d}": (e["lat"], e["lng"], 0.0) for e in EMANET},
            "Antalya": (36.8969, 30.7133, 30.0)},
     "p3": {"Antalya Expo Center": None, "D400": None, "Antalya": (36.8890, 30.7050, 60.0),
            "Antalya Körfezi": (36.8434, 30.6543, 0.0), "Beydağları": None},     # B: körfez çapası dikey kırpımın içinde
@@ -1199,8 +1300,8 @@ def disari_aktar():
             else:
                 pts = {k: geo.latlon_enu(*v) for k, v in CAPALAR[poster].items()}
             # anahtarlar W'nin şemasındaki kimlikler (docs/klipler-sema.md §3); görünen adlar capa_adlari'nda
-            KIMLIK = {"Antalya": "antalya", "Akdeniz": "akdeniz", "Anadolu": "anadolu", "Kıbrıs": "kibris",
-                      "Antalya Expo Center": "expo", "D400": "d400", "Antalya Körfezi": "korfez", "Beydağları": "beydaglari"}
+            KIMLIK = {"Antalya": "antalya", "Antalya Expo Center": "expo", "D400": "d400", "Antalya Körfezi": "korfez",
+                      "Beydağları": "beydaglari", **{f"Emanet {e['no']:02d}": f"emanet{e['no']:02d}" for e in EMANET}}
             cap, adlar = {}, {}
             for ad, p in pts.items():
                 if p is None:
@@ -1214,6 +1315,23 @@ def disari_aktar():
             js["capa_adlari"] = adlar
             js["capa_kirpim"] = {k: {"dikey": 420 <= v_[0] <= 1500, "yatay": 420 <= v_[1] <= 1500} for k, v_ in cap.items()}
             js["poster"] = poster
+            # E turu etiketleri (brief §12.4-9 şeması; anahtarlar capalar ile aynı): d1/d11 Antalya künyesi, d2 12 emanet
+            # (metin boş, ad yazılmaz) + Antalya künyesi. Görünür metin W'nin sözlüğünde; buradaki künye satırı SSR metni.
+            et = {}
+            if "antalya" in cap and poster in ("p1", "p2"):
+                et["antalya"] = {"tur": "kunye", "metin": KUNYE_SSR}
+            if poster == "p2":
+                for e in EMANET:
+                    k_ = f"emanet{e['no']:02d}"
+                    if k_ not in cap:
+                        continue
+                    et[k_] = {"tur": "emanet", "no": e["no"], "donem": e["donem"], "metin": ""}
+                    if e["no"] in EMANET_OFSET:
+                        et[k_]["dx"], et[k_]["dy"] = EMANET_OFSET[e["no"]]
+                js["etiket_ofset_notu"] = ("dx/dy: numaranin cekirdek merkezine gore video px ofseti (dikey ve yatay ayni); "
+                                           "dx < 0 numara solda, cekirdege 10 px")
+            if et:
+                js["etiketler"] = et
         json.dump(js, open(os.path.join(CIKIS, f"{klip}.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         log(f"{klip}.json", "kadraj", kad[0], "→", kad[-1], ("çapalar " + str(js.get("capalar"))) if poster else "")
 
@@ -1223,6 +1341,8 @@ if a.sadece_json:
     log("yalnız JSON"); sys.exit(0)
 
 anahtarla()
+if a.teshis_bulut_yok and "bulut" in OB:          # teşhis (S1b hale ölçümü): bulut kabuğu görünmez
+    OB["bulut"].scale = (1e-4, 1e-4, 1e-4)
 
 # ------------------------------------------------------------------ render ayarları
 r = sc.render

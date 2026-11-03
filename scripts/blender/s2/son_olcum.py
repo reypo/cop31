@@ -1,4 +1,4 @@
-"""S2 son render ölçümleri (B turu; C turu: p6_c, t34b_k0000) → D:/soft/cop31-varlik/render-son/_onizleme/s2-olcum.json (+ poster JPG'leri).
+"""S2 son render ölçümleri (B turu; C turu: plaka, t34b_k0000; E turu: §12.6 dikiş listesi, t78[65] ↔ eski t56[71] / p8) → D:/soft/cop31-varlik/render-son/_onizleme/s2-olcum.json (+ poster JPG'leri).
 Kare süreleri (s2-son.jsonl, medyan), VRAM (nvidia-smi kart toplamı, s2-vram-<klip>.csv), dikişler (ΔE00 + ort. mutlak
 fark /255), döngü kapanışı (119→0 ↔ ardışık kare farkı), metin bandı en parlak %5 (p4 üst, p5 alt; dikey + yatay),
 malzeme maskesiyle en parlak kanal (p4, p5), kapak renk sadakati (t56 son kare, p6), parlama (t34b).
@@ -15,6 +15,7 @@ import olc
 
 R = "D:/soft/cop31-varlik/render-son"
 O = R + "/_onizleme"
+SONRA = ""   # --sonra: bu ISO zamandan önce biten koşular (s2-son.jsonl) yok sayılır
 
 
 def k(klip, n):
@@ -31,6 +32,8 @@ def sureler():
     enuzun = {}
     for satir in open(yol, encoding="utf-8"):   # klip başına en çok kareli koşu (yama koşuları: t45 56–59, p6)
         j = json.loads(satir)
+        if SONRA and j.get("zaman", "") < SONRA:   # E: önceki turların koşuları dışarıda (D'de t56 72 kareydi)
+            continue
         if j.get("kare_say", 0) >= enuzun.get(j["klip"], {}).get("kare_say", 0):
             enuzun[j["klip"]] = j
     for kl, j in enuzun.items():
@@ -59,6 +62,8 @@ def vram():
         enuzun = {}
         for satir in open(yol, encoding="utf-8"):
             j = json.loads(satir)
+            if SONRA and j.get("zaman", "") < SONRA:
+                continue
             if j.get("kare_say", 0) >= enuzun.get(j["klip"], {}).get("kare_say", 0):
                 enuzun[j["klip"]] = j
         for j in enuzun.values():
@@ -95,10 +100,11 @@ def dongu(klip, n=120):
     return {"kapanis_119_0": kap, "ardisik_0_1": ard[0], "ardisik_59_60": ard[1], "ardisik_118_119": ard[2]}
 
 
-def p6_c():
-    """C turu (brief §11.1 S2-C 2): p6 broşürsüz. p6 ↔ t56[71] broşür dikdörtgeni (606–1314 × 460–1460) dışında, tam
-    çözünürlük; dikdörtgene uzaklığa göre (yığının kâğıt taşması + gölgesi yalnız yakın bantta) ve dikdörtgen içi renk."""
-    t, p = RB.png_oku(k("t56", 71)), RB.png_oku(k("p6", 0))
+def plaka_kars(t_yol, p_yol):
+    """C turu (brief §11.1 S2-C 2) / E turu (§12.6): broşürsüz plaka (p8, eski p6) ↔ broşürlü son kare (E: t78[65];
+    C/D: t56[71]) broşür dikdörtgeni (606–1314 × 460–1460) dışında, tam çözünürlük; dikdörtgene uzaklığa göre (yığının
+    kâğıt taşması + gölgesi yalnız yakın bantta) ve dikdörtgen içi renk."""
+    t, p = RB.png_oku(t_yol), RB.png_oku(p_yol)
     x0, y0, x1, y1 = olc.RECT
     yy, xx = np.mgrid[0:t.shape[0], 0:t.shape[1]]
     ic = (xx >= x0) & (xx < x1) & (yy >= y0) & (yy < y1)
@@ -112,9 +118,23 @@ def p6_c():
     pi = p[ic]
     return {"dis_tum": oz(~ic), "dis_0_12px": oz(~ic & (uz <= 12)), "dis_12_45px": oz(~ic & (uz > 12) & (uz <= 45)),
             "dis_45px_ustu": oz(~ic & (uz > 45)),
-            "t56_71_dis_kagit_piksel(min kanal > 0,80)": int((~ic & (t.min(-1) > 0.80)).sum()),
-            "p6_ic_ort": RB.hex_(pi.mean(0)), "p6_ic_p1": RB.hex_(np.percentile(pi, 1, 0)), "p6_ic_p99": RB.hex_(np.percentile(pi, 99, 0)),
-            "p6_ic_kagit_oran(min kanal > 0,80)": round(float((pi.min(1) > 0.80).mean()), 6)}
+            "son_kare_dis_kagit_piksel(min kanal > 0,80)": int((~ic & (t.min(-1) > 0.80)).sum()),
+            "plaka_ic_ort": RB.hex_(pi.mean(0)), "plaka_ic_p1": RB.hex_(np.percentile(pi, 1, 0)), "plaka_ic_p99": RB.hex_(np.percentile(pi, 99, 0)),
+            "plaka_ic_kagit_oran(min kanal > 0,80)": round(float((pi.min(1) > 0.80).mean()), 6)}
+
+
+def tam_de00(a_yol, b_yol):
+    """Tam çözünürlük ΔE00 (0,05 eşiği için; olc.dikis 2'de 1 örnekler)."""
+    a, b = RB.png_oku(a_yol), RB.png_oku(b_yol)
+    if a.shape != b.shape:
+        return {"hata": f"boyut {a.shape} ≠ {b.shape}"}
+    a2, b2 = a.reshape(-1, 3), b.reshape(-1, 3)
+    d = np.concatenate([RB.de00(a2[i:i + 400000], b2[i:i + 400000]) for i in range(0, len(a2), 400000)])
+    f = np.abs(a - b) * 255
+    return {"de00_ort": round(float(d.mean()), 4), "de00_p95": round(float(np.percentile(d, 95)), 3),
+            "de00_p99_9": round(float(np.percentile(d, 99.9)), 3), "de00_maks": round(float(d.max()), 2),
+            "ort_mutlak_fark_255": round(float(f.mean()), 4), "maks_fark_255": round(float(f.max()), 1),
+            "piksel_1_255_ustu": int((f.max(-1) > 1).sum())}
 
 
 def poster_jpg(src, ad):
@@ -124,14 +144,27 @@ def poster_jpg(src, ad):
     return yol
 
 
+RD = "D:/soft/cop31-varlik/render-son-d"   # D turu master yedekleri (§12.9-4)
+
+
 def main(maske_dizin):
-    out = {"sure": sureler(), "vram": vram(), "dikis": {}, "dongu": {}, "bant": {}, "maske": {}, "kapak": {}, "poster_jpg": []}
-    ciftler = {"t45[59]↔l5[0]": (k("t45", 59), k("l5", 0)), "l4[0]↔t34b[23]": (k("l4", 0), k("t34b", 23)),
-               "t56[0]↔l5[0]": (k("t56", 0), k("l5", 0)), "t45[0]↔l4[0]": (k("t45", 0), k("l4", 0)),
-               "t56[71]↔p6 (C: yığın yok; tüm kare)": (k("t56", 71), k("p6", 0))}
+    """E turu (brief §12.6): S2 dikişleri master ΔE00 ≤ 0,3; t78[65] ↔ eski t56[71] (render-son-d) ≤ 0,05 tam kare;
+    t78[65] ↔ p8 (eski p6 plakası, broşürsüz) broşür dikdörtgeni dışında ≤ 0,05."""
+    out = {"tur": "E", "sure": sureler(), "vram": vram(), "dikis": {}, "dongu": {}, "bant": {}, "maske": {}, "kapak": {},
+           "poster_jpg": []}
+    ciftler = {"t34[47]↔t34[48]": (k("t34", 47), k("t34", 48)), "t34[71]↔l4[0]": (k("t34", 71), k("l4", 0)),
+               "t45[0]↔l4[0]": (k("t45", 0), k("l4", 0)), "t45[59]↔l5[0]": (k("t45", 59), k("l5", 0)),
+               "l5[0]↔t56[0]": (k("l5", 0), k("t56", 0)), "t56[59]↔t67[0]": (k("t56", 59), k("t67", 0)),
+               "t67[47]↔t78[0]": (k("t67", 47), k("t78", 0)), "p6↔t56[59]": (k("p6", 0), k("t56", 59)),
+               "p7↔t67[47]": (k("p7", 0), k("t67", 47))}
     for ad, (a, b) in ciftler.items():
         if os.path.exists(a) and os.path.exists(b):
             out["dikis"][ad] = olc.dikis(a, b)
+    eski71 = f"{RD}/t56/k_0071.png"
+    if os.path.exists(k("t78", 65)) and os.path.exists(eski71):
+        out["dikis"]["t78[65]↔eski t56[71] (tam kare, tam çözünürlük)"] = tam_de00(k("t78", 65), eski71)
+    if os.path.exists(k("t78", 65)) and os.path.exists(k("p8", 0)):
+        out["p8_e"] = plaka_kars(k("t78", 65), k("p8", 0))
     for kl in ("l4", "l5"):
         if os.path.exists(k(kl, 119)):
             out["dongu"][kl] = dongu(kl)
@@ -143,15 +176,12 @@ def main(maske_dizin):
         m = f"{maske_dizin}/maske-{kl}/k_0000.png"
         if os.path.exists(k(kl, 0)) and os.path.exists(m):
             out["maske"][ad] = olc.maske_stat(k(kl, 0), m)
-    m56 = f"{maske_dizin}/maske-t56/k_0071.png"
-    if os.path.exists(k("t56", 71)):
-        out["kapak"]["t56_71"] = olc.kapak(k("t56", 71), m56 if os.path.exists(m56) else None)
-    if os.path.exists(R + "/t56.json"):
-        j = json.load(open(R + "/t56.json", encoding="utf-8"))
+    if os.path.exists(k("t78", 65)):
+        out["kapak"]["t78_65"] = olc.kapak(k("t78", 65))
+    if os.path.exists(R + "/t78.json"):
+        j = json.load(open(R + "/t78.json", encoding="utf-8"))
         out["kapak"]["brosur_dikdortgen"] = j.get("brosur_dikdortgen")
         out["kapak"]["brosur_olcum"] = j.get("brosur_olcum")
-    if os.path.exists(k("p6", 0)) and os.path.exists(k("t56", 71)):
-        out["p6_c"] = p6_c()
     if os.path.exists(k("t34b", 0)):
         a16 = RB.png_oku(k("t34b", 0)).reshape(-1, 3)
         u = np.unique(np.round(a16 * 65535).astype(int), axis=0)
@@ -160,7 +190,7 @@ def main(maske_dizin):
     if os.path.exists(R + "/t34b/_parlama.json"):
         p = json.load(open(R + "/t34b/_parlama.json", encoding="utf-8"))
         out["parlama"] = {f: {"ort": v["ort_parlaklik"], "rgb": RB.hex_(np.array(v["ort_rgb"]))} for f, v in p.items() if int(f) <= 56}
-    for src, ad in ((k("l4", 0), "p4"), (k("l5", 0), "p5"), (k("p6", 0), "p6"), (k("t56", 71), "t56-son")):
+    for src, ad in ((k("l4", 0), "p4"), (k("p6", 0), "p6"), (k("p7", 0), "p7"), (k("p8", 0), "p8"), (k("t78", 65), "t78-son")):
         if os.path.exists(src):
             out["poster_jpg"].append(poster_jpg(src, ad))
     with open(O + "/s2-olcum.json", "w", encoding="utf-8") as fh:
@@ -171,4 +201,7 @@ def main(maske_dizin):
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--maske_dizin", default="D:/soft/cop31-varlik/render-son/_onizleme/maske")
-    main(p.parse_args().maske_dizin)
+    p.add_argument("--sonra", default="2026-11-03T15:00:00")   # E turu son render'ı bu saatten sonra
+    x = p.parse_args()
+    SONRA = x.sonra
+    main(x.maske_dizin)

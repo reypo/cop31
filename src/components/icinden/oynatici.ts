@@ -325,9 +325,10 @@ export class Oynatici {
   }
   /**
    * Geçiş öğesinin `poster` özniteliği için durak: klibin 0. karesi o durağın posteri olmalı (klip zinciri). DOM
-   * durağından ileri giden klip (d9 → t01: 0. kare amblem boyunda Dünya) durağın posterine (p6 plakası) eşit
-   * DEĞİL → poster yok (-1). Hiç oynamamış öğe poster bayrağı nedeniyle 0. kare yerine posteri gösterir; B turunda
-   * d9→d10 kesişmesinde lombar deliğinde p6'nın broşürü görünüyordu.
+   * durağından ileri giden klip (brosur-arka → t01: 0. kare amblem boyunda Dünya) durağın posterine (p8 plakası)
+   * eşit DEĞİL → poster yok (-1). Hiç oynamamış öğe poster bayrağı nedeniyle 0. kare yerine posteri gösterir; B
+   * turunda dalış kesişmesinde lombar deliğinde plakanın broşürü görünüyordu. Döngüsüz klip durağı (duvar, d6/d7)
+   * "klip" türündedir: posteri gelen klibin son karesi = giden klibin 0. karesi (son-kare posteri, §12.4-9).
    */
   private ilkKarePosteri(k: number, dir: number) {
     return dir > 0 && this.m.duraklar[k]?.tur === "dom" ? -1 : k;
@@ -341,8 +342,11 @@ export class Oynatici {
     const ters = this.gecis(k, -yon);
     if (ayni) l.push({ url: ayni.url, dongu: false, k: this.ilkKarePosteri(k, yon) });
     if (ters) l.push({ url: ters.url, dongu: false, k: this.ilkKarePosteri(k, -yon), bosta: true });
-    // Uç ya da DOM durağı: boş kalan yuvaya varılacak döngü (aynı yönde ilk klipli durak).
-    for (let j = k + yon; l.length < 3 && j >= 0 && j < this.N; j += yon) {
+    // Uç ya da DOM durağı: boş kalan yuvaya varılacak döngü (aynı yönde ilk klipli durak). Döngüsüz klip durağında
+    // (duvar) iki yönün geçişi zaten yuvada; üçüncü yuva boş kalır, sıradaki geçiş pencereden iner (uzaktaki l1'i
+    // buradan indirmek d6'da ~1 MB boşa bayt olurdu).
+    const uc = this.m.duraklar[k]?.tur === "dom" || !ayni || !ters;
+    for (let j = k + yon; uc && l.length < 3 && j >= 0 && j < this.N; j += yon) {
       const dj = this.dongu(j);
       if (dj) {
         l.push({ url: dj.url, dongu: true, k: j });
@@ -359,7 +363,7 @@ export class Oynatici {
     const d = (j: number) => this.dongu(j)?.url;
     const g = (j: number, yy: number) => this.gecis(j, yy)?.url;
     const l = [d(k), g(k, y), d(k + y), g(k + y, y), d(k + 2 * y), g(k + 2 * y, y), d(k - y)];
-    // DOM durakları arasında (d6–d9) sıradaki klip uzaktadır: ilk klipli geçişe kadar ileri bak.
+    // Broşür (DOM) durakları arasında sıradaki klip uzaktadır: ilk klipli geçişe kadar ileri bak.
     if (!l.some(Boolean)) for (let j = k; j >= 0 && j < this.N; j += y) if (g(j, y)) {
       l.push(g(j, y), d(j + y));
       break;
@@ -787,12 +791,12 @@ export class Oynatici {
       this.goster(L.el, 0);
       sonra();
     } else if (d) void this.donguBaslat(j).then(sonra);
-    else sonra(); // DOM durağı: son kare durur; VideoSahne gizle() ile söndürür
+    else sonra(); // döngüsüz durak (duvar, DOM): son kare durur; DOM durağında VideoSahne gizle() ile söndürür
     this.olay("varis", kayit);
     sec.varis?.(kayit);
   }
 
-  /** DOM geçişi bitti (d6–d9, kapanış dönüşü). */
+  /** DOM geçişi bitti (broşür durakları arası, kapanış dönüşü). */
   domVaris(j: number) {
     const kayit = this.olaylar.at(-1);
     this.k = j;

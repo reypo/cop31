@@ -6,9 +6,16 @@ Klipler (§9.1 numaralandırması; R3 kart adları parantezde):
   l4    120 kare döngü: patlatılmış stant, parçalar ±1,5 cm salınır (R3 L3)          p4 = l4[0]
   t45   60 kare: montaj koreografisi + vinçten rotundaya kavisli iniş (R3 T34)
   l5    120 kare döngü: rotunda içi, "Bugün" tepe ışığı ±%6 nefes (R3 L4)            p5 = l5[0]
-  t56   72 kare (B: 2,4 s, deklanşör 0,35): bankoya süzülüş, 18 → 85 mm; son karede broşür dikdörtgeni (R3 T45)
-  p6    banko plakası (tek kare, f/2) (R3 P5); C turu: broşürsüz (--yigin 0, son.sh geçirir)
+  E turu (brief §12.3; durak numaraları §12.1):
+  t56   60 kare (2,0 s, deklanşör 0,35): P5 → baş kalkar → 120° sütun aralığı → poz A (d6, arka duvar)
+  p6    "son-kare" poster = t56 master son karesi (ayrı render yok; son.sh kopyalar, p6.json tip "son-kare")
+  t67   48 kare (1,6 s): poz A → poz B (d7, sol duvar); 0,54 m kayma + 62° sola pan
+  p7    "son-kare" poster = t67 son karesi
+  t78   66 kare (2,2 s): B → totem ile batı duvarı arası → Dn → eski t56 kuyruğu (banko_kamera; E → son, 85 mm);
+        son karede broşür dikdörtgeni; son kare ≡ eski t56[71] (§12.6)
+  p8    banko plakası = eski p6 plakası (yeniden render yok; render-son/p8, p8.json tip "plaka"; --yigin 0)
   olcum-hol / olcum-rotunda / olcum-banko: Cycles ölçüm kareleri (2'şer)
+  --carpisma: render yok; t56/t67/t78 kamera yollarının nesne gruplarına en küçük uzaklığı (BVH, kare başına 8 alt örnek)
 
 B turu (orkestratör kararları): EEVEE 1920² TAA 64 son render (son.sh), patlatma ×1,6, P4 14 mm / 11 m, "fuar holü"
 (komşu stant fasya + ışık kutuları, kablo tavaları, hol dolgusu), broşür 0,708 + kapak-dom.png (AgX ön telafisi: renk.py),
@@ -43,8 +50,12 @@ KLIPLER = {
     "t45": (0, 59, "gecis"),
     "l5": (0, 119, "dongu"),
     "p5": (0, 0, "poster"),
-    "t56": (0, 71, "gecis"),       # B: 2,4 s = 72 kare (orkestratör B kararı 5)
-    "p6": (0, 0, "plaka"),
+    "t56": (0, 59, "gecis"),       # E: 2,0 s; P5 → poz A (d6)
+    "p6": (0, 0, "son-kare"),      # = t56[59]
+    "t67": (0, 47, "gecis"),       # E: 1,6 s; A → B (d7)
+    "p7": (0, 0, "son-kare"),      # = t67[47]
+    "t78": (0, 65, "gecis"),       # E: 2,2 s; B → banko; son kare ≡ eski t56[71]
+    "p8": (0, 0, "plaka"),         # eski p6 plakası (t78 son karesinin kamerası, üstteki broşür gizli)
     "olcum-hol": (0, 1, "olcum"),
     "olcum-rotunda": (0, 1, "olcum"),
     "olcum-banko": (0, 1, "olcum"),
@@ -56,7 +67,7 @@ def ek_arg(p):
     p.add_argument("--kareler", default="")
     p.add_argument("--json", action="store_true")
     p.add_argument("--yalniz_json", action="store_true")   # render yok, yalnız <klip>.json
-    p.add_argument("--yigin", type=int, default=1)   # p6: 1 → üstteki broşür hariç yığın kalır; 0 → yığın yok
+    p.add_argument("--yigin", type=int, default=-1)  # p8: 1 → üstteki broşür hariç yığın kalır; 0 → yığın yok (−1: p8'de 0)
     p.add_argument("--bitki", type=int, default=1)
     p.add_argument("--p4_genislik", type=float, default=1.20)   # patlatılmış stant / dikey kadraj genişliği (B: ~%120)
     p.add_argument("--p4_egim", type=float, default=0.0)        # d4 eğimi (derece, aşağı negatif); 0 → --p4_genislik ile çöz
@@ -67,6 +78,13 @@ def ek_arg(p):
     p.add_argument("--kalibre", default="", choices=["", "beyaz", "siyah"])   # kapak kalibrasyonu: düz beyaz / siyah albedo
     p.add_argument("--maske", action="store_true")              # Workbench malzeme kimliği maskesi (ölçüm)
     p.add_argument("--isik_carp", type=float, default=0.0)      # tüm lambaların enerji çarpanı; 0 → motora göre (EEVEE 1,0 / Cycles 0,45)
+    # E turu (brief §12.3)
+    p.add_argument("--yikama_w", type=float, default=260.0)     # duvar yıkama spotu gücü (W, EEVEE; CARP uygulanır); önizlemede ayarlanır
+    p.add_argument("--yikama_golge", type=float, default=1.0)   # yıkama spotu gölge çözünürlük ölçeği (VRAM geri dönüşü §12.7-9: 0,5)
+    p.add_argument("--ekran_g", type=float, default=2.0)        # "Sen de söz ver." ekranlarının emisyon gücü (kiosk ekranıyla aynı)
+    p.add_argument("--t78_rampa", type=float, default=0.0)      # t78 zaman eğrisi: 0 easeInOutSine (eski t56); 0,3 → tepe hız −%9 (bulanıklık yedeği)
+    p.add_argument("--carpisma", action="store_true")           # render yok: kamera yolu ↔ nesne en küçük uzaklık raporu
+    p.add_argument("--carpisma_json", default="")               # rapor dosyası (boş → <kok>/_onizleme/s2-carpisma.json)
 
 
 a = O.argumanlar(ek_arg)
@@ -75,6 +93,8 @@ KLIP = a.klip
 # başına lamba enerji çarpanı (emisyonlu yüzeyler hariç). --isik_carp ile elle.
 CARP = a.isik_carp or (0.45 if a.engine == "CYCLES" else 1.0)
 K0, K1, TUR = KLIPLER[KLIP]
+if a.yigin < 0:
+    a.yigin = 0 if KLIP == "p8" else 1   # C turu (§11.1 S2-C 2): plaka broşürsüz
 
 # ================================================================== sabitler
 W, DP = 15.0, 9.9
@@ -108,7 +128,20 @@ KAPAK_DOM = DOKU + "kapak-dom.png"
 KAPAK_KOMP = DOKU + "kapak-dom-komp.png"     # AgX ön telafili (renk.py): render'da DOM kapağın tonları
 KAPAK = a.kapak or (KAPAK_KOMP if os.path.exists(KAPAK_KOMP) else KAPAK_DOM)
 P4_LENS = a.p4_lens
-T56_SON = 71
+T56_ESKI_SON = 71        # D turu t56'sının son karesi (72 kare): banko_kamera(ESKI_T56) — p8 plakası, t78 sonu ≡ bu kare
+N_T56, N_T67, N_T78 = 59, 47, 65   # E turu son kare dizinleri (60 / 48 / 66 kare)
+# son-kare posterleri ve plaka: hangi klibin hangi karesi (sahne durumu o kareninki)
+POSTER_KAYNAK = {"p6": ("t56", N_T56), "p7": ("t67", N_T67), "p8": ("t78", N_T78), "olcum-banko": ("t78", N_T78)}
+# E turu duvar baskıları (brief §12.3): iç yüz düzlemleri ve doku dosyaları (S2a, dokular.mjs, 500 px/m)
+Y_ARKA_IC = DP / 2 - DUVAR_T          # 4,83: arka_kapali iç yüzü (güneye bakar)
+X_SOL_IC = -W / 2 + DUVAR_T           # −7,38: sol_kapali iç yüzü (doğuya bakar)
+Y_ON_DIS = -DP / 2                    # −4,95: on_kapali dış yüzü (güneye bakar)
+BASKI_T = 0.005                       # baskı paneli kalınlığı (5 mm)
+DUVAR_DOKU = {"arka": "duvar-arka.png", "sol": "duvar-sol.png", "ekran": "ekran-soz.png", "cephe": "cephe-on.png"}
+# poz A (d6, arka duvar) ve poz B (d7, sol duvar): brief z'leri stant zemininden (Z0) ölçülü (P5 gibi)
+POZ_A = {"konum": Vector((-4.30, 1.90, Z0 + 1.55)), "psi": -18.0, "phi": 4.0, "lens": 18.0}
+POZ_B = {"konum": Vector((-4.75, 1.60, Z0 + 1.55)), "psi": -80.0, "phi": 4.0, "lens": 18.0}
+DEKLANSOR_E = 0.35                    # t56 / t67 / t78 (eski t56 ile aynı; t78 son karesi ≡ eski t56[71])
 O.RENDER = a.kok
 
 random.seed(31)
@@ -216,6 +249,21 @@ def m_emis(ad, renk, guc):
     d.b(em.outputs[0], out.inputs[0])
     MAT[ad] = m
     return m
+
+
+YEDEK_DOKU = []   # bulunamayıp düz renkle kurulan doku dosyaları (son.sh bunlarla son render'ı reddeder)
+
+
+def m_baski(ad, dosya, yedek_hex, emis_g=0.0, **kw):
+    """E turu duvar baskısı / ekran (S2a dokuları, DOKU altında). Dosya yoksa düz renkli geçici malzeme (uyarıyla)."""
+    yol = DOKU + dosya
+    if os.path.exists(yol):
+        return m_doku(ad, yol, emis_g=emis_g, **kw)
+    print(f"[UYARI] doku yok: {yol} → düz {yedek_hex} (geçici; S2a üretince gerçeği kullanılır)", flush=True)
+    YEDEK_DOKU.append(dosya)
+    renk = srgb(yedek_hex)
+    return m_principled(ad, renk, rough=kw.get("rough", 0.6), spec=kw.get("spec", 0.4), coat=kw.get("coat", 0.0),
+                        emis=renk if emis_g > 0 else None, emis_g=emis_g)
 
 
 def kelvin(k):
@@ -336,6 +384,59 @@ def panel_doku(ad, w, h, t, loc, rotz, mat_on, mat_kenar, parent=None, dikey_met
     if parent:
         o.parent = parent
     return o
+
+
+# ================================================================== E TURU: duvar baskıları, ekranlar, yıkama spotları
+# Yıkama spotları (brief §12.3): z 4,25 (Z0'dan), duvardan 0,7 m açıkta, 3.000 K, koni 35°, blend 0,6, hedef z 2,0.
+YIKAMA_Z, YIKAMA_ACIK, YIKAMA_HEDEF_Z = Z0 + 4.25, 0.70, Z0 + 2.0
+YIKAMA = (
+    [{"ad": f"yikama_kuzey_{i}", "grup": "kuzey", "duvar": "arka",
+      "konum": Vector((x, Y_ARKA_IC - YIKAMA_ACIK, YIKAMA_Z)), "hedef": Vector((x, Y_ARKA_IC, YIKAMA_HEDEF_Z)),
+      "taban": Vector((x, DP / 2 - DUVAR_T / 2, Z0 + DUVAR_H))} for i, x in enumerate((-6.6, -4.9, -3.2))]
+    + [{"ad": f"yikama_bati_{i}", "grup": "bati", "duvar": "sol",
+        "konum": Vector((X_SOL_IC + YIKAMA_ACIK, y, YIKAMA_Z)), "hedef": Vector((X_SOL_IC, y, YIKAMA_HEDEF_Z)),
+        "taban": Vector((-W / 2 + DUVAR_T / 2, y, Z0 + DUVAR_H))} for i, y in enumerate((0.6, 1.95, 3.3))]
+)
+
+
+def duvar_baskilari(d_on, d_arka, d_sol):
+    """4 baskı (5 mm panel; duvar parçasının çocuğu → d4 patlatması ve montaj aynen) + 2 ekran + 6 yıkama armatürü."""
+    bw = MAT["boya_beyaz"]
+    ma = m_baski("baski_arka", DUVAR_DOKU["arka"], "#F7E6CD", rough=0.75, spec=0.3)
+    ms = m_baski("baski_sol", DUVAR_DOKU["sol"], "#F7E6CD", rough=0.75, spec=0.3)
+    mc = m_baski("baski_cephe", DUVAR_DOKU["cephe"], "#F7E6CD", rough=0.75, spec=0.3)
+    me = m_baski("ekran_soz", DUVAR_DOKU["ekran"], "#17241D", emis_g=a.ekran_g, rough=0.08, spec=0.6, coat=1.0)
+    # arka_kapali iç yüzü: x −7,38…−1,80 × z 0–4 (2.790 × 2.000 px); ön yüz −Y
+    x0, x1 = X_SOL_IC, PX(0.38)
+    panel_doku("baski_arka", x1 - x0, DUVAR_H, BASKI_T, ((x0 + x1) / 2, Y_ARKA_IC - BASKI_T / 2, Z0), 0.0, ma, bw, parent=d_arka)
+    # sol_kapali iç yüzü: y −0,50…4,83 (2.665 × 2.000 px); ön yüz +X (u kuzeye artar: içeriden bakana soldan sağa)
+    y0, y1 = -0.50, Y_ARKA_IC
+    panel_doku("baski_sol", y1 - y0, DUVAR_H, BASKI_T, (X_SOL_IC + BASKI_T / 2, (y0 + y1) / 2, Z0), math.pi / 2, ms, bw, parent=d_sol)
+    # 2 × 50" emisyonlu panel: 1,11 × 0,62 m, 4 cm ara, y 1,05…3,31, z 1,20–1,82; gövde 5 cm
+    for i in range(2):
+        yc = 1.05 + 1.11 / 2 + i * (1.11 + 0.04)
+        panel_doku(f"ekran_soz_{i}", 1.11, 0.62, 0.05, (X_SOL_IC + BASKI_T + 0.025, yc, Z0 + 1.20), math.pi / 2, me,
+                   MAT["metal_siyah"], parent=d_sol)
+    # on_kapali dış yüzü: x 1,95…7,5 (2.775 × 2.000 px); ön yüz −Y (dışarı)
+    xk = PX(0.63)
+    panel_doku("baski_cephe", W / 2 - xk, DUVAR_H, BASKI_T, ((xk + W / 2) / 2, Y_ON_DIS - BASKI_T / 2, Z0), 0.0, mc, bw, parent=d_on)
+    # yıkama armatürleri: duvar üstünde dikme → yatay kol (0,7 m) → çatal → silindir gövde (ışın doğrultusunda)
+    ms_ = MAT["metal_siyah"]
+    for y_ in YIKAMA:
+        par = d_arka if y_["duvar"] == "arka" else d_sol
+        L, T, B = y_["konum"], y_["hedef"], y_["taban"]
+        yon = (T - L).normalized()
+        govde_m = L - yon * 0.085                 # gövde merkezi (ön yüzü ışığın 1 cm gerisinde)
+        z_kol = govde_m.z + 0.10
+        kutu(f"{y_['ad']}_dikme", 0.03, 0.03, z_kol + 0.03 - B.z, (B.x, B.y, B.z), ms_, parent=par, bev=0)
+        orta = (B + govde_m) / 2
+        if y_["duvar"] == "arka":
+            kutu(f"{y_['ad']}_kol", 0.03, abs(B.y - govde_m.y) + 0.015, 0.03, (B.x, orta.y, z_kol), ms_, parent=par, bev=0)
+        else:
+            kutu(f"{y_['ad']}_kol", abs(B.x - govde_m.x) + 0.015, 0.03, 0.03, (orta.x, B.y, z_kol), ms_, parent=par, bev=0)
+        kutu(f"{y_['ad']}_catal", 0.02, 0.02, z_kol - govde_m.z, (govde_m.x, govde_m.y, govde_m.z), ms_, parent=par, bev=0)
+        o = silindir(f"{y_['ad']}_govde", 0.045, 0.15, L - yon * 0.16, ms_, parent=par, n=20, bev=0.004)
+        o.rotation_euler = yon.to_track_quat("Z", "Y").to_euler()
 
 
 # ================================================================== HOL
@@ -557,6 +658,8 @@ def stant_kur():
     # sol (−X): Y −0,5 → 4,95 kapalı, önü fasya
     kutu("sol_kapali", DUVAR_T, DP / 2 + 0.5, DUVAR_H, (xs, (DP / 2 - 0.5) / 2, Z0), bw, parent=d_sol)
     kutu("sol_fasya", DUVAR_T, DP / 2 - 0.5, DUVAR_H - FASIA_ALT, (xs, (-0.5 - DP / 2) / 2, Z0 + FASIA_ALT), bw, parent=d_sol)
+    # E turu (brief §12.3): arka / sol iç yüz + ön cephe baskıları, sol duvarda 2 ekran, 6 yıkama armatürü
+    duvar_baskilari(d_on, d_arka, d_sol)
     # iç odalar (+1,4 m yukarı)
     oda = parca("odalar", (0, 0, 1.4), 0.05, 0.42)
     xo = PX(0.655)
@@ -821,9 +924,11 @@ def sandalye(ad, loc, rz, m_dos, m_ayak, parent, kol=False):
 # ================================================================== bitkiler (Poly Haven CC0)
 BITKI_YER = [
     # (x, y, tür) tür 1: potted_plant_01 (1,35 m), 2: potted_plant_02 (0,84 m)
-    (-7.0, -3.55, 1), (-3.55, -4.45, 1), (0.55, -4.45, 2), (-6.9, 1.75, 1), (2.75, 4.45, 1), (7.05, 4.45, 1),
+    (-7.0, -3.55, 1), (-3.55, -4.45, 1), (0.55, -4.45, 2), (-6.95, -0.25, 1), (2.75, 4.45, 1), (7.05, 4.45, 1),
     (7.0, 1.05, 2), (2.8, 1.05, 2), (-3.7, 1.9, 1), (1.6, 3.6, 2), (-7.0, 4.45, 1),
 ]
+# E turu: 3 numara (−6,9; 1,75) → (−6,95; −0,25): d7 (poz B) kadrajında sol ekranın alt ~0,3 m'sini örtüyordu; sol duvarın
+# güney ucuna alındı. l5[0] ve eski t56[71]'de bu bitki görünmüyor (ışın denetimi) → değişmeyen klipler etkilenmez.
 
 
 def bitkiler():
@@ -950,6 +1055,13 @@ def isiklar_kur(hol):
         p = RC + Vector(((R_KANOPI - 0.12) * math.cos(th), (R_KANOPI - 0.12) * math.sin(th), KANOPI_ALT - 0.02))
         o = isik(f"kanopi_led_{i}", "SPOT", p, 26, 4000, spot=(45, 0.9), yon=Vector((-0.25 * math.cos(th), -0.25 * math.sin(th), -1)), yumusak=0.04)
         ISIK["kanopi_led"].append(o)
+    # 7) E turu duvar yıkama spotları (brief §12.3): kuzey (arka duvar) ve batı (sol duvar); isik_durum "kuzey" / "bati"
+    ISIK["yikama"] = {"kuzey": [], "bati": []}
+    for y_ in YIKAMA:
+        o = isik(y_["ad"], "SPOT", y_["konum"], a.yikama_w, 3000, spot=(35, 0.6), yon=y_["hedef"] - y_["konum"], yumusak=0.04)
+        if a.yikama_golge != 1.0:
+            o.data.shadow_maximum_resolution = o.data.shadow_maximum_resolution / max(0.05, a.yikama_golge)
+        ISIK["yikama"][y_["grup"]].append(o)
     # 6) oyun masası üstleri: yukarı bakan yumuşak ışık (emisyonun etrafa yayılımı; iki motorda aynı)
     for j, (cx, cy) in enumerate(((PX(0.299), PY(0.858)), (PX(0.5175), PY(0.858)))):
         isik(f"masa_isik_{j}", "AREA", Vector((cx, cy, Z0 + 0.79)), 25, 4000, rot=(math.pi, 0, 0), boyut=(0.86, 0.86))
@@ -989,7 +1101,8 @@ def p4_kamera_coz(cam):
     bpy.context.view_layer.update()
     ex = []
     for o in COL["stant"].objects:
-        if o.type != "MESH" or o.name.startswith(("bitki_", "brosur_")):
+        # E turu baskı / ekran / yıkama armatürleri hariç: P4 (ve l4/t45/t34b kadrajı) D turuyla bire bir kalsın
+        if o.type != "MESH" or o.name.startswith(("bitki_", "brosur_", "baski_", "ekran_soz", "yikama_")):
             continue
         mw = o.matrix_world
         for c in o.bound_box:
@@ -1118,23 +1231,8 @@ def t45_kamera(f, P4, yol):
     return pos, psi, phi_g, lens, (hed - pos).length
 
 
-# t56: P5 → göz hizası → sütun aralığı (−120°) → banko üstü; son kare: broşürün 0,5937 m üstü, −90°, 85 mm
-def t56_kamera(f):
-    u = f / float(T56_SON)                    # son kare (71) = u 1
-    # B kararı 4: son karede kapak master x 606–1314, y 460–1460 (708 × 1000 px, merkez (960, 960)), dönüklük 0
-    D_SON = BROSUR_W * 1920 / (708 * 36 / 85)          # ~0,955 m
-    ust = S_["brosur_ust_z"]
-    br_c = Vector((BANKO_C.x, BANKO_C.y, ust))
-    kay = 0.0                                 # kapak merkezi = kare merkezi
-    son = br_c - ileri(PSI_SON, 0.0) * kay + Vector((0, 0, D_SON))
-    g = Vector((RC.x + R_SUTUN * math.cos(math.radians(-120)), RC.y + R_SUTUN * math.sin(math.radians(-120)), Z0 + 1.55))
-    A = P5["konum"]
-    B = Vector((RC.x - 0.55, RC.y - 0.95, Z0 + 1.62))   # dönüş ve iniş
-    C = g
-    Dn = Vector((BANKO_C.x + 1.05, BANKO_C.y + 1.25, Z0 + 1.62))
-    E = son + Vector((0, 0.10, 0.06))
-    pts = [A + (A - B) * 0.4, A, B, C, Dn, E, son, son + (son - E)]
-
+def cr_ornek(pts, n=200):
+    """Catmull-Rom (düzgün parametre) örnekleri + yay uzunluğu tablosu; pts[0] ve pts[-1] hayalet noktalar."""
     def cr(i, tt):
         P0, P1, P2, P3 = pts[i - 1], pts[i], pts[i + 1], pts[i + 2]
         t2, t3 = tt * tt, tt * tt * tt
@@ -1142,43 +1240,180 @@ def t56_kamera(f):
 
     ornek = []
     for i in range(1, len(pts) - 2):
-        for k in range(200):
-            ornek.append(cr(i, k / 200))
+        for k in range(n):
+            ornek.append(cr(i, k / n))
     ornek.append(pts[-2])
     L = [0.0]
     for i in range(1, len(ornek)):
         L.append(L[-1] + (ornek[i] - ornek[i - 1]).length)
-    s = O.ease_in_out_sine(u)
+    return ornek, L
+
+
+def cr_konum(ornek, L, s):
+    """Yay uzunluğu oranı s (0–1) → konum."""
     import bisect
     hl = s * L[-1]
     i = min(len(L) - 1, max(1, bisect.bisect_left(L, hl)))
     uu = (hl - L[i - 1]) / max(1e-9, L[i] - L[i - 1])
-    pos = ornek[i - 1].lerp(ornek[i], uu)
-    # yön: 0° → −180° (sola dönüş), eğim −78 → −14 → −32 → −90
-    # önce baş kalkar (u 0–0,34), dönüş ondan sonra yatay bir pan olarak gelir (u 0,12–0,88): yere dikken dönmek
-    # görüntüyü kendi ekseninde çevirir (aşırı bulanıklık, önizlemede görüldü)
-    psi = O.lerp(0.0, PSI_SON, O.ease_in_out_sine((u - 0.12) / 0.76))
+    return ornek[i - 1].lerp(ornek[i], uu)
+
+
+def duvar_mesafe(pos, fw, en_cok=12.0):
+    """Bakış ışınının stant zeminine (Z0), arka iç düzleme (y 4,83) ya da sol iç düzleme (x −7,38) ilk değdiği uzaklık
+    (d6/d7 kadraj ve odak hedefi: duvar düzlemi; aşağı bakarken zemin)."""
+    ts = []
+    if fw.z < -1e-6:
+        ts.append((Z0 - pos.z) / fw.z)
+    if fw.y > 1e-6:
+        ts.append((Y_ARKA_IC - pos.y) / fw.y)
+    if fw.x < -1e-6:
+        ts.append((X_SOL_IC - pos.x) / fw.x)
+    ts = [t for t in ts if t > 0]
+    return max(0.3, min(en_cok, min(ts))) if ts else en_cok
+
+
+# banko_kamera: D turu t56'sının (P5 → sütun aralığı −120° → banko üstü, 72 kare) genelleştirilmiş hâli. Yolun başı (`bas`)
+# ve yön/eğim profili (`pr`) parametre; kuyruk (Dn → E → son, PSI_SON, −90°, 85 mm, D_SON, odak/diyafram) ortak.
+# ESKI_T56 profiliyle eski t56_kamera'yı bire bir verir (73 kare karşılaştırıldı); t78 kuyruğu bu fonksiyonun çağrısı.
+def banko_noktalari():
+    D_SON = BROSUR_W * 1920 / (708 * 36 / 85)          # ~0,955 m (B kararı 4: kapak x 606–1314, y 460–1460)
+    ust = S_["brosur_ust_z"]
+    br_c = Vector((BANKO_C.x, BANKO_C.y, ust))
+    kay = 0.0                                 # kapak merkezi = kare merkezi
+    son = br_c - ileri(PSI_SON, 0.0) * kay + Vector((0, 0, D_SON))
+    Dn = Vector((BANKO_C.x + 1.05, BANKO_C.y + 1.25, Z0 + 1.62))
+    E = son + Vector((0, 0.10, 0.06))
+    return Dn, E, son, ust
+
+
+def zaman_egrisi(u, rampa=0.0):
+    """Yay ilerlemesi s(u). rampa 0 → easeInOutSine (eski t56; tepe hız ortalamanın π/2 katı). rampa a > 0 → iki uçta
+    a süreli sinüs rampalı yamuk hız (tepe 1/(1 − a) kat; ör. 0,3 → %9 düşük tepe); uçlarda hız yine 0."""
+    u = O.clamp01(u)
+    if rampa <= 0:
+        return O.ease_in_out_sine(u)
+    v = 1.0 / (1.0 - rampa)
+    def bas_(x):
+        return v * (x / 2 - rampa / (2 * math.pi) * math.sin(math.pi * x / rampa))
+    if u < rampa:
+        return bas_(u)
+    if u > 1 - rampa:
+        return 1.0 - bas_(1 - u)
+    return v * (rampa / 2 + (u - rampa))
+
+
+def banko_kamera(f, n_son, bas, pr):
+    u = f / float(n_son)                      # son kare = u 1
+    Dn, E, son, ust = banko_noktalari()
+    pts = [bas[0] + (bas[0] - bas[1]) * 0.4] + list(bas) + [Dn, E, son, son + (son - E)]
+    ornek, L = cr_ornek(pts)
+    pos = cr_konum(ornek, L, zaman_egrisi(u, pr.get("rampa", 0.0)))
+    # yön: ψ0 → PSI_SON; eğim üç parça (eski: −78 → −26 → −32, sonra −30 → −90 easeInOutCubic)
+    a0, du = pr["psi_u"]
+    psi = O.lerp(pr["psi0"], PSI_SON, O.ease_in_out_sine((u - a0) / du))
+    p0, p1, p2, p3 = pr["phi"]
     if u < 0.34:
-        phi = O.lerp(-78.0, -26.0, O.ease_in_out_sine(u / 0.34))
+        phi = O.lerp(p0, p1, O.ease_in_out_sine(u / 0.34))
     elif u < 0.62:
-        phi = O.lerp(-26.0, -32.0, O.ease_in_out_sine((u - 0.34) / 0.28))
+        phi = O.lerp(p1, p2, O.ease_in_out_sine((u - 0.34) / 0.28))
     else:
-        phi = O.lerp(-30.0, -90.0, O.ease_in_out_cubic((u - 0.62) / 0.38))
+        phi = O.lerp(p3, -90.0, O.ease_in_out_cubic((u - 0.62) / 0.38))
     # odak uzaklığı: 18 → 85 mm, ln uzayında, u 0,45–1
     lens = math.exp(math.log(18) + (math.log(85) - math.log(18)) * O.ease_in_out_sine((u - 0.45) / 0.55))
-    if f >= T56_SON:
+    if f >= n_son:
         pos, psi, phi, lens = son, PSI_SON, -90.0, 85.0
     # odak: bakış doğrultusunun hedef düzlemi (zemin → broşür üstü) ile kesişimi; diyafram f/16 → f/2 (l5 dikişi keskin)
     fw = ileri(psi, phi)
     z_h = O.lerp(Z0, ust, O.smoother((u - 0.45) / 0.45))
-    if fw.z < -0.05:
+    if pr["odak"] == "duvar":                 # t78: B pozundaki (t67 sonu) duvar odağından sürekli
+        d_d = duvar_mesafe(pos, fw, 8.0)
+        odak = min(d_d, max(0.3, min(8.0, (pos.z - z_h) / -fw.z))) if fw.z < -0.05 else d_d
+    elif fw.z < -0.05:
         odak = max(0.3, min(8.0, (pos.z - z_h) / -fw.z))
     else:
         odak = 4.0
     fstop = math.exp(math.log(16) + (math.log(2) - math.log(16)) * O.ease_in_out_sine((u - 0.5) / 0.5))
-    if f >= T56_SON:
+    if f >= n_son:
         odak, fstop = pos.z - ust, 2.0
     return pos, psi, phi, lens, odak, fstop
+
+
+# D turu t56 (eski): P5 → göz hizası → sütun aralığı (−120°) → banko üstü; p8 plakası ve t78 sonu bunun 71. karesi
+ESKI_T56 = {"psi0": 0.0, "psi_u": (0.12, 0.76), "phi": (-78.0, -26.0, -32.0, -30.0), "odak": "eski"}
+
+
+def eski_t56_kamera(f):
+    A = P5["konum"]
+    B = Vector((RC.x - 0.55, RC.y - 0.95, Z0 + 1.62))   # dönüş ve iniş
+    C = Vector((RC.x + R_SUTUN * math.cos(math.radians(-120)), RC.y + R_SUTUN * math.sin(math.radians(-120)), Z0 + 1.55))
+    return banko_kamera(f, T56_ESKI_SON, [A, B, C], ESKI_T56)
+
+
+# ---- E turu: t56 (P5 → A), t67 (A → B), t78 (B → banko)
+RAD120 = Vector((math.cos(math.radians(120)), math.sin(math.radians(120)), 0))
+
+
+def t56_noktalari():
+    """P5 → (u 0–0,30) baş kalkar, z 1,75, (−1,68; 1,27) → (u 0,30–0,60) 120° sütun aralığı (R 2,10'da radyal geçiş;
+    krom yok, iki yanda ≥ 0,30 m) → dışarıda batıya kayma + geri çekilme → A. Brief'teki (−1,75; 1,25) ve (−2,41; 2,51)
+    120° radyal doğrusuna oturtuldu (geçiş sütun aralığına dik olsun diye)."""
+    P1 = RC + RAD120 * 0.60 + Vector((0, 0, 1.75))
+    G = RC + RAD120 * R_SUTUN + Vector((0, 0, 1.60))
+    G2 = RC + RAD120 * 2.75 + Vector((0, 0, 1.58))
+    Wk = Vector((-4.15, 2.85, Z0 + 1.55))
+    return [P5["konum"], P1, G, G2, Wk, POZ_A["konum"]]
+
+
+def t56_kamera(f):
+    u = O.clamp01(f / float(N_T56))
+    bas = t56_noktalari()
+    A = bas[-1]
+    pts = [bas[0] + (bas[0] - bas[1]) * 0.4] + bas + [A + (A - bas[-2]) * 0.4]
+    ornek, L = cr_ornek(pts)
+    pos = cr_konum(ornek, L, O.ease_in_out_sine(u))     # son 0,25 s yumuşak iniş (easeInOutSine)
+    # yön: 0 (u < 0,12; yere bakarken dönme yok) → −27 (u 0,55; radyal geçiş doğrultusu) → −18 (A)
+    if u < 0.6:
+        psi = O.lerp(P5["psi"], -27.0, O.ease_in_out_sine((u - 0.12) / 0.43))
+    else:
+        psi = O.lerp(-27.0, POZ_A["psi"], O.ease_in_out_sine((u - 0.6) / 0.4))
+    # eğim: −78 → −6 (u 0–0,30, baş kalkar) → −6 → +4 (u 0,60–1)
+    if u < 0.6:
+        phi = O.lerp(P5["phi"], -6.0, O.ease_in_out_sine(u / 0.30))
+    else:
+        phi = O.lerp(-6.0, POZ_A["phi"], O.ease_in_out_sine((u - 0.6) / 0.4))
+    if f <= 0:
+        pos, psi, phi = P5["konum"].copy(), P5["psi"], P5["phi"]
+    if f >= N_T56:
+        pos, psi, phi = POZ_A["konum"].copy(), POZ_A["psi"], POZ_A["phi"]
+    odak = duvar_mesafe(pos, ileri(psi, phi), 8.0)
+    return pos, psi, phi, 18.0, odak, 16.0
+
+
+def t67_kamera(f):
+    """A → B: 0,54 m kayma + 62° sola pan (easeInOutSine), eğim +4°, 18 mm."""
+    e = O.ease_in_out_sine(f / float(N_T67))
+    pos = POZ_A["konum"].lerp(POZ_B["konum"], e)
+    psi = O.lerp(POZ_A["psi"], POZ_B["psi"], e)
+    phi = O.lerp(POZ_A["phi"], POZ_B["phi"], e)
+    odak = duvar_mesafe(pos, ileri(psi, phi), 8.0)
+    return pos, psi, phi, 18.0, odak, 16.0
+
+
+# t78: B → batıya (totemin kuzey ucunun önünden) → (−6,00; 0,40) → (−6,00; −1,60): totem ile batı duvarı arası (iki yanda
+# ≥ 0,95 m) → Dn → E → son. Kuyruk banko_kamera (eski t56 ile aynı fonksiyon ve aynı Dn/E/son); son kare ≡ eski t56[71].
+# Wa brief'te yok: B → (−6,00; 0,40) doğrusu totemin kuzey ucunu ~0,11 m'den geçiyordu → önce batıya (çarpışma betiği).
+T78_WA = Vector((-5.70, 1.50, Z0 + 1.58))
+T78_W1 = Vector((-6.00, 0.40, Z0 + 1.62))
+T78_W2 = Vector((-6.00, -1.60, Z0 + 1.62))
+T78_PROFIL = {"psi0": POZ_B["psi"], "psi_u": (0.0, 0.62), "phi": (POZ_B["phi"], -16.0, -30.0, -30.0), "odak": "duvar",
+              "rampa": a.t78_rampa}
+
+
+def t78_kamera(f):
+    if f <= 0:   # B pozu (t67 sonu) bire bir
+        pos, psi, phi = POZ_B["konum"].copy(), POZ_B["psi"], POZ_B["phi"]
+        return pos, psi, phi, 18.0, duvar_mesafe(pos, ileri(psi, phi), 8.0), 16.0
+    return banko_kamera(f, N_T78, [POZ_B["konum"], T78_WA, T78_W1, T78_W2], T78_PROFIL)
 
 
 P_DONGU = 4.0
@@ -1225,17 +1460,19 @@ def kur():
 
 
 O.render_ayarla(a)
-if KLIP == "t56":
-    sc.render.motion_blur_shutter = 0.35     # B kararı 5: orta bölümdeki aşırı bulanıklık
+if KLIP in ("t56", "t67", "t78"):
+    sc.render.motion_blur_shutter = DEKLANSOR_E     # B kararı 5 (eski t56); E: t56/t67/t78 aynı (t78 sonu ≡ eski t56[71])
 cam = kur()
 print(f"[P4] konum {tuple(round(v, 3) for v in P4['konum'])} ψ {P4['psi']} φ {P4['phi']:.2f} genişlik {P4['genislik_px']:.0f} px "
       f"x {P4['x_aralik'][0]:.3f}–{P4['x_aralik'][1]:.3f} y {P4['y_aralik'][0]:.3f}–{P4['y_aralik'][1]:.3f}", flush=True)
 
 # ================================================================== ANİMASYON
-def isik_durum(t_montaj, nefes=1.0):
-    """t_montaj None → d4 (patlatılmış: yumuşak kutu açık, stant ışıkları kapalı); ≥ 2,0 → d5."""
+def isik_durum(t_montaj, nefes=1.0, kuzey=0.0, bati=0.0):
+    """t_montaj None → d4 (patlatılmış: yumuşak kutu açık, stant ışıkları kapalı); ≥ 2,0 → d5.
+    E turu: "kuzey" / "bati" duvar yıkama spotları (brief §12.3); d4'te, montajda, l5 boyunca ve banko anında 0 —
+    yalnız t56/t67/t78 (duvar_isik) açar. Mevcut "duvar" anahtarı değişmedi."""
     if t_montaj is None:
-        return {"yumusak_kutu": 1.0, "duvar": 0.0, "rotunda": 0.0, "banko": 0.0}
+        return {"yumusak_kutu": 1.0, "duvar": 0.0, "rotunda": 0.0, "banko": 0.0, "kuzey": 0.0, "bati": 0.0}
     t = t_montaj
     return {
         # kamera ışığın altına girerken yumuşak kutu söner; 1,6 s'de devir tamam (brief: "1,6 s'de devreder")
@@ -1243,7 +1480,24 @@ def isik_durum(t_montaj, nefes=1.0):
         "duvar": O.smoother((t - 0.45) / 0.25),
         "banko": O.smoother((t - 0.95) / 0.3),
         "rotunda": O.smoother((t - 1.15) / 0.45) * nefes,
+        "kuzey": kuzey,
+        "bati": bati,
     }
+
+
+def duvar_isik(klip, f):
+    """(kuzey, bati) ışık devri, klip karesi f'de (brief §12.3 tablosu). Sınırlarda dikiş: t56 sonu (1; 0,15) = t67 başı;
+    t67 sonu (0,3; 1) = t78 başı; t78 sonu (0; 0) = eski t56[71] (banko anı)."""
+    if klip == "t56":   # kuzey u 0,55–0,95'te 0 → 1; bati t67 başının 0,15'ine aynı rampayla
+        k = O.ease_in_out_sine((f / N_T56 - 0.55) / 0.40)
+        return k, 0.15 * k
+    if klip == "t67":   # kuzey 1 → 0,3, bati 0,15 → 1 (pan ile aynı easeInOutSine)
+        e = O.ease_in_out_sine(f / N_T67)
+        return O.lerp(1.0, 0.3, e), O.lerp(0.15, 1.0, e)
+    if klip == "t78":   # ikisi de u 0,25–0,60'ta 0'a
+        d = 1.0 - O.ease_in_out_sine((f / N_T78 - 0.25) / 0.35)
+        return 0.3 * d, 1.0 * d
+    return 0.0, 0.0
 
 
 TABAN = {}
@@ -1268,6 +1522,11 @@ def isik_uygula(dur, f):
         k(o.data, TABAN["led"] * min(1.0, dur["rotunda"]))
     for _, o in ISIK["duvar_spotlar"]:
         k(o.data, TABAN["duvar"] * dur["duvar"])
+    if "yikama" not in TABAN:
+        TABAN["yikama"] = ISIK["yikama"]["kuzey"][0].data.energy
+    for grup in ("kuzey", "bati"):
+        for o in ISIK["yikama"][grup]:
+            k(o.data, TABAN["yikama"] * dur.get(grup, 0.0))
 
 
 def kamera_uygula(f, pos, psi, phi, lens, odak=None, dof=False, fstop=2.0):
@@ -1288,6 +1547,7 @@ def kamera_uygula(f, pos, psi, phi, lens, odak=None, dof=False, fstop=2.0):
 
 YOL45 = t45_yol(P4)
 KAYIT = {"kadraj_m": {}, "kamera": {}}
+ISIK_KAYIT = {}   # f → (kuzey, bati)
 
 
 def kadraj(pos, psi, phi, lens, hedef):
@@ -1339,12 +1599,15 @@ def kare_kur(f):
         isik_uygula(isik_durum(9.0, nefes), f)
         kamera_uygula(f, P5["konum"], P5["psi"], P5["phi"], 18.0)
         return kadraj(P5["konum"], P5["psi"], P5["phi"], 18.0, HEDEF5), (P5["konum"], P5["psi"], P5["phi"], 18.0)
-    # t56 / p6 / olcum-banko
-    isik_uygula(isik_durum(9.0), f)
-    ff = T56_SON if KLIP in ("p6", "olcum-banko") else f
-    pos, psi, phi, lens, odak, fstop = t56_kamera(ff)
+    # E turu: t56 (d6) / t67 (d7) / t78 (banko) ve son-kare posterleri p6 / p7, plaka p8, olcum-banko
+    klip, ff = POSTER_KAYNAK.get(KLIP, (KLIP, f))
+    kuzey, bati = duvar_isik(klip, ff)
+    isik_uygula(isik_durum(9.0, kuzey=kuzey, bati=bati), f)
+    pos, psi, phi, lens, odak, fstop = {"t56": t56_kamera, "t67": t67_kamera, "t78": t78_kamera}[klip](ff)
     kamera_uygula(f, pos, psi, phi, lens, odak=odak, dof=True, fstop=fstop)
-    hed = pos + ileri(psi, phi) * odak
+    # kadraj hedefi: d6/d7'de duvar düzlemi (zemin/arka/sol iç yüz ilk kesişimi); t78'de odak noktası (eski t56 mantığı)
+    hed = pos + ileri(psi, phi) * (odak if klip == "t78" else duvar_mesafe(pos, ileri(psi, phi)))
+    ISIK_KAYIT[f] = (kuzey, bati)
     return kadraj(pos, psi, phi, lens, hed), (pos, psi, phi, lens)
 
 
@@ -1357,6 +1620,87 @@ def kare_listesi():
     return list(range(K0, K1 + 1))
 
 
+# ================================================================== ÇARPIŞMA (--carpisma; render yok, GPU yok)
+CARPISMA_GRUP = [   # (grup, ad süzgeci, eşik m | None = bilgi)
+    ("sutunlar", lambda n: n.startswith("sutun_"), 0.25),
+    ("kanopi", lambda n: n.startswith(("kanopi", "krom_")), 0.25),
+    ("totem", lambda n: n.startswith("totem_"), 0.25),
+    ("sol_bank", lambda n: n == "sol_bank", 0.25),
+    ("kiosk", lambda n: n.startswith("kiosk_"), 0.25),
+    ("duvarlar", lambda n: n.startswith(("on_", "sag_", "arka_", "sol_kapali", "sol_fasya", "baski_", "ekran_soz", "yikama_",
+                                         "bant_", "cita_", "oda_bati", "oda_kuzey", "oda_ara")), 0.25),
+    ("bitkiler", lambda n: n.startswith(("bitki_", "saksi_")), 0.25),
+    ("banko", lambda n: n.startswith(("banko_", "brosur_", "logo")), None),
+    ("diger", None, None),   # oyun alanı, amfi, oda eşyası, pankartlar, zemin dışı her şey
+]
+
+
+def carpisma_raporu():
+    from mathutils.bvhtree import BVHTree
+    for p in PARCALAR:   # d5+ : montaj tamam
+        l_, r_ = parca_durum(p, 9.0, None)
+        p["o"].location = l_
+        p["o"].rotation_euler = r_
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    gruplar = {g: ([], []) for g, _, _ in CARPISMA_GRUP}
+    for o in COL["stant"].objects:
+        if o.type != "MESH" or o.name in ("zemin_plaka", "oyun_zemin", "halka"):
+            continue
+        g = next((g for g, fn, _ in CARPISMA_GRUP if fn and fn(o.name)), "diger")
+        oe = o.evaluated_get(dg)
+        me = oe.to_mesh()
+        vs, ps = gruplar[g]
+        b = len(vs)
+        mw = oe.matrix_world
+        vs.extend(mw @ v.co for v in me.vertices)
+        ps.extend([b + i for i in pl.vertices] for pl in me.polygons)
+        oe.to_mesh_clear()
+    agac = {g: BVHTree.FromPolygons(vs, ps) for g, (vs, ps) in gruplar.items() if ps}
+    yollar = {"t56": (t56_kamera, N_T56), "t67": (t67_kamera, N_T67), "t78": (t78_kamera, N_T78)}
+    ALT = 8
+    rapor = {"esik_m": 0.25, "alt_ornek": ALT, "klipler": {}, "uretim": time.strftime("%Y-%m-%dT%H:%M:%S"),
+             "tanim": "kamera merkezinin (z Z0 + …) grup yüzeylerine en küçük uzaklığı (BVH, montajı tamam sahne); kare başına "
+                      f"{ALT} alt örnek (hareket bulanıklığı aralığını kapsar)"}
+    tutmayan = []
+    for klip, (fn, n) in yollar.items():
+        en = {g: (1e9, None, None) for g in agac}
+        hiz = []
+        onceki = None
+        for i in range(n * ALT + 1):
+            f = i / ALT
+            pos = fn(f)[0]
+            if onceki is not None:
+                hiz.append((pos - onceki).length * FPS * ALT)
+            onceki = pos
+            for g, t in agac.items():
+                r = t.find_nearest(pos, 50.0)
+                if r[0] is not None and r[3] < en[g][0]:
+                    en[g] = (r[3], f, [round(v, 3) for v in pos])
+        rk = {}
+        for g, esik in ((g, e) for g, _, e in CARPISMA_GRUP):
+            if g not in en:
+                continue
+            d, f, p = en[g]
+            ok = None if esik is None else d >= esik
+            rk[g] = {"min_m": round(d, 3), "kare": round(f, 3), "konum_m": p, "esik_m": esik, "tamam": ok}
+            if ok is False:
+                tutmayan.append(f"{klip}/{g} {d:.3f} m (kare {f:.2f})")
+        rapor["klipler"][klip] = {"grup": rk, "hiz_tepe_m_s": round(max(hiz), 2), "hiz_tepe_kare": round(hiz.index(max(hiz)) / ALT, 2)}
+        print(f"[CARPISMA] {klip}: " + "  ".join(f"{g} {v['min_m']:.3f}@{v['kare']:.1f}{'' if v['tamam'] is None else (' ✓' if v['tamam'] else ' ✗')}"
+                                               for g, v in rk.items()) + f"  | hız tepe {max(hiz):.2f} m/s", flush=True)
+    rapor["tutmayan"] = tutmayan
+    yol = a.carpisma_json or os.path.join(O.RENDER, "_onizleme", "s2-carpisma.json")
+    os.makedirs(os.path.dirname(yol), exist_ok=True)
+    with open(yol, "w", encoding="utf-8") as fh:
+        json.dump(rapor, fh, ensure_ascii=False, indent=1)
+    print(f"[CARPISMA] {'TAMAM' if not tutmayan else 'TUTMAYAN: ' + '; '.join(tutmayan)} → {yol}", flush=True)
+
+
+if a.carpisma:
+    carpisma_raporu()
+    raise SystemExit(0)
+
 KARELER = kare_listesi()
 TUM = list(range(K0 - 1, K1 + 2))   # hareket bulanıklığı için klip sınırının bir dışı da anahtarlanır
 kadrajlar = {}
@@ -1365,8 +1709,8 @@ for f in TUM:
     kadrajlar[f] = kj
     KAYIT["kamera"][f] = poz
 
-# p6: üstteki broşür yok (DOM kapak bu dikdörtgene oturur); --yigin 0 → yığın tamamen yok
-if KLIP == "p6":
+# p8 (eski p6 plakası): üstteki broşür yok (DOM kapak bu dikdörtgene oturur); --yigin 0 → yığın tamamen yok
+if KLIP == "p8":
     S_["yigin"][-1].hide_render = True
     if not a.yigin:
         for o in S_["yigin"]:
@@ -1384,6 +1728,90 @@ def proj(v, f):
 
 def kirpim_ici(x, y):
     return {"dikey": 420 <= x <= 1500 and 0 <= y <= 1920, "yatay": 0 <= x <= 1920 and 420 <= y <= 1500}
+
+
+# Duvar çapaları (brief §12.4-4, §12.4-9 `Ozel.duvarCapalari`): p6 → d6 kılavuz çizgileri (fidan, genc_iklim, orman; arka
+# duvar), p7 → sol duvar çapaları (S2a'nın verdiği kadarı; manifest kullanmıyor, bilgi). Kaynak: S2a dokular.mjs
+# `_duvar-olcum.json` → capalar[ad].dunya (montajlı sahne, m; yazı mürekkep kutusu ortası). Dosya yoksa brief §12.3
+# yerleşiminden TAHMİN (yalnız p6). Yön başına kırpımın (kenardan ≥ 24 video px) içinde kalan ilk aday seçilir; "orman"
+# (dağ şeridi) için aynı z'de x boyunca yedek adaylar.
+DUVAR_CAPA_VARSAYILAN = {   # (x, z − Z0) arka duvar iç yüzü, m
+    "fidan": (-6.25, 2.25),          # "300" rakamı
+    "genc_iklim": (-4.75, 1.64),     # "Genç İklim"
+    "orman": (-5.45, 0.30),          # dağ şeridi
+}
+CAPA_PAY = 36   # master px (= 24 video px)
+CAPA_DUVAR = {"p6": "duvar-arka.png", "p7": "duvar-sol.png"}
+
+
+def kirpimda(boyut, x, y, pay=CAPA_PAY):
+    if boyut == "dikey":
+        return 420 + pay <= x <= 1500 - pay and pay <= y <= 1920 - pay
+    return pay <= x <= 1920 - pay and 420 + pay <= y <= 1500 - pay
+
+
+def duvar_capalari(klip):
+    kaynak, noktalar = None, {}
+    yol = DOKU + "_duvar-olcum.json"
+    if os.path.exists(yol):
+        try:
+            for ad, v in json.load(open(yol, encoding="utf-8")).get("capalar", {}).items():
+                if v.get("doku") == CAPA_DUVAR[klip]:
+                    noktalar[ad] = Vector(v["dunya"])
+            kaynak = yol + " (capalar.dunya)"
+        except Exception as e:   # bozuk dosya: varsayılanla devam, uyar
+            print(f"[UYARI] {yol} okunamadı ({e}); varsayılan çapalar", flush=True)
+            noktalar = {}
+    if not noktalar and klip == "p6":
+        noktalar = {ad: Vector((x, Y_ARKA_IC - BASKI_T, Z0 + z)) for ad, (x, z) in DUVAR_CAPA_VARSAYILAN.items()}
+        kaynak = "varsayılan (brief §12.3 yerleşiminden tahmin; _duvar-olcum.json yok)"
+        print("[UYARI] _duvar-olcum.json yok: duvar çapaları tahmin", flush=True)
+    capalar, liste, video, ayrinti = {}, [], [], {}
+    for ad, w0 in noktalar.items():
+        aday = [w0]
+        if ad == "orman":   # dağ şeridi boyunca yedekler (aynı yükseklik)
+            aday += [w0 + Vector((dx, 0, 0)) for dx in (0.6, -0.6, 1.2, -1.2, 1.8, -1.8) if X_SOL_IC + 0.1 < w0.x + dx < PX(0.38) - 0.1]
+        sec = {}
+        for boyut in ("dikey", "yatay", "ikisi"):
+            for w in aday:
+                px, py, pz = proj(w, K0)
+                ok = pz > 0 and (kirpimda("dikey", px, py) and kirpimda("yatay", px, py) if boyut == "ikisi" else kirpimda(boyut, px, py))
+                if ok:
+                    sec[boyut] = (px, py, w, True)
+                    break
+            else:
+                px, py, pz = proj(w0, K0)
+                sec[boyut] = (px, py, w0, False)
+        capalar[ad] = [sec["ikisi"][0], sec["ikisi"][1]]
+        liste.append({"ad": ad, "dikey": [sec["dikey"][0], sec["dikey"][1]], "yatay": [sec["yatay"][0], sec["yatay"][1]]})
+        video.append({"ad": ad, "dikey": [round((sec["dikey"][0] - 420) / 1.5, 1), round(sec["dikey"][1] / 1.5, 1)],
+                      "yatay": [round(sec["yatay"][0] / 1.5, 1), round((sec["yatay"][1] - 420) / 1.5, 1)]})
+        ayrinti[ad] = {b: {"dunya_m": [round(v, 3) for v in sec[b][2]], "kirpimda": sec[b][3]} for b in ("dikey", "yatay", "ikisi")}
+    return {
+        "capalar": capalar,
+        "capa_tanim": (f"{klip}: duvar yazılarının mürekkep kutusu ortası (S2a _duvar-olcum.json), master px; iki kırpıma da "
+                       "giren nokta (manifest-birlestir bunu okur: dikey ((x − 420) / 1,5, y / 1,5), yatay (x / 1,5, (y − 420) / 1,5))"),
+        "duvarCapalari": liste,
+        "duvarCapalari_video": video,
+        "duvarCapalari_ayrinti": ayrinti,
+        "duvarCapalari_kaynak": kaynak,
+        "duvarCapalari_tanim": ("§12.4-9 biçimi, master px (1920²); yön başına kırpım içinde kalan nokta. duvarCapalari_video: "
+                                "video px (kirpimY 420). dunya_m: montajlı sahne koordinatı."),
+    }
+
+
+def doku_denetim():
+    """E turu dokuları: bulunan / eksik, piksel boyutu (beklenen 500 px/m), bit derinliği (16 bit PNG Blender'da float →
+    VRAM ×4)."""
+    bekl = {"duvar-arka.png": (2790, 2000), "duvar-sol.png": (2665, 2000), "ekran-soz.png": (1110, 620), "cephe-on.png": (2775, 2000)}
+    for ad, (bw_, bh_) in bekl.items():
+        im = next((i for i in bpy.data.images if i.filepath and os.path.basename(i.filepath) == ad), None)
+        if im is None:
+            print(f"[DOKU] {ad}: YOK (düz renk yedek)", flush=True)
+            continue
+        w_, h_ = im.size
+        print(f"[DOKU] {ad}: {w_}×{h_} (beklenen {bw_}×{bh_}) {'✓' if (w_, h_) == (bw_, bh_) else '✗'} "
+              f"kanal {im.channels} derinlik {im.depth} bit float {im.is_float}", flush=True)
 
 
 def json_yaz():
@@ -1449,14 +1877,15 @@ def json_yaz():
         js["capa_tanim"] = ("12 sütunun iç yüz orta çizgisinde master karenin %2 içinde kalan en yüksek nokta (poster karesi, "
                             "master px); yüz merkezi (1,15 m) 'capa_yuz_merkezi'nde, çoğu kadraj dışında")
         js["halka_merkez"] = proj(RC + Vector((0, 0, 0.002)), K0)[:2]
-    if KLIP == "t56":
+    if KLIP == "t78":
+        # E turu: broşür dikdörtgeni t56'dan t78'e taşındı (son kare ≡ eski t56[71]; manifest D[8] brosurDikdortgen)
         ust = S_["yigin"][-1]
         sc.frame_set(K1)
         mw = ust.matrix_world
         x, y, h = BROSUR_W / 2, BROSUR_H / 2, BROSUR_T
         kose = [mw @ Vector(c) for c in ((-x, y, h), (x, y, h), (x, -y, h), (-x, -y, h))]   # kapak: sol üst, sağ üst, sağ alt, sol alt
         js["brosur_dikdortgen"] = [proj(v, K1)[:2] for v in kose]
-        js["brosur_tanim"] = f"son kare ({T56_SON}), üstteki broşürün kapak köşeleri: sol üst, sağ üst, sağ alt, sol alt (master px)"
+        js["brosur_tanim"] = f"son kare ({N_T78}), üstteki broşürün kapak köşeleri: sol üst, sağ üst, sağ alt, sol alt (master px)"
         xs = [p[0] for p in js["brosur_dikdortgen"]]
         ys = [p[1] for p in js["brosur_dikdortgen"]]
         dx = js["brosur_dikdortgen"][1][0] - js["brosur_dikdortgen"][0][0]
@@ -1465,13 +1894,39 @@ def json_yaz():
                                "donukluk_deg": round(math.degrees(math.atan2(dy, dx)), 3),
                                "hedef": "x 606–1314, y 460–1460 (oran 0,708, iki kırpıma da sığar; dönüklük 0)",
                                "kapak_dokusu": os.path.basename(KAPAK), "brosur_m": [round(BROSUR_W, 4), BROSUR_H]}
-        js["deklansor"] = 0.35
+        e = eski_t56_kamera(T56_ESKI_SON)
+        k = KAYIT["kamera"][K1]
+        js["esdeger"] = {"eski": "t56[71] (D turu; render-son-d/t56/k_0071.png, p8 plakası)",
+                         "konum_fark_m": round((k[0] - e[0]).length, 6), "yon_fark_deg": round(abs(k[1] - e[1]), 6),
+                         "egim_fark_deg": round(abs(k[2] - e[2]), 6), "lens_fark_mm": round(abs(k[3] - e[3]), 6),
+                         "olcut": "§12.6: t78[65] ↔ eski t56[71] ΔE00 ≤ 0,05"}
+    if KLIP in ("t56", "t67", "t78"):
+        js["deklansor"] = DEKLANSOR_E
         js["kamera"]["lens_mm_kare"] = [round(KAYIT["kamera"][f][3], 3) for f in range(K0, K1 + 1)]
-    if KLIP == "p6":
-        # C turu (brief §11.1 S2-C 2): plaka broşürsüz; DOM broşür d6–d9'da üstünde serbestçe büyür
+        js["kamera"]["kare"] = [[*(round(v, 4) for v in KAYIT["kamera"][f][0]), round(KAYIT["kamera"][f][1], 3),
+                                 round(KAYIT["kamera"][f][2], 3)] for f in range(K0, K1 + 1)]
+        js["kamera"]["kare_tanim"] = "kare başına [x, y, z (m), yön ψ, eğim φ (derece)]"
+        js["isik"] = {"kuzey": [round(ISIK_KAYIT[f][0], 4) for f in range(K0, K1 + 1)],
+                      "bati": [round(ISIK_KAYIT[f][1], 4) for f in range(K0, K1 + 1)],
+                      "tanim": "duvar yıkama spotları (isik_durum 'kuzey' / 'bati'), taban gücün oranı; brief §12.3"}
+        js["kadraj_hedef"] = "duvar düzlemi (zemin / arka iç y 4,83 / sol iç x −7,38 ilk kesişimi)" if KLIP != "t78" else \
+            "odak noktası (eski t56 mantığı: zemin → broşür üstü düzlemi; B pozunda duvar)"
+    if KLIP in ("p6", "p7"):
+        kk, kn = POSTER_KAYNAK[KLIP]
+        js["tip"] = "son-kare"
+        js["kaynak_klip"] = kk
+        js["kaynak_kare"] = kn
+        js["not"] = (f"{KLIP} = {kk} master son karesi ({kn}); ayrı render yok (son.sh {kk}/k_{kn:04d}.png → {KLIP}/k_0000.png "
+                     "kopyalar). kodla.mjs 'son-kare' tipini bu dosyadan okur.")
+        js.update(duvar_capalari(KLIP))   # p6: d6 kılavuz çapaları (manifest `capalar`); p7: sol duvar (bilgi)
+    if KLIP == "p8":
+        # C turu (brief §11.1 S2-C 2): plaka broşürsüz; DOM broşür d8–d10'da üstünde serbestçe büyür. E: eski p6 plakası.
+        js["tip"] = "plaka"
+        js["eski"] = "p6"
         js["yigin"] = a.yigin
-        js["not"] = ("banko plakası, t56 son karesinin (71) kamerası; üstteki broşür hep gizli. yigin 0 → broşür yığını "
-                     "tamamen yok (dikdörtgen x 606–1314, y 460–1460 içinde yalnız banko meşesi); yigin 1 → B turu (yığın görünür).")
+        js["not"] = ("banko plakası = eski p6 plakası (D/C turu render'ı; yeniden render yok, S2c render-son/p6 → p8 taşır). "
+                     "Kamera t78 son karesi = eski t56[71]; üstteki broşür hep gizli. yigin 0 → broşür yığını tamamen yok "
+                     "(dikdörtgen x 606–1314, y 460–1460 içinde yalnız banko meşesi).")
     if KLIP == "t34b":
         js["not"] = ("t34'ün S2 parçası: dosyalar k_0000–k_0023 = t34 kare 48–71 (t34_ofset). "
                      "t34 kare 48–55 parlaması parlama.py ile (#FFF1DC, kare 48 tam).")
@@ -1484,9 +1939,13 @@ def json_yaz():
     print("[JSON]", yol, flush=True)
 
 
-if (a.json or a.yalniz_json) and TUR != "olcum":
+doku_denetim()
+if (a.json or a.yalniz_json or TUR == "son-kare") and TUR != "olcum":
     json_yaz()
 if a.yalniz_json:
+    raise SystemExit(0)
+if TUR == "son-kare":   # p6 / p7: ayrı render yok (kaynak klibin master son karesi; son.sh / onizleme.sh kopyalar)
+    print(f"[SON-KARE] {KLIP} = {POSTER_KAYNAK[KLIP][0]}[{POSTER_KAYNAK[KLIP][1]}]; render yok, yalnız json", flush=True)
     raise SystemExit(0)
 
 if a.blend:
@@ -1522,6 +1981,10 @@ if a.maske:
             o.hide_render = True
 
 # ================================================================== RENDER
+if YEDEK_DOKU and not a.onizleme and os.environ.get("S2_GECICI") != "1":
+    print(f"[HATA] E turu dokuları eksik ({', '.join(YEDEK_DOKU)}): son render düz renkli yedekle yapılmaz (S2_GECICI=1 ile zorla)",
+          flush=True)
+    raise SystemExit(3)
 out = a.out or os.path.join(O.RENDER, KLIP if not a.onizleme else f"_onizleme/s2-{KLIP}")
 if KLIP == "t34b":
     out = os.path.join(out, "ham")      # parlama.py ham/ → üst klasör (kare 48–55 parlama; çıktı 0'dan: k_0000 = t34 kare 48)
