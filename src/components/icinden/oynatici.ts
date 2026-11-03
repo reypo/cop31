@@ -18,6 +18,10 @@
  * hatasında (MEDIA_ERR_DECODE / SRC_NOT_SUPPORTED) AV1/HEVC'den H.264'e bir kez dönülür (`kodekYedekIste`).
  * Poster kipi (Veri Tasarrufu, 2G/3G; VideoSahne karar verir): video inmez, her geçiş poster çapraz sönmesi.
  *
+ * Devirler kare sınırında (akıcılık turu): döngü → geçiş sönmesi geçişin ilk karesiyle başlar; geçiş → döngü devri
+ * geçişin son karesi sunulunca olur ve döngü ölçülen başlama gecikmesi kadar önceden görünmezken başlatılır (ön sarma).
+ * iOS ısıtmaları sırayla ve varış devri pencerelerinin dışında. Apple WebKit'te kodek sırası HEVC → AV1 → H.264.
+ *
  * Havuz (en çok 3 <video>): k. durakta döngü_k + aynı yöndeki geçiş + ters geçiş (uçta komşu döngü).
  * Yedekler: geçiş hazır değilse 300 ms bekle → hedef posterine çapraz sönme (süre = klip süresi);
  * `play()` reddi (NotAllowedError, iOS Düşük Güç) → aynı yedek + ilk touchend/click/keydown'da (yakalama
@@ -37,6 +41,17 @@ const ISIT_MS = 250;
 const HATA_SINIRI = 2;
 /** Olay kayıtlarının üst sınırı (kiosk günlerce açık kalır). */
 const KAYIT_SINIRI = 300;
+/**
+ * Varış devri (akıcılık turu): döngü, geçişin son karesinden "başlama gecikmesi" kadar önce görünmezken başlatılır
+ * (ön sarma); görünürlük geçişin son karesi sunulunca (rVFC) değişir, `ended` beklenmez. Döngü[0] ≡ geçişin son
+ * karesi olduğundan döngü bir iki kare önde başlasa da dikiş görünmez; eskiden `ended` + arama + play() gecikmesi
+ * kadar (Chrome 4× ölçüm: 67–117 ms, iOS'ta daha uzun olabilir) son kare donuyordu. Gecikme her geçişin kendi
+ * play()'inden ölçülür (cihaza uyar), sınırlar içinde tutulur.
+ */
+const BASLAMA_ILK_MS = 50;
+const BASLAMA_EN_COK_MS = 200;
+/** Döngü → geçiş sönmesi geçişin saati başlayınca başlar; bu süreden sonra her durumda (öğe hiç kare sunmazsa). */
+const SONME_EN_GEC_MS = 250;
 
 type Yuva = {
   el: HTMLVideoElement;
@@ -71,6 +86,12 @@ export type Kayit = {
   dusen?: number;
   gecisMs?: number;
   donguHazirdi?: boolean;
+  /** Geçiş öğesinin play() → saatin başlaması (ms; rVFC: ilk karenin zamanı − medya zamanı). */
+  baslamaMs?: number;
+  /** Döngü ön sarması (varıştan ne kadar önce, ms) ya da hiç (döngü hazır değil / döngüsüz durak). */
+  onSarMs?: number;
+  /** Geçişin son karesi → görünen döngünün ilk YENİ karesi (ms; 30 fps'de ideal ≈ 33). */
+  devirMs?: number;
   bitti?: boolean;
 };
 
@@ -257,6 +278,11 @@ export class Oynatici {
   private kilitDinle: () => void;
   private gorunurlukDinle: () => void;
   private onYukleme = new Map<string, HTMLImageElement>();
+  /** play() → oynatma saatinin başlaması (ms), son geçişlerden üstel ortalama; ön sarmanın öncülüğü. */
+  baslamaMs = BASLAMA_ILK_MS;
+  /** Video geçişinin beklenen varış anı (performance.now; geçişte) ve son varış anı (ısıtma devir penceresi). */
+  private varisBek = 0;
+  private varisT = -Infinity;
 
   constructor(o: {
     sahne: HTMLElement;
@@ -442,20 +468,43 @@ export class Oynatici {
       () => {},
     );
   }
-  /** Görünmez öğeyi bir kez oynatıp durdur (WebKit'te prepareToPlay veriyi yükler; canplay gelir). */
+  /** Varış devrine yakın mı: beklenen varıştan önceki 400 ms ya da varıştan sonraki 300 ms (döngü başlıyor). */
+  private devirYakin() {
+    const t = performance.now();
+    if (this.durum === "gecis") return this.varisBek > 0 && this.varisBek - t < 400;
+    return t - this.varisT < 300;
+  }
+  /**
+   * Görünmez öğeyi bir kez oynatıp durdur (WebKit'te prepareToPlay veriyi yükler; canplay gelir). Akıcılık turu: her
+   * ısıtma bir çözücü oturumu açar → aynı anda yalnız bir ısıtma (görünen geçişle en çok iki etkin çözücü; eskiden geçişin
+   * +530 ms'sinde iki öğe birlikte) ve devir pencerelerinde ısıtma yok. Bekleyen (hazirBekle) öğe sıra beklemez.
+   */
+  private isitan: Yuva | null = null;
   private isit(y: Yuva, s: number) {
     const el = y.el;
     if (y.surum !== s || y.hazir || y.oynat || el === this.aktif || this.engel || this.durum === "kapali") return;
     if (el.readyState >= 3 || !el.paused) return;
+    const acil = y.cozum.length > 0;
+    if (!acil && ((this.isitan && this.isitan !== y) || this.devirYakin())) {
+      this.sonra(120, () => this.isit(y, s));
+      return;
+    }
+    this.isitan = y;
+    const birak = () => {
+      if (this.isitan === y) this.isitan = null;
+    };
+    this.sonra(1000, birak); // play() çözülmezse sıra kilitlenmesin
     this.olay("isitma", { url: y.url, readyState: el.readyState });
     el.play().then(
       () => {
+        birak();
         if (y.surum === s && !y.oynat && el !== this.aktif) {
           el.pause();
           el.currentTime = 0;
         }
       },
       (e: Error) => {
+        birak();
         if (e?.name === "NotAllowedError") {
           this.engelVar();
           this.olay("engel", { yer: "isitma" });
@@ -617,7 +666,8 @@ export class Oynatici {
     if (this.aktif === L.el && !L.el.paused) return;
     L.oynat = true;
     try {
-      L.el.currentTime = 0;
+      // Zaten 0'daysa arama yok: gereksiz arama play()'i bir çözme turu geciktirir.
+      if (L.el.currentTime > 0.001) L.el.currentTime = 0;
       await L.el.play();
       if (this.k !== j || this.durum !== "dur") return;
       this.goster(L.el, 0);
@@ -684,6 +734,7 @@ export class Oynatici {
     if (this.olaylar.length > KAYIT_SINIRI) this.olaylar.splice(0, this.olaylar.length - KAYIT_SINIRI);
     this.durum = "gecis";
     this.sonYon = dir;
+    this.varisBek = 0;
     this.bostaPlanla();
     this.olay("adim", kayit);
     if (!g) return 0;
@@ -720,7 +771,8 @@ export class Oynatici {
     T.el.loop = false;
     T.el.playbackRate = g.hiz;
     const q0 = T.el.getVideoPlaybackQuality?.();
-    kayit.tPlay = performance.now();
+    const tPlay = (kayit.tPlay = performance.now());
+    this.varisBek = tPlay + (g.sure * 1000) / g.hiz;
     if (T.el.currentTime > 0.001) T.el.currentTime = 0;
     T.el.play().catch((e: Error) => {
       kayit.playHata = e?.name;
@@ -728,16 +780,62 @@ export class Oynatici {
       if (e?.name === "NotAllowedError") this.engelVar();
       if (this.durum === "gecis" && !kayit.bitti) this.yedek(j, dir, kayit, "play-red", g, sec);
     });
-    // Önizlemede (lombar deliğinin altı) zaten görünür: yeniden söndürüp açma.
-    if (L !== T.el) this.goster(T.el, L ? SOLMA_MS : 0);
+    /*
+     * Döngüden geçişe devir (akıcılık turu): akan döngü varsa çapraz sönme geçişin saati başlayınca (ilk rVFC karesi ya
+     * da `playing`) başlar; o ana dek döngü akar. Eskiden sönme play() anında başlıyor, geçiş başlama gecikmesi boyunca
+     * 0. karede donuk görünüyordu. Güvenlik: en geç SONME_EN_GEC_MS. Önizlemede (lombar deliğinin altı) zaten görünür:
+     * yeniden söndürüp açma. Döngü sönme bitince (+100 ms) durur; serbest yuvalar o zaman dağıtılır.
+     */
+    const akanDongu = !!L && L !== T.el && !L.paused;
+    let sonme = false;
+    const sonmeBaslat = () => {
+      T.el.removeEventListener("playing", sonmeBaslat);
+      if (sonme || T.surum !== s || kayit.bitti) return;
+      sonme = true;
+      if (L !== T.el) this.goster(T.el, L ? SOLMA_MS : 0);
+      this.sonra(SOLMA_MS + 100, () => {
+        if (kayit.bitti) return;
+        if (L && L !== T.el) L.pause();
+        this.dagit(j, dir, [T]);
+      });
+    };
+    if (!akanDongu) sonmeBaslat();
+    else {
+      T.el.addEventListener("playing", sonmeBaslat, { once: true });
+      this.sonra(SONME_EN_GEC_MS, sonmeBaslat);
+    }
     let sunulan = 0;
     const fps = this.m.fps;
+    let onSarildi = false;
+    let tSon: number | undefined;
     const kare = (now: number, meta: VideoFrameCallbackMetadata) => {
       if (T.surum !== s || kayit.bitti) return;
       sunulan++;
-      if (sunulan === 1) kayit.ilkKareMs = Math.round((now - kayit.tJest) * 10) / 10;
+      if (sunulan === 1) {
+        sonmeBaslat();
+        kayit.ilkKareMs = Math.round((now - kayit.tJest) * 10) / 10;
+        // Saatin başlaması = bu karenin gösterim zamanı − medya zamanı (hız dahil) − play() anı; ön sarmanın öncülüğü
+        // buna uyar. Hızlı cihazda ölçü sıfırın altına düşebilir (kare gösterime saatten önce hazır): 0 sayılır.
+        const b = (meta.expectedDisplayTime || now) - tPlay - (meta.mediaTime * 1000) / g.hiz;
+        if (b < 1000) {
+          const bb = Math.max(0, b);
+          kayit.baslamaMs = Math.round(bb);
+          this.baslamaMs = Math.min(BASLAMA_EN_COK_MS, Math.max(16, (this.baslamaMs + bb) / 2));
+        }
+      }
       kayit.sunulan = sunulan;
-      sec.kare?.(Math.min(g.kare - 1, Math.round(meta.mediaTime * fps)), g.kare);
+      const f = Math.min(g.kare - 1, Math.round(meta.mediaTime * fps));
+      sec.kare?.(f, g.kare);
+      // Ön sarma: varış döngüsü son kareden "başlama gecikmesi" kadar önce görünmezken başlar.
+      const kalan = ((g.kare - 1 - f) * 1000) / fps / g.hiz;
+      if (!onSarildi && kalan <= this.baslamaMs) onSarildi = this.onSar(j, kayit, kalan);
+      // Son kare sunuldu: görsel devir şimdi (ended bir kare süresi + olay gecikmesi sonra gelir). Durum varışı
+      // (VideoSahne `dur`, jest kabulü) eskisi gibi `ended`'da: adımlayıcının kilitli adımı bitmeden `dur`a geçilirse
+      // varışa hemen gelen ters jest kilide takılıp tükeniyordu (tuzak "hızlı ileri-geri").
+      if (f >= g.kare - 1) {
+        tSon = now;
+        return this.devir(j, kayit, now);
+      }
       T.el.requestVideoFrameCallback(kare);
     };
     if (typeof T.el.requestVideoFrameCallback === "function") T.el.requestVideoFrameCallback(kare);
@@ -750,11 +848,6 @@ export class Oynatici {
       };
       requestAnimationFrame(raf);
     }
-    this.sonra(SOLMA_MS + 100, () => {
-      if (kayit.bitti) return;
-      if (L && L !== T.el) L.pause();
-      this.dagit(j, dir, [T]);
-    });
     const bitir = () => {
       if (T.surum !== s || kayit.bitti) return;
       kayit.bitti = true;
@@ -764,14 +857,71 @@ export class Oynatici {
         kayit.cozulen = q1.totalVideoFrames - q0.totalVideoFrames;
         kayit.dusen = q1.droppedVideoFrames - q0.droppedVideoFrames;
       }
-      this.varis(j, dir, kayit, sec);
+      this.varis(j, dir, kayit, sec, tSon);
     };
     T.el.onended = bitir;
     const guvenlik = this.sonra(((g.sure / g.hiz) + 1.5) * 1000, bitir);
   }
 
-  private varis(j: number, dir: 1 | -1, kayit: Kayit, sec: GecisSecenek) {
+  /**
+   * Görsel devir (geçişin son karesi sunulunca): ön sarılmış varış döngüsü öne alınır (döngü[0] ≡ son kare). Ön
+   * sarılmadıysa (hazır değil, engel) bir şey yapılmaz; varış eski yolla (arama + play) yapar.
+   */
+  private devir(j: number, kayit: Kayit, tSon: number) {
+    const d = this.dongu(j);
+    const L = d ? this.yuva(d.url) : null;
+    // `paused`a bakılmaz: saat henüz başlamadıysa döngü 0. karesini (≡ son kare) gösterir, fark görünmez.
+    if (!L || !L.hazir || !L.oynat || this.engel || L.el === this.aktif) return;
+    this.goster(L.el, 0);
+    this.devirOlc(L, kayit, tSon);
+  }
+  /** Devir ölçümü (HUD, ölçüm betiği): geçişin son karesinden görünen döngünün ilk YENİ karesine (rVFC). */
+  private devirOlc(L: Yuva, kayit: Kayit, tSon: number) {
+    if (kayit.devirMs !== undefined) return;
+    // Ön sarılan döngü 1. kareyi geçtiyse yeni kare öne alındığı karede görünür (döngü[0] ≡ son kare; ondan sonrası
+    // yeni): ölçü bir sonraki kare (rVFC içinden istenen rAF aynı karede koşabildiği için iki kat).
+    if (L.el.currentTime >= 1 / this.m.fps) {
+      requestAnimationFrame(() =>
+        requestAnimationFrame((now) => {
+          if (kayit.devirMs === undefined) kayit.devirMs = Math.round(now - tSon);
+        }),
+      );
+      return;
+    }
+    if (typeof L.el.requestVideoFrameCallback !== "function") return;
+    const s = L.surum;
+    const ilk = (now: number, meta: VideoFrameCallbackMetadata) => {
+      if (L.surum !== s || kayit.devirMs !== undefined) return;
+      if (meta.mediaTime <= 0.001 && now - tSon < 400) return void L.el.requestVideoFrameCallback(ilk);
+      kayit.devirMs = Math.round(now - tSon);
+    };
+    L.el.requestVideoFrameCallback(ilk);
+  }
+
+  /**
+   * Ön sarma (BASLAMA_*): j'nin döngüsü hazırsa görünmezken (z1, opaklık 0) 0. kareden başlatılır; görünürlük varışta
+   * değişir. Hazır değilse false (sonraki karede yeniden denenir); engel/poster kipinde ya da döngüsüz durakta true.
+   */
+  private onSar(j: number, kayit: Kayit, kalan: number): boolean {
+    const d = this.dongu(j);
+    if (!d || this.engel) return true;
+    const L = this.yuva(d.url);
+    if (!L || L.el === this.aktif) return true;
+    if (!L.hazir) return false;
+    L.oynat = true;
+    L.el.loop = true;
+    if (L.el.currentTime > 0.001) L.el.currentTime = 0;
+    L.el.play().catch(() => {
+      L.oynat = false;
+    });
+    kayit.onSarMs = Math.round(kalan);
+    return true;
+  }
+
+  private varis(j: number, dir: 1 | -1, kayit: Kayit, sec: GecisSecenek, tSon?: number) {
     this.k = j;
+    this.varisT = performance.now();
+    this.varisBek = 0;
     kayit.gecisMs = Math.round(performance.now() - kayit.tJest);
     this.posterAyarla(j);
     this.durum = "dur";
@@ -784,11 +934,17 @@ export class Oynatici {
         this.bostaPlanla();
       });
     if (L && L.hazir && !this.engel) {
-      // Döngünün 0. karesi = geçişin son karesi (üretim kuralı): kesme, sönme yok.
+      // Döngünün 0. karesi = geçişin son karesi (üretim kuralı): kesme, sönme yok. Ön sarıldıysa zaten oynuyor.
       L.oynat = true;
-      L.el.currentTime = 0;
-      L.el.play().catch(() => {});
-      this.goster(L.el, 0);
+      if (L.el.paused) {
+        L.el.currentTime = 0;
+        L.el.play().catch(() => {});
+      }
+      // Ön sarılıp son karede öne alındıysa (devir) yeniden gösterme yok.
+      if (this.aktif !== L.el) {
+        this.goster(L.el, 0);
+        if (tSon !== undefined) this.devirOlc(L, kayit, tSon);
+      }
       sonra();
     } else if (d) void this.donguBaslat(j).then(sonra);
     else sonra(); // döngüsüz durak (duvar, DOM): son kare durur; DOM durağında VideoSahne gizle() ile söndürür
@@ -801,6 +957,7 @@ export class Oynatici {
     const kayit = this.olaylar.at(-1);
     this.k = j;
     this.durum = "dur";
+    this.varisT = performance.now();
     this.posterAyarla(j);
     if (kayit && !kayit.bitti) {
       kayit.bitti = true;
@@ -848,6 +1005,7 @@ export class Oynatici {
       this.k = j;
       this.posterAyarla(j);
       this.durum = "dur";
+      this.varisT = performance.now();
       kayit.gecisMs = Math.round(performance.now() - kayit.tJest);
       if (!this.posterKipi) {
         this.dagit(j, dir);
@@ -963,11 +1121,27 @@ function tepeBitHizi(m: IstemciManifest, boyut: Boyut, kodek: KodekAd) {
   return Math.round(tepe) || 2_000_000;
 }
 
+/**
+ * Apple WebKit (iOS/iPadOS'taki her tarayıcı ve Safari; `navigator.vendor`). Akıcılık turu: burada HEVC (hvc1) AV1'in
+ * önünde denenir. AV1 donanım çözücüsü yalnız A17 Pro/A18 ve M3 sonrasında var; daha eski Apple cihazları zaten HEVC'ye
+ * düşüyordu, yani AV1 yalnız en yeni iPhone'larda (kullanıcının iPhone 16'sı) seçiliyordu. HEVC Apple'da en olgun
+ * donanım yolu; dikey HEVC seti AV1'den küçük (21 dosya 9,998 / 10,431 MB). Kanıt (AV1'in iOS'ta takıldığı) yok: cihazda
+ * `?kodek=av1` / `?kodek=hevc` ve `?hud=1` ile karşılaştırılmalı.
+ */
+function appleWebKit(): boolean {
+  try {
+    return /Apple/.test(navigator.vendor);
+  } catch {
+    return false;
+  }
+}
+
 /** Kodek seçimi (R4 §4): mediaCapabilities (destekli + güç verimli + akıcı) → canPlayType → H.264. */
 export async function kodekSec(m: IstemciManifest, boyut: Boyut, istek?: string | null): Promise<KodekAd> {
-  const adaylar = m.kodekler.filter((k) => k.boyutlar.includes(boyut));
-  const zorla = adaylar.find((k) => k.ad === istek);
+  const tum = m.kodekler.filter((k) => k.boyutlar.includes(boyut));
+  const zorla = tum.find((k) => k.ad === istek);
   if (zorla) return zorla.ad;
+  const adaylar = appleWebKit() ? [...tum.filter((k) => k.ad === "hevc"), ...tum.filter((k) => k.ad !== "hevc")] : tum;
   const { g, y } = m.boyutlar[boyut];
   for (const k of adaylar) {
     if (k.ad === "h264") continue;

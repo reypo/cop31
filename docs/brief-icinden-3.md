@@ -1912,6 +1912,57 @@ Ajanların (S1-F2, S2-F2, R-F, K-F, W-F, V) açık bıraktığı maddeler şöyl
 | `render-son-e` (8,2 GB, D:) | G-B bitene kadar durur; sonra silinebilir |
 | Gerçek cihaz (iPhone 16) testi | **açık**; akıcılık ajanının yaması ve kontrol listesi ayrı commit |
 
+### 13.8 Akıcılık turu (iPhone 16 takılmaları; ajan worktree'de, 4 Kasım 2026 ~01.35; F'nin üstüne ayrı commit)
+
+Kullanıcı takılmayı iPhone 16'da gördü; masaüstü Chrome'da yok. Ajan Chrome (CDP izleri, rVFC kare günlüğü), iOS benzetimi
+(önyükleme kısıtı + 120 ms `play()` gecikmesi) ve Playwright WebKit (yalnız poster kipi; Windows WebKit video çözmüyor) ile ölçtü.
+Rapor: `scratchpad/f-ak/rapor.md`; ölçümler `.qa/icinden3/ak-ajan/` (ajan) ve `.qa/icinden3/ak/` (F üstünde yeniden koşu).
+
+**Kök neden (cihazdan bağımsız, iPhone'da büyümesi beklenen):** video öğesi **devirleri**. (1) Döngülü her durağa varışta geçişin
+son karesi donuyordu: devir `ended`'da (son kareden bir kare sonra) + gereksiz `currentTime = 0` araması + `play()` başlama
+gecikmesi → Chrome 4× p50 83 ms, iOS benzetiminde 184–200 ms. (2) Her geçişin başında yeni klip, `play()` başlayana dek 0.
+karesinde donuk sönüyordu (iOS benzetimi 150–184 ms). (3) iOS ısıtması her ileri geçişte iki görünmez öğeyi aynı anda oynatıyordu.
+(4) d11'de broşür ön ısıtması yay animasyonuyla çakışıyordu (WebKit 29 kare > 50 ms).
+
+**Düzeltme (`oynatici.ts`, `VideoSahne.tsx`, yeni `hud.ts`; klipler.json/kodla.mjs/CSS/fontlar değişmedi):** devirler rVFC kare
+sınırında; varış döngüsü ölçülen başlama gecikmesi (`baslamaMs`, üstel ortalama 16–200 ms) kadar önceden görünmezken başlatılır
+(ön sarma), durum varışı eskisi gibi `ended`'da (ara sürümde son karede yapılınca tuzak zinciri [1,1,2,2,3,3] bozuldu; ayrılınca
+[1,0,1,0,1,0]); döngü → geçiş sönmesi geçişin ilk karesinde (en geç 250 ms); ısıtma tek tek ve devir pencerelerinin dışında;
+`donguBaslat` 0'daysa aramaz; **Apple WebKit'te kodek sırası HEVC → AV1 → H.264** (dikey HEVC seti AV1'den 0,43 MB küçük; AV1'in
+iPhone'da takıldığına kanıt yok, cihazda karşılaştırılır); d11 broşür ısıtması 800 → 2.450 ms; `?hud=1` cihaz göstergesi (919 B gz,
+yalnız sorguyla inen ayrı parça: kodek, jest → ilk kare, devir, düşen kare, > 25/> 50 ms kare, ölçülen başlama gecikmesi).
+
+**Sonuç (ajan, 30e7816 üstünde):** varış devri p50 83 → **33 ms** (30 fps'nin tek kare süresi), iOS benzetiminde 184 → 50 ms;
+geçiş başı donma iOS benzetiminde 167 → 50 ms; WebKit d11 29 → 3 uzun kare. Kapılar: 4× fps 59,9/60,0, > 50 ms 1/0 (7→8 kesişmesi,
+tabanda da var), 1× düşen 0/1.044; rota JS +0,8 kB gz (toplam 209,8), HTML gz değişmedi.
+
+**F (52bf0e8) üstünde yeniden ölçüm (orkestratör, port 3102):** stale 3/3 ✓; tuzak ✓ (geçişte jest 1, uç 0, zincir [1,0,1,0,1,0],
+kapanış 12/11, tekerlek 1/2, hata 0); perf 4× mobil 59,9 fps / > 50 ms 1 (7→8 57 ms) / düşen 0/948, masaüstü 59,9 / 0 / 3 (bilgi);
+perf 1× mobil 59,9 / 1 (7→8 61 ms) / düşen 0/948, masaüstü 60,0 / 0 / 0.
+
+| Kapı (F + akıcılık yaması, port 3102, headless Chrome) | Eşik | Ölçüm | |
+|---|---|---|---|
+| Mobil oturum 4G, önbelleksiz: **HEVC** (Apple yolu) / AV1 | ≤ 12,00 MB | **11,210** / 11,471 | ✓ |
+| İlk yükleme (tanım), HEVC / AV1 | ≤ 2,5 | 2,176 / 1,999 | ✓ |
+| Adım penceresi maks, HEVC / AV1 | ≤ 2,5 | 1,726 / 1,849 | ✓ |
+| Perf 4× mobil / masaüstü: fps · > 50 ms · düşen /948 | ≥ 59,5 · ≤ 3 · bilgi | 59,9 · 1 · 0 / 59,9 · 0 · 3 | ✓ |
+| Perf 1× mobil / masaüstü: düşen /948 | ≤ 1/1.000 | 0 / 0 | ✓ |
+| Kiosk tam turu | 115–125 s | 118,5 s (yedek 0) | ✓ |
+| stale 0/1/2 · tuzak · konsol hatası | 3/3 · geçti · 0 | 3/3 · geçti · 0 | ✓ |
+| tsc · eslint (src) | 0 · 0 | 0 · 0 | ✓ |
+
+Ölçüm dosyaları `.qa/icinden3/ak/*-AK*.json`. 4G oturumu HEVC ile AV1'den 0,26 MB küçük; §11.2 kapısına `mobile:hevc` satırı eklendi.
+
+**Değişmeyen, raporlanan (G-B'de broşür kalkınca çoğu düşer):** d7 dinlenmesinde broşür ön ısıtması (Layout 88 ms + GPU ilk raster
+≈ 165 ms + görsel çözme ≈ 60 ms, durağan karede); WebKit'te her karede boyananlar: lombar `mask-image`, d1/d11 yay opaklığı (SVG
+çocukları), broşür yörüngesi (SVG `<g>`), sarkaç (`@property`), FLIP `filter`, 3B menteşede JS stil yazımı. **G-B/W kuralları
+(fidan DOM'u için):** SVG çocuklarında animasyon yok (dönen öğe ayrı HTML katmanında `transform`); `@property` animasyonu yok; her
+karede `filter` yok; 0,003 opak ısınma katmanı video geçişi boyunca tutulmaz; menteşe/kart animasyonu CSS/WAAPI.
+
+**Gerçek iPhone 16 doğrulaması (kullanıcı; `docs/klip-oynatma.md` §6.1):** Vercel önizlemesinde `/icinden?hud=1`; 1. satırda
+`hevc`; durak varışlarında `devir` (hedef 17–60 ms) ve `başla` (≥ 60 ms ise bu yama asıl düzeltmedir; ≈ 0 ise sıradaki iş WebKit DOM
+sıcak noktaları); `?kodek=av1` ile karşılaştırma; Düşük Güç Modu'nda `ENGEL`.
+
 ## 14. G turu: müşteri revizyonu (3 Kasım 2026 gece; orkestratör okuması — bağlayıcı taslak, kullanıcı onayıyla kesinleşir)
 
 ### 14.0 Müşteri mesajı ve kullanıcı ekleri

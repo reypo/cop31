@@ -43,6 +43,8 @@ const KESIS_MS = 200;
 const DALIS_MS = 600;
 const LOGO_MS = 300;
 const METIN_ONCE_MS = 250;
+/** Dönüş dunyasında broşür ön ısıtması: yay çizimi ve sönümü (400–2400 ms) bittikten sonra. */
+const DONUS_ISITMA_MS = 2450;
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 const easeInCubic = (x: number) => x * x * x;
 
@@ -554,10 +556,13 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       // Ön ısıtma (v2 KAGIT_GIRIS kalıbı): broşür, ilk görüneceği yerde neredeyse görünmez (0,003) boyanır; kesişmede
       // ilk görünme ve FLIP sonu yeniden raster karesi takılmasın (ölçüldü: 4× CPU mobilde 195 + 506 ms uzun kare).
       // Dönüş dunyasında arka kapak dalış dönüşümünde (geri dalışın ilk boyaması klibin ortasına düşüp 1 kare
-      // düşürüyordu, B turu). Varıştan 800 ms sonra (döngü başladıktan sonra; varış karesine binmesin: ölçüldü 136 ms).
+      // düşürüyordu, B turu). Son duvarda varıştan 800 ms sonra (döngü başladıktan sonra; varış karesine binmesin: ölçüldü
+      // 136 ms). Dönüş dunyasında yaylar bitince (DONUS_ISITMA_MS; icinden3-isik.css: çizim 400–2000, sönüm 2000–2400 ms):
+      // WebKit'te SVG yol opaklığı kompozitöre gitmez, yaylar her karede boyanır; 800 ms'deki ısıtma (yerleşim + ilk boyama
+      // + 0,003 opak broşür katmanları) bu pencereye düşüp Playwright WebKit'te 29 kareyi > 50 ms yapıyordu (akıcılık turu).
       const once = j === kesisDurak;
       brosurEl.hidden = true;
-      sonra(800, () => {
+      sonra(once ? 800 : DONUS_ISITMA_MS, () => {
         if (k !== j || faz !== "dur") return;
         // Önce oku, sonra yaz (denetim D2-03): dönüşüm sahne ölçüsünü okur (geo()); hidden=false'tan sonra okunursa
         // broşürün bütün alt ağacı için zorunlu stil + yerleşim (4× CPU'da ~75 ms) aynı geri çağrıda yapılıyordu.
@@ -1022,7 +1027,17 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     },
   };
 
+  /* ---------------- cihaz göstergesi (?hud=1; ayrı parça, rota JS'ine girmez) ---------------- */
+  let hudSil: (() => void) | null = null;
+  let hudIptal = false;
+  if (q.get("hud") === "1")
+    void import("./hud").then(({ hudKur }) => {
+      if (!hudIptal) hudSil = hudKur(oy);
+    });
+
   return () => {
+    hudIptal = true;
+    hudSil?.();
     for (const z of zamanlar) window.clearTimeout(z);
     zamanlar.clear();
     if (rafId) cancelAnimationFrame(rafId);

@@ -562,6 +562,28 @@ Eski tahmin (R4, ağır vekil set): H.264 ~16 MB, HEVC ~12, AV1 ~10. Gerçek dik
 - **rVFC:** Safari 15.4+. Yoksa `playing` + `timeupdate` yedeği gerekir (spike'ta yok).
 - **Data Saver / Düşük Veri Modu:** önyükleme penceresini daraltmak gerekebilir **(V)**.
 
+### 6.1 iPhone 16'da doğrulama listesi (`?hud=1`; akıcılık turu, 4 Kasım 2026)
+
+Önkoşul: akıcılık yaması Vercel'e çıkmış olmalı (önizleme yeterli). Safari, Düşük Güç Modu **kapalı**, telefon dikey.
+
+1. `https://<alan>/icinden?hud=1` aç. Sol altta dört satır: `kodek hevc · dikey` / `son t12 ilk 166 devir 33 düşen 0/56` /
+   `p50 ilk … devir … · düşen x/y · yedek n` / `kare >25ms … · >50ms … · başla …`. 1. satırda **hevc** görünmeli.
+2. d0 → d5 ileri, sonra d0'a geri; her durakta 2–3 s bekle. Her varıştan sonra 2. satırdaki **devir** ve 4. satırdaki **başla** değerine bak.
+   - devir ≈ 17–60 ms: varış dikişsiz. ≥ 100 ms ya da gözle "varışta görüntü bir an durup sonra döngü başlıyor": not al.
+   - başla = iPhone'un `play()` başlama gecikmesi. ≥ 60 ms ise yamasız sürümde her varışta ≈ başla + 70 ms, her geçiş başında ≈ başla
+     kadar donma vardı; kök neden cihazda doğrulanmış olur. ≈ 0–20 ms ise video devri asıl neden değildir; 4. satırdaki `>50ms`
+     sayısına bak (DOM/kompozitör).
+   - düşen x/y 0 olmalı.
+3. Aynı turu `?hud=1&kodek=av1` ve `?hud=1&kodek=hevc` ile (sayfayı yeniden yükleyerek) yap; `p50 devir`, `düşen`, `>50ms`, `başla`
+   ve gözle akıcılığı karşılaştır. AV1 belirgin iyi değilse HEVC kalır. İkisi de takılıyorsa `?hud=1&kodek=h264`.
+4. Gözle: (a) varışta görüntü duruyor mu; (b) jestte yeni klip ilk karesinde donuk mu sönüyor; (c) d0→d1 ve d10→d11'de kâğıttaki
+   delik kesik kesik mi büyüyor (lombar maskesi, değişmedi); (d) d1/d11 yaylar; (e) d7→d8 broşür gelişi ve d8↔d10 sayfa çevirme
+   (G-B'de kalkıyor); (f) d7'de varıştan ~1 s sonra hemen kaydırınca geçişin geç başlaması.
+5. Düşük Güç Modu açıkken HUD 1. satırda `ENGEL`; adım parmak kalkınca atılır; ilk dokunuştan sonra geçişler video olmalı.
+6. Mac varsa: Safari ▸ Geliştir ▸ iPhone ▸ Zaman Çizelgeleri ("Görüntü Kareleri") ile d1→d3 ve d7→d10 kaydı.
+7. Sonuç: her koşu için HUD 2.–4. satırlar + gözlem. Başla büyükse bu yama asıl düzeltmedir; küçükse sıradaki iş brief §13.8'deki
+   WebKit DOM maddeleri (adim.ts kaydırma yazımı, lombar maskesi, d7 görsellerini d6'da çözme).
+
 ## 7. Bilinen sınırlar
 
 - Ölçümler masaüstü Chrome'da mobil emülasyon; CPU kısıtı medya çözücüyü ve GPU'yu yavaşlatmaz. Gerçek iPhone
