@@ -330,46 +330,48 @@ uygulanacaksa GOP 24 (H.264 +%16, AV1 +%5). Asıl maliyet yuva: ters klip ileri 
 5. Çözünürlük: 720×1280 (DPR 3 telefonda ~1,6× büyütme; foto-gerçekçi hareketli içerikte kabul edilebilir **(V)**).
    1080×1920 ~1,5× bayt; yalnız AV1/HEVC kolunda düşünülebilir.
 
-## 5. Bütçe — gerçek render ile ölçüldü (C turu, 3 Kasım 2026, kodlama ajanı K-C)
+## 5. Bütçe — gerçek render ile ölçüldü (D turu, 3 Kasım 2026, kodlama ajanı K-D; C turu K-C)
 
-Kaynak: `D:\soft\cop31-varlik\render-son\` (Cycles 1920², PNG 16 bit; C turunda S1 t23 + t34a, S2 t34b + l4 + p6
-yeniden render edildi; t34 = `scripts/icinden/t34-birlestir.py`, kare 47 ↔ 48 16 bit farkı 0). Tek komut
-`docs/klipler-sema.md` §4 (x264/x265 `slow`, SVT-AV1 p4, GOP = klip, `-sc_threshold 0`, +faststart, `-an`, yuv420p,
-BT.709). Liste `D:\soft\cop31-varlik\kodlama\render-son.json`, doğrulama `python -X utf8 -P
-scripts/icinden/kodlama-dogrula.py --vmaf` → `kodlama\dogrula-render-son.json`. **kB = 1.000 bayt, MB = 10⁶ bayt.**
-VMAF v0.6.1, master → aynı kırpım/ölçek (lanczos) referansına karşı, ortalama (parantezde en düşük kare).
+Kaynak: `D:\soft\cop31-varlik\render-son\` (Cycles 1920², PNG 16 bit). C turunda S1 t23 + t34a, S2 t34b + l4 + p6
+yeniden render edildi. D turunda S1-D2 t01/l1/t12/l2/t23'ü yeni su maskesiyle (Katara, brief §11.6-6) yeniden render
+etti; l3, t34 ve S2 klipleri değişmedi. t34 = `scripts/icinden/t34-birlestir.py` (kare 47 ↔ 48 16 bit farkı 0). Tek
+komut `docs/klipler-sema.md` §4 (x264/x265 `slow`, SVT-AV1 p4, GOP = klip, `-sc_threshold 0`, +faststart, `-an`,
+yuv420p, BT.709). Liste `D:\soft\cop31-varlik\kodlama\render-son.json`, doğrulama `python -X utf8 -P
+scripts/icinden/kodlama-dogrula.py --vmaf` → `kodlama\dogrula-render-son.json` (C turunun listesi ve doğrulaması K-D
+scratchpad'inde `c-yedek\`). **kB = 1.000 bayt, MB = 10⁶ bayt.** VMAF v0.6.1, master → aynı kırpım/ölçek (lanczos)
+referansına karşı, ortalama (parantezde en düşük kare).
 
-**Ayarlar (brief-icinden-3 §11.2).**
+**Ayarlar (brief-icinden-3 §11.2 + §11.6-1, -2).**
 
-- **CRF:** B'deki döngü/geri +2 geri alındı → ileri ve döngü H.264 23 / HEVC 25 / AV1 30, geri 26 / 28 / 34; yalnız
-  **t23 ve t34 ileri 26 / 27 / 32** (geri r32/r43 tabanda kaldı).
-- **t23 → l3 dikişi (§11.2-6):** CRF'den sonra kodlanmış t23 son ↔ l3 0 H.264 dikey 3,21 / yatay 3,33 ✗, HEVC 2,97,
-  AV1 2,21 / 2,36 → **yalnız t23 H.264'e `zones` kare 74–83, CRF −4** (`b=1,5874`; tabloda `*`): 2,66 / 2,79 ✓, bedeli
-  +114 / +118 kB. HEVC'de de denendi (2,97 → 2,43, +184 kB): eşiğin altında olduğu için uygulanmadı.
+- **CRF:** ileri ve döngü H.264 23 / HEVC 25 / AV1 30, geri 26 / 28 / 34; **t23 ve t34 ileri 26 / 27 / 32** (C). D turunda
+  §11.6-1'in bedelsiz maddeleri: **t34 ileri AV1 34**, **l3 AV1 32** (dikey + yatay). t23 AV1 32'de kaldı: 34'te en kötü
+  kare VMAF 76,8 (C ölçümü). Başka CRF değişikliği yok.
+- **t23 → l3 dikişi (§11.2-6):** yalnız t23 H.264'e `zones` kare 74–83, CRF −4 (`b=1,5874`; tabloda `*`). C'de bununla
+  3,21 / 3,33 → 2,66 / 2,79 olmuştu; D'de 2,67 / 2,78 ✓. HEVC'ye uygulanmadı (2,95 ≤ 3).
 - **Yatay kırpım `kirpimY` (§11.2-5):** yatay kırpımın y ofseti klip başına (master px): t23 420 → 200 (kare 24–72,
   easeInOutCubic; ffmpeg `crop` y ifadesi kare numarası `n` ile, tam sayıya yuvarlanır, ölçekten önce), l3 ve p3 200,
   t34 kare 0–47 200 / ≥ 48 420 (basamak düz #FFF1DC parlamasında), diğerleri 420. Geri klipler `reverse` ile
   kendiliğinden doğru (r32 son = t23 0 = 420). Manifestte d3 yatay çapaları 200 ile çevrildi: Expo (640; 525), D400
-  (491,9; 676,5), **Beydağları (622,3; 40,2)**, Antalya (643,7; 158,6), **Antalya Körfezi (506,3; 136,7)** — B'de
-  yalnız Expo ve D400 kadrajdaydı. `dunyaC`, `sutunlar`, `brosurDikdortgen`, d4 etiketleri ve lombar hizası B
-  manifestiyle bayt bayt aynı. Yatay p3'te Beydağları sırtı (y ≈ 30–120) ve körfez suyu (y ≈ 110–165) görünür.
-- **Posterler WebP q80.** p3 için q68–76 denendi (aşağıda); hiçbiri q80'e göre ΔE00 ≤ 1,0 koşulunu sağlamadı → q80.
+  (491,9; 676,5), **Beydağları (622,3; 40,2)**, Antalya (643,7; 158,6), **Antalya Körfezi (506,3; 136,7)**. D
+  manifesti C'ninkinden yalnız `dosya`, `bayt`, `lqip` ve `olusturma` alanlarında ayrılıyor; çapalar, kadraj,
+  `dunyaC`, `sutunlar`, `brosurDikdortgen` ve `kapakTon` aynı.
+- **Posterler WebP q80, p3 q68** (§11.6-2, `--poster-q p3=68`; merdiven aşağıda).
 
 | Klip | tür | kare | CRF (264/265/AV1) | dikey H.264 | dikey HEVC | dikey AV1 | yatay H.264 | yatay AV1 | VMAF dikey 264/265/AV1 (min) | VMAF yatay 264/AV1 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| t01 | ileri | 54 | 23/25/30 | 259 | 288 | 219 | 234 | 204 | 96,5/97,1/97,4 (87,7) | 96,1/96,8 |
-| r10 | geri | 54 | 26/28/34 | 205 | 186 | 177 | 178 | 167 | 92,3/94,2/96,1 (87,6) | 91,9/95,6 |
-| l1 | döngü | 120 | 23/25/30 | 462 | 427 | 411 | 359 | 321 | 93,8/93,8/94,5 (90,0) | 94,0/94,6 |
+| t01 | ileri | 54 | 23/25/30 | 259 | 277 | 220 | 234 | 204 | 96,6/97,1/97,5 (87,9) | 96,1/96,9 |
+| r10 | geri | 54 | 26/28/34 | 202 | 186 | 177 | 179 | 166 | 92,3/94,3/96,1 (86,8) | 92,0/95,6 |
+| l1 | döngü | 120 | 23/25/30 | 524 | 426 | 410 | 378 | 319 | 93,8/94,0/94,8 (90,3) | 94,6/95,6 |
 | p1 | poster WebP q80 | 1 | — | 72 | | | 56 | | — | — |
-| t12 | ileri | 60 | 23/25/30 | 686 | 553 | 470 | 626 | 433 | 98,3/98,4/99,0 (86,8) | 97,8/98,5 |
-| r21 | geri | 60 | 26/28/34 | 453 | 374 | 362 | 430 | 340 | 93,8/95,9/97,9 (81,0) | 93,5/97,2 |
-| l2 | döngü | 120 | 23/25/30 | 340 | 286 | 368 | 221 | 291 | 94,2/93,4/95,4 (92,8) | 94,1/95,7 |
-| p2 | poster WebP q80 | 1 | — | 69 | | | 62 | | — | — |
-| t23 | ileri | 84 | 26*/27/32 | 1.383 | 1.243 | 1.283 | 1.374 | 1.324 | 94,1/94,6/95,6 (79,0) | 94,0/96,0 |
-| r32 | geri | 84 | 26/28/34 | 1.277 | 975 | 1.130 | 1.256 | 1.186 | 91,7/92,0/94,3 (73,7) | 91,9/94,7 |
-| l3 | döngü | 150 | 23/25/30 | 324 | 260 | 533 | 349 | 569 | 95,5/94,9/97,2 (94,9) | 95,5/97,1 |
-| p3 | poster WebP q80 | 1 | — | 218 | | | 229 | | — | — |
-| t34 | ileri | 72 | 26/27/32 | 951 | 947 | 1.172 | 959 | 1.182 | 97,9/98,3/98,7 (87,9) | 97,4/98,5 |
+| t12 | ileri | 60 | 23/25/30 | 682 | 552 | 471 | 626 | 433 | 98,2/98,4/99,0 (87,0) | 97,8/98,5 |
+| r21 | geri | 60 | 26/28/34 | 452 | 376 | 360 | 431 | 340 | 93,8/95,9/97,8 (81,1) | 93,4/97,2 |
+| l2 | döngü | 120 | 23/25/30 | 347 | 293 | 369 | 227 | 291 | 94,3/93,7/95,5 (93,0) | 94,5/95,8 |
+| p2 | poster WebP q80 | 1 | — | 68 | | | 61 | | — | — |
+| t23 | ileri | 84 | 26*/27/32 | 1.377 | 1.234 | 1.281 | 1.376 | 1.334 | 93,7/94,3/95,5 (78,8) | 93,8/95,9 |
+| r32 | geri | 84 | 26/28/34 | 1.272 | 982 | 1.128 | 1.259 | 1.186 | 91,7/92,1/94,2 (73,9) | 91,9/94,6 |
+| l3 | döngü | 150 | 23/25/**32** | 324 | 260 | **498** | 349 | **532** | 95,5/94,9/97,1 (94,9) | 95,5/97,1 |
+| p3 | poster WebP **q68** | 1 | — | **169** | | | **176** | | — | — |
+| t34 | ileri | 72 | 26/27/**34** | 951 | 947 | **1.042** | 959 | **1.046** | 97,9/98,3/98,6 (87,9) | 97,4/98,5 |
 | r43 | geri | 72 | 26/28/34 | 1.085 | 910 | 1.003 | 994 | 1.010 | 97,6/98,0/98,5 (78,7) | 97,3/98,3 |
 | l4 | döngü | 120 | 23/25/30 | 170 | 108 | 211 | 154 | 163 | 96,1/95,9/97,1 (94,8) | 95,6/96,9 |
 | p4 | poster WebP q80 | 1 | — | 45 | | | 38 | | — | — |
@@ -380,100 +382,137 @@ VMAF v0.6.1, master → aynı kırpım/ölçek (lanczos) referansına karşı, o
 | t56 | ileri | 72 | 23/25/30 | 626 | 386 | 378 | 666 | 418 | 99,8/99,8/99,8 (92,5) | 99,6/99,8 |
 | r65 | geri | 72 | 26/28/34 | 501 | 288 | 290 | 541 | 316 | 99,0/99,3/99,6 (86,2) | 98,4/99,4 |
 | p6 | poster WebP q80 (plaka, broşürsüz) | 1 | — | 26 | | | 28 | | — | — |
-| **video toplamı** | | | | **10.199** | **8.254** | **9.234** | **9.801** | **9.073** | | |
-| poster toplamı | | | | 474 | | | 460 | | | |
+| **video toplamı** | | | | **10.250** | **8.248** | **9.064** | **9.833** | **8.907** | | |
+| poster toplamı | | | | 424 | | | 406 | | | |
 
-Bütçe (§11.2-3; MB). İlk yükleme = HTML+JS+CSS+font 0,5 + t01 + p1 + l1 + t12; d_j varışında **kritik yol** =
-t(j→j+1) + l(j+1) + p(j+1), **pencere** = kritik + r(j→j−1); set = video + poster; **tam tur oturumu (0→10)** = set +
-1,27 MB medya dışı (W-B2 ölçümü: oturum 11,82 − set 10,55; font, JS, HTML, broşür görselleri), d10 dönüşü önbellekten.
+**C → D (kB; yalnız değişen dosyalar).** l3 H.264/HEVC, t34 H.264/HEVC ve r43/l4/t45/r54/l5/t56/r65/p4/p5/p6 C ile aynı
+özetle çıktı (47 dosya, bayt bayt aynı). t34 AV1 ve l3 AV1, C'nin ayrı seçenek kodlamalarıyla aynı baytta (1.042,2 /
+498,3 kB dikey).
 
-| Set | İlk yükleme ≤ 2,5 | kritik d1 · d2 · d3 · d4 · d5 (≤ 1,8) | pencere d1 · d2 · d3 · d4 · d5 (≤ 2,5) | Set ≤ 15 | Tam tur oturumu (≤ 12, AV1) |
+| Klip | dikey H.264 | dikey HEVC | dikey AV1 | yatay H.264 | yatay AV1 |
 |---|---|---|---|---|---|
-| dikey H.264 | 1,98 ✓ | 1,09 · **1,93** · 1,17 · 0,99 · 0,65 ✗ | 1,30 · 2,38 · 2,44 · 2,08 · 1,18 ✓ | 10,67 ✓ | 11,94 |
-| dikey HEVC | 1,84 ✓ | 0,91 · 1,72 · 1,10 · 0,67 · 0,41 ✓ | 1,09 · 2,10 · 2,08 · 1,58 · 0,81 ✓ | 8,73 ✓ | 10,00 |
-| dikey AV1 | 1,67 ✓ | 0,91 · **2,03** · 1,43 · 0,80 · 0,40 ✗ | 1,08 · 2,40 · **2,56** · 1,80 · 0,88 ✗ | 9,71 ✓ | 10,98 ✓ |
-| yatay H.264 | 1,77 ✓ | 0,91 · **1,95** · 1,15 · 0,98 · 0,69 ✗ | 1,09 · 2,38 · 2,41 · 1,98 · 1,22 ✓ | 10,26 ✓ | 11,53 |
-| yatay AV1 | 1,51 ✓ | 0,79 · **2,12** · 1,38 · 0,76 · 0,45 ✗ | 0,95 · 2,46 · **2,57** · 1,76 · 0,89 ✗ | 9,53 ✓ | 10,80 ✓ |
+| t01 | 258,8 → 259,5 (+0,6) | 288,0 → 276,7 (−11,3) | 218,8 → 220,1 (+1,3) | 234,5 → 234,2 (−0,3) | 204,4 → 203,7 (−0,6) |
+| r10 | 205,0 → 202,2 (−2,9) | 185,7 → 186,3 (+0,6) | 177,0 → 177,0 (0,0) | 178,4 → 179,1 (+0,7) | 166,9 → 166,2 (−0,7) |
+| l1 | 462,2 → **523,8 (+61,6)** | 426,6 → 425,9 (−0,8) | 411,4 → 410,0 (−1,4) | 358,5 → **377,7 (+19,2)** | 321,2 → 318,7 (−2,6) |
+| p1 | 72,0 → 72,3 (+0,2) | | | 55,8 → 55,9 (+0,0) | |
+| t12 | 685,9 → 682,4 (−3,5) | 552,5 → 552,0 (−0,5) | 470,2 → 470,7 (+0,5) | 626,1 → 625,7 (−0,4) | 433,3 → 433,1 (−0,2) |
+| r21 | 452,8 → 452,1 (−0,8) | 374,4 → 376,2 (+1,9) | 361,9 → 359,7 (−2,2) | 430,0 → 431,3 (+1,3) | 339,7 → 339,5 (−0,2) |
+| l2 | 340,1 → 347,2 (+7,2) | 285,6 → 292,8 (+7,2) | 368,0 → 368,7 (+0,7) | 220,9 → 227,5 (+6,6) | 291,1 → 290,9 (−0,1) |
+| p2 | 68,9 → 68,4 (−0,5) | | | 61,5 → 60,5 (−1,0) | |
+| t23 | 1.383,2 → 1.376,7 (−6,5) | 1.242,9 → 1.233,8 (−9,2) | 1.282,8 → 1.281,2 (−1,7) | 1.373,8 → 1.375,8 (+2,0) | 1.324,0 → 1.334,4 (+10,3) |
+| r32 | 1.276,5 → 1.272,1 (−4,5) | 975,4 → 982,1 (+6,8) | 1.129,9 → 1.127,7 (−2,2) | 1.256,4 → 1.259,0 (+2,6) | 1.186,4 → 1.186,4 (+0,1) |
+| l3 | aynı | aynı | 533,3 → **498,3 (−35,0)** | aynı | 568,7 → **532,1 (−36,6)** |
+| p3 | 218,3 → **168,6 (−49,8)** | | | 229,4 → **176,2 (−53,2)** | |
+| t34 | aynı | aynı | 1.172,0 → **1.042,2 (−129,8)** | aynı | 1.181,6 → **1.045,7 (−135,9)** |
+| **video** | 10.199 → 10.250 (+51,3) | 8.254 → 8.248 (−5,3) | 9.234 → 9.064 (−170,0) | 9.801 → 9.833 (+31,7) | 9.073 → 8.907 (−166,6) |
+| **set (video + poster)** | 10.673 → 10.674 (+1,2) | 8.727 → 8.672 (−55,4) | 9.707 → 9.487 (−220,1) | 10.261 → 10.239 (−22,4) | 9.533 → 9.312 (−220,7) |
 
-- **Tutanlar:** ilk yükleme 1,51–1,98 MB ✓; set 8,73–10,67 MB/kodek ✓; tam tur oturumu AV1 dikey 10,98 / yatay 10,80 MB ✓
-  (H.264 11,94 / 11,53, HEVC 10,00); HEVC'de kritik ve pencere ✓; H.264'te pencere ✓ (en çok 2,44).
-- **Kritik yol d2 aşılıyor:** H.264 dikey 1,93 / yatay 1,95, AV1 2,03 / 2,12 MB ✗ (≤ 1,8). d2 = t23 + l3 + p3; t23 tek
-  başına 1,24–1,38 MB. H.264'te zones olmadan 1,81 / 1,83 idi (zones +0,11). AV1'de l3 533 / 569 kB: yakın-durağan
-  sahnenin tek I-karesi CRF 30'da H.264 CRF 23'ten daha ayrıntılı (VMAF 97,2 ↔ 95,5).
-- **Pencere d3 AV1 2,56 / 2,57 MB ✗** (t34 1,17 + l4 0,21 + p4 0,05 + r32 1,13); H.264 ve HEVC ✓.
-- B'ye göre (eski adım tanımı t + l + p + r): d2 dikey H.264 2,72 → 2,38, d3 2,66 → 2,44 MB; t23 H.264 1,87 → 1,38 MB,
-  t34 1,47 → 0,95 MB. Döngü ve geri tabana dönünce set +0,1–0,2 MB büyüdü (H.264 10,55 → 10,67).
-- **Ölçülmüş seçenekler** (dikey, ayrı kodlama, teslim EDİLMEDİ; kB ve VMAF ort. (en düşük)): p3 q68 168,6 (−49,8);
-  l3 H.264 CRF 25 274,2 (−50,1; 94,7); l3 AV1 CRF 32 498,3 (−35,0; 97,1), CRF 34 468,9 (−64,4; 97,0); t23 AV1 CRF 34
-  1.128,0 (−154,8; 94,4 (76,8) — H.264 t23 94,1 ile eş); t34 AV1 CRF 34 1.042,2 (−129,8; 98,6); r32 AV1 CRF 36 969,9
-  (−160,0; 92,6 (68,9)). Örnek hesap: AV1'de t23 CRF 34 + l3 CRF 34 + p3 q68 → kritik d2 2,03 → 1,77 ✓; t34 CRF 34 →
-  pencere d3 2,56 → 2,43 ✓. H.264'te p3 q68 + l3 CRF 25 → 1,93 → 1,83 (yine ✗); üstüne zones da kaldırılırsa 1,71 ama t23 → l3
-  3,21 ✗. Karar orkestratörün.
+- **l1 H.264 büyüdü:** dikey +61,6 kB (+%13), yatay +19,2 kB. VMAF yerinde: dikey 93,8 → 93,8, yatay 94,1 → 94,6. Paket
+  boyutu: I-kare 108,0 → 101,4 kB, P/B ortalaması 2.957 → 3.538 bayt (+%20). HEVC ve AV1'de l1 değişmedi (−0,8 / −1,4
+  kB). S1-D2'de döngüler artık sabit tohumlu (ardışık master farkı l1 0,259 → 0,115/255). Nedeni ölçülmedi. Varsayım:
+  gürültü deseni ekranda sabit kalıyor, dünya dönüyor; x264'ün hareket dengelemesi ikisini birlikte öngöremiyor. CRF
+  değiştirilmedi (§11.6). Bu artış ilk yüklemeye giriyor (H.264 dikey 1,98 → 2,04 MB, sınırın altında).
+- l2 H.264/HEVC +7 kB, t01 HEVC −11 kB; öteki yeni master'lar ±10 kB içinde.
 
-**p3 poster kalitesi (§11.2-4).** Aynı filtre zinciri (kırpım + lanczos + rgb24 → libwebp, `-compression_level 6`);
-WebP libwebp ile (Pillow) çözüldü; ΔE00 piksel ortalaması.
+Bütçe (§11.2-3 tanımı, §11.6-1 sınırları; MB). İlk yükleme = HTML+JS+CSS+font 0,5 + t01 + p1 + l1 + t12. d_j
+varışında **kritik yol** = t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8 MB (**d2 istisnası ≤ 2,1**). **Pencere** = kritik + r(j→j−1)
+≤ 2,5 MB (**AV1 d3 istisnası ≤ 2,6**). Set = video + poster. **Tam tur oturumu (0→10)** = set + 1,27 MB medya dışı
+(W-B2 ölçümü: oturum 11,82 − set 10,55; font, JS, HTML, broşür görselleri); d10 dönüşü önbellekten.
+
+| Set | İlk yükleme ≤ 2,5 | kritik d1 · d2 · d3 · d4 · d5 (≤ 1,8; d2 ≤ 2,1) | pencere d1 · d2 · d3 · d4 · d5 (≤ 2,5; AV1 d3 ≤ 2,6) | Set ≤ 15 | Tam tur oturumu (≤ 12, AV1) |
+|---|---|---|---|---|---|
+| dikey H.264 | 2,04 ✓ | 1,10 · **1,87** · 1,17 · 0,99 · 0,65 ✓ | 1,30 · 2,32 · 2,44 · 2,08 · 1,18 ✓ | 10,67 ✓ | 11,94 |
+| dikey HEVC | 1,83 ✓ | 0,91 · 1,66 · 1,10 · 0,67 · 0,41 ✓ | 1,10 · 2,04 · 2,08 · 1,58 · 0,81 ✓ | 8,67 ✓ | 9,94 |
+| dikey AV1 | 1,67 ✓ | 0,91 · **1,95** · 1,30 · 0,80 · 0,40 ✓ | 1,08 · 2,31 · 2,43 · 1,80 · 0,88 ✓ | 9,49 ✓ | 10,76 ✓ |
+| yatay H.264 | 1,79 ✓ | 0,91 · **1,90** · 1,15 · 0,98 · 0,69 ✓ | 1,09 · 2,33 · 2,41 · 1,98 · 1,22 ✓ | 10,24 ✓ | 11,51 |
+| yatay AV1 | 1,51 ✓ | 0,79 · **2,04** · 1,25 · 0,76 · 0,45 ✓ | 0,95 · 2,38 · 2,43 · 1,76 · 0,89 ✓ | 9,31 ✓ | 10,58 ✓ |
+
+- **§11.6-1 tanımıyla hepsi tutuyor.** İlk yükleme 1,51–2,04 MB. Kritik yol d2 1,66–2,04 MB (≤ 2,1). Öteki duraklarda
+  kritik en çok 1,30. Pencere en çok 2,44 (dikey H.264 d3); AV1 d3 2,43 / 2,43, yani ≤ 2,5 bile, istisnaya gerek
+  kalmadı. Set 8,67–10,67 MB. AV1 tam tur oturumu 10,76 / 10,58 MB.
+- **Katı 1,8 sınırıyla d2 hâlâ aşılıyor:** H.264 1,87 / 1,90, AV1 1,95 / 2,04; HEVC 1,66 ✓. d2 = t23 (1,23–1,38) + l3 +
+  p3. Kodlama dogrulama çıktısında katı sonuç `kritik_katı_tamam` alanında.
+- **C → D:** kritik d2 H.264 1,93 → 1,87 / 1,95 → 1,90, HEVC 1,72 → 1,66, AV1 2,03 → 1,95 / 2,12 → 2,04. Pencere d3 AV1
+  2,56 → 2,43 / 2,57 → 2,43. Set AV1 −0,22 MB, H.264 dikey +0,001 MB (p3 −49,8 kB ile l1 +61,6 kB birbirini götürüyor).
+  Brief §11.6-1'in "AV1 d3 penceresi ≈ 2,4 MB" tahmini tuttu (2,43).
+- **C'de ölçülen seçeneklerden** (dikey, ayrı kodlama) §11.6-1 ile t34 AV1 CRF 34, l3 AV1 CRF 32 ve p3 q68 uygulandı.
+  Uygulanmayanlar: t23 AV1 CRF 34 (1.128,0 kB, −154,8; en kötü kare VMAF 76,8), l3 AV1 CRF 34 (468,9 kB, VMAF 97,0), l3
+  H.264 CRF 25 (274,2 kB, 94,7) ve r32 AV1 CRF 36 (969,9 kB, en kötü kare 68,9).
+
+**p3 poster kalitesi (§11.2-4, §11.6-2).** C turundaki merdiven (aynı filtre zinciri: kırpım + lanczos + rgb24 → libwebp,
+`-compression_level 6`; libwebp ile çözüldü; ΔE00 piksel ortalaması). D teslimi **q68**.
 
 | q | dikey kB | ΔE00 q80'e | ΔE00 master'a | yatay kB | ΔE00 q80'e | ΔE00 master'a |
 |---|---|---|---|---|---|---|
 | 60 | 154,8 | 2,85 | 3,39 | 160,5 | 3,02 | 3,57 |
-| 68 | 168,6 | 2,66 | 3,26 | 176,2 | 2,83 | 3,42 |
+| **68 (D teslimi)** | **168,6** | 2,66 | 3,26 | **176,2** | 2,83 | 3,42 |
 | 70 | 172,2 | 2,62 | 3,23 | 180,4 | 2,76 | 3,39 |
 | 72 | 176,2 | 2,56 | 3,20 | 184,4 | 2,71 | 3,36 |
 | 74 | 180,6 | 2,51 | 3,17 | 191,1 | 2,62 | 3,29 |
 | 76 | 190,0 | 2,33 | 3,08 | 199,1 | 2,48 | 3,23 |
 | 78 | 203,2 | 2,03 | 2,99 | 211,6 | 2,18 | 3,14 |
-| **80 (teslim)** | **218,3** | 0 | 2,86 | **229,4** | 0 | 3,01 |
+| 80 (C teslimi) | 218,3 | 0 | 2,86 | 229,4 | 0 | 3,01 |
 
-Koşul (q80'e göre ΔE00 ≤ 1,0) hiçbir kalitede tutmuyor: p3 çok ayrıntılı arazi ve her kalite basamağı piksel
-düzeyinde ~2 ΔE00 doku gürültüsü üretiyor (8×8 blok ortalamasında bile q78 1,12, q68 1,28). 150 kB hedefi q60'ta bile
-aşılıyor (154,8). 2× büyütmede q68 ile q80 arasında yalnız hafif yumuşama görülüyor; ölçüt "master'a uzaklık q80'e
-göre en çok +1,0" olsaydı q68 seçilirdi (dikey +0,40, yatay +0,41; −49,8 / −53,2 kB). Karar orkestratörün:
-`--poster-q p3=68`.
+§11.6-2 ölçütü "master'a uzaklık, q80'e göre en çok +1,0 ΔE00" biçiminde okundu. q68 bunu sağlıyor: dikey +0,40, yatay
++0,41. D'de kodlanan p3 boyutu merdivendekiyle aynı: 168,6 / 176,2 kB (−49,8 / −53,2). Bedeli dikişte görülüyor: t23 son →
+p3 posteri AV1'de 3,02 → 3,24 (dikey) ve 3,19 → 3,37 (yatay). H.264/HEVC'de 3,20 → 3,18 / 3,52 → 3,45.
 
 Dikişler (kodlanmış, ΔE00 ortalaması; aynı kodek ve kırpım; parantezde hedef posterine karşı):
 
 | Dikiş (ΔE00 ort.) | dikey H.264 | dikey HEVC | dikey AV1 | yatay H.264 | yatay AV1 |
 |---|---|---|---|---|---|
-| t01 son → l1 0 (poster) | 1,53 (1,79) | 1,37 (1,85) | 1,14 (1,66) | 1,21 (1,62) | 0,91 (1,52) |
-| t12 son → l2 0 (poster) | 1,67 (1,89) | 1,65 (1,88) | 1,59 (1,84) | 1,53 (1,73) | 1,45 (1,68) |
-| t23 son → l3 0 (poster) | 2,66 (3,20) | 2,97 (3,52) | 2,21 (3,02) | 2,79 (3,30) | 2,36 (3,19) |
-| t34 son → l4 0 (poster) | 1,30 (1,93) | 1,39 (1,90) | 1,08 (1,73) | 1,27 (1,82) | 1,06 (1,70) |
+| t01 son → l1 0 (poster) | 1,19 (1,79) | 1,16 (1,77) | 1,11 (1,65) | 0,98 (1,64) | 0,92 (1,49) |
+| t12 son → l2 0 (poster) | 1,66 (1,88) | 1,64 (1,87) | 1,59 (1,83) | 1,53 (1,71) | 1,45 (1,67) |
+| t23 son → l3 0 (poster) | 2,67 (3,18) | 2,95 (3,45) | 2,20 (3,24) | 2,78 (3,25) | 2,37 (3,37) |
+| t34 son → l4 0 (poster) | 1,30 (1,93) | 1,39 (1,90) | 1,10 (1,72) | 1,27 (1,82) | 1,09 (1,73) |
 | t45 son → l5 0 (poster) | 1,31 (1,61) | 1,34 (1,60) | 1,27 (1,58) | 1,35 (1,67) | 1,27 (1,61) |
 | t56 son → p6, dikdörtgen dışı 0 / 45 px pay (tüm kare) | 2,13 / 1,08 (11,0) | 2,24 / 1,19 (11,1) | 2,18 / 1,12 (11,0) | 2,15 / 1,10 (11,0) | 2,17 / 1,12 (11,0) |
-| kalkış l2 0 → t23 0 | 1,56 | 1,57 | 1,32 | 1,39 | 1,33 |
-| kalkış l3 0 → t34 0 | 2,93 | 2,78 | 2,36 | 3,00 | 2,49 |
-| geri r21 son → l1 0 | 1,63 | 1,58 | 1,36 | 1,35 | 1,17 |
-| geri r32 son → l2 0 | 1,81 | 1,83 | 1,60 | 1,65 | 1,48 |
-| geri r43 son → l3 0 | 3,48 | 3,42 | 2,88 | 3,60 | 3,00 |
+| kalkış l1 0 → t12 0 | 1,00 | 0,95 | 0,94 | 0,95 | 0,76 |
+| kalkış l2 0 → t23 0 | 1,54 | 1,55 | 1,33 | 1,39 | 1,25 |
+| kalkış l3 0 → t34 0 | 2,93 | 2,78 | 2,44 | 3,00 | 2,59 |
+| geri r21 son → l1 0 | 1,46 | 1,65 | 1,37 | 1,21 | 1,18 |
+| geri r32 son → l2 0 | 1,82 | 1,84 | 1,62 | 1,66 | 1,47 |
+| geri r43 son → l3 0 | 3,48 | 3,42 | 2,88 | 3,60 | 2,99 |
 | geri r54 son → l4 0 | 1,41 | 1,51 | 1,24 | 1,32 | 1,23 |
 | geri r65 son → l5 0 | 1,45 | 1,48 | 1,28 | 1,52 | 1,32 |
-| t34 47 ↔ 48 fark /255 (komşu 43–47) | 0,002 (0,00–0,12) | 0,005 (0,00–0,02) | 0,979 (0,97–1,00) | 0,003 (0,00–0,30) | 0,985 (0,98–1,03) |
+| t34 47 ↔ 48 fark /255 (komşu 43–47) | 0,002 (0,00–0,12) | 0,005 (0,00–0,02) | 0,471 (0,02–0,47) | 0,003 (0,00–0,30) | 0,405 (0,40–0,73) |
 
-- **Dikiş özeti:** t23 → l3 zones sonrası 2,21–2,97 ✓ (hedef ≤ 3; posterine karşı 3,02–3,52, poster WebP ile video
-  I-karesi arasındaki fark payı +0,5). r32 son → l2 0 1,48–1,83 ✓. Kalkış l3 0 → t34 0 2,36–3,00 (B 2,73–3,31).
-  **Geri r43 son → l3 0 2,88–3,60** (kabul listesinde yok; geri CRF'de GOP sonundaki yumuşak kare ↔ l3 I-karesi):
-  r43'e zones 62–71 CRF −4 denendi → H.264 3,48 → 2,96 dikey / 3,60 → 3,10 yatay, HEVC 3,42 → 2,88; bedeli +166 / +153
-  / +174 kB → uygulanmadı.
-- **t56 → p6:** p6 artık broşürsüz (§11.1 S2-C 2); tüm karede 11,0 beklenen fark (kapak + yığın t56'da var, DOM broşür
-  örter). Broşür dikdörtgeninin dışında 2,13–2,24, 45 master px pay ile 1,08–1,19 (öteki poster dikişleri 1,5–1,9):
-  aradaki bant yığının taşan kâğıtları ve gölgesi (S2-C ölçümü ≤ 37 master px).
-- **t34 47 ↔ 48** (yatayda kırpım 200 → 420 basamağı burada): H.264/HEVC 0,002–0,005/255; AV1 0,98/255, ama komşu düz
-  kareler arasında da 0,97–1,03 (SVT-AV1'in hiyerarşik QP katmanları düz kremde ±1 seviye oynatıyor; kırpımdan değil,
-  master'da 47 ↔ 48 16 bit farkı 0). Kare 47 tonu #FFF1DC'ye ΔE00 0,51–1,09.
-- **Döngü kapanışı** (son→ilk / ardışık ortalama, /255; ΔE00 son→ilk ≤ 0,97): I-kare sıçraması sürüyor (§11.4 kabul),
-  en belirgin l1 H.264 1,55 / 0,18 (dikey), 1,14 / 0,13 (yatay); l3'te 0,00–0,17.
-- **VMAF ≥ 90: 85/85 dosya ✓.** İleri 94,0–99,8, döngü 93,4–97,2, geri 91,7–99,6; en düşük r32 H.264 dikey 91,7 (B'de
-  +2 CRF'le 85,7). t23/t34 (CRF 26/27/32) 94,0–96,0 / 97,4–98,7: t23 için beklenen ≥ 93 tuttu.
-- **Kodek dizeleri** (MP4 örnek tanımından): `avc1.64001f` 34/34, `hvc1.1.6.L93.90` 17/17 (manifest de bu), `av01.0.05M.08`
-  34/34 ✓; kare sayıları 85/85 fragmanla eşit.
-- **Süre:** tam set 227 s (97 dosya; 6 çekirdek, GPU ajanları bitmişti); t23 + t34 yeniden (zones) 63 s; doğrulama +
-  22 FFV1 referansı + 85 VMAF 8 dk 08 s. Kodlama deterministik: B ile aynı master ve ayardaki 27 dosya (t01/t12/t45/t56
-  ileri, p1/p2/p5, p3 dikey) aynı özetle çıktı.
-- **Teslim:** `public/icinden` 97 listedeki dosya + `kart-icinden.webp` = 98 dosya, 47.548.632 bayt; fazla 0, eksik 0;
-  manifestteki 97 yolun hepsi diskte. Kapak tonu (t56 k_0071) B ile aynı: saturate 0,934, contrast 0,894, brightness
-  1,0, sepia 0,057 (RMS 5,8/255).
+- **Dikiş özeti (C ile karşılaştırma):**
+  - t23 → l3 2,20–2,95 ✓ (C 2,21–2,97).
+  - r32 son → l2 0 1,47–1,84 ✓ (C 1,48–1,83).
+  - t12 → l2 1,45–1,66 (C 1,45–1,67).
+  - t01 → l1 0,92–1,19; C 0,91–1,53 idi, H.264'te 1,53 → 1,19.
+  - Kalkış l3 → t34 2,44 / 2,59 AV1 (C 2,36 / 2,49): l3 AV1 CRF 32, t34 AV1 CRF 34. H.264/HEVC aynı, en çok 3,00 (yatay H.264).
+  - Geri r43 → l3 H.264/HEVC aynı (3,42–3,60, §11.6-5 kabul), AV1 2,88 / 2,99.
+  - t56 → p6 bayt bayt aynı (§11.6-3 kabul).
+- **t34 47 ↔ 48** AV1'de CRF 34 ile 0,979 → 0,471 (dikey) ve 0,985 → 0,405 (yatay) /255 (§11.6-4 kabul). H.264/HEVC aynı
+  (0,002–0,005). Kare 47 tonu #FFF1DC'ye ΔE00 0,51–0,88.
+- **Döngü kapanışı** (son→ilk / ardışık ortalama, /255; ΔE00 son→ilk ≤ 0,59): I-kare sıçraması sürüyor (§11.4 kabul) ama
+  sabit tohumlu l1'de azaldı. H.264 dikey 1,55 / 0,18 → 1,15 / 0,16 (ΔE00 0,97 → 0,59), yatay 1,14 / 0,13 → 0,86 / 0,11.
+  l2 H.264 0,77 → 0,75; l3'te 0,00–0,17.
+- **VMAF ≥ 90: 85/85 dosya ✓.** İleri 93,7–99,8, döngü 93,7–97,3, geri 91,7–99,6. En düşük r32 H.264 dikey 91,7 (en kötü
+  kare 80,4); en düşük tek kare r32 AV1 yatay 71,8 (C 71,7). t23 93,7–95,9 (C 94,0–96,0), t34 AV1 98,6 / 98,5 (C 98,7 /
+  98,5), l3 AV1 97,1 / 97,1 (C 97,2 / 97,1). l1/l2 aynı ya da biraz yüksek (93,7–95,8).
+- **Kodek dizeleri** (MP4 örnek tanımından): `avc1.64001f` 34/34, `hvc1.1.6.L93.90` 17/17, `av01.0.05M.08` 34/34 ✓.
+  Kare sayıları 85/85 fragmanla eşit.
+- **Katara (§11.6-6) posterlerde** (K-D; S1-D2 bölge tanımı: maske farkının izdüşümü, 2 px aşındırılmış; çevre = 8–20
+  master px halka; iç − çevre, RGB /255):
+  - p2 dikey: C −89,0 / −68,1 / −36,7 → D −12,5 / −17,9 / −29,9 (ΔE00 31,0 → 7,0). Yatay −12,1 / −17,9 / −29,7.
+  - p1 (Katara 37 poster px): dikey C −77,0 / −65,7 / −37,5 → D +16,1 / +9,0 / −7,3.
+  - Kartta: +12,5 / +8,3 / −10,0.
+  - **±15/255 ölçütü p2'de G ve B'de, p1'de R'de tutmuyor.** Kalan fark BMNG dokusunun kendi farkı: aynı piksellerde
+    doku −20,7 / −23,7 / −27,3. Render − doku farkı ≤ 8,6 (p2) ve ≤ 5,3 (p1).
+  - Kara-yalnız coğrafi halkayla (0,35–1,0°, Akdeniz dışarıda) p1 −7,1 / −8,9 / −17,8, p2 −7,3 / −11,8 / −23,0. B kanalı yine ✗.
+  - Koyu göl lekesi yok. Kırpım: K-D scratchpad `katara-poster.png`.
+- **Süre:**
+  - Tek komut zinciri 3 dk 46 s: t34-birlestir, 97 dosyanın kodlaması (222 s), kapak-ton, manifest ve kart.
+  - Doğrulama 7 dk 57 s: dikişler, 10 yeni FFV1 referansı (t01/l1/t12/l2/t23) ve 85 VMAF.
+  - C turunun bayatlamış 10 referansı silindi (352 MB); önbellekte 22 referans kaldı (863 MB).
+- **Teslim:** `public/icinden` 97 listedeki dosya + `kart-icinden.webp` = 98 dosya, 47.185.340 bayt (C 47.548.632); fazla 0,
+  eksik 0. Manifestteki 97 yolun hepsi diskte. Kart l1[0]'dan yeniden üretildi: 1200×600, q78, 53.962 bayt. Kapak tonu
+  (t56 k_0071) aynı: saturate 0,934, contrast 0,894, brightness 1,0, sepia 0,057 (RMS 5,8/255).
 
-Eski tahmin (R4, ağır vekil set): H.264 ~16 MB, HEVC ~12, AV1 ~10 — gerçek dikey video (C) 10,2 / 8,3 / 9,2 MB.
+Eski tahmin (R4, ağır vekil set): H.264 ~16 MB, HEVC ~12, AV1 ~10. Gerçek dikey video: C 10,2 / 8,3 / 9,2 MB, D 10,3 / 8,2 / 9,1 MB.
 
 ## 6. iOS riskleri (gerçek cihazda sınanmadı)
 

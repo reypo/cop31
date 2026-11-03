@@ -387,12 +387,12 @@ Kodlama: H.264 High 4.0, yuv420p, 30 fps, ses izi YOK (`-an`), `+faststart`, GOP
 x264 `veryslow`, `tune film`. Boyutlar **tahmindir**; ilk render'da `ffprobe` ile ölçülüp tablo güncellenir.
 Kalite hedefi: master'a karşı VMAF ≥ 90 (ffmpeg'de libvmaf varsa).
 
-| Varlık | Adet | Süre | Hedef | Tahmini boyut | **Ölçülen (C turu, dikey H.264 / HEVC / AV1)** |
+| Varlık | Adet | Süre | Hedef | Tahmini boyut | **Ölçülen (D turu, dikey H.264 / HEVC / AV1)** |
 |---|---|---|---|---|---|
-| İleri geçiş t01, t12, t23, t34, t45, t56 | 6 | 1,8–2,8 s | CRF 23 / 25 / 30; **t23, t34: 26 / 27 / 32** (§11.2-2); t23 H.264 son 10 kare −4 (`zones`, §11.2-6) | 500–660 KB | t01 259/288/219 · t12 686/553/470 · **t23 1.383/1.243/1.283** · **t34 951/947/1.172** · t45 768/550/602 · t56 626/386/378 kB (B: t23 1.867/1.551/1.471, t34 1.468/1.278/1.397) |
-| Geri geçiş r10…r65 | 6 | aynı | CRF 26 / 28 / 34 (C: B'deki +2 geri alındı) | 300–420 KB | 205/186/177 · 453/374/362 · 1.277/975/1.130 · 1.085/910/1.003 · 529/401/474 · 501/288/290 kB |
-| Döngü l1–l5 | 5 | 4–5 s | CRF 23 / 25 / 30 (C: +2 geri alındı) | 300–450 KB | 462/427/411 · 340/286/368 · 324/260/533 · 170/108/211 · 180/72/151 kB |
-| Poster p1–p6 | 6 | — | WebP q80, 720×1.280 | 60–110 KB | 72 · 69 · **218** · 45 · 44 · 26 kB (yatay 56 · 62 · 229 · 38 · 46 · 28; p6 broşürsüz, yatay p3 kırpım 200); p3 q68–76 denendi, q80'e göre ΔE00 ≤ 1,0 tutmadı → q80 |
+| İleri geçiş t01, t12, t23, t34, t45, t56 | 6 | 1,8–2,8 s | CRF 23 / 25 / 30; **t23, t34: 26 / 27 / 32** (§11.2-2); t23 H.264 son 10 kare −4 (`zones`, §11.2-6) | 500–660 KB | t01 259/277/220 · t12 682/552/471 · **t23 1.377/1.234/1.281** · **t34 951/947/1.042** (AV1 CRF 34, §11.6-1) · t45 768/550/602 · t56 626/386/378 kB (C: t23 1.383/1.243/1.283, t34 AV1 1.172; B: t23 1.867/1.551/1.471, t34 1.468/1.278/1.397) |
+| Geri geçiş r10…r65 | 6 | aynı | CRF 26 / 28 / 34 (C: B'deki +2 geri alındı) | 300–420 KB | 202/186/177 · 452/376/360 · 1.272/982/1.128 · 1.085/910/1.003 · 529/401/474 · 501/288/290 kB |
+| Döngü l1–l5 | 5 | 4–5 s | CRF 23 / 25 / 30 (C: +2 geri alındı) | 300–450 KB | 524/426/410 · 347/293/369 · 324/260/**498** (l3 AV1 CRF 32, §11.6-1) · 170/108/211 · 180/72/151 kB (C: l1 462/427/411, l3 AV1 533) |
+| Poster p1–p6 | 6 | — | WebP q80, 720×1.280 | 60–110 KB | 72 · 68 · **169** (p3 q68, §11.6-2) · 45 · 44 · 26 kB (yatay 56 · 61 · 176 · 38 · 46 · 28; p6 broşürsüz, yatay p3 kırpım 200); C: p3 q80 218 / 229 |
 | Broşür fotoğrafları (v2) | ~6 | — | mevcut `public/photos` | ~0,9 MB | (ölçülmedi) |
 
 **Ölçüm (C turu, 3 Kasım, kodlama ajanı K-C; ayrıntı, VMAF ve dikişler `docs/klip-oynatma.md` §5; MB = 10⁶ bayt).**
@@ -674,7 +674,7 @@ R1 §3 metni birebir: Sentinel ("Contains modified Copernicus Sentinel data 2025
 R3 §7.5'in 10 sorusu + "Akdeniz ara durağı" + "16.00 güneşi" + fuar alanı Wi-Fi/mobil hızı (R4: 1,6 Mbps'de site
 poster kipine düşer).
 
-## 10. Uygulama ve ölçüm (B turu W-B2; C turu W-C, 3 Kasım 2026)
+## 10. Uygulama ve ölçüm (B turu W-B2; C turu W-C; D turu W-D, 3 Kasım 2026)
 
 Girdi (C): Cycles 1920² son render (`render-son`; S1-C t23/t34a, S2-C t34b/l4/p6 yeniden), K-C'nin kodladığı set (§6
 tablosu, `docs/klip-oynatma.md` §5; 97 dosya + kart, 47,5 MB) ve `src/components/icinden/klipler.json` (`kaynak:
@@ -683,67 +683,86 @@ tablosu, `docs/klip-oynatma.md` §5; 97 dosya + kart, 47,5 MB) ve `src/component
 lombar, kapak, dalis, d3yatay, okuma) + `scripts/icinden/scrim-olc.mjs`; çıktılar `.qa/icinden3/c/` (B turu
 `.qa/icinden3/b2/`). Blender/GPU boşta (nvidia-smi %0), CPU yükü perf başında %4–5. Parantez içi: B turu.
 
+**D turu (W-D):** girdi S1-D2'nin yeni su maskesiyle (Katara, §11.6-6) yeniden render ettiği t01/l1/t12/l2/t23 ve K-D'nin
+§11.6-1/2 bayraklarıyla kodladığı set (97 dosya + kart, 47,19 MB; manifestte yalnız dosya/bayt/lqip/oluşturma alanları
+değişti, öteki alanlar C ile birebir). Aynı ölçüm zinciri scratchpad `d/w-d/` kopyasıyla (`icinden3.mjs`'e `katara`
+senaryosu, `boyut`/`lazy`'ye konsol hatası alanı eklendi); çıktılar `.qa/icinden3/d/`. Kod değişikliği yok. GPU %0,
+Blender yok; CPU yükü perf başında %14 / %6. Aşağıda **"C → D"** yazan sayılar D'de değişti; ötekiler D'de yeniden
+ölçüldü ve C ile aynı çıktı.
+
 ### 10.1 Gerçek boyutlar ve bütçe
 
 - **JS** (prerender HTML'deki betikler, gzip -9): `/icinden` toplam 205,0 kB; `/` ve `/dunya` ile ortak 187,1 kB;
   **rotaya özgü 17,8 kB ✓** (≤ 50; B 16,4 — fark F'nin motor düzeltmeleri). HTML 42,6 kB gz, RSC 22,0 kB gz (manifest
-  burada, JS'te değil).
-- **Medya** (K-C): dikey set video + poster H.264 10,67 / HEVC 8,73 / AV1 9,71 MB ✓ (≤ 15); yatay H.264 10,26 / AV1 9,53
-  (B: 10,55 / 8,49 / 9,50; yatay 10,75 / 9,99).
-- **Bütçe, §11.2-3 tanımıyla** (manifest baytları, MB = 10⁶; W-C `butce.py` ile bağımsız hesap, K-C'nin
-  `kodlama-dogrula.py` sonucuyla birebir). d_j'de kritik = t(j→j+1) + l(j+1) + p(j+1), pencere = kritik + r(j→j−1);
-  ilk yükleme = 0,5 + t01 + p1 + l1 + t12; oturum = set + 1,27:
+  burada, JS'te değil). D'de aynı (`js-boyut.json`).
+- **Medya** (K-C → K-D): dikey set video + poster H.264 10,67 → 10,67 / HEVC 8,73 → 8,67 / AV1 9,71 → 9,49 MB ✓ (≤ 15);
+  yatay H.264 10,26 → 10,24 / AV1 9,53 → 9,31 (B: 10,55 / 8,49 / 9,50; yatay 10,75 / 9,99).
+- **Bütçe, §11.2-3 tanımı, §11.6-1 sınırlarıyla (C turu → D turu)** (manifest baytları, MB = 10⁶; W-D `butce.py` ile
+  bağımsız hesap, K-D'nin `kodlama-dogrula.py` sonucuyla 75/75 değer birebir). d_j'de kritik = t(j→j+1) + l(j+1) +
+  p(j+1), pencere = kritik + r(j→j−1); ilk yükleme = 0,5 + t01 + p1 + l1 + t12; oturum = set + 1,27. Hücrelerde D;
+  değişenlerde parantez içi C:
 
-  | Set | İlk ≤ 2,5 | Kritik d1 · d2 · d3 · d4 · d5 (≤ 1,8) | Pencere d1 · d2 · d3 · d4 · d5 (≤ 2,5) | Oturum (≤ 12, AV1) |
+  | Set | İlk ≤ 2,5 | Kritik d1 · d2 · d3 · d4 · d5 (≤ 1,8; **d2 ≤ 2,1**) | Pencere d1 · d2 · d3 · d4 · d5 (≤ 2,5; **AV1 d3 ≤ 2,6**) | Oturum (≤ 12, AV1) |
   |---|---|---|---|---|
-  | dikey H.264 | 1,98 ✓ | 1,09 · **1,93** · 1,17 · 0,99 · 0,65 ✗ | 1,30 · 2,38 · 2,44 · 2,08 · 1,18 ✓ | 11,94 |
-  | dikey HEVC | 1,84 ✓ | 0,91 · 1,72 · 1,10 · 0,67 · 0,41 ✓ | 1,09 · 2,10 · 2,08 · 1,58 · 0,81 ✓ | 10,00 |
-  | dikey AV1 | 1,67 ✓ | 0,91 · **2,03** · 1,43 · 0,80 · 0,40 ✗ | 1,08 · 2,40 · **2,56** · 1,80 · 0,88 ✗ | 10,98 ✓ |
-  | yatay H.264 | 1,77 ✓ | 0,91 · **1,95** · 1,15 · 0,98 · 0,69 ✗ | 1,09 · 2,38 · 2,41 · 1,98 · 1,22 ✓ | 11,53 |
-  | yatay AV1 | 1,51 ✓ | 0,79 · **2,12** · 1,38 · 0,76 · 0,45 ✗ | 0,95 · 2,46 · **2,57** · 1,76 · 0,89 ✗ | 10,80 ✓ |
+  | dikey H.264 | 2,04 (1,98) ✓ | 1,10 (1,09) · **1,87** (1,93) · 1,17 · 0,99 · 0,65 ✓ | 1,30 · 2,32 (2,38) · 2,44 · 2,08 · 1,18 ✓ | 11,94 |
+  | dikey HEVC | 1,83 (1,84) ✓ | 0,91 · 1,66 (1,72) · 1,10 · 0,67 · 0,41 ✓ | 1,10 (1,09) · 2,04 (2,10) · 2,08 · 1,58 · 0,81 ✓ | 9,94 (10,00) |
+  | dikey AV1 | 1,67 ✓ | 0,91 · **1,95** (2,03) · 1,30 (1,43) · 0,80 · 0,40 ✓ | 1,08 · 2,31 (2,40) · 2,43 (**2,56**) · 1,80 · 0,88 ✓ | 10,76 (10,98) ✓ |
+  | yatay H.264 | 1,79 (1,77) ✓ | 0,91 · **1,90** (1,95) · 1,15 · 0,98 · 0,69 ✓ | 1,09 · 2,33 (2,38) · 2,41 · 1,98 · 1,22 ✓ | 11,51 (11,53) |
+  | yatay AV1 | 1,51 ✓ | 0,79 · **2,04** (2,12) · 1,25 (1,38) · 0,76 · 0,45 ✓ | 0,95 · 2,38 (2,46) · 2,43 (**2,57**) · 1,76 · 0,89 ✓ | 10,58 (10,80) ✓ |
 
-  d2 aşımı t23 (1,24–1,38 MB) + l3 + p3 (0,22); seçenekler K-C raporunda ve `klip-oynatma.md` §5 (karar orkestratörde).
-- **4G ölçümü** (4 Mbps / 50 ms, HTTP önbelleği kapalı, okur temposu 4 s/durak, d0'da 8 s boşta; dikey 390×844, yatay
-  1280×800; kodek `?kodek=` ile sabit). "Pencere" burada ölçülendir: d_j'ye geçiş + 4 s dinlenmede inen bayt.
+  §11.6-1 sınırlarıyla 5/5 set ✓; pencere katı 2,5'le de ✓ (AV1 d3 istisnasına gerek kalmadı). Katı 1,8'le d2 hâlâ
+  aşılıyor: H.264 1,87 / 1,90, AV1 1,95 / 2,04 (HEVC 1,66 ✓); d2 = t23 (1,23–1,38 MB) + l3 + p3 (0,17 / 0,18). C → D farkı
+  t34 AV1 CRF 34 (−130 / −136 kB), l3 AV1 CRF 32 (−35 / −37), p3 q68 (−50 / −53) ve l1 H.264 (+62 / +19 kB, S1-D2'nin
+  sabit tohumlu l1'i; K-D raporu).
+- **4G ölçümü (C turu → D turu)** (4 Mbps / 50 ms, HTTP önbelleği kapalı, okur temposu 4 s/durak, d0'da 8 s boşta;
+  dikey 390×844, yatay 1280×800; kodek `?kodek=` ile sabit). "Pencere" burada ölçülendir: d_j'ye geçiş + 4 s
+  dinlenmede inen bayt. Hücrelerde D; farkı ≥ 0,02 MB / 0,05 s olanlarda parantez içi C:
 
   | Set | d1 hazır | İlk yükleme (d1 hazır) | İlk yükleme, tanım (t12 de inmiş) | 8 s boşta | Pencere d1 · d2 · d3 · d4 · d5 · d6 | Oturum 0→10 + kapanış |
   |---|---|---|---|---|---|---|
-  | dikey H.264 | 3,33 s | 1,52 ✓ | 2,20 ✓ (4,8 s) | 3,93 | 1,70 · 1,44 · 2,13 · 1,11 · 0,81 · 0,81 ✓ | 11,95 |
-  | dikey AV1 | 3,13 s | 1,43 ✓ | 1,90 ✓ (4,1 s) | 3,55 | 2,10 · 1,22 · 1,70 · 1,03 · 0,76 · 0,60 ✓ | **10,98 ✓** |
-  | yatay H.264 | 3,02 s | 1,36 ✓ | 1,99 ✓ (4,4 s) | 3,59 | 1,72 · 1,37 · 2,16 · 1,02 · 0,67 · 0,65 ✓ | 11,19 |
-  | yatay AV1 | 2,88 s | 1,30 ✓ | 1,73 ✓ (3,8 s) | 3,35 | 2,15 · 1,10 · 1,80 · 1,04 · 0,59 · 0,43 ✓ | **10,46 ✓** |
+  | dikey H.264 | 3,47 s (3,33) | 1,58 (1,52) ✓ | 2,26 (2,20) ✓ (4,9 s) | 3,99 (3,93) | 1,65 (1,70) · 1,44 · 2,12 · 1,11 · 0,81 · 0,81 ✓ | 11,95 |
+  | dikey AV1 | 3,15 s | 1,43 ✓ | 1,90 ✓ (4,2 s; C 4,1) | 3,55 | **1,89** (2,10) · 1,22 · 1,70 · 1,03 · 0,76 · 0,60 ✓ | **10,76 (10,98) ✓** |
+  | yatay H.264 | 3,06 s | 1,38 (1,36) ✓ | 2,01 (1,99) ✓ (4,4 s) | 3,61 (3,59) | 1,67 (1,72) · 1,38 · 2,16 · 1,02 · 0,67 · 0,65 ✓ | 11,17 (11,19) |
+  | yatay AV1 | 2,86 s | 1,29 ✓ | 1,73 ✓ (3,8 s) | 3,35 | **1,92** (2,15) · 1,10 · 1,80 · 1,04 · 0,59 · 0,43 ✓ | **10,24 (10,46) ✓** |
 
-  İlk yükleme (dikey H.264, d1 hazır): font 0,30 · JS 0,19 · video 0,72 (t01 + l1) · poster 0,14 (p1, p2) · görsel 0,09 ·
-  CSS + HTML 0,07 MB (B 1,38 MB: l1 o turda CRF +2 idi). Ölçülen pencere tanımdakinden farklıdır: oynatıcı iki durak ileri
-  önyüklediği için d_j'nin kritik yolu çoğunlukla d_(j−1)'de iner, d_j'de inen p(j+2) + l(j+2) + t(j+2→j+3) +
-  r(j→j−1)'dir (ör. d1: p3 219 + l3 325 + t34 951 + r10 205 kB). En büyük ölçülen pencere 2,10–2,16 MB ✓ (B 2,32 / 2,44
-  ✗); d6'dan sonra ~0. Dört koşuda klipli 7 geçişin hepsi hazırdı (yedek 0).
+  İlk yükleme (dikey H.264, d1 hazır): font 0,30 · JS 0,19 · video 0,78 (t01 + l1; C 0,72 — l1 H.264 +62 kB) · poster
+  0,14 (p1, p2) · görsel 0,09 · CSS + HTML 0,07 MB (B 1,38 MB: l1 o turda CRF +2 idi). Ölçülen pencere tanımdakinden
+  farklıdır: oynatıcı iki durak ileri önyüklediği için d_j'nin kritik yolu çoğunlukla d_(j−1)'de iner, d_j'de inen p(j+2)
+  + l(j+2) + t(j+2→j+3) + r(j→j−1)'dir (ör. d1: p3 169 (C 219) + l3 325 + t34 951 + r10 202 kB). En büyük ölçülen pencere
+  D'de 1,89–2,16 MB ✓ (C 2,10–2,16; B 2,32 / 2,44 ✗): AV1 d1'de t34 + l3 + p3 küçüldüğü için −0,21 / −0,23 MB; d6'dan sonra
+  ~0. Dört koşuda klipli 7 geçişin hepsi hazırdı (yedek 0).
 - **Geri klip sırası (§11.2-3):** 4 koşu × 6 ters klip = **24/24** indirme yalnız dinlenmede başladı: faz `dur`, acil
-  kuyruk 0, pencere kuyruğu 0, `bostaAcik`, varıştan 1,12–2,60 s sonra (≥ 1 s ✓). İniş 4G'de r32 2,3–2,6 s, r43 2,1–2,3
-  s. Sıra (dikey H.264): d0'da t01 → l1 → t12 → l2 → t23; 0→1 geçişinde l3 → t34; d1 dinlenmesinde r10; 1→2'de l4 → t45;
-  d2'de r21; … d6'da r65 (`boyut.json` → `sira`, `ters`).
+  kuyruk 0, pencere kuyruğu 0, `bostaAcik`, varıştan 1,12–2,15 s sonra (C 1,12–2,60; ≥ 1 s ✓). İniş 4G'de r32 2,3–2,6 s,
+  r43 2,1–2,3 s. Sıra (dikey H.264): d0'da t01 → l1 → t12 → l2 → t23; 0→1 geçişinde l3 → t34; d1 dinlenmesinde r10; 1→2'de
+  l4 → t45; d2'de r21; … d6'da r65 (`boyut.json` → `sira`, `ters`; D'de aynı sıra).
 
-### 10.2 Performans (prod, 4× CPU, 20 adım 0→10→0, iki koşu)
+### 10.2 Performans (prod, 4× CPU, 20 adım 0→10→0, iki koşu; C turu → D turu)
 
 | Giriş | fps | uzun kare (> 50 ms) / 20 adım | en uzun | düşen kare | jest → ilk yeni kare |
 |---|---|---|---|---|---|
-| mobil dokunma 390×844 | 59,8 / 59,8 | **0 / 1** (7→6 sayfa çevirme 50,1 ms) ✓ | 46,1 / 50,1 ms | **0 / 856** ×2 ✓ | klipli adım p50 33–49 ms; 0→1 650 ms, 9→10 850 ms, 6→5 650–667 ms (tasarımdaki DOM ön evresi 600 / 800 / 620 ms) |
-| masaüstü fare 1280×800 | 59,9 / 59,9 | **0 / 0** ✓ | 39,4 / 38,4 ms | **0 / 856** ×2 ✓ | p50 49 ms |
+| mobil dokunma 390×844, C | 59,8 / 59,8 | **0 / 1** (7→6 sayfa çevirme 50,1 ms) ✓ | 46,1 / 50,1 ms | **0 / 856** ×2 ✓ | klipli adım p50 33–49 ms; 0→1 650 ms, 9→10 850 ms, 6→5 650–667 ms (tasarımdaki DOM ön evresi 600 / 800 / 620 ms) |
+| mobil dokunma 390×844, **D** | 59,8 / 59,8 | **1 / 0** (10→9, 55,4 ms) ✓ | 55,4 / 48,3 ms | **1 / 856** (3→4) · **1 / 856** (4→5) ✗; ek iki koşu 0 / 856 ×2 | p50 49 ms; 0→1 633–650, 9→10 833–850, 6→5 667 ms |
+| masaüstü fare 1280×800, C | 59,9 / 59,9 | **0 / 0** ✓ | 39,4 / 38,4 ms | **0 / 856** ×2 ✓ | p50 49 ms |
+| masaüstü fare 1280×800, **D** | 60,0 / 60,0 | **0 / 0** ✓ | 40,2 / 35,5 ms | **0 / 856** ×2 ✓ (ek iki koşu da 0) | p50 49 ms |
 
-(B: mobil 2 uzun kare, en uzun 53,6 ms; masaüstü 0.) Geçiş süreleri (ileri): 2,41 · 2,01 · 2,82 · 2,41 · 2,02 · 2,41
-(+0,62 DOM) · 1,60 ×3 · 2,62 s; geri 1,25×. **Kiosk tam tur 106,5 s** (1280×800, d0 → … → d10 → kapanış 9 s → beyaz →
-d0; yedek 0). B'deki 93,0 s kapanışsızdı; fark kapanışta 9 s (A3-01) ve d4'te dört bölgenin hepsi (600 + 4 × 3,5 s,
-A1-07). Girdide tur durur (`girdiSonrasi.duraklat`).
+(B: mobil 2 uzun kare, en uzun 53,6 ms; masaüstü 0.) D'de mobilde iki ana koşunun her birinde 1 düşen kare var, farklı
+geçişlerde (t34 AV1 3→4, t45 AV1 4→5; t45 C ile bayt bayt aynı); aynı koşullarda iki ek koşu (`perf-3`, `perf-4`; CPU
+%13 / %5) mobilde 0 / 856 ×2, uzun kare 1 / 0 (5→6, 52,8 ms). Headless Chrome'da CPU kısıtı medya çözücüyü yavaşlatmaz;
+tek düşen kare ölçüm gürültüsü düzeyinde, gerçek cihaz değil. Geçiş süreleri (ileri): 2,41 · 2,01 · 2,82 · 2,41 · 2,02 ·
+2,41 (+0,62 DOM) · 1,60 ×3 · 2,62 s (D'de ±15 ms içinde aynı); geri 1,25×. **Kiosk tam tur 106,5 s** (C 106,55 → D
+106,54 s; 1280×800, d0 → … → d10 → kapanış 9 s → beyaz → d0; yedek 0). B'deki 93,0 s kapanışsızdı; fark kapanışta 9 s
+(A3-01) ve d4'te dört bölgenin hepsi (600 + 4 × 3,5 s, A1-07). Girdide tur durur (`girdiSonrasi.duraklat`).
 
 ### 10.3 Dikişler (ekran görüntüsünde ölçüldü)
 
-- **Lombar** (t01 kare 0 diski ↔ DOM amblem dairesi; yarı yükseklik daire uydurma, 366–378 ışın): merkez sapması 0,31 /
-  0,55 / 0,75 px, yarıçap +0,77 / +1,20 / +0,74 px — 390×844 / 1280×800 / 844×390 ✓ (≤ 2 px). t01 C turunda değişmedi;
-  sayılar B ile aynı. Sıra kuralı karelerde: logo 0 opaklığa inmeden disk görünmüyor.
+- **Lombar** (t01 kare 0 diski ↔ DOM amblem dairesi; yarı yükseklik daire uydurma, 362–378 ışın): merkez sapması C →
+  D 0,31 → 0,31 / 0,55 → 0,48 / 0,75 → 0,76 px, yarıçap +0,77 → +0,78 / +1,20 → +1,27 / +0,74 → +0,74 px — 390×844 /
+  1280×800 / 844×390 ✓ (≤ 2 px). t01 D'de yeni su maskesiyle yeniden render edildi (S1-D2: disk geometrisi C ile aynı);
+  farklar uydurma gürültüsü düzeyinde. Sıra kuralı karelerde: logo 0 opaklığa inmeden disk görünmüyor.
 - **d6 kapak** (t56 son video karesi ↔ DOM kapak, `brosurDikdortgen`'in contain'i; kapağın iç %92'si): konum kayması
   −0,48 / 0,02 / −0,47 px ✓ (≤ 0,5). ΔE00 ortalama render tonunda 3,59 / 3,16 / 3,93 (medyan 2,15 / 2,11 / 2,19), gerçek
-  renkte 4,75 / 4,31 / 5,09 (B ile aynı; §11.4'te kabul). Kesişmede DOM kapak bu dikdörtgenden okuma boyutuna FLIP'le
-  geçer: telefonda ×1,15 büyür, masaüstünde ×0,97, yatay telefonda ×0,70.
+  renkte 4,75 / 4,31 / 5,09 (B ile aynı; §11.4'te kabul; t56 D'de değişmedi, sayılar D'de aynı). Kesişmede DOM kapak
+  bu dikdörtgenden okuma boyutuna FLIP'le geçer: telefonda ×1,15 büyür, masaüstünde ×0,97, yatay telefonda ×0,70.
 - **p6 broşürsüz** (S2-C): kapak dikdörtgeninde p6 ↔ son video karesi ΔE00 29,5, korelasyon ≤ 0,008 (render broşürü
   yok); d6–d9'da üç görünümde DOM broşür gizlenince altta yalnız boş banko var, 844×390'daki "ikinci kapak" **kalktı**.
   Dikdörtgen dışı fark (yığının taşan kâğıtları ve gölgesi; S2-C master 0,537 ✗ ≤ 0,05; kodlanmışta 2,13–2,24, 45 px payla
@@ -754,13 +773,21 @@ A1-07). Girdide tur durur (`girdiSonrasi.duraklat`).
   844×390'da (cover kırpımı üstten/alttan 64 video px) körfez, kent ve Expo görünür; Beydağları'nın yalnız etekleri kalır,
   "Beydağları" (y −16) ve "D400" (y 404) etiketleri ekran dışında.
 - **Scrim** (`scrim-olc.mjs`, render-son döngülerinin her 4. karesi, metin altındaki en parlak/koyu %5; yatay
-  dönüşüm artık klip başına `kirpimY`): gereken en çok α uzay 0,17 · altın 0,54 · hol 0,50 · krem 0,62 (tek piksel en
-  kötü 0,65) → `--a` 0,68 / 0,66 / 0,65 / 0,70 (d5 dikey krem 0,84, A1-11) ile **18 durak × görünüm ✓**. d3 scrim
-  `#1A1714` (A1-13).
-- **Kodlanmış klip dikişleri** (K-C, ΔE00 ort.): t23 son → l3 0 2,21–2,97 ✓ (H.264'te `zones`), r32 son → l2 0
-  1,48–1,83 ✓, kalkış l3 0 → t34 0 2,36–3,00; r43 son → l3 0 2,88–3,60 (kabul listesinde değil).
+  dönüşüm artık klip başına `kirpimY`): gereken en çok α uzay 0,17 → 0,16 (yeni l1; d1 1280×800) · altın 0,54 · hol 0,50
+  · krem 0,62 (tek piksel en kötü 0,65) → `--a` 0,68 / 0,66 / 0,65 / 0,70 (d5 dikey krem 0,84, A1-11) ile **18 durak ×
+  görünüm ✓** (C ve D). d3 scrim `#1A1714` (A1-13).
+- **Kodlanmış klip dikişleri** (ΔE00 ort., K-C → K-D): t23 son → l3 0 2,21–2,97 → 2,20–2,95 ✓ (H.264'te `zones`), r32
+  son → l2 0 1,48–1,83 → 1,47–1,84 ✓, t01 son → l1 0 0,91–1,53 → 0,92–1,19, kalkış l3 0 → t34 0 2,36–3,00 → 2,44–3,00
+  (AV1 2,36 / 2,49 → 2,44 / 2,59; t34 AV1 CRF 34); r43 son → l3 0 2,88–3,60 (değişmedi; §11.6-5 kabul).
 
 ### 10.4 Değişenler
+
+**D turu (W-D):** sitede kod değişikliği yok (tsc, eslint temiz; rota JS 17,8 kB aynı; manifest alanları C ile birebir).
+Ölçüm betiği (scratchpad `d/w-d/icinden3.mjs`): `boyut` ve `lazy` JSON'larına konsol hatası alanı (§11.6-8), `katara`
+senaryosu (d1, d2, d10; doğal ve döngü kare 0 + metin gizli) ve `katara-ekran.py` (K-D'nin master maskesi ekran pikseline).
+Değişmeyen ölçümler D'de de aynı çıktı: tuzak, stale, engel (yoklama 337 ms, kilit 4607 ms'de, 53/59/83/71 kare), lazy,
+reduced (video 0, 5 poster 0,45 → 0,40 MB — p3 q68), yatay taşma 0, d6 bandı %64, d3 yatay etiketler, okuma düzeni, d10
+dönüşü 0 px; konsol hatası 0 (`errors` alanı olan 21 JSON'un hepsi boş).
 
 **C turu (W-C):**
 
@@ -783,21 +810,20 @@ jestten önce (303 ms), kilit ilk dokunuşta açıldı, 0→1…3→4 video (53/
 d4'e dek 0, d5'te 2, d6'da 4 ✓; reduced: video 0, 5 poster 0,45 MB, taşma 0 ✓; yatay taşma 0 (1280×800, 844×390) ✓;
 konsol hatası 0 (22 ölçüm dosyası); tsc, eslint temiz.
 
-### 10.5 Bilinen sınırlar (C turu sonrası)
+### 10.5 Bilinen sınırlar (D turu sonrası)
 
 - **Gerçek iOS/Android testi yok.** Düşük Güç Modu, Safari'nin `poster`/ilk kare davranışı, iOS ısıtması (A2-01), kap
   birimi yedeği (iOS 15, A2-10), 100svh ve bellek yalnız benzetimle ya da hiç sınanmadı.
-- **Bütçe (§11.2-3, statik tanım):** kritik yol d2 H.264 1,93 / 1,95, AV1 2,03 / 2,12 MB (> 1,8); pencere d3 AV1 2,56 /
-  2,57 MB (> 2,5). HEVC ✓. 4G'de 4 s okur temposunda görünür etkisi yok (ölçülen pencere ≤ 2,16 MB, bütün geçişler hazır);
-  daha yavaş ağda ya da hızlı adımlamada 300 ms → poster yedeği devreye girer. Karar orkestratörde (K-C seçenekleri).
+- **Bütçe (§11.2-3 tanımı, §11.6-1 sınırları):** D'de hepsi tutuyor. Kritik yol d2 H.264 1,87 / 1,90, AV1 1,95 / 2,04 MB
+  — d2 istisnasıyla (≤ 2,1) ✓, katı 1,8'in üstünde (HEVC 1,66 ✓). Pencere en çok 2,44 (dikey H.264 d3); AV1 d3 2,43 /
+  2,43, katı 2,5'le de ✓. İlk yükleme en çok 2,04 (dikey H.264; l1 H.264 +62 kB). 4G'de 4 s okur temposunda ölçülen
+  pencere ≤ 2,16 MB, bütün geçişler hazır; daha yavaş ağda ya da hızlı adımlamada 300 ms → poster yedeği devreye girer.
 - **d3 temsilî** (onay-listesi §14.1): ön plan OSM ekstrüzyonu + örneklenmiş ağaç. 16:9'dan geniş yatay ekranlarda
   (844×390) Beydağları kırpılır, iki etiketi ekran dışında.
-- **p6 dikdörtgen dışı** fark (S2-C ✗): kesişmede yığın kenarı ve gölgesi 200 ms'de söner; t56 yeniden render'la kapanır.
-- p3 posteri q80'de (218 / 229 kB; hedef 150 kB tutmadı). r43 son → l3 0 dikişi 2,88–3,60. Yatay AV1'de t34 47↔48
-  ~1/255 (kodlayıcı; master 0).
+- **p6 dikdörtgen dışı** fark (S2-C ✗; §11.6-3 kabul): kesişmede yığın kenarı ve gölgesi 200 ms'de söner.
+- p3 posteri q68'de (168,6 / 176,2 kB; §11.6-2; 150 kB hedefi yine tutmadı). r43 son → l3 0 dikişi 2,88–3,60 (§11.6-5).
+  AV1'de t34 47↔48 0,47 / 0,41 /255 (C 0,98 / 0,99; kodlayıcı, master 0; §11.6-4).
 - Yatay kırpımda d4 stantı ve d5 halkası sağ %38'e taşıyor (kabul, §11.4).
-- **Katara Çöküntüsü (Mısır) d1/d2/d10'da koyu bir göl gibi** (A3-02): `hazirla.py` su maskesi deniz seviyesi altındaki
-  karayı su sayıyor. C teslimi bu hâliyle; D turunda düzeltilir (§11.6-6).
 
 ## 11. C turu kararları (orkestratör, 3 Kasım 2026 03.30; bağlayıcı — §9 ile çelişirse bu bölüm geçerli)
 
@@ -1002,3 +1028,88 @@ gözle görülmez. Ayrıca kabul listesi dışında: r43 son → l3 0 dikişi 2,
    dışı: kabul, bilinen sınır (§10.5). boyut/lazy JSON'larına konsol alanı: D'de W ekler.
 9. **Teslim.** C turu bu hâliyle commit edilir ve `origin/main`'e gönderilir (deploy kullanıcıda). D turu (6, 1, 2) hemen
    ardından başlar; D bitince ikinci commit.
+
+### 11.7 D turu sonucu (W-D, 3 Kasım 2026)
+
+S1-D2 (t01/l1/t12/l2/t23 yeni su maskesiyle, C'nin kamera/pozlama/tohum ayarlarıyla), K-D (§11.6-1/2: t34 AV1 CRF 34,
+l3 AV1 CRF 32, p3 q68; 97 dosya + kart, 47,19 MB) ve W-D (prod ölçüm, §10) çıktıları. Kaynak: S1-D2
+`render-son/_onizleme/s1-olcum.json` → `d_turu`; K-D raporu ve `kodlama/dogrula-render-son.json`; W-D `.qa/icinden3/d/`.
+
+**§11.5'in 9–18. satırları, C → D:**
+
+| # | Ölçüt (§) | Hedef | C | D | |
+|---|---|---|---|---|---|
+| 9 | p6 broşürsüz: dikdörtgen dışı (11.1 S2-C 2) | ΔE00 ≤ 0,05 | 0,537 (master); kodlanmışta 2,13–2,24 | aynı (p6 ve t56 değişmedi); 45 px payla 1,08–1,19 | ✗ — §11.6-3 kabul |
+| 10 | t34 47↔48 kodlanmış (11.2-5) | fark 0 | H.264 0,002–0,003, HEVC 0,005; AV1 0,98 / 0,99 | H.264 / HEVC 0,002–0,005; AV1 0,47 / 0,41 (CRF 34); k47 #FFF1DC'ye ΔE00 0,51–0,88 | ✓ / AV1 ✗ — §11.6-4 kabul |
+| 11 | VMAF (11.2-2) | her dosya ort. ≥ 90 | 85/85; en düşük r32 H.264 91,7 | 85/85; en düşük r32 H.264 dikey 91,68 (en kötü kare 80,4); t34 AV1 98,60 / 98,45; l3 AV1 97,11 / 97,06 | ✓ |
+| 12 | İlk yükleme (11.2-3) | ≤ 2,5 MB | tanım 1,51–1,98; 4G d1 hazır 1,30–1,52, t12 dahil 1,73–2,20 | tanım 1,51–2,04; 4G d1 hazır 1,29–1,58, t12 dahil 1,73–2,26 | ✓ |
+| 13 | Kritik yol (11.2-3, 11.6-1) | ≤ 1,8 MB/adım; d2 ≤ 2,1 | d2: H.264 1,93 / 1,95, AV1 2,03 / 2,12; HEVC 1,72 | d2: H.264 1,87 / 1,90, AV1 1,95 / 2,04; HEVC 1,66; öteki duraklar ≤ 1,30 | ✓ (katı 1,8'le d2 ✗, HEVC ✓) |
+| 14 | Pencere (11.2-3, 11.6-1) | ≤ 2,5 MB; AV1 d3 ≤ 2,6 | tanım AV1 d3 2,56 / 2,57; 4G ölçülen en çok 2,16 | tanım en çok 2,44; AV1 d3 2,43 / 2,43; 4G ölçülen en çok 2,16 (AV1 d1 2,10 / 2,15 → 1,89 / 1,92) | ✓ (katı 2,5'le de) |
+| 15 | Set (11.2-3) | ≤ 15 MB/kodek | 8,73–10,67 | 8,67–10,67 | ✓ |
+| 16 | Tam tur oturumu AV1 (11.2-3) | ≤ 12 MB | tanım 10,98 / 10,80; 4G 10,98 / 10,46 | tanım 10,76 / 10,58; 4G 10,76 / 10,24 | ✓ |
+| 17 | Geri klip kuyrukta en son, yalnız boşta (11.2-3) | her ters klip | 24/24; varıştan ≥ 1,12 s | 24/24 (4 koşu): faz dur, acil 0, pencere 0, varıştan 1,12–2,15 s | ✓ |
+| 18 | p3 posteri (11.2-4, 11.6-2) | master'a uzaklık q80'e göre en çok +1,0 ΔE00; ≤ 150 kB | q80 218 / 229 kB | q68 168,6 / 176,2 kB; master'a 3,26 / 3,42 (q80 2,86 / 3,01 → +0,40 / +0,41) | ✓ (§11.6-2 okuması); 150 kB ✗ |
+
+Statik bütçe W-D `butce.py` ile bağımsız hesaplandı; K-D'nin `kodlama-dogrula.py` çıktısıyla 5 set × 15 değer = 75/75
+birebir (fark 0,0005 MB'tan küçük). Bütçe tablosu §10.1.
+
+**§11.6-6 (Katara) ve S1-D2 kabulü:**
+
+| # | Ölçüt | Hedef | Ölçülen (C → D) | |
+|---|---|---|---|---|
+| D1 | l2[0] master'da çöküntü çöl renginde (S1-D2) | koyu göl yok | iç RGB 76,7 / 77,8 / 74,5 → 153,1 / 127,6 / 80,9; iç − halka (8–20 px) −88,3 / −67,9 / −37,1 → −11,9 / −18,1 / −30,7; ΔE00 30,8 → 7,1; koyu leke payı %88,1 → %36,8 (BMNG dokusunun kendisinde %40,5) | ✓ |
+| D2 | Maske farkı dışında B/C master'a göre fark, bütün kareler (S1-D2) | ≤ 1,5/255 | ortalama en çok: l1 0,21 · l2 0,18 · t23 0,065 · t12 0,065 · t01 0,010 | ✓ |
+| D3 | t23[83] ↔ l3[0] master (11.1 S1-C 1) | ΔE00 ≤ 0,3 | 0,031 → 0,031 | ✓ |
+| D4 | t23[0] ↔ l2[0] master | ΔE00 ≤ 0,3 | 0,101 → 0,101 | ✓ |
+| D5 | t23 son 4 ardışık fark | ≤ 1,5/255 | 0,023 ×4 | ✓ |
+| D6 | t23 parlaklık (11.1 S1-C 2) | kare 0–60 ≥ %20; 10–40 tek yönlü ±%3 | S1-D2 tam çözünürlükle %22,66 (kare 25); W-D 4× seyreltmeyle %22,57 (kare 19); en büyük geri dönüş 2,29 (C ile 0,12 puan içinde) | ✓ |
+| D7 | t01[0] diski (lombar) | C ile aynı | S1-D2: kutu merkezi (959; 771,5), çap 350 × 347 aynı; sitede lombar 0,31 / 0,48 / 0,76 px, r +0,78 / +1,27 / +0,74 | ✓ |
+| D8 | Kodlanmış dikişler (11.2-5/6) | ΔE00 ≤ 3 | t23 son → l3 0 2,21–2,97 → 2,20–2,95; r32 son → l2 0 1,48–1,83 → 1,47–1,84 | ✓ |
+| D9 | Katara iç − çevre, kanal başına (S1-D2'nin önerdiği sayı) | ±15/255 | master l2[0] −11,9 / −18,1 / −30,7; p2 −12,5 / −17,9 / −29,9; site d2 −12,0 / −18,3 / −30,5 (390×844), −12,1 / −18,2 / −30,3 (1280×800); site d1/d10 +17,0…+19,7 / +8,0…+10,2 / −7,0…−9,7 | ✗ (d2'de G, B; d1/d10'da R) |
+| D10 | Render − BMNG dokusu (aynı piksellerde iç − çevre farkının farkı) | ±10/255 | master l2 +8,8 / +5,5 / −3,6; p1/p2 en çok 8,6; site d2 +8,8 / +5,4 / −3,1 ve +8,4 / +5,2 / −3,4; site d1/d10 en çok 3,5 | ✓ |
+
+Site ölçümü (W-D `katara-ekran.py`): K-D'nin bölge tanımı (S1-D2 `d_olcum` a — maske farkının kare 0 izdüşümü, 2 px
+aşındırılmış; çevre 8–20 master px halka, öteki değişen bileşenler dışarıda) `geo` dönüşümüyle ekran pikseline taşındı.
+İç bölge d2'de 7.234 (390×844, dpr 2) / 5.138 (1280×800) cihaz pikseli, d1/d10'da 72 / 46. Ölçülen kareler: D doğal,
+D yalın (döngü kare 0, metin/etiket/kadraj gizli; d2'de doğalla aynı sayı, bant çöküntünün üstünde değil) ve W-C'nin
+C kareleri. Koyu leke payı (iç piksellerin, halkanın %1'lik luma eşiğinin altında kalan payı) d2'de %89,2 / %89,3 →
+%37,5 / %38,0; dokunun kendisinde %40,5 / %40,2. d1/d10'da hem C'de hem D'de %0 (çöküntü 72 px; koyu göl C'de gözle
+seçiliyordu, iç − çevre −70 / −56 / −29). Kırpımlar: `.qa/icinden3/d/kontak-katara.png` (d1, d2, d10 × iki görünüm: C |
+D | D yalın | D + Katara sınırı), `kontak-m.png` ve `kontak-D.png`'nin son hücresi (d2 yakın, C | D).
+
+**Katara kabulü (W-D değerlendirmesi; karar orkestratörde).** §11.6-6'nın yazılı kabulü ("l2[0]'da çöküntü çöl renginde",
+maske dışı ≤ 1,5/255, dikişler) tutuyor: koyu göl üç kaynakta da (master, poster, site) kalktı; C'nin −88 / −68 / −37'lik
+farkı −12 / −18 / −30'a, ΔE00 31'den 7'ye indi; koyu leke payı dokunun kendi payı düzeyinde. S1-D2'nin eklediği ±15/255
+sayısı ise tutmuyor: kalan fark doku kaynaklı (çöküntünün sabhka tabanı ve kuzey yamacı BMNG'de çevresinden koyu; dokuda
+−20,7 / −23,6 / −27,1), render bu farkı ±9/255 içinde izliyor. ±15'e çekmek doku boyamayı gerektirir; §11.6-6 "renk
+dokularına dokunulmaz" dediği için yapılmadı. Öneri: ölçüt D10 biçiminde ("render iç − çevre farkı, BMNG dokusunun
+farkına ±10/255") okunsun: master, dört poster ve altı site karesinin hepsinde tutuyor (en çok 8,8).
+
+**S1-D2 master dikişleri (ΔE00 ort.; C → D):** t01[53] ↔ l1[0] 0,089 → 0,089 · l1[119] ↔ l1[0] (döngü kapanışı) 0,109 →
+0,048 · l1[119] ↔ t12[0] 0,104 → 0,104 · t12[59] ↔ l2[0] 0,103 → 0,103 · l2[119] ↔ l2[0] 0,151 → 0,088 · l2[0] ↔ t23[0]
+0,101 → 0,101 · t23[83] ↔ l3[0] 0,031 → 0,031. Döngüler artık sabit tohumlu: ardışık master farkı l1 0,259 → 0,115, l2
+0,325 → 0,205 /255. Kodlanmışta l1 H.264 döngü kapanışı 1,55 → 1,15/255 (ΔE00 0,97 → 0,59), t01 son → l1 0 dikişi
+0,91–1,53 → 0,92–1,19 (K-D).
+
+**Site (W-D, §10):** tsc, eslint temiz · rota JS 17,8 kB ✓ · lombar ≤ 0,76 px ✓ · d5→d6 kapak −0,48 / 0,02 / −0,47 px ✓ ·
+scrim 18/18 ✓ · tuzak, stale, engel, reduced, lazy, yatay, d3 yatay, okuma ✓ (C ile aynı) · 4G 4 koşu × 7 klipli geçiş
+hazır, yedek 0 ✓ · konsol hatası 0 (21 JSON; `boyut` ve `lazy` artık alanlı) ✓ · kiosk tam tur 106,5 s · perf: uzun kare
+mobil 1 / 0, masaüstü 0 / 0 ✓; **düşen kare mobilde 1 / 856 ×2** (3→4, 4→5; C'de 0) — iki ek koşuda 0 / 856 ×2, masaüstü
+dört koşuda 0.
+
+**Açık maddeler (orkestratöre):** (D9) Katara ±15 yerine doku-göreli ölçüt (D10) kabul mü? · l1 H.264 +61,6 / +19,2 kB
+(S1-D2'nin sabit tohumlu l1'i; VMAF aynı; ilk yükleme 2,04 ≤ 2,5, bütçeyi bozmuyor) için ayrı CRF istenir mi (K-D sorusu)?
+· Mobil perf'te koşu başına 1 düşen kare (ek iki koşuda 0): gürültü kabul mü? · §11.6-9'a göre D turu commit'i.
+
+### 11.8 Orkestratör kararları, D sonucu (3 Kasım 2026 ~11.15)
+
+1. **Katara ölçütü.** §11.6-6'daki "çevre çöl ±15/255" yanlış kurulmuştu: BMNG dokusunda çöküntü tabanı (sabhka, kuzey
+   yamaç) zaten çevresinden 20–27/255 koyu. Kabul ölçütü W-D'nin önerdiği biçime çevrildi: render iç − çevre farkı, dokunun
+   kendi farkına **±10/255** içinde (ölçülen en çok 8,8; master, 4 poster, 6 site karesi ✓). Boyalı göl kalktı (iç↔çevre
+   ΔE00 31 → 7). Doku boyanmaz.
+2. **Perf.** Mobil 4× CPU'da iki ana koşuda 1/856 düşen kare, iki ek koşuda 0, masaüstü 4 koşuda 0: gürültü, kabul.
+3. **l1 H.264 +62 kB.** Ayrı CRF yok; ilk yükleme 2,04 MB ≤ 2,5. Sabit tohumlu döngü bu kodekte biraz pahalı, HEVC/AV1'de etkisi yok.
+4. **Bütçe.** §11.6-1 tanımıyla 5 set 5 ✓ (kritik d2 1,66–2,04; pencere en çok 2,43; AV1 oturum 10,24–10,76; set ≤ 10,7).
+   Katı 1,8 MB d2'de yine aşılıyor (HEVC hariç) — istisna kalıcı.
+5. **Teslim.** D turu commit edilir ve `origin/main`'e gönderilir. Sonraki iş gerçek cihaz testi ve müşteri yanıtları
+   (onay-listesi §14.1); yeni render turu planlanmıyor.

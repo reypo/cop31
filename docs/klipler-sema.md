@@ -72,14 +72,15 @@ karesindeki `kirpimY` ile çevrilir (`manifest-birlestir.mjs` listeden okur); `b
 
 ## 4. Kodlama listesi (`kodlama.json`, `kodla.mjs` yazar) ve K ajanı için tek komut
 
-**Son render, tek komut** (depo kökünde; render-son'daki bütün klipler bitince; GPU kullanmaz, kilit gerekmez). C turu
-teslim seti (brief-icinden-3 §11.2) bununla üretildi:
+**Son render, tek komut** (depo kökünde; render-son'daki bütün klipler bitince; GPU kullanmaz, kilit gerekmez). D turu
+teslim seti (brief-icinden-3 §11.2 + §11.6-1, -2; S1-D2'nin yeni t01/l1/t12/l2/t23 master'ları) bununla üretildi; C'den
+farkı yalnız `t34.av1=34,l3.av1=32` ve `--poster-q p3=68`:
 
 ```
-python -X utf8 -P scripts/icinden/t34-birlestir.py && node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --crf t23.h264=26,t23.hevc=27,t23.av1=32,t34.h264=26,t34.hevc=27,t34.av1=32 --bolge t23.h264=74-83:-4 && python -X utf8 -P scripts/icinden/kapak-ton.py --kare D:/soft/cop31-varlik/render-son/t56/k_0071.png --fragman D:/soft/cop31-varlik/render-son/t56.json --cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json && node scripts/icinden/manifest-birlestir.mjs && node scripts/icinden/kart.mjs
+python -X utf8 -P scripts/icinden/t34-birlestir.py && node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --crf t23.h264=26,t23.hevc=27,t23.av1=32,t34.h264=26,t34.hevc=27,t34.av1=34,l3.av1=32 --bolge t23.h264=74-83:-4 --poster-q p3=68 && python -X utf8 -P scripts/icinden/kapak-ton.py --kare D:/soft/cop31-varlik/render-son/t56/k_0071.png --fragman D:/soft/cop31-varlik/render-son/t56.json --cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json && node scripts/icinden/manifest-birlestir.mjs && node scripts/icinden/kart.mjs
 ```
 
-Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kurulması + 85 VMAF; referanslar önbellekteyse daha kısa):
+Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kurulması + 85 VMAF; D turunda 7 dk 57 s: dikişler + t01/l1/t12/l2/t23 için 10 yeni FFV1 referansı + 85 VMAF; referanslar önbellekteyse daha kısa):
 `python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf` → `D:/soft/cop31-varlik/kodlama/dogrula-render-son.json`.
 
 1. `t34-birlestir.py`: §1'deki t34 birleşimi (sabit bağlar + `t34.json` + 47↔48 doğrulaması).
@@ -88,12 +89,13 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
    BT.709 matris ve renk etiketi (16 bit → 8 bit dönüşüm kodlayıcıdan önce, `scale` içinde). Süreç önceliği düşük.
    - **CRF tabanı** (§9.4): ileri ve döngü H.264 23 / HEVC 25 / AV1 30, geri 26 / 28 / 34. `--crf` seçicisi tür
      (`ileri|geri|dongu`) ya da dosya adı (`t23`, `r32`, `l3`), isteğe bağlı `.kodek`; değer `+N`/`-N` (tabana ek) ya
-     da `N` (mutlak). C turu: yalnız t23 ve t34 ileri H.264 26 / HEVC 27 / AV1 32 (geri r32/r43 tabanda).
+     da `N` (mutlak). C turu: yalnız t23 ve t34 ileri H.264 26 / HEVC 27 / AV1 32 (geri r32/r43 tabanda). D turu
+     (§11.6-1): t34 ileri AV1 **34**, l3 AV1 **32** (dikey + yatay); t23 AV1 32'de kalır (34'te en kötü kare VMAF 76,8).
    - **`--bolge ad.kodek=k0-k1:ΔCRF`**: x264/x265 `zones` (`b=` bit hızı çarpanı = 2^(−ΔCRF/6); CRF kipinde qscale'i
      böler). C turu: `t23.h264=74-83:-4` (t23 → l3 dikişi H.264'te > 3 idi; HEVC 2,97 ve AV1 2,21 ≤ 3, uygulanmadı).
      AV1'de yok sayılır.
-   - **`--poster-q ad[.boyut]=q`**: poster WebP kalitesi (varsayılan 80). C turu: hepsi 80 (p3 merdiveni
-     `docs/klip-oynatma.md` §5).
+   - **`--poster-q ad[.boyut]=q`**: poster WebP kalitesi (varsayılan 80). C turu: hepsi 80. D turu (§11.6-2): `p3=68`
+     (dikey + yatay; p3 merdiveni `docs/klip-oynatma.md` §5), öteki posterler 80.
    - **Yatay kırpım `kirpimY`** (master px, `KIRPIM_Y` tablosu; §11.2-5): sayı ya da `{bas, son, k0, k1}` (kare ≤ k0 →
      bas, ≥ k1 → son, arası easeInOutCubic). **t23 `{420 → 200, 24 → 72}`**, **l3 (ve p3) 200**, **t34
      `{200 → 420, 47 → 48}`** (basamak düz #FFF1DC parlama karelerinde; 47↔48 farkı 0 kalır), diğerleri 420 (t01/l1/t12/l2
@@ -114,7 +116,8 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
 5. `kart.mjs`: ana sayfa kartı `public/icinden/kart-icinden.webp` (p1 = `render-son/l1/k_0000.png`, ≤ 60 KB).
 6. `kodlama-dogrula.py`: kodek dizeleri (`avc1.64001f`, `hvc1.1.6.L93.90`, `av01.0.05M.08`), kare sayıları, dikişler
    (ileri son ↔ döngü 0 / poster, kalkış, geri son ↔ önceki döngü 0, t56 son ↔ p6 dikdörtgen dışı), döngü kapanışı,
-   t34 47↔48, bütçe (§11.2-3: ilk yükleme, kritik yol, pencere, set, tam tur oturumu), `--vmaf` (referans listedeki
+   t34 47↔48, bütçe (§11.2-3: ilk yükleme, kritik yol, pencere, set, tam tur oturumu; §11.6-1 istisnaları kritik d2
+   ≤ 2,1 ve AV1 pencere d3 ≤ 2,6 `*_tamam`'da, katı 1,8 / 2,5 `*_katı_tamam`'da), `--vmaf` (referans listedeki
    `kirpim` filtresiyle kurulur, önbellek adı kırpım + kaynak kare zamanından özetli).
 
 Sonra site doğrulaması (W): `next build` + `next start -p 3100`, `node scripts/icinden/scrim-olc.mjs --port 3100
@@ -188,5 +191,6 @@ Geri yön: k+1 → k, `duraklar[k].ileri.geri` klibi `hizGeri` hızında (süre 
 - Fragman ↔ kodlanmış kare sayısı eşit; her durağın posteri iki yönde; d5'te 12 sütun; sözlükte olmayan çapa.
 - Kodlama ajanı ayrıca (§9.4, §11.2; `kodlama-dogrula.py`): kodek dizeleri, ΔE00 (geçiş son karesi ↔ hedef döngü
   0. karesi) ≤ 3, döngü dikişi, VMAF ≥ 90 (her dosya), bütçe: ilk yükleme ≤ 2,5 MB, kritik yol (ileri + varış
-  döngüsü + poster) ≤ 1,8 MB/adım, pencere (+ geri) ≤ 2,5 MB, set ≤ 15 MB/kodek, tam tur oturumu (0→10, AV1) ≤ 12 MB.
+  döngüsü + poster) ≤ 1,8 MB/adım (§11.6-1: d2 ≤ 2,1), pencere (+ geri) ≤ 2,5 MB (§11.6-1: AV1 d3 ≤ 2,6), set ≤ 15
+  MB/kodek, tam tur oturumu (0→10, AV1) ≤ 12 MB.
   Ölçülen değerler `docs/klip-oynatma.md` §5.

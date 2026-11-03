@@ -24,8 +24,9 @@
 //
 // H.264 High@3.1 CRF 23/26, HEVC x265 hvc1 CRF 25/28 (yalnız dikey), AV1 SVT-AV1 p4 CRF 30/34; döngüler ileri
 // CRF'le; GOP = klip uzunluğu, sahne kesmesi kapalı, +faststart, ses yok. Poster WebP q80 (döngünün 0. karesi).
-// C turu teslim ayarı (§11.2-2, -6): `--crf t23.h264=26,t23.hevc=27,t23.av1=32,t34.h264=26,t34.hevc=27,t34.av1=32
-// --bolge t23.h264=74-83:-4` (posterler q80; tek komut docs/klipler-sema.md §4). Süreç önceliği düşük.
+// D turu teslim ayarı (§11.2-2, -6; §11.6-1, -2): `--crf t23.h264=26,t23.hevc=27,t23.av1=32,t34.h264=26,t34.hevc=27,
+// t34.av1=34,l3.av1=32 --bolge t23.h264=74-83:-4 --poster-q p3=68` (öteki posterler q80; tek komut docs/klipler-sema.md
+// §4). Süreç önceliği düşük.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";

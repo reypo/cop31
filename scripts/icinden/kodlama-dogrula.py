@@ -13,7 +13,8 @@
 # 4. Döngü kapanışı: son→ilk fark ↔ ardışık kare farkı (ortalama mutlak /255 ve ΔE00).
 # 5. t34 iç dikişi (kare 47 ↔ 48) ve parlama karelerinin tonu (#FFF1DC).
 # 6. Bütçe (§11.2-3; MB = 10^6 bayt): ilk yükleme = temel (HTML+JS+CSS+font, W ölçümü) + t01 + p1 + l1 + t12 ≤ 2,5;
-#    d_j'ye varınca kritik yol t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8, pencere = kritik + r(j→j−1) ≤ 2,5; set (video +
+#    d_j'ye varınca kritik yol t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8 (§11.6-1: d2 istisnası ≤ 2,1), pencere = kritik +
+#    r(j→j−1) ≤ 2,5 (§11.6-1: AV1 d3 istisnası ≤ 2,6; `*_tamam` istisnalarla, `*_katı_tamam` 1,8 / 2,5 ile); set (video +
 #    poster) ≤ 15/kodek; tam tur oturumu (0→10) = set + oturum-temel (W-B2: oturum − set, font/JS/HTML/broşür
 #    fotoğrafları) ≤ 12 (AV1).
 # 7. --vmaf: master → aynı kırpım/ölçek (listedeki `kirpim` filtresi, lanczos, 8 bit yuv420p, FFV1 önbellek `--ref`;
@@ -232,7 +233,15 @@ for boyut, kodekler in {} if a.yalniz_vmaf else KODEK_BOYUT.items():
                 sonuc["t34"].append({"boyut": boyut, "kodek": kodek, "fark_47_48": round(ard[47], 3), "komsu_43_52": [round(x, 2) for x in ard[43:53]], "k47_ort_rgb": [round(float(v), 1) for v in T[47].reshape(-1, 3).mean(0)], "k48_ort_rgb": [round(float(v), 1) for v in T[48].reshape(-1, 3).mean(0)], "k47_dE00_FFF1DC": round(de00(T[47], np.broadcast_to(np.array([255, 241, 220], np.uint8), T[47].shape)), 2)})
 
 
-# 6. bütçe
+# 6. bütçe — sınırlar §11.2-3, istisnalar §11.6-1 (kritik d2 ≤ 2,1; AV1 pencere d3 ≤ 2,6)
+def kritik_sinir(varis):
+    return 2.1 if varis == "d2" else 1.8
+
+
+def pencere_sinir(kodek, varis):
+    return 2.6 if (kodek == "av1" and varis == "d3") else 2.5
+
+
 def b(klip, tur, boyut, kodek=None):
     s = satir(klip, tur, boyut, kodek)
     return s["bayt"] if s else 0
@@ -245,14 +254,14 @@ for boyut, kodekler in KODEK_BOYUT.items():
         for j in range(1, 6):
             parca = {"t": b(f"t{j}{j + 1}", "ileri", boyut, kodek), "l": b(f"l{j + 1}", "dongu", boyut, kodek), "p": b(f"p{j + 1}", "poster", boyut), "r": b(f"r{j}{j - 1}", "geri", boyut, kodek)}
             kritik = parca["t"] + parca["l"] + parca["p"]
-            adim.append({"varis": f"d{j}", "kritik_MB": round(kritik / MB, 3), "pencere_MB": round((kritik + parca["r"]) / MB, 3), "parca_KB": {k: round(v / 1000) for k, v in parca.items()}})
+            adim.append({"varis": f"d{j}", "kritik_MB": round(kritik / MB, 3), "kritik_sinir": kritik_sinir(f"d{j}"), "pencere_MB": round((kritik + parca["r"]) / MB, 3), "pencere_sinir": pencere_sinir(kodek, f"d{j}"), "parca_KB": {k: round(v / 1000) for k, v in parca.items()}})
         video = sum(s["bayt"] for s in liste if s["boyut"] == boyut and s["kodek"] == kodek)
         poster = sum(s["bayt"] for s in liste if s["boyut"] == boyut and s["tur"] == "poster")
         oturum = video + poster + a.oturum_temel * MB
         sonuc["butce"][f"{boyut}-{kodek}"] = {
             "ilk_MB": round(ilk / MB, 3), "ilk_tamam": ilk <= 2.5 * MB, "adim": adim,
-            "kritik_maks_MB": max(x["kritik_MB"] for x in adim), "kritik_tamam": all(x["kritik_MB"] <= 1.8 for x in adim),
-            "pencere_maks_MB": max(x["pencere_MB"] for x in adim), "pencere_tamam": all(x["pencere_MB"] <= 2.5 for x in adim),
+            "kritik_maks_MB": max(x["kritik_MB"] for x in adim), "kritik_tamam": all(x["kritik_MB"] <= x["kritik_sinir"] for x in adim), "kritik_katı_tamam": all(x["kritik_MB"] <= 1.8 for x in adim),
+            "pencere_maks_MB": max(x["pencere_MB"] for x in adim), "pencere_tamam": all(x["pencere_MB"] <= x["pencere_sinir"] for x in adim), "pencere_katı_tamam": all(x["pencere_MB"] <= 2.5 for x in adim),
             "video_MB": round(video / MB, 3), "poster_MB": round(poster / MB, 3), "set_MB": round((video + poster) / MB, 3), "set_tamam": (video + poster) <= 15 * MB,
             "oturum_MB": round(oturum / MB, 3), "oturum_tamam": oturum <= 12 * MB,
         }
@@ -316,7 +325,7 @@ for k in ("dikis", "kalkis", "dongu", "t34"):
 for r in sonuc["geri"]:
     print("geri", json.dumps(r, ensure_ascii=False))
 for k, v in sonuc["butce"].items():
-    print("butce", k, f"ilk {v['ilk_MB']} MB, kritik maks {v['kritik_maks_MB']}, pencere maks {v['pencere_maks_MB']}, set {v['set_MB']} MB (video {v['video_MB']}, poster {v['poster_MB']}), oturum {v['oturum_MB']}", "kritik", [x["kritik_MB"] for x in v["adim"]], "pencere", [x["pencere_MB"] for x in v["adim"]])
+    print("butce", k, f"ilk {v['ilk_MB']} MB, kritik maks {v['kritik_maks_MB']}, pencere maks {v['pencere_maks_MB']}, set {v['set_MB']} MB (video {v['video_MB']}, poster {v['poster_MB']}), oturum {v['oturum_MB']}", "kritik", [x["kritik_MB"] for x in v["adim"]], "pencere", [x["pencere_MB"] for x in v["adim"]], f"§11.6-1 kritik {v['kritik_tamam']} pencere {v['pencere_tamam']} (katı {v['kritik_katı_tamam']}/{v['pencere_katı_tamam']})")
 if sonuc["vmaf"]:
     alt = [x for x in sonuc["vmaf"] if "ort" in x and x["ort"] < 90]
     print("VMAF < 90:", len(alt), [(x["boyut"], x["klip"], x["kodek"], x["ort"]) for x in alt])
