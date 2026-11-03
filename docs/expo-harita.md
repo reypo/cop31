@@ -1,5 +1,7 @@
 # `expo-harita.ts`: Antalya Expo Center vektör haritası (H2)
 
+> **Arşiv (2 Kasım 2026, /icinden v3 B turu):** bu belgedeki `.ts` dosyası v2 SVG katmanlarıyla birlikte silindi (v3 önceden render edilmiş kliplerle çalışır). Dosya git geçmişinde (b9cd9db); yeniden üretim adımları aşağıda geçerli.
+
 `src/components/icinden/expo-harita.ts`, `/icinden` rotasının 2. durağı (küre → Antalya → Expo)
 için OpenStreetMap'ten türetilmiş, sadeleştirilmiş vektör harita verisidir. Dosya **üretilmiştir**;
 elle düzenlenmez, aşağıdaki "Yeniden üretim" adımlarıyla yeniden yazılır.

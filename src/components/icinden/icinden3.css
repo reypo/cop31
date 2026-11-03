@@ -1,0 +1,996 @@
+/*
+ * /icinden v3 "sinematik" — sahne, metin bantları, etiketler, kadraj okuması, reduced-motion düzeni.
+ * Önek .v3-. Broşür (.ic-br-*), kapanış (.ic-kapanis-*) ve okunur kopyalar (.ic-yalniz-*) icinden.css'ten
+ * (v2'den kalan kurallar; ölü v2 kuralları B turunda ayıklandı). Kurallar (brief-icinden-3 §5): text-transform YOK, backdrop-filter YOK,
+ * panel kartı YOK; metin scrim üstünde; animasyon yalnız opacity/transform. Turuncu metin rengi değil.
+ *
+ * Video uzayı: dikey 720×1280, yatay (vw/H ≥ 4:3) 1280×720, `object-fit: cover`. Sahne bir boyut kabı
+ * (container-type: size); içindeki etiketler cover dönüşümüyle CSS'te yerleşir:
+ *   s = max(100cqw / G, 100cqh / Y),  ekran = 50% + (v − merkez) · s.
+ */
+
+.v3 {
+  position: relative;
+  background: #fff;
+}
+
+/* ============================== sahne ============================== */
+
+.v3-sahne {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #fff;
+  container-type: size;
+  pointer-events: none;
+}
+.v3-poster,
+.v3-video,
+.v3-yedek {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.v3-poster {
+  z-index: 0;
+  background: #0b1018 center / cover no-repeat;
+}
+.v3-poster[hidden] {
+  display: none;
+}
+.v3-video {
+  z-index: 1;
+  opacity: 0;
+  background: transparent;
+}
+.v3-yedek {
+  z-index: 4;
+  opacity: 0;
+  background: #fff center / cover no-repeat;
+  will-change: opacity, transform;
+}
+.v3-kagit {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #fff;
+}
+.v3-brosur {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+.v3-brosur[hidden] {
+  display: none;
+}
+.v3-brosur-kutu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1000px;
+  height: 1000px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* v2'nin "Bugün" diski eşleşme kopyası (kâğıt dışı) v3'te yok: rotunda render'da. */
+.v3 .ic-br > .ic-br-sanat {
+  display: none;
+}
+/* Gölge render ışığına uyar (R3 d6–d8 (a)): +6, +10, 24 px. */
+.v3 .ic-br-kagit {
+  box-shadow:
+    0 0 0 1px rgb(40 51 47 / 0.06),
+    6px 10px 24px rgb(40 30 20 / 0.28);
+}
+/*
+ * Sahnedeki broşürde gölge kâğıdın kendisinde değil ayrı bir katmanda (::before, will-change): d9 → d10 dalışında
+ * ahşap beyaza dönerken sayfa beyaz kâğıtla birleşsin diye yalnız gölge söner (data-dalis; C turu, denetim A1-06:
+ * gölgeli boş sayfa beyazda "yüzüyordu"). Kâğıdın opaklığı sayfaları da taşıdığı için kullanılamaz.
+ */
+.v3 .ic-br > .ic-br-kagit {
+  box-shadow: none;
+}
+.v3 .ic-br > .ic-br-kagit::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 1px rgb(40 51 47 / 0.06),
+    6px 10px 24px rgb(40 30 20 / 0.28);
+  content: "";
+  pointer-events: none;
+  transition: opacity 300ms linear;
+  will-change: opacity;
+}
+.v3[data-dalis="1"] .ic-br > .ic-br-kagit::before {
+  opacity: 0;
+}
+/* Canlılık (v2 kuralı, v3 numarası): kapak yörüngesi d6, polaroid sarkacı d7–d8. */
+.v3[data-dinlenme="6"] .ic-br-yorunge {
+  animation-play-state: running;
+}
+.v3[data-dinlenme="7"] .ic-sarkac-a,
+.v3[data-dinlenme="8"] .ic-sarkac-b,
+.v3[data-dinlenme="8"] .ic-sarkac-c {
+  --ic-genlik: 1;
+  animation-play-state: running;
+  transition-duration: 900ms;
+  will-change: rotate;
+}
+
+.v3-perde {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: #fff;
+  opacity: 0;
+}
+
+/* ------------------------------ video uzayı değişkenleri ------------------------------ */
+
+.v3-etiketler,
+.v3-acilis {
+  --s: max(calc(100cqw / 720), calc(100cqh / 1280));
+  --cx: 360;
+  --cy: 640;
+}
+@container (min-aspect-ratio: 4/3) {
+  .v3-etiketler {
+    --s: max(calc(100cqw / 1280), calc(100cqh / 720));
+    --cx: 640;
+    --cy: 360;
+  }
+}
+
+/* ------------------------------ sahne etiketleri ------------------------------ */
+
+.v3-etiketler {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+}
+.v3-et {
+  --x: var(--xd);
+  --y: var(--yd);
+  /* çapanın ekran x'i; metin kenardan ≥ 8 px içeride kalır (translate yüzdesi metnin kendi genişliği) */
+  --lx: calc(50cqw + (var(--x) - var(--cx)) * var(--s));
+  position: absolute;
+  left: calc(50% + (var(--x) - var(--cx)) * var(--s));
+  top: calc(50% + (var(--y) - var(--cy)) * var(--s));
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 200ms linear;
+  color: #fff;
+}
+.v3-et[data-yok="dikey"] {
+  display: none;
+}
+@container (min-aspect-ratio: 4/3) {
+  .v3-et {
+    --x: var(--xy);
+    --y: var(--yy);
+  }
+  .v3-et[data-yok="dikey"] {
+    display: block;
+  }
+  .v3-et[data-yok="yatay"] {
+    display: none;
+  }
+}
+.v3-et-metin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  transform: translate(clamp(calc(8px - var(--lx)), -50%, calc(100cqw - 8px - var(--lx) - 100%)), -50%);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.55);
+}
+.v3-et-doga .v3-et-metin {
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.v3-et-yapi .v3-et-metin,
+.v3-et-bolge .v3-et-metin {
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.v3-et-noktali .v3-et-metin {
+  transform: translate(min(7px, calc(100cqw - 8px - var(--lx) - 100%)), -50%);
+}
+.v3-et-nokta {
+  position: absolute;
+  top: -1.5px;
+  left: -1.5px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+}
+.v3-et-bolge {
+  color: #f7e6cd;
+}
+.v3-et-bolge .v3-et-nokta {
+  top: -2.5px;
+  left: -2.5px;
+  width: 5px;
+  height: 5px;
+  background: #f7e6cd;
+}
+.v3-et-cizgi {
+  position: absolute;
+  bottom: 3px;
+  left: -0.5px;
+  width: 1px;
+  height: 30px;
+  background: #b49168;
+}
+.v3-et-bolge .v3-et-metin {
+  transform: translate(clamp(calc(8px - var(--lx)), -50%, calc(100cqw - 8px - var(--lx) - 100%)), calc(-100% - 36px));
+  /* 0 genişlikli çapada min-content'e kırılmasın: en çok iki dengeli satır */
+  width: max-content;
+  max-width: min(200px, 56cqw);
+  white-space: normal;
+  text-wrap: balance;
+  text-align: center;
+  line-height: 1.25;
+  /* Açık stant duvarlarının üstünde (C turu, denetim A1-03): hale hol scrim renginde ve daha kalın. */
+  -webkit-text-stroke: 4px rgb(22 24 27 / 0.82);
+  text-shadow: 0 0 4px rgb(22 24 27 / 0.7);
+}
+/*
+ * Rotunda etiketi (1) çapanın solunda, yatay kılavuzla: üstteki "Söz Kiosku" (3) çapası hemen üstünde olduğundan
+ * dikey kılavuzu rotunda yazısının içinden geçiyordu (390×844 ve 844×390'da ölçüldü, denetim A1-03).
+ */
+.v3-et-bolge[data-no="1"] .v3-et-cizgi {
+  top: -0.5px;
+  right: 4px;
+  bottom: auto;
+  left: auto;
+  width: 26px;
+  height: 1px;
+}
+.v3-et-bolge[data-no="1"] .v3-et-metin {
+  transform: translate(max(calc(8px - var(--lx)), calc(-100% - 34px)), calc(-50% - 3px));
+  text-align: right;
+}
+@container (min-width: 900px) {
+  .v3-et-doga .v3-et-metin {
+    font-size: 16px;
+  }
+  .v3-et-yapi .v3-et-metin,
+  .v3-et-bolge .v3-et-metin {
+    font-size: 13px;
+  }
+}
+/* görünürlük: etiketler birlikte 300 ms */
+.v3[data-etiket="1"] .v3-et[data-d="1"],
+.v3[data-etiket="2"] .v3-et[data-d="2"],
+.v3[data-etiket="3"] .v3-et[data-d="3"],
+.v3[data-etiket="4"] .v3-et[data-d="4"] {
+  opacity: 1;
+  transition-duration: 300ms;
+}
+/* d4 spot (3,5 s): etkin olmayan bölge etiketleri %80 (metin rengi değişmez; %60'ta açık duvarda kayboluyordu) */
+.v3[data-etiket="4"]:is([data-spot="1"], [data-spot="2"], [data-spot="3"], [data-spot="4"]) .v3-et-bolge {
+  opacity: 0.8;
+}
+.v3[data-etiket="4"][data-spot="1"] .v3-et-bolge[data-no="1"],
+.v3[data-etiket="4"][data-spot="2"] .v3-et-bolge[data-no="2"],
+.v3[data-etiket="4"][data-spot="3"] .v3-et-bolge[data-no="3"],
+.v3[data-etiket="4"][data-spot="4"] .v3-et-bolge[data-no="4"] {
+  opacity: 1;
+}
+
+/*
+ * d5: etkin sütundan alt banda kılavuz çizgi (JS konumlar). Çizgi yalnız kısa ve metne değmiyorsa (≤ 0,35 ·
+ * kısa kenar, çapa bandın dışında); değilse çapada nokta, çapa kırpımda/bant altındaysa hiçbiri (denetim A1-02).
+ */
+.v3-sutun-cizgi {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  width: 0;
+  height: 1px;
+  background: #28332f;
+  transform-origin: 0 50%;
+  opacity: 0;
+  transition: opacity 300ms linear;
+}
+.v3-sutun-cizgi[data-nokta="1"] {
+  width: 9px;
+  height: 9px;
+  border: 2px solid #28332f;
+  border-radius: 50%;
+  background: rgb(247 230 205 / 0.9);
+  box-shadow: 0 0 0 1px rgb(247 230 205 / 0.6);
+  transform-origin: 50% 50%;
+}
+.v3:not([data-metin="5"]) .v3-sutun-cizgi {
+  opacity: 0 !important;
+}
+
+/* ------------------------------ kadraj okuması ------------------------------ */
+
+.v3-kadraj {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  right: 16px;
+  z-index: 12;
+  pointer-events: none;
+  margin: 0;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  /* Hale (sahne etiketleriyle aynı kalıp): açık gökte (d3 mobil) ve geçişin açık karelerinde de okunsun. */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.5);
+  text-shadow: 0 0 4px rgb(0 0 0 / 0.6);
+  transition:
+    color 300ms linear,
+    opacity 200ms linear;
+}
+/* d0, kapanış ve lombar kâğıdı görünürken (0→1, 1→0, 9→10, 10→9: beyaz kâğıt) okuma yok. */
+.v3:is([data-durak="0"], [data-durak="11"], [data-kagit="1"]) .v3-kadraj {
+  opacity: 0;
+}
+/* Krem/ahşap duraklar (d5–d9) ve oraya giden geçişler: koyu metin, krem hale. */
+.v3:is([data-durak="5"], [data-durak="6"], [data-durak="7"], [data-durak="8"], [data-durak="9"])[data-faz="dur"] .v3-kadraj,
+.v3[data-faz="gecis"]:is([data-hedef="5"], [data-hedef="6"], [data-hedef="7"], [data-hedef="8"], [data-hedef="9"]) .v3-kadraj {
+  color: #28332f;
+  -webkit-text-stroke-color: rgb(247 230 205 / 0.85);
+  text-shadow: 0 0 4px rgb(247 230 205 / 0.8);
+}
+@media (min-width: 900px) {
+  .v3-kadraj {
+    font-size: 13px;
+  }
+}
+
+/* ============================== bölümler ============================== */
+
+.v3-durak {
+  position: relative;
+  height: 100svh;
+}
+.v3-azalt {
+  display: none;
+}
+
+/* ============================== metin bantları ============================== */
+
+.v3-bant {
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms linear;
+  --sonum: 104px;
+}
+.v3-bant-ic {
+  position: relative;
+  max-width: 560px;
+}
+.v3-bant::before {
+  position: absolute;
+  z-index: -1;
+  right: 0;
+  left: 0;
+  content: "";
+}
+.v3-bant-ust {
+  top: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 44px) 24px 0;
+}
+.v3-bant-ust::before {
+  top: 0;
+  bottom: calc(-1 * var(--sonum));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--scrim) / var(--a0)),
+    rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum)),
+    rgb(var(--scrim) / 0)
+  );
+}
+.v3-bant-alt {
+  bottom: 0;
+  padding: 0 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+.v3-bant-alt::before {
+  top: calc(-1 * var(--sonum));
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgb(var(--scrim) / var(--a0)),
+    rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum)),
+    rgb(var(--scrim) / 0)
+  );
+}
+.v3-bant-ince {
+  --sonum: 64px;
+}
+
+/* temalar (§5 tablosu; alfa metin satırlarındaki en düşük değer). B turu (scripts/icinden/scrim-olc.mjs, Cycles
+   render, 3 görünüm): gereken en çok α (en parlak/koyu %5) uzay 0,33 · altın 0,57 · hol 0,50 · krem 0,62; tek
+   piksel 0,65. --a brief minimumlarında (0,68 / 0,66 / 0,65 / 0,70). */
+.v3-tema-uzay {
+  --scrim: 7 11 20;
+  --a0: 0.84;
+  --a: 0.68;
+  --ikincil: #c9d6e3;
+  color: #fff;
+}
+/* d3: R3'ün altın saat varsayımıyla lacivertti; son render düz/pus ışıkta, sıcak bej → nötr-sıcak koyu (A1-13). */
+.v3-tema-altin {
+  --scrim: 26 23 20;
+  --a0: 0.82;
+  --a: 0.66;
+  --ikincil: #f2e6d3;
+  color: #fff;
+}
+.v3-tema-hol {
+  --scrim: 22 24 27;
+  --a0: 0.82;
+  --a: 0.65;
+  --ikincil: #f7e6cd;
+  color: #f7e6cd;
+}
+.v3-tema-krem {
+  --scrim: 247 230 205;
+  --a0: 0.9;
+  --a: 0.7;
+  --ikincil: #28332f;
+  color: #28332f;
+}
+
+/* tipografi (§5) */
+.v3-baslik {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: clamp(30px, 8.8vw, 44px);
+  line-height: 1.12;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.v3-en {
+  margin: 6px 0 0;
+  text-wrap: pretty;
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 16px;
+  line-height: 22px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ikincil);
+}
+/* ≤ 38 karakter satır (§5): Montserrat'ta 1ch ("0") ortalama harften geniş; 38ch ≈ 44 karakter çıkıyordu (A1-10). */
+.v3-alt-satir,
+.v3-govde,
+.v3-sayilar,
+.v3-etiket-satir {
+  max-width: 32ch;
+  text-wrap: pretty;
+  margin: 10px 0 0;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 23px;
+  font-weight: 400;
+}
+.v3-alt-satir {
+  margin-top: 8px;
+  font-weight: 500;
+}
+.v3-govde {
+  color: var(--ikincil);
+}
+.v3-etiket-satir {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.v3-satir-baslik {
+  margin: 0;
+  text-wrap: balance;
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.v3-slogan {
+  margin: 0;
+  font-size: clamp(44px, 12.4vw, 64px);
+  line-height: 1.1;
+  font-weight: 400;
+  text-wrap: balance;
+}
+/* Tarih aralığı ("9–20 Kasım 2026") satır sonunda bölünmez. */
+.v3-nowrap {
+  white-space: nowrap;
+}
+
+/*
+ * d5 dikey: alt bandın EN ve sütun satırları zemin halkasının ters "OSMANLI / AKKOYUNLU" yazılarının üstüne düşüyor;
+ * kontrast geçse de metin-üstüne-metin dokusu kalıyordu (A1-11) → krem plato α 0,84.
+ */
+@media not all and (min-aspect-ratio: 4/3) {
+  .v3-bant[data-d="5"] {
+    --a: 0.84;
+  }
+}
+
+/* d4 alt bant: etkin bölgenin kısa satırı (spot 3,5 s) */
+.v3-spot-satirlari,
+.v3-sutun-satirlari {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.v3-spot-satir,
+.v3-sutun-satir {
+  grid-area: 1 / 1;
+  max-width: 40ch;
+  opacity: 0;
+  transition: opacity 300ms linear;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 21px;
+}
+.v3-spot-satir[data-no="1"],
+.v3-sutun-satir[data-no="1"] {
+  opacity: 1;
+}
+.v3-spot-ad {
+  font-weight: 600;
+}
+.v3-sutun-satirlari {
+  margin-top: 12px;
+}
+.v3-sutun-no {
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.v3-sutun-cumle {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 19px;
+}
+.v3:is([data-spot="2"], [data-spot="3"], [data-spot="4"], [data-spot="5"], [data-spot="6"], [data-spot="7"], [data-spot="8"], [data-spot="9"], [data-spot="10"], [data-spot="11"], [data-spot="12"])
+  :is(.v3-spot-satir, .v3-sutun-satir)[data-no="1"] {
+  opacity: 0;
+}
+.v3[data-spot="2"] :is(.v3-spot-satir, .v3-sutun-satir)[data-no="2"],
+.v3[data-spot="3"] :is(.v3-spot-satir, .v3-sutun-satir)[data-no="3"],
+.v3[data-spot="4"] :is(.v3-spot-satir, .v3-sutun-satir)[data-no="4"],
+.v3[data-spot="5"] .v3-sutun-satir[data-no="5"],
+.v3[data-spot="6"] .v3-sutun-satir[data-no="6"],
+.v3[data-spot="7"] .v3-sutun-satir[data-no="7"],
+.v3[data-spot="8"] .v3-sutun-satir[data-no="8"],
+.v3[data-spot="9"] .v3-sutun-satir[data-no="9"],
+.v3[data-spot="10"] .v3-sutun-satir[data-no="10"],
+.v3[data-spot="11"] .v3-sutun-satir[data-no="11"],
+.v3[data-spot="12"] .v3-sutun-satir[data-no="12"] {
+  opacity: 1;
+}
+
+/* görünürlük: jestte 200 ms söner; klibin son 250 ms'sinde 350 ms giriş (yalnız opaklık) */
+.v3[data-metin="0"] .v3-bant[data-d="0"],
+.v3[data-metin="1"] .v3-bant[data-d="1"],
+.v3[data-metin="3"] .v3-bant[data-d="3"],
+.v3[data-metin="4"] .v3-bant[data-d="4"],
+.v3[data-metin="5"] .v3-bant[data-d="5"],
+.v3[data-metin="6"] .v3-bant[data-d="6"],
+.v3[data-metin="10"] .v3-bant[data-d="10"] {
+  opacity: 1;
+  transition-duration: 350ms;
+}
+
+/* ============================== d0: açılış ============================== */
+
+.v3-acilis {
+  inset: 0;
+  container-type: size;
+  color: var(--color-brand-ink);
+  transition: opacity 300ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.v3-acilis::before {
+  content: none;
+}
+.v3[data-metin="0"] .v3-acilis a {
+  pointer-events: auto;
+}
+/* Logo: amblem merkezi ve yarıçapı T01'in 0. karesindeki diskle aynı (video uzayı, cover dönüşümü). */
+.v3-logo {
+  --ax: var(--ax-d);
+  --ay: var(--ay-d);
+  --lk: calc(var(--ar) / 160.445 * var(--s));
+  position: absolute;
+  left: calc(50% + (var(--ax) - var(--cx)) * var(--s) - 225.384 * var(--lk));
+  top: calc(50% + (var(--ay) - var(--cy)) * var(--s) - 171.213 * var(--lk));
+  width: calc(450.839 * var(--lk));
+  height: calc(636.03 * var(--lk));
+}
+.v3-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.v3-logo-alti {
+  --ax: var(--ax-d);
+  --ay: var(--ay-d);
+  --lk: calc(var(--ar) / 160.445 * var(--s));
+  position: absolute;
+  top: calc(50% + (var(--ay) - var(--cy)) * var(--s) + (636.03 - 171.213) * var(--lk) + 18px);
+  right: 16px;
+  left: 16px;
+  margin: 0;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  text-align: center;
+}
+@container (min-aspect-ratio: 4/3) {
+  .v3-logo,
+  .v3-logo-alti {
+    --ax: var(--ax-y);
+    --ay: var(--ay-y);
+    --s: max(calc(100cqw / 1280), calc(100cqh / 720));
+    --cx: 640;
+    --cy: 360;
+  }
+}
+.v3-serit {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.v3-geri {
+  border-radius: 999px;
+  padding: 6px 2px;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-brand-ink);
+  outline-offset: 2px;
+}
+.v3-geri:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+}
+/* Kiosk (?auto=1): stant ekranında iç önizleme sayfasına giden bağlantı yok (A1-07). */
+.v3[data-kiosk="1"] .v3-geri {
+  visibility: hidden;
+}
+.v3-kimlik {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.v3-kimlik p {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.2;
+}
+.v3-kimlik-logo {
+  width: auto;
+  height: 36px;
+}
+.v3-kimlik-ad {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-brand-blue);
+}
+.v3-kimlik-alt {
+  font-size: 11px;
+  font-weight: 500;
+}
+.v3-ipucu {
+  position: absolute;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  left: 0;
+  text-align: center;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+}
+.v3-ipucu p {
+  margin: 0;
+}
+.v3-ipucu p + p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* ============================== yatay düzen (vw/H ≥ 4:3) ============================== */
+
+@media (min-aspect-ratio: 4/3) {
+  .v3-bant:not(.v3-acilis) {
+    top: 0;
+    bottom: 0;
+    left: auto;
+    display: flex;
+    width: min(38vw, 560px);
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 40px 56px 28px;
+  }
+  .v3-bant:not(.v3-acilis)::before {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: calc(-1 * var(--sonum) - 40px);
+    background: linear-gradient(
+      to left,
+      rgb(var(--scrim) / var(--a0)),
+      rgb(var(--scrim) / var(--a)) calc(100% - var(--sonum) - 40px),
+      rgb(var(--scrim) / 0)
+    );
+  }
+  .v3-bant.v3-bant-ek {
+    justify-content: flex-end;
+  }
+  .v3-bant.v3-bant-ek::before {
+    content: none;
+  }
+  .v3-bant.v3-bant-ince:not(.v3-bant-ek) {
+    justify-content: flex-end;
+  }
+  .v3-serit {
+    right: auto;
+    justify-content: flex-start;
+    gap: 28px;
+  }
+}
+@media (min-aspect-ratio: 4/3) and (min-width: 900px) {
+  /* ≤ 2 satır (§5): bant ≤ 38vw; 1280'de 52 px'te "Dünya Antalya'da" sığmıyor, 3 tek kelimelik satır (A1-10). */
+  .v3-baslik {
+    max-width: none;
+    font-size: clamp(40px, 3.6vw, 52px);
+    line-height: 1.08;
+  }
+  .v3-en {
+    font-size: 18px;
+    line-height: 26px;
+  }
+  .v3-govde,
+  .v3-alt-satir,
+  .v3-sayilar {
+    font-size: 17px;
+    line-height: 27px;
+  }
+  .v3-slogan {
+    font-size: 64px;
+  }
+}
+/* Yatay telefon (844×390): bant sığsın. */
+@media (min-aspect-ratio: 4/3) and (max-height: 480px) {
+  .v3-bant:not(.v3-acilis) {
+    padding: 20px 24px 20px 16px;
+  }
+  .v3-baslik {
+    font-size: 26px;
+  }
+  .v3-govde {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 19px;
+  }
+  /* Logo yüksekliği ekranı doldurur: alt satır sol alta, ipucu sağ alta (logonun iki yanı boş). */
+  .v3-logo-alti {
+    top: auto;
+    right: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    max-width: 30%;
+    font-size: 12px;
+    line-height: 17px;
+    text-align: left;
+  }
+  .v3-ipucu {
+    right: 16px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    left: auto;
+    text-align: right;
+  }
+}
+
+/*
+ * Kap birimleri ve kap sorguları yok (Safari < 16, iOS 15): sahne ve d0 bandı `position: fixed; inset: 0` olduğundan
+ * kap = görünüm alanı; --s ve etiket kıskacı vw/vh ile (A2-10). Desteklenen tarayıcıda bu blok hiç uygulanmaz.
+ */
+@supports not (width: 1cqw) {
+  .v3-etiketler,
+  .v3-acilis {
+    --s: max(calc(100vw / 720), calc(100vh / 1280));
+  }
+  .v3-et {
+    --lx: calc(50vw + (var(--x) - var(--cx)) * var(--s));
+  }
+  .v3-et-metin {
+    transform: translate(clamp(calc(8px - var(--lx)), -50%, calc(100vw - 8px - var(--lx) - 100%)), -50%);
+  }
+  .v3-et-bolge .v3-et-metin {
+    max-width: 200px;
+    transform: translate(clamp(calc(8px - var(--lx)), -50%, calc(100vw - 8px - var(--lx) - 100%)), calc(-100% - 36px));
+  }
+  .v3-et-noktali .v3-et-metin {
+    transform: translate(min(7px, calc(100vw - 8px - var(--lx) - 100%)), -50%);
+  }
+  @media (min-aspect-ratio: 4/3) {
+    .v3-etiketler,
+    .v3-logo,
+    .v3-logo-alti {
+      --s: max(calc(100vw / 1280), calc(100vh / 720));
+      --cx: 640;
+      --cy: 360;
+    }
+    .v3-logo,
+    .v3-logo-alti {
+      --ax: var(--ax-y);
+      --ay: var(--ay-y);
+    }
+    .v3-et {
+      --x: var(--xy);
+      --y: var(--yy);
+    }
+    .v3-et[data-yok="dikey"] {
+      display: block;
+    }
+    .v3-et[data-yok="yatay"] {
+      display: none;
+    }
+  }
+}
+
+/* ============================== kapanış ============================== */
+
+.v3 .ic-kapanis {
+  z-index: 30;
+}
+.v3-atiflar {
+  margin: 22px 0 0;
+  padding: 12px 0 0;
+  list-style: none;
+}
+.v3-atiflar li + li {
+  margin-top: 4px;
+}
+
+/* ============================== reduced-motion: akış + posterler, video yok ============================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .v3-sahne {
+    display: none;
+  }
+  .v3-durak {
+    display: flex;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 16px;
+  }
+  .v3-bant,
+  .v3-acilis {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    width: auto;
+    max-width: 560px;
+    margin-inline: auto;
+    padding: 0;
+    opacity: 1 !important;
+    pointer-events: auto;
+    color: #28332f;
+    container-type: normal;
+  }
+  .v3-bant::before {
+    content: none !important;
+  }
+  .v3-bant {
+    --ikincil: var(--color-brand-ink);
+    order: 2;
+  }
+  .v3-acilis {
+    display: flex;
+    min-height: 90svh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .v3-serit,
+  .v3-ipucu,
+  .v3-logo,
+  .v3-logo-alti {
+    position: static;
+    width: auto;
+    height: auto;
+  }
+  .v3-serit {
+    align-self: stretch;
+  }
+  .v3-logo {
+    width: min(64vw, 280px);
+  }
+  .v3-spot-satir,
+  .v3-sutun-satir {
+    grid-area: auto;
+    opacity: 1 !important;
+    margin-top: 10px;
+  }
+  .v3-azalt {
+    position: relative;
+    display: block;
+    order: 1;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .v3-azalt img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    background-size: cover;
+  }
+  .v3-azalt-etiketler {
+    position: absolute;
+    inset: 0;
+  }
+  .v3-azalt-et {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 0 3px rgb(0 0 0 / 0.7);
+  }
+  .v3-azalt-et.v3-et-doga {
+    font-family: var(--font-serif), "Lora", Georgia, serif;
+    font-size: 14px;
+    font-style: italic;
+  }
+  .v3-slogan {
+    color: var(--color-brand-green);
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-aspect-ratio: 4/3) {
+  .v3-azalt img {
+    aspect-ratio: 16 / 9;
+  }
+  .v3-azalt-etiketler {
+    display: none;
+  }
+}

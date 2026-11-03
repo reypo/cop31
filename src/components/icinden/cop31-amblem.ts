@@ -1,7 +1,8 @@
 /*
- * Resmî COP31 logosunun amblem diski (docs/cop31-logo.md §5). Ayrı modül: istemci tarafındaki
- * derinlik motoru (derinlik.ts) yalnızca bu sayıları kullanır; logo path'leri (Cop31Logo.tsx)
- * istemci paketine girmesin diye buradan okunur. Cop31Logo.tsx aynı nesneyi yeniden dışa verir.
+ * Resmî COP31 logosunun amblem diski (docs/cop31-logo.md §5). Ayrı modül: bu sayılar (v3'te logo
+ * yerleşimi CSS'te, `icinden3.css` .v3-logo sabitleri) logo path'leri (Cop31Logo.tsx) olmadan okunabilsin
+ * diye; v2'de istemcideki derinlik motoru (derinlik.ts, silindi) kullanıyordu. Cop31Logo.tsx aynı nesneyi
+ * yeniden dışa verir.
  */
 
 /** Amblemin dairesel diski (lale hariç), ilgili düzenin viewBox biriminde. */

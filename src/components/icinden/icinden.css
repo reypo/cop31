@@ -1,10 +1,10 @@
 /*
- * /icinden — A (içerik) stilleri: bölümler, durak metinleri, paneller, sütun yüzleri, broşür,
- * kapanış. B'nin sahne stilleri icinden-sahne.css'te (.ics-*). Önek: .ic-
+ * /icinden — v2'den kalan ortak stiller (v3 sinematik rotası, docs/brief-icinden-3.md §7.3): broşür (Brosur.tsx,
+ * d6–d9 DOM sayfaları ve reduced kartları), kapanış (IcindenKapanis.tsx), ekran okuyucu kopyaları. Önek: .ic-
+ * v3 sahne, bant, etiket stilleri icinden3.css'te (.v3-*). v2'nin bölüm/panel/sütun yüzü/katman kuralları
+ * (derinlik.ts motoru) B turu temizliğinde silindi.
  * Kurallar: text-transform YOK (Türkçe i/İ); renkler marka tokenları + stant paleti
- * (--ic-krem, --ic-koyu, --ic-ahsap; page.tsx); tek turuncu marka #F08322; lacivert yalnızca
- * broşürün slogan dairesinde (metinlerde marka mavisi). Kart (panel) yalnız d1 ve d4: %94 opak düz beyaz,
- * backdrop-filter YOK, ≤ 42svh; d2/d3/d5 satırları kartsız, nesnenin üstünde/yanında.
+ * (--ic-krem, --ic-koyu, --ic-ahsap; page.tsx); tek turuncu marka #F08322.
  * Animasyon yalnızca transform/opacity (canlılıkta rotate + kayıtlı özel özellik genliği).
  */
 
@@ -20,34 +20,11 @@
   font-family: var(--font-serif), "Lora", Georgia, serif;
 }
 
-/* ============================== bölümler ============================== */
-
-/* Yükseklik derinlik.ts BOLUM_SVH'den (style="--ic-bolum: 220"); motor offsetTop ile ölçer. */
-.ic-bolum {
-  position: relative;
-  height: calc(var(--ic-bolum, 100) * 1svh);
-}
-
-/* Bölümün ilk ekranı: reduced-motion'da akıştaki metinler bunun altına dizilir. */
-.ic-ekran {
-  display: flex;
-  min-height: 100svh;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 14px;
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) var(--ic-kenar) max(var(--ic-kenar), env(safe-area-inset-bottom));
-}
-.ic-ekran-acilis {
-  justify-content: space-between;
-}
-.ic-bosluk {
-  flex: 1;
-}
+/* ============================== ekran okuyucu kopyaları ============================== */
 /*
  * Okunur kopyalar: hareketli düzende ekran okuyucuya açık ama görünmez (sr-only); reduced-motion'da
  * .ic-yalniz-azalt görünür olur, .ic-yalniz-hareket kaybolur (orada görünür kartlar var).
  */
-.ic-yalniz-azalt,
 .ic-yalniz-hareket {
   position: absolute;
   width: 1px;
@@ -58,514 +35,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-/* ============================== durak metinleri ============================== */
-
-/*
- * Hareketli düzen: sabit katman, yalnızca opaklık (Panel.tsx yazar). JS gelmeden yalnızca
- * durak 0 metni görünür. Bağlantı taşıyan metin yalnızca görünürken tıklanır.
- */
-.ic-dm {
-  position: fixed;
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-}
-.ic-dm[data-durak-metni="0"] {
-  opacity: 1;
-}
-.ic-dm-link[data-gorunur] a {
-  pointer-events: auto;
-}
-/* Klavye odağı görünmez bir bağlantıya düşmesin (WCAG 2.4.7): odakta metin görünür. */
-.ic-dm-link:focus-within {
-  opacity: 1 !important;
-}
-.ic-dm-link:focus-within a {
-  pointer-events: auto;
-}
-
-.ic-yer-alt,
-.ic-yer-panel {
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  bottom: max(var(--ic-kenar), env(safe-area-inset-bottom));
-  max-width: 480px;
-  margin-inline: auto;
-}
-.ic-yer-ust {
-  top: calc(env(safe-area-inset-top, 0px) + 10px);
-  left: 12px;
-  right: 12px;
-}
-/*
- * Logonun hemen altı: logo kutusu (derinlik.ts LOGO_GEOMETRI, 1000 nominalde y 180…820) d0'da
- * çapa 0,38·H, kadraj taban·sig (dikey: min(vw, H)·1) → alt kenar 38svh + 0,32·taban.
- */
-.ic-yer-logo-alti {
-  /* +32 px: resmî logonun koruma alanı (≈ logo yüksekliğinin %10'u; marka rehberi gelince güncellenir). */
-  top: calc(38svh + 0.32 * min(100vw, 100svh) + 32px);
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  text-align: center;
-}
-.ic-yer-ipucu {
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  bottom: max(18px, env(safe-area-inset-bottom));
-  text-align: center;
-}
-/*
- * d2: haritanın alt kenarı. Expo katmanı d2'de taban·1 kare, merkezi 0,38·H; dairesel maskenin sönen
- * bandı merkezden ~0,35·taban'dan başlar → satır haritanın içinde, Expo'nun güneyindeki açık alanda.
- */
-.ic-yer-harita {
-  top: calc(38svh + 0.34 * min(100vw, 100svh));
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  text-align: center;
-}
-/*
- * d3: planın üst kenarının hemen üstü. Stant kutusu 0,92·taban; plan kutuda y 144,5'ten başlar →
- * merkezden −0,327·taban. Satırın ALT kenarı oraya oturur (translate −100%).
- */
-.ic-yer-plan-ustu {
-  top: calc(38svh - 0.327 * min(100vw, 100svh) - 10px);
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  translate: 0 -100%;
-  text-align: center;
-}
-/* d5: kapağın hemen altı. Broşür kutusu 1,35·taban; kâğıdın altı nominal 980 → merkezden +0,648·taban. */
-.ic-yer-kapak-alti {
-  top: calc(38svh + 0.648 * min(100vw, 100svh) + 14px);
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  text-align: center;
-}
-/* d9: küre (kure2, sig 0,86) çapı 0,86·taban, merkezi 0,38·H → altı 38svh + 0,43·taban. */
-.ic-yer-kure-alti {
-  top: calc(38svh + 0.43 * min(100vw, 100svh) + 10px);
-  left: var(--ic-kenar);
-  right: var(--ic-kenar);
-  text-align: center;
-}
-
-/* Yatay ekran (vw/H ≥ 4:3): panel ve durak satırları sağda, en çok %38 (B'nin çapası 0,31·vw). */
-@media (min-aspect-ratio: 4/3) {
-  .ic-yer-panel,
-  .ic-yer-alt,
-  .ic-yer-harita,
-  .ic-yer-plan-ustu,
-  .ic-yer-kapak-alti,
-  .ic-yer-kure-alti {
-    left: auto;
-    right: max(24px, 3vw);
-    top: 50%;
-    bottom: auto;
-    width: min(36vw, 440px);
-    max-width: none;
-    margin: 0;
-    translate: 0 -50%;
-    text-align: left;
-  }
-  /*
-   * Yatayda panel nesnenin YANINDA (altında değil): 42svh sınırı dikey ekran içindir; yatay telefonda
-   * (844×390 → 164 px) metni keserdi. Burada ekran yüksekliğiyle sınırlı.
-   */
-  .ic-yer-panel .ic-panel {
-    max-height: calc(100svh - 32px);
-  }
-  /* Kimlik şeridi solda: ortadaki logonun (yatay telefonda tepesi ~87 px) üstüne binmesin. */
-  .ic-yer-ust .ic-serit {
-    align-items: flex-start;
-  }
-  /* Açılışta kamera ortada (durak "ortala", sig 0,86, taban min(0,62·vw, H)). */
-  /* Yatay telefonda (844×390) logo ekranı doldurur: satır "Aşağı kaydır"ın üstünde kalsın. */
-  .ic-yer-logo-alti {
-    top: min(calc(50svh + 0.2752 * min(62vw, 100svh) + 28px), calc(100svh - 76px));
-  }
-}
-
-/* ------------------------------ açılış (d0) ------------------------------ */
-
-.ic-serit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.ic-geri {
-  align-self: flex-start;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.95);
-  padding: 6px 12px;
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 700;
-  color: var(--color-brand-blue);
-  box-shadow: 0 2px 10px -4px rgb(27 79 156 / 0.45);
-  outline-offset: 2px;
-}
-.ic-geri:focus-visible {
-  outline: 2px solid var(--color-brand-blue);
-}
-.ic-kimlik {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 0.94);
-  padding: 7px 14px 7px 8px;
-  box-shadow: 0 0 0 1px rgb(12 119 182 / 0.1);
-}
-.ic-kimlik-logo {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-}
-.ic-kimlik-ad {
-  display: block;
-  font-size: 14px;
-  line-height: 1.15;
-  font-weight: 900;
-  color: var(--color-brand-blue);
-}
-.ic-kimlik-alt {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  line-height: 1.2;
-  font-weight: 600;
-  color: var(--color-brand-ink);
-}
-.ic-notr {
-  font-size: 14px;
-  line-height: 1.3;
-  font-weight: 600;
-  color: var(--color-brand-ink);
-}
-.ic-ipucu {
-  font-size: 13px;
-  line-height: 1.2;
-  font-weight: 700;
-  color: var(--color-brand-blue);
-}
-.ic-ipucu + .ic-en {
-  margin-top: 2px;
-}
-
-/* ------------------------------ panel ------------------------------ */
-
-.ic-panel {
-  max-height: 42svh;
-  overflow: hidden;
-  border-radius: 18px;
-  background: rgb(255 255 255 / 0.94);
-  padding: 16px 18px 18px;
-  box-shadow:
-    0 0 0 1px rgb(12 119 182 / 0.07),
-    0 14px 34px -18px rgb(27 79 156 / 0.42);
-}
-.ic-etiket {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 0 60% 0 60%;
-  background: var(--color-brand-green);
-  padding: 5px 14px;
-  font-size: 11px;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  color: #fff;
-}
-.ic-panel-baslik {
-  margin-top: 8px;
-  font-size: 23px;
-  line-height: 1.12;
-  font-weight: 900;
-  text-wrap: balance;
-  color: var(--color-brand-blue);
-}
-.ic-en {
-  margin-top: 3px;
-  font-size: 13px;
-  line-height: 1.3;
-  font-weight: 500;
-  color: rgb(85 84 84 / 0.82);
-}
-.ic-govde {
-  margin-top: 9px;
-  font-size: 15px;
-  line-height: 1.5;
-  text-wrap: pretty;
-  color: var(--color-brand-ink);
-}
-
-/*
- * Kısa dikey ekran (≤ 720 px, ör. 360×640, 375×667): nesnenin (çapa 0,38·H, kenar ~0,9·vw) altında
- * ~210 px kalıyor; panel o alana sığsın diye sıkı tipografi (ölçüldü: 260 → ~200 px).
- */
-@media (max-height: 720px) and (max-aspect-ratio: 4/3) {
-  .ic-panel {
-    padding: 12px 14px 13px;
-  }
-  .ic-etiket {
-    padding: 4px 12px;
-    font-size: 10.5px;
-  }
-  .ic-panel-baslik {
-    margin-top: 6px;
-    font-size: 19px;
-  }
-  .ic-en {
-    font-size: 12px;
-  }
-  .ic-govde {
-    margin-top: 6px;
-    font-size: 13.5px;
-    line-height: 1.42;
-  }
-  .ic-aktif-sutun {
-    margin-top: 7px;
-    padding-top: 6px;
-  }
-  .ic-aktif-satir {
-    font-size: 12.5px;
-    line-height: 1.38;
-  }
-  .ic-aktif-no {
-    font-size: 15px;
-  }
-}
-
-/*
- * Panel dışı kısa satırlar (d2, d3, d5): KARTSIZ tipografi, nesnenin üstünde/yanında. Başlık 19 px kalın
- * (büyük metin: marka mavisi sis/krem üstünde ≥ 3:1). d2 satırı haritanın üstünde: zemin rengi hale.
- */
-.ic-yazi {
-  text-wrap: balance;
-}
-.ic-yazi-harita > * {
-  text-shadow:
-    0 0 2px #fff,
-    0 0 6px #fff,
-    0 0 12px rgb(255 255 255 / 0.9);
-}
-.ic-satir-baslik {
-  font-size: 19px;
-  line-height: 1.22;
-  font-weight: 800;
-  text-wrap: balance;
-  color: var(--color-brand-blue);
-}
-.ic-stant-baslik {
-  font-size: 20px;
-  line-height: 1.2;
-  font-weight: 700;
-  color: var(--ic-koyu);
-}
-.ic-sayilar {
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 1.3;
-  font-weight: 800;
-  /* krem zemin: marka mavisi küçük metinde 3,9:1 kalıyordu; stant koyu yeşili ≥ 10:1 */
-  color: var(--ic-koyu);
-  font-variant-numeric: tabular-nums;
-}
-
-/* d9 sloganı (küre altında, beyaz zemin) */
-.ic-d9-slogan {
-  font-size: clamp(34px, 10vw, 52px);
-  line-height: 1.08;
-  text-wrap: balance;
-  color: var(--color-brand-green);
-}
-
-/* ------------------------------ aktif sütun (d4 paneli) ------------------------------ */
-
-.ic-aktif-sutun {
-  display: grid;
-  margin-top: 10px;
-  border-top: 1px solid rgb(40 51 47 / 0.14);
-  padding-top: 9px;
-}
-.ic-aktif-satir {
-  grid-area: 1 / 1;
-  font-size: 14px;
-  line-height: 1.42;
-  color: var(--color-brand-ink);
-  visibility: hidden;
-  opacity: 0;
-  transition:
-    opacity 350ms ease,
-    visibility 0s linear 350ms;
-}
-.ic-aktif-satir[data-gorunen] {
-  visibility: visible;
-  opacity: 1;
-  transition:
-    opacity 350ms ease 120ms,
-    visibility 0s;
-}
-.ic-aktif-no {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ic-koyu);
-}
-.ic-aktif-ad {
-  font-weight: 800;
-  color: var(--ic-koyu);
-}
-.ic-aktif-meta {
-  font-weight: 600;
-  /* teal 14 px panelde 4,29:1 (AA altı) → gövde grisi */
-  color: var(--color-brand-ink);
-}
-
-/* ============================== sütun yüzleri (rotunda katmanı) ============================== */
-
-.ic-kadran {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  transform-origin: 500px 500px;
-  transition: transform 1100ms cubic-bezier(0.45, 0.05, 0.25, 1);
-}
-.ic-yuz {
-  position: absolute;
-  display: flex;
-  width: 120px;
-  height: 140px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px 14px 10px 10px;
-  background: var(--ic-koyu);
-  padding: 8px 7px 9px;
-  text-align: center;
-  color: var(--ic-krem);
-  box-shadow:
-    0 0 0 2px var(--ic-ahsap),
-    0 8px 14px -8px rgb(40 51 47 / 0.6);
-  transform-origin: 50% 50%;
-  transition:
-    scale 700ms cubic-bezier(0.3, 0.7, 0.2, 1),
-    background-color 400ms ease;
-}
-.ic-yuz[data-aktif] {
-  z-index: 2;
-  scale: 1.8;
-  background: #1f2925;
-  box-shadow:
-    0 0 0 2px var(--color-brand-orange),
-    0 14px 24px -12px rgb(40 51 47 / 0.75);
-}
-.ic-yuz-no {
-  font-size: 40px;
-  line-height: 0.95;
-  font-weight: 600;
-  color: var(--ic-krem);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.ic-yuz-ad {
-  display: -webkit-box;
-  margin-top: 5px;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  font-size: 14.5px;
-  line-height: 1.08;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-  color: #fff;
-}
-.ic-yuz-il {
-  margin-top: 3px;
-  font-size: 11.5px;
-  line-height: 1.1;
-  font-weight: 600;
-  color: rgb(247 230 205 / 0.82);
-}
-.ic-cip {
-  display: inline-flex;
-  max-width: 100%;
-  align-items: center;
-  gap: 4px;
-  margin-top: 5px;
-  border-radius: 999px;
-  background: #58281f;
-  padding: 2px 7px 2px 5px;
-  font-size: 10.5px;
-  line-height: 1.2;
-  font-weight: 700;
-  white-space: nowrap;
-  color: #fff;
-}
-.ic-cip-nokta {
-  width: 7px;
-  height: 7px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.6);
-}
-
-/* Reduced-motion: 12 satırlık liste (bölüm 4'te, panelin altında). */
-.ic-sutun-listesi {
-  margin: 0;
-  border-radius: 18px;
-  background: rgb(255 255 255 / 0.94);
-  padding: 10px 14px;
-  list-style: none;
-  box-shadow: 0 0 0 1px rgb(40 51 47 / 0.12);
-}
-.ic-liste-satir {
-  display: grid;
-  grid-template-columns: 2.1rem minmax(0, 1fr);
-  gap: 2px 6px;
-  border-bottom: 1px solid rgb(40 51 47 / 0.1);
-  padding: 7px 0;
-}
-.ic-liste-satir:last-child {
-  border-bottom: 0;
-}
-.ic-liste-no {
-  font-size: 22px;
-  line-height: 1;
-  font-weight: 600;
-  color: var(--ic-koyu);
-}
-.ic-liste-ad {
-  display: block;
-  font-size: 14px;
-  line-height: 1.2;
-  font-weight: 800;
-  color: var(--ic-koyu);
-}
-.ic-liste-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-brand-ink);
-}
-.ic-liste-cip {
-  margin-top: 0;
-}
-.ic-liste-cumle {
-  display: block;
-  margin-top: 3px;
-  font-size: 13px;
-  line-height: 1.38;
-  color: var(--color-brand-ink);
 }
 
 /* ============================== broşür (brosur katmanı) ============================== */
@@ -820,9 +289,12 @@
   color: var(--color-brand-blue);
 }
 .ic-br-imza-rol {
-  font-size: calc(24 * var(--u));
+  /* Tek satır (C turu, denetim A1-01): 24u'da iki satıra kırılıyor ve blok sayfanın 10,6u altına taşıyordu
+     ("Başkanı" kesik). 22u'da "AK Parti Gençlik Kolları Başkanı" 366u'ya sığar (ölçüldü); alt pay ≥ 24u. */
+  font-size: calc(22 * var(--u));
   line-height: 1.22;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--color-brand-green);
 }
 
@@ -1150,50 +622,20 @@
   font-size: 11px;
   line-height: 1.5;
   font-weight: 500;
+  /* Uzun atıf paragrafları ortalı taranmıyor (denetim A1-12): sola hizalı blok. */
+  text-align: start;
   color: rgb(85 84 84 / 0.85);
 }
 
 /* ============================== reduced-motion düzeni ============================== */
 
 @media (prefers-reduced-motion: reduce) {
-  /* Bölümler içeriği kadar uzar (B de aynısını yapar); motor floor(d + 0,15) durağını gösterir. */
-  .ic-bolum {
-    height: auto;
-    min-height: 100svh;
-  }
-  /* Durak metinleri ve paneller akışta, tamamı opak. */
-  .ic-dm {
-    position: relative;
-    inset: auto;
-    z-index: 20;
-    width: 100%;
-    max-width: 480px;
-    margin-inline: auto;
-    translate: none;
-    opacity: 1 !important;
-    pointer-events: auto;
-  }
-  .ic-yalniz-azalt {
-    position: static;
-    display: block;
-    width: 100%;
-    height: auto;
-    max-width: 480px;
-    margin: 0 auto;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-  .ic-yalniz-hareket,
-  .ic-azaltta-yok {
+  .ic-yalniz-hareket {
     display: none;
   }
   /* d6–d8: akış kartları okunurken sahnedeki kapak soluk (Brosur.tsx data-k); kartlar arası boşlukta ayrı sayfa gibi durmasın. */
   .ic-br:is([data-k="6"], [data-k="7"], [data-k="8"]) {
     opacity: 0.18;
-  }
-  .ic-aktif-sutun {
-    display: none;
   }
   /* Katmanda yalnızca kapak; sayfalar akıştaki kartlarda. */
   .ic-br .ic-br-sayfa:not(.ic-br-sayfa-kapak) {
@@ -1223,11 +665,6 @@
   .ic-br-statik .ic-br-sayac-kutu,
   .ic-br-statik .ic-br-en-foto {
     opacity: 1;
-  }
-  .ic-kadran,
-  .ic-yuz,
-  .ic-aktif-satir {
-    transition: none;
   }
   .ic-sarkac,
   .ic-br-yorunge {

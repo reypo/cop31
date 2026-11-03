@@ -1,5 +1,7 @@
 # `turkiye-silueti.ts`: Türkiye kıyı silüeti (H3)
 
+> **Arşiv (2 Kasım 2026, /icinden v3 B turu):** bu belgedeki `.ts` dosyası v2 SVG katmanlarıyla birlikte silindi (v3 önceden render edilmiş kliplerle çalışır). Dosya git geçmişinde (b9cd9db); yeniden üretim adımları aşağıda geçerli.
+
 `src/components/icinden/turkiye-silueti.ts`, `/icinden` rotasında d = 2'ye giden yoldaki ara katman
 ("Türkiye kıyı silüeti": küre → silüet → Antalya Körfezi → Expo) için kara poligonlarıdır
 (`docs/brief-icinden.md` §1 d = 2, §4). Dosya **üretilmiştir**; elle düzenlenmez, §8'deki adımlarla

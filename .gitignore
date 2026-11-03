@@ -42,3 +42,10 @@ next-env.d.ts
 
 # QA screenshots
 .qa/
+
+# python
+__pycache__/
+*.pyc
+
+# /icinden kodlama: yarıda kalan geçici çıktılar (scripts/icinden/kodla.mjs önce <ad>.tmp.* yazar, sonra taşır)
+public/icinden/**/*.tmp.*

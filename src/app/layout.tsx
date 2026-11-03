@@ -3,7 +3,7 @@ import { Great_Vibes, Montserrat } from "next/font/google";
 import "./globals.css";
 
 const montserrat = Montserrat({
-  weight: ["400", "500", "700", "900"],
+  weight: ["400", "500", "600", "700", "900"],
   subsets: ["latin", "latin-ext"],
   variable: "--font-display",
   display: "swap",

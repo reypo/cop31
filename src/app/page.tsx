@@ -5,6 +5,8 @@ import { networkInterfaces } from "node:os";
 import type { ReactNode } from "react";
 import { cover } from "@/lib/content";
 import { logos, photos } from "@/lib/photos";
+// /icinden kartı: gerçek render posterinden (p1) kırpım, scripts/icinden/kart.mjs üretir (≤ 60 KB).
+import icindenKart from "../../public/icinden/kart-icinden.webp";
 import QrBlock from "./qr-block";
 
 export const metadata: Metadata = {
@@ -21,9 +23,16 @@ const featured = [
   {
     href: "/icinden",
     title: "COP31'in İçinden",
-    text: "Resmî COP31 logosundan Antalya Expo'ya, standımıza ve broşürümüze kesintisiz bir dalış.",
+    text: "Resmî COP31 logosundan uzaya, Antalya Expo'ya, standımıza ve broşürümüze bölüm bölüm inen sinematik bir dalış.",
     art: <IcindenArt />,
     genis: true,
+    // Kart görseli p1 render'ından: NASA ve değiştirilmiş Copernicus Sentinel verisi içerir (atıf zorunlu, kartın hemen altında).
+    atif: (
+      <>
+        Görsel: NASA Earth Observatory (Blue Marble, Black Marble), GEBCO;{" "}
+        <span lang="en">Contains modified Copernicus Sentinel data 2025.</span>
+      </>
+    ),
   },
   {
     href: "/dunya",
@@ -37,7 +46,7 @@ const featured = [
     text: "Kaydırdıkça tek bir fidan kökten taca büyür; her büyüme aşaması AK Gençlik'in bir bölümünü anlatır.",
     art: <FidanArt />,
   },
-] satisfies readonly (Concept & { art: ReactNode; genis?: boolean })[];
+] satisfies readonly (Concept & { art: ReactNode; genis?: boolean; atif?: ReactNode })[];
 
 const comparison = [
   {
@@ -106,7 +115,7 @@ export default function Home() {
         <SectionHeading id="one-cikan" title="Öne çıkan konseptler" note="Hikâyeyi kaydırdıkça kuran üç ana yön; en yenisi en üstte." />
         <ul className="mt-5 grid gap-5 sm:grid-cols-2">
           {featured.map((c) => (
-            <li key={c.href} className={"genis" in c && c.genis ? "sm:col-span-2" : undefined}>
+            <li key={c.href} className={`flex flex-col${"genis" in c && c.genis ? " sm:col-span-2" : ""}`}>
               <Link
                 href={c.href}
                 className={`group flex h-full flex-col overflow-hidden rounded-[20px] border border-brand-mist bg-white shadow-[0_10px_28px_-16px_rgb(27_79_156/0.45)] transition-[border-color,box-shadow,translate] duration-200 hover:border-brand-green hover:shadow-[0_16px_32px_-16px_rgb(27_79_156/0.5)] motion-safe:hover:-translate-y-0.5 ${focusRing}`}
@@ -123,6 +132,7 @@ export default function Home() {
                   </span>
                 </div>
               </Link>
+              {"atif" in c && c.atif ? <p className="mt-2 px-1 text-[0.6875rem] leading-snug text-brand-ink">{c.atif}</p> : null}
             </li>
           ))}
         </ul>
@@ -252,61 +262,19 @@ function HeroGlobe() {
 }
 
 /**
- * /icinden kartı: iç içe daireler (Droste dalışı). Her daire bir öncekinin içinde, aynı odak noktasına
- * doğru küçülür: noktalı küre → harita → Expo → stant → rotunda → broşürün slogan diski → turuncu odak.
+ * /icinden kartı: v3'ün gerçek render'ı (p1: 16.00 güneşinde Dünya, Akdeniz ve terminatör). Mobilde 2:1,
+ * geniş ekranda 3:1 (`object-cover`). Görsel dekoratif; başlık ve metin kartta.
  */
 function IcindenArt() {
-  // Odak (F) ve dış daire (C0, r0); iç daireler F merkezli benzerlikle küçülür (hepsi iç içe).
-  const F = { x: 206, y: 86 };
-  const C0 = { x: 160, y: 80, r: 70 };
-  const at = (k: number) => ({ x: F.x + (C0.x - F.x) * k, y: F.y + (C0.y - F.y) * k, r: C0.r * k });
-  const [kure, harita, expo, stant, rotunda, slogan] = [1, 0.68, 0.47, 0.32, 0.215, 0.13].map(at);
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 320 160"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 size-full"
-      fill="none"
-    >
-      <defs>
-        <linearGradient id="icinden-zemin" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="1" stopColor="var(--color-brand-mist)" />
-        </linearGradient>
-        <pattern id="icinden-nokta" width="5" height="5" patternUnits="userSpaceOnUse">
-          <circle cx="2.5" cy="2.5" r="0.85" fill="var(--color-brand-blue)" fillOpacity="0.32" />
-        </pattern>
-        <linearGradient id="icinden-slogan" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0.08" stopColor="var(--color-brand-navy)" />
-          <stop offset="0.92" stopColor="var(--color-brand-blue)" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="320" height="160" fill="url(#icinden-zemin)" />
-      <g transform={`rotate(-12 ${C0.x} ${C0.y})`} stroke="var(--color-brand-green)" strokeWidth="1.2" strokeDasharray="3 6" strokeLinecap="round" opacity="0.6">
-        <path d={`M${C0.x - 118} ${C0.y} A118 34 0 0 1 ${C0.x + 118} ${C0.y}`} />
-      </g>
-      <circle cx={kure.x} cy={kure.y} r={kure.r} fill="#E3EEF6" />
-      <circle cx={kure.x} cy={kure.y} r={kure.r} fill="url(#icinden-nokta)" />
-      <circle cx={kure.x} cy={kure.y} r={kure.r} stroke="var(--color-brand-blue)" strokeOpacity="0.35" />
-      <circle cx={harita.x} cy={harita.y} r={harita.r} fill="#ffffff" stroke="var(--color-brand-blue)" strokeWidth="1.4" />
-      <circle cx={expo.x} cy={expo.y} r={expo.r} fill="var(--color-brand-green)" fillOpacity="0.22" stroke="var(--color-brand-green)" strokeWidth="1.4" strokeDasharray="4 3" />
-      <circle cx={stant.x} cy={stant.y} r={stant.r} fill="#F7E6CD" stroke="#B49168" strokeWidth="1.2" />
-      <circle cx={rotunda.x} cy={rotunda.y} r={rotunda.r - 2} stroke="#28332F" strokeWidth="4" />
-      <circle cx={slogan.x} cy={slogan.y} r={slogan.r} fill="url(#icinden-slogan)" />
-      <circle cx={F.x} cy={F.y} r="2.6" fill="var(--color-brand-orange)" />
-      <g transform={`rotate(-12 ${C0.x} ${C0.y})`}>
-        <path
-          d={`M${C0.x + 118} ${C0.y} A118 34 0 0 1 ${C0.x - 118} ${C0.y}`}
-          stroke="var(--color-brand-blue)"
-          strokeWidth="1.2"
-          strokeDasharray="3 6"
-          strokeLinecap="round"
-          opacity="0.5"
-        />
-        <circle cx={C0.x - 70} cy={C0.y + 27} r="4" fill="var(--color-brand-orange)" />
-      </g>
-    </svg>
+    <Image
+      src={icindenKart}
+      alt=""
+      fill
+      sizes="(min-width: 720px) 656px, calc(100vw - 32px)"
+      placeholder="blur"
+      className="bg-black object-cover"
+    />
   );
 }
 

@@ -4,7 +4,8 @@ import Image from "next/image";
 import { memo, startTransition, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { backCover, baskanMesaji, cop31, cover, facts, iklim } from "@/lib/content";
 import { logos, photos, type PhotoAsset } from "@/lib/photos";
-import { BROSUR_GEOMETRI, dAbone } from "./derinlik";
+import { BROSUR_GEOMETRI } from "./brosur-geometri";
+import { dAbone } from "./d-yayin";
 
 /**
  * Broşür katmanı (docs/brief-icinden.md §1 d = 5…8): krem zemin üstünde gölgeli beyaz kâğıt;
@@ -13,7 +14,7 @@ import { BROSUR_GEOMETRI, dAbone } from "./derinlik";
  * opacity/transform. preserve-3d YOK. Değerler dAbone'dan (B'nin rAF döngüsü) okunur ve doğrudan
  * DOM'a yazılır; React state'e yalnızca görsel kapıları girer.
  *
- * Geometri B'nin sözleşmesidir (derinlik.ts `BROSUR_GEOMETRI`, katman 1000×1000 nominal):
+ * Geometri B'nin sözleşmesidir (brosur-geometri.ts `BROSUR_GEOMETRI`, katman 1000×1000 nominal):
  * kâğıt `sayfa`, kapaktaki lacivert slogan dairesi `slogan` (rotundadaki "Bugün" diski buna oturur),
  * arka kapaktaki küre fotoğrafı dairesi `arkaKure` (d9 küre katmanı buna oturur). Kapak ve arka
  * kapağın sanat karesi bu iki daireden geriye hesaplanır (/brosur cover.tsx oranları).
@@ -489,7 +490,7 @@ function ArkaKapakIcerik({ acik, eager, katman = false }: SayfaProps) {
             aspect="1 / 1"
           />
         </div>
-        <blockquote className="ic-br-mesaj" style={{ left: u(278), top: u(694), width: u(366) }}>
+        <blockquote className="ic-br-mesaj" style={{ left: u(278), top: u(690), width: u(366) }}>
           <p>{tirnak(ilkCumle(baskanMesaji.paragraphs[0]))}</p>
           <footer className="ic-br-imza">
             <span className="ic-br-imza-ad">{baskanMesaji.name}</span>
@@ -719,7 +720,7 @@ export function BrosurMetni({ sayfa }: { sayfa: SayfaAdi }) {
  * Reduced-motion düzeni: broşür sayfaları akışta, okunur kartlar (hareketli düzende `display:none`,
  * içindeki lazy görseller yüklenmez). Sayfa 1 dalış bitmiş hâliyle (sayaç 100.000+).
  */
-export function BrosurKarti({ sayfa }: { sayfa: Exclude<SayfaAdi, "kapak"> }) {
+export function BrosurKarti({ sayfa }: { sayfa: SayfaAdi }) {
   const Icerik = ICERIK[sayfa];
   return (
     <div className="ic-br-kart">
