@@ -301,3 +301,100 @@ python -X utf8 -P calis.py --kilit --etiket e_onizleme -- --klip t12,l2,t23 --re
 python -X utf8 -P calis.py --kilit --etiket e_son_<klip> -- --klip <klip> --engine CYCLES --res 1920 --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/e_son_olcum.jsonl
 #   sırayla t12, l2, t23: klip başına ayrı süreç ve kilit, aralarda 25 sn
 ```
+
+## F turu (brief §13: "fiske" geçişler) — S1-F tasarım + önizleme
+
+Kullanıcı: "önceki tasarımda en güzel olan geçişlerdi; Antalya'dan fuar alanına hızlıca yakınlaşma… her geçişte olmalı".
+Bu tur yalnız tasarım ve EEVEE 960² önizleme; son render yok.
+
+**Profil** (`kamera.py`, `PROFIL = "fiske"`; `sahne.py --profil eski` E turu zamanlamasını bire bir verir):
+
+- `fiske(t, a, k, m)`: ln d ilerlemesi. İlk `a` (0,15 s) beşinci derece kalkış (`_besinci`; s, s', s'' sürekli, hız 0'dan),
+  sonra ease-out `1 − (1 − m·u)^k` (`m` = 1 tam iniş; t34a'da `m` 0,4: kare 47'de hız sıfır değil). Kalkışın değeri
+  "yarı hız" kuralıyla (kalkış ortalama hızı = birleşme hızının yarısı) → hız 0'dan tekdüze artar, birleşmede aşma yok.
+- `ilerleme(klip, f)` → (s, t_eski). t01/t12/t34a: pencereler eski fonksiyonlarıyla t_eski(s) = ease_sine⁻¹(s)
+  (t34a: `t34a_eski_kare` = t34a_ilerleme⁻¹) noktasında → **yol E turuyla aynı, yalnız zamanlama değişti**. t23: yeni s
+  pencereleri (`T23_H` baş −120° s 0,10–0,90; `T23_P` eğim s 0,45–0,99; oy/lens eski sınırların s karşılığı); eski yol
+  baş dönüşünü ve eğimi kent yaklaşımına sıkıştırıyordu (bulut perdesinin içi). `s = 1`'de eski formül → uç kareler
+  bit düzeyinde aynı.
+- Kare sayıları `KARE_FISKE` (F-B: t01 54, t12 54, **t23 72** (2,4 s; son 6 kare durgun), **t34a 36** (1,2 s; t34
+  toplamı `TOPLAM_T34` 60)), `KARE_ESKI` (54/60/84/48, t34 72); `profil_sec()` `KLIPLER`'i (ve `toplam`'ı) günceller.
+  k: t01/t12 2,4, t23 2,2.
+- t34a kipi `T34A_KIP` (`sahne.py --t34a_kip`, varsayılan **`kalkis`**, F-B): `kalkis(t, a, us)` = fiske kalkışı (0,15 s,
+  beşinci derece, yarı hız kuralı) + sürekli ivmelenme `t^us` (`KALKIS_US` 1,25): hız kare kare artar, çatı üstünde
+  takılma yok, kare 35'te (ışıklık bandı ~106 m, eski kare 47'nin durumu) hız en yüksek. `fiske` = F-A'nın kesik
+  ease-out adayı (m 0,4), yalnız karşılaştırma.
+
+**Sahne** (`sahne.py`): `--profil fiske|eski`; `--t23_bulut oto|eski|yok` (fiske'de perde ve yerel kümülüs yok;
+`eski` anlamlı olan `--profil eski` ile); `--sabit_tohum oto` (t23 son 6 durgun kare: F-B 66–71, E 78–83; t34a 0–2);
+t34a ışıklık parıltısı `isik_k` yolun aynı noktasına (t_eski) bağlı; JSON'da `f_turu` (profil, a, k, m, kare,
+kare kare ilerleme, t23 pencereleri). Pozlama zaten irtifaya bağlı (`pozlama(st["irtifa"])`, `POZ_EGRI` ln irtifa).
+`parlama.py --bas 33` (varsayılan, F-B): rampa 33–35 (a_f 0,29 / 1,31 / 3,2), kare 35 tam #FFF1DC (`--son` boşsa
+ham/'daki en büyük kare); F-A `--bas 45` (son 47); `--bas 38` eski tablo. t34a.json `kesme` alanı K için: `s1_son_kare`
+35, `s2_ilk_kare` 36, `t34b_t34_ofset` 36, `parlama_bas` 33, `kirpim_y_t34` {200 → 420, k0 35, k1 36}; `toplam_kare_t34`
+60, `t34_kare` [0, 35]. `t34-birlestir.py` t34a uzunluğunu `kare`'den okur (kod değişikliği gerekmez).
+`kontak.py --n 0 --onek s1-f- --bicim png --on <dizin>`: bütün kareler ızgarada (kare no + irtifa).
+- Pozlama: `--poz oto` → fiske + bulutsuz t23'te `egri_f`. `POZ_EGRI`'nin 25–88 km düğümleri F önizlemesinden yeniden
+  çıkarıldı; luma tabanı %22,5, ölçülen EV duyarlılığı ≈ 8,4 puan/EV. C'nin negatif düğümleri yerel kümülüsü
+  bastırmak içindi ve bulutsuz kentte kare 23'ü %16,8'e indiriyordu. ≥ 100 km ve ≤ 25 km E ile aynı.
+- Teşhis bayrakları (yalnız EEVEE; Cycles etkilenmez): `--golge_m` (güneş gölgesi en büyük çözünürlüğü),
+  `--ee_rt` (ekran-uzayı ışın izleme + hızlı GI), `--isik_carpan` (ışıklık parıltısı çarpanı).
+
+Önizleme (F-A, 960²; kareler `render/_onizleme/s1-f*`, kontak `s1-f-<klip>.png`, mp4, kent kareleri
+`s1-f-t23-kent-*.png`, kaplama grafiği `s1-f-t23-kaplama.png`):
+
+- Dikişler: t01[53]↔l1[0] ΔE00 0,000; t12[53]↔l2[0] 0,000; t23[83]↔l3[0] 0,020; l3[0]↔t34a[0] 0,040.
+- t23 bulut kaplaması en çok %0,88 (güneş parıltısı). Luma kare 0–31 %20,4–25,7, sonra l3'ün %40'ına tekdüze.
+- OSM 40 km açılışında (kare 28) sıçrama yok.
+- t34a parlaması: kare 45 %78,1, 46 %93,2, 47 tam #FFF1DC. %80+ beyaz kare S1'de 2.
+- **EEVEE uyarıları:**
+  - t23 alçak irtifada TAA 16 ile kare başına 46–75 sn; maliyet örnek başına (TAA 4 19–23 sn; MB ya da gölge değil).
+  - t34a'da ışıklığa ~310 m kala (fiske kare 19–20, eski kare 29) EEVEE süreci 0xC0000409 ile çöküyor. MB, gölge,
+    ışın izleme ve parıltı kapatılınca da çöküyor.
+  - Önizlemede bu yüzden t23 kare 43–83 TAA 4, t34a Cycles 960² 16 örnek + OIDN (kare başına 2,3 sn).
+  - Sonraki önizlemeler için Cycles 960² düşük örnek EEVEE'den hızlı ve kararlı.
+
+```
+python -X utf8 -P calis.py --etiket f_on_g1 -- --klip t01,l1,t12,l2 --kareler "t01:0-53;l1:0;t12:0-53;l2:0" --res 960 --onizleme --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1-f
+python -X utf8 -P calis.py --etiket f_on_g2 -- --klip t23,l3 --kareler "t23:0-83;l3:0" --res 960 --onizleme --kilit --samples 4 --cikis D:/soft/cop31-varlik/render/_onizleme/s1-f
+python -X utf8 -P calis.py --etiket f_on_g3 -- --klip l3,t34a --kareler "l3:0;t34a:0-47" --engine CYCLES --res 960 --samples 16 --depth 8 --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1-f-34
+python -X utf8 -P parlama.py D:/soft/cop31-varlik/render/_onizleme/s1-f-34/t34a --bas 45
+python -X utf8 kontak.py kontak t23 --render D:/soft/cop31-varlik/render/_onizleme/s1-f --on D:/soft/cop31-varlik/render/_onizleme --onek s1-f- --n 0 --bicim png
+```
+
+### F-B (brief §13.5): kısalan klipler, t34a "kalkis" — S1-F2
+
+GPU'suz ölçüm (`scratchpad/f-s1b/profil.py`; master 1920², K = dikey kırpım kenar ortası, S = kırpım sınırları):
+
+| klip | kare / s | p(0,5) ln kadraj | tepe K (kare) | K > 0,3 s | son 3 S px |
+|---|---|---|---|---|---|
+| t01 | 54 / 1,8 | 0,804 | uzay | — | 0,48 / 0,24 / 0,05 |
+| t12 | 54 / 1,8 | 0,821 | 39,9 (6) | 39,0 | 1,08 / 0,53 / 0,12 |
+| t23 | **72 / 2,4** (k 2,2) | 0,776 | 274,8 (5) | 141,1 (9) | 0 / 0 / 0 (66–71 durgun) |
+| t34a | **36 / 1,2** (kalkis 1,25) | t34 (0–59) **0,764**; kare 30'da 0,784 | 97,6 (34) | 97,6 | 254 / 263 / 266 (parlamaya dalış) |
+
+t34a kare 10–35 hız / tepe en az: ln d 0,73, K 0,513, S 0,51 (tam kare M 0,485: eğim penceresi, yol E ile aynı); hız
+kare 2–35 tekdüze artar. Uç eşitlik (konum/yönelim/lens farkı 0): t23[71] ≡ E t23[83] ≡ l3[0], t34a[35] ≡ E t34a[47],
+t34a[0..1] ≡ l3[0]. Önizleme: Cycles 960², 16 örnek + OIDN, `render/_onizleme/s1-f2-34/`, kontak `s1-f2-t34a.png`.
+
+```
+python -X utf8 -P calis.py --kilit --etiket f2_on_t34a -- --klip l3,t34a --kareler "l3:0;t34a:0-35" --engine CYCLES --res 960 --samples 16 --depth 8 --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1-f2-34
+python -X utf8 -P parlama.py D:/soft/cop31-varlik/render/_onizleme/s1-f2-34/t34a --bas 33
+python -X utf8 kontak.py kontak t34a --render D:/soft/cop31-varlik/render/_onizleme/s1-f2-34 --on D:/soft/cop31-varlik/render/_onizleme --onek s1-f2- --n 0 --bicim png
+```
+
+**Son render (R-F; sıralı, tek Blender süreci, aralarda ≥ 20 sn; cwd `scripts/blender/s1`).** Önce E yedeği
+(`render-son-e\`, yalnız t01/t12/t23/t34a + json, kopya) doğrulanır, sonra `render-son/{t01,t12,t23,t34a}` silinir
+(eski t12 54–59, t23 72–83, t34a 36–47 kalmasın). Varsayılanlar (`--profil fiske`, `--t23_bulut oto` → yok, `--poz oto`
+→ egri_f, `--sabit_tohum oto`, `--t34a_kip kalkis`) doğru; ek bayrak yok.
+
+```
+python -X utf8 -P calis.py --etiket f_son_t01  -- --klip t01  --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/f_son_olcum.jsonl
+python -X utf8 -P calis.py --etiket f_son_t12  -- --klip t12  --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/f_son_olcum.jsonl
+python -X utf8 -P calis.py --etiket f_son_t23  -- --klip t23  --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/f_son_olcum.jsonl
+python -X utf8 -P calis.py --etiket f_son_t34a -- --klip t34a --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/f_son_olcum.jsonl
+python -X utf8 -P parlama.py D:/soft/cop31-varlik/render-son/t34a --bas 33
+python -X utf8 -P kontak.py hepsi --render D:/soft/cop31-varlik/render-son
+```
+
+Tahmin (ölçülmedi; D/E kare sürelerinden): t01 ~1,8 + t12 ~4,7 + t23 ~11–13 + t34a ~4,9 ≈ **22–25 dk** GPU.

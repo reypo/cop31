@@ -285,7 +285,8 @@
 .ic-br-imza-ad {
   font-size: calc(28 * var(--u));
   line-height: 1.2;
-  font-weight: 800;
+  /* 900: Google yüzleri 700/900 olduğundan 800 hep 900 çiziliyordu; yerel değişken yazıyla görünüm aynı kalsın (W-F). */
+  font-weight: 900;
   color: var(--color-brand-blue);
 }
 .ic-br-imza-rol {

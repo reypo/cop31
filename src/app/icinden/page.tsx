@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import { Lora } from "next/font/google";
+import localFont from "next/font/local";
 import { stant } from "@/lib/stant";
 import Icinden3 from "@/components/icinden/Icinden3";
 // Kökteki paylaşım görseli: sayfada openGraph verilince dosya kuralıyla gelen görsel miras alınmıyor (ölçüldü).
@@ -11,11 +11,16 @@ import ogGorsel from "../opengraph-image.jpg";
  * etiketleri (500 italik), sütun numaraları (700). Değişken yazı (ağırlık ekseni) iki stil; yalnız bu
  * rotada. `--font-serif` /icinden sarmalayıcısına verilir (layout.tsx'e dokunulmaz).
  */
-const lora = Lora({
-  style: ["normal", "italic"],
-  subsets: ["latin", "latin-ext"],
+const seri = localFont({
+  // Lora 3.008 (OFL, Reserved Font Name "Lora"): alt kümelenmiş sürüm OFL §3 gereği "Cop31 Serif" adını taşır.
+  // Aynı dosyalar /dunya'da; üretim komutları layout.tsx başlığında.
+  src: [
+    { path: "../fonts/Cop31Serif.woff2", weight: "400 700", style: "normal" },
+    { path: "../fonts/Cop31Serif-Italic.woff2", weight: "400 700", style: "italic" },
+  ],
   variable: "--font-serif",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 
 const BASLIK = "COP31'in İçinden — AK Gençlik";
@@ -59,7 +64,7 @@ const stantRenkleri = {
  */
 export default function IcindenPage() {
   return (
-    <main className={lora.variable} style={stantRenkleri as CSSProperties}>
+    <main className={seri.variable} style={stantRenkleri as CSSProperties}>
       <Icinden3 />
     </main>
   );

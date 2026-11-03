@@ -22,13 +22,12 @@ def kareler(dizin):
     return [(int(os.path.basename(f)[2:6]), f) for f in fs]
 
 
-def kontak(klip, kaynak=None, n=6, karo=520, cikis=None, baslik=None):
+def kontak(klip, kaynak=None, n=6, karo=520, cikis=None, baslik=None, sut=3):
     dz = kaynak or os.path.join(ONIZ, f"s2-{klip}")
     ks = kareler(dz)
     if not ks:
         raise SystemExit(f"kare yok: {dz}")
     sec = [ks[round(i * (len(ks) - 1) / (n - 1))] for i in range(n)] if len(ks) >= n else ks
-    sut = 3
     sat = (len(sec) + sut - 1) // sut
     pad = 10
     W = Image.new("RGB", (sut * karo + (sut + 1) * pad, sat * karo + (sat + 1) * pad + 40), (24, 24, 26))
@@ -55,7 +54,7 @@ def kontak(klip, kaynak=None, n=6, karo=520, cikis=None, baslik=None):
     return yol
 
 
-def mp4(klip, kaynak=None):
+def mp4(klip, kaynak=None, onek="s2-"):
     dz = kaynak or os.path.join(ONIZ, f"s2-{klip}")
     ks = kareler(dz)
     if len(ks) < 2:
@@ -67,7 +66,7 @@ def mp4(klip, kaynak=None):
     cik = []
     for ad, vf in (("d", f"crop={c1}:{res}:{c0}:0,scale=720:1280:flags=lanczos,format=yuv420p"),
                    ("y", f"crop={res}:{c1}:0:{c0},scale=1280:720:flags=lanczos,format=yuv420p")):
-        yol = os.path.join(ONIZ, f"s2-{klip}-{ad}.mp4")
+        yol = os.path.join(ONIZ, f"{onek}{klip}-{ad}.mp4")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", "30", "-start_number", str(bas), "-i",
                         os.path.join(dz, "k_%04d.png"), "-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "23",
                         "-profile:v", "high", "-movflags", "+faststart", "-an", yol], check=True)
@@ -156,12 +155,16 @@ if __name__ == "__main__":
     p.add_argument("--cikis", default=None)
     p.add_argument("--baslik", default=None)
     p.add_argument("--mp4", type=int, default=1)
+    p.add_argument("--n", type=int, default=6)          # F: kare sayısı (eşit aralıklı; ilk ve son dahil)
+    p.add_argument("--sut", type=int, default=3)        # F: sütun sayısı
+    p.add_argument("--karo", type=int, default=520)
+    p.add_argument("--mp4_onek", default="s2-")         # F: "s2-f-" (E önizleme mp4'leri ezilmesin)
     x = p.parse_args()
     if x.is_ == "kontak":
-        kontak(x.hedef, x.kaynak, cikis=x.cikis, baslik=x.baslik)
+        kontak(x.hedef, x.kaynak, n=x.n, karo=x.karo, cikis=x.cikis, baslik=x.baslik, sut=x.sut)
         if x.mp4:
-            mp4(x.hedef, x.kaynak)
+            mp4(x.hedef, x.kaynak, x.mp4_onek)
     elif x.is_ == "mp4":
-        mp4(x.hedef, x.kaynak)
+        mp4(x.hedef, x.kaynak, x.mp4_onek)
     else:
         metin(x.hedef, x.bant, x.metin, x.scrim, x.alfa)

@@ -56,10 +56,14 @@ ap.add_argument("--uzay_ev", type=float, default=1.0)         # uzay karelerinde
 ap.add_argument("--kilit", action="store_true")               # klip başına GPU kilidi (render\.gpu-kilit)
 ap.add_argument("--ham", default="t34a")                      # bu klipler <cikis>/<klip>/ham/'a yazılır (görüntü uzayı parlama)
 # C turu (brief §11.1)
-ap.add_argument("--poz", default="egri", choices=["egri", "rampa"])   # egri: ölçülmüş POZ_EGRI; rampa: --poz_rampa
+ap.add_argument("--poz", default="oto", choices=["oto", "egri", "egri_f", "rampa"])   # egri: ölçülmüş POZ_EGRI; rampa: --poz_rampa
+# F turu: egri_f = POZ_EGRI'nin 25–88 km kısmı yeniden (C turunun 37–66 km negatif düğümleri kare 36'dan açılan yerel
+# kümülüsün parlaklığını bastırmak içindi; bulut kalkınca kent yaklaşımında luma %23 → %16,8 çukuru yaptı; ölçüldü).
+# oto: --profil fiske ve --t23_bulut yok → egri_f; aksi hâlde egri (E turu bire bir).
 ap.add_argument("--poz_rampa", default="30e3,400e3")          # uzay pozlaması rampası (m); B: 150e3,1000e3
-# geçişlerde sabit tohumlu kareler (l3 ile aynı tohum 31): t23'ün durgun son 6 karesi, t34a'nın ilk 3 karesi
-ap.add_argument("--sabit_tohum", default="t23:78-83;t34a:0-2")
+# geçişlerde sabit tohumlu kareler (l3 ile aynı tohum 31): t23'ün durgun son 6 karesi, t34a'nın ilk 3 karesi.
+# F turu: "oto" = kamera.KLIPLER'den (t23: N−6…N−1, iniş/durgun kareler; t34a: 0–2) → E'de "t23:78-83;t34a:0-2", F-B'de "t23:66-71;t34a:0-2"
+ap.add_argument("--sabit_tohum", default="oto")
 ap.add_argument("--exr", action="store_true")                 # teşhis: her kareyi ayrıca doğrusal EXR (pozlamasız) yaz
 # E turu (brief §12.2)
 ap.add_argument("--rolyef_guc", type=float, default=0.2)      # Dunya ShaderNodeBump gücü (çift gölgede 0,15; 0 = kapalı)
@@ -69,7 +73,28 @@ ap.add_argument("--hale_ic_lo", type=float, default=-0.04)   # hale/pus gece sı
 ap.add_argument("--hale_ic_H", type=float, default=0.02)     # uzuv içi pus ölçeği (1 − b)
 ap.add_argument("--hale_ic_A", type=float, default=0.7)      # uzuv içi pus genliği (dış hale tepesine göre)
 ap.add_argument("--teshis_bulut_yok", action="store_true")   # yalnız teşhis: bulut kabuğu küçültülür
+# F turu (brief §13): "fiske" zamanlaması (kamera.py; varsayılan) | "eski" (E turu zamanlaması bire bir)
+ap.add_argument("--profil", default="fiske", choices=["fiske", "eski"])
+# t23 bulut perdesi + yerel kümülüs: "eski" (C/E: perde kare 57, kümülüs kare 36–76), "yok" (F: perde kalkar);
+# "oto" = profil eski → eski, fiske → yok
+ap.add_argument("--t23_bulut", default="oto", choices=["oto", "eski", "yok"])
+# t34a kipi: "kalkis" (F-B varsayılanı, brief §13.5: fiske kalkışı + sürekli ivmelenme, kamera.kalkis / KALKIS_US) |
+# "fiske" (F-A adayı: kesik ease-out m 0,4). Kare sayısı kamera.KARE_FISKE (F-B 36; t34 = 60)
+ap.add_argument("--t34a_kip", default="kalkis", choices=["kalkis", "fiske"])
+# F turu önizleme hızı: EEVEE güneş gölgesi en büyük çözünürlüğü (m). 0,0005 (E) alçak irtifada kare başına 45–60 sn;
+# Cycles bu ayarı kullanmaz (son render etkilenmez)
+ap.add_argument("--golge_m", type=float, default=0.0005)
+# teşhis (F turu, EEVEE çökmesi): ışıklık parıltısı isik_k çarpanı (1 = tasarım; 0 = parıltı kapalı)
+ap.add_argument("--isik_carpan", type=float, default=1.0)
+# teşhis (F turu, EEVEE çökmesi t34a kare 19–20): EEVEE ekran-uzayı ışın izleme + hızlı GI (1 = E ayarı)
+ap.add_argument("--ee_rt", type=int, default=1)
 a = ap.parse_args(argv)
+KM.profil_sec(a.profil)
+KM.T34A_KIP = a.t34a_kip
+T23_BULUT = (("eski" if a.profil == "eski" else "yok") if a.t23_bulut == "oto" else a.t23_bulut)
+if a.sabit_tohum == "oto":
+    _n23 = KM.KLIPLER["t23"]["kare"]
+    a.sabit_tohum = f"t23:{_n23 - KM.T23_DURGUN}-{_n23 - 1};t34a:0-2"
 B_YAKIN = a.yakin == "B"
 ORNEK = {"l1": 32, "l2": 32}                                  # döngülerde maks örnek (diğerleri 64)
 DEKLANSOR = {"t12": 0.3, "t23": 0.25, "t34a": 0.25}            # diğerleri 0,5 (E turu: t12 0,5 → 0,3, hale şeridi)
@@ -929,7 +954,7 @@ GOK = sky
 
 # ------------------------------------------------------------------ güneş lambası
 gl = bpy.data.lights.new("Gunes", "SUN"); gl.energy = 4.0; gl.angle = math.radians(0.53)
-for k, v in (("shadow_maximum_resolution", 0.0005), ("use_shadow_jitter", False)):
+for k, v in (("shadow_maximum_resolution", a.golge_m), ("use_shadow_jitter", False)):     # yalnız EEVEE (Cycles kullanmaz)
     if hasattr(gl, k):
         setattr(gl, k, v)
 go = bpy.data.objects.new("Gunes", gl); sc.collection.objects.link(go)
@@ -962,10 +987,10 @@ log("d3:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in D3.items
 # klip-yerel kare (~%68). C turu: t23 yerel zamanı (kamera.t23_zaman) kare 40'tan sonra hızlandığı için τ(57) ≈ 59 —
 # perde ve yerel bulut katmanı B turundaki konumda/irtifada (~5,5 km) kalır.
 T23_PERDE = 57
-st_p = KM.kamera("t23", T23_PERDE, D3)
-pc = st_p["C"]
 YEREL_BULUT = []
-if not a.sadece_json and "t23" in klipler:
+if not a.sadece_json and "t23" in klipler and T23_BULUT == "eski":
+    st_p = KM.kamera("t23", T23_PERDE, D3)
+    pc = st_p["C"]
     n_kat = 9
     kat_ara = 55.0
     m_bl, d = malzeme("YerelBulut")
@@ -1007,7 +1032,7 @@ if not a.sadece_json and "t23" in klipler:
         YEREL_BULUT.append(o)
     log("yerel kümülüs katmanı: merkez", np.round(pc, 1), "irtifa", round(st_p["irtifa"]), "m")
 
-# ------------------------------------------------------------------ kameraya bağlı düzlemler: bulut perdesi (t23), parlama (t34a 44–47)
+# ------------------------------------------------------------------ kameraya bağlı düzlemler: bulut perdesi (t23), parlama (t34a son 4 kare; yalnız --yakin A)
 def kamera_duzlem(ad, renk, guc, attr_ad):
     m_, d = malzeme(ad)
     m_.surface_render_method = "BLENDED"
@@ -1025,8 +1050,8 @@ def kamera_duzlem(ad, renk, guc, attr_ad):
     return o
 
 
-if not a.sadece_json and "t23" in klipler:
-    # bulutun içi: düzgün, güneşli bulut beyazı (en beyaz kare 59 ≈ %70)
+if not a.sadece_json and "t23" in klipler and T23_BULUT == "eski":
+    # bulutun içi: düzgün, güneşli bulut beyazı (en beyaz kare 59 ≈ %70). F turu (--t23_bulut yok): perde kalkar
     OB["perde"] = kamera_duzlem("Perde", (1.0, 0.975, 0.95), 2.2, "perde_k")
 if not a.sadece_json and "t34a" in klipler and not B_YAKIN:
     # AgX Punchy + pozlama 0,3 altında #FFF1DC'ye en yakın (ölçüldü: 250,240,220; ort. %92,8)
@@ -1040,6 +1065,8 @@ def ss(x, a_, b_):
 
 
 POZ_RAMPA = tuple(float(x) for x in a.poz_rampa.split(","))
+if a.poz == "oto":
+    a.poz = "egri_f" if (a.profil == "fiske" and T23_BULUT == "yok") else "egri"
 # C turu, ölçülmüş eğri (poz_egri.py; önizleme EXR + OCIO AgX Punchy): (irtifa km, k), pozlama = exposure + uzay_ev · k.
 # Uçlarda kıskaç: ≥ 965,6 km → k = 1 (l2/t12/l1/t01: B ile aynı), ≤ 28,1 km → k = 0 (l3/t34a: B ile aynı). Arada
 # luma tabanı %23 (kare 16–36), kare 36–40 en çok +2 puan; 30–400 km rampası çukuru kapatmıyordu (ölçüm: kare 20 %15,1,
@@ -1062,8 +1089,14 @@ def _fc_egimleri(xs, ys):
     return m
 
 
-_PX = [math.log(x) for x, _ in POZ_EGRI]
-_PY = [k for _, k in POZ_EGRI]
+# F turu (bulutsuz t23, --poz egri_f): ≥ 115 km POZ_EGRI aynen; 25–88 km düğümleri F önizlemesinden (EEVEE 960², eski
+# eğriyle kare 19–30 luma 23,0 → 16,8 → 22,2; EV duyarlılığı kare 19–23'te ölçülen ≈ 8,4 luma puanı/EV) luma tabanı
+# %22,5 hedefiyle; ≤ 25 km k = 0 (l3/t34a ve t23'ün kare 31 sonrası E ile aynı 0,3 EV).
+POZ_EGRI_F = [(25.00, 0.000), (28.27, 0.030), (31.93, 0.130), (36.06, 0.220), (40.75, 0.290), (46.13, 0.360),
+              (52.32, 0.410), (59.50, 0.430), (66.42, 0.440), (88.35, 0.450)] + [q for q in POZ_EGRI if q[0] > 100.0]
+_PE = POZ_EGRI_F if a.poz == "egri_f" else POZ_EGRI
+_PX = [math.log(x) for x, _ in _PE]
+_PY = [k for _, k in _PE]
 _PM = _fc_egimleri(_PX, _PY)
 
 
@@ -1105,7 +1138,7 @@ def ortam(klip, f, st):
         # S1b: kopuk hale düzeltmesi l1 irtifasında (15.529 km) 0 → t12 k10 (13.475 km) 1; 1.000 km altında yine 0
         "hale_ic_k": ss(alt, 15.45e6, 13.45e6) * ss(alt, 1.0e6, 1.9e6),
     }
-    if klip == "t23":
+    if klip == "t23" and T23_BULUT == "eski":
         o["yerel_bulut_k"] = ss(f, 36, 50) * (1 - ss(f, 66, 76))
         o["perde_k"] = 0.97 * math.exp(-((f - T23_PERDE) / 2.6) ** 2)
     if K["tur"] == "dongu":
@@ -1116,8 +1149,13 @@ def ortam(klip, f, st):
         else:
             o["saat_su"] = th
     if klip == "t34a":
-        o["isik_k"] = ss(f, 28, 44)
-        o["parlama_k"] = {41: 0.12, 42: 0.4, 43: 0.78}.get(int(round(f)), 1.0 if f >= 44 else 0.0)
+        # F turu: ışıklık parıltısı yolun aynı noktasına bağlı (eski yerel kare fz; fiske'de ilerlemeden geri çözülür)
+        f_yol = KM.ilerleme("t34a", f)[1] if a.profil == "fiske" else f
+        o["isik_k"] = ss(f_yol, 28, 44) * a.isik_carpan
+        # parlama düzlemi (yalnız --yakin A; B'de kurulmaz): klibin sonuna bağıl (48 karede 41–43 rampa, 44– tam; F-B 36
+        # karede 29–31, 32–)
+        n_ = K["kare"]
+        o["parlama_k"] = {n_ - 7: 0.12, n_ - 6: 0.4, n_ - 5: 0.78}.get(int(round(f)), 1.0 if f >= n_ - 4 else 0.0)
     # güneş rengi: uzayda beyaz, atmosferde alçak güneşin sıcak tonu
     yuk = GUN["yukseklik"]
     sicak = np.array([1.0, 0.86, 0.70]) if yuk < 12 else np.array([1.0, 0.91, 0.80])
@@ -1276,20 +1314,60 @@ def disari_aktar():
             js["dunyaR"] = dR; js["dunyaC"] = dC
             js["amblemDaire"] = {"cx": 960, "cy": 768, "r": 172.5}
         if klip == "t34a":
-            js["not"] = ("t34 = 72 kare; S1 kare 0-47 (dis), S2 kare 48-71 (ic). Parlama goruntu uzayinda (s1/parlama.py): kare 38'den "
-                         "rampa, 44-47 ort. parlaklik >= %92, kare 47 tam #FFF1DC (S2 kare 48 ile birebir).")
-            js["toplam_kare_t34"] = 72
+            T34 = K["toplam"]                       # F-B 60 (eski 72); S2 t34b = T34 − n kare
+            pb = n - 3                              # parlama.py --bas (F-B 33: rampa 33–35)
+            js["not"] = ((f"t34 = {T34} kare; S1 kare 0-{n - 1} (dis), S2 kare {n}-{T34 - 1} (ic). Parlama goruntu uzayinda "
+                          f"(s1/parlama.py --bas {pb}): kare {pb}-{n - 1} rampa, kare {n - 1} tam #FFF1DC (S2 kare {n} ile birebir); "
+                          f"%80+ beyaz kare t34'te <= 6 (S1 {pb}-{n - 1} + S2 {n}-{n + 2}).")
+                         if a.profil == "fiske" else
+                         ("t34 = 72 kare; S1 kare 0-47 (dis), S2 kare 48-71 (ic). Parlama goruntu uzayinda (s1/parlama.py --bas 38): kare 38'den "
+                          "rampa, 44-47 ort. parlaklik >= %92, kare 47 tam #FFF1DC (S2 kare 48 ile birebir)."))
+            js["toplam_kare_t34"] = T34
+            # K (t34-birlestir.py, fragman.mjs, kodla.mjs) t34a'nın uzunluğunu "kare"dan okur: S1 t34a k_0000…k_{n−1} →
+            # t34 0…n−1, S2 t34b k_0000… → t34 n… (t34b.json "t34_ofset" = n olmalı). Kesme (iki sahnenin birleştiği
+            # kare çifti) ikisi de tam #FFF1DC: n−1 ↔ n. KIRPIM_Y t34 basamağı {k0: n−1, k1: n} (brief §13.5).
+            js["t34_kare"] = [0, n - 1]
+            js["kesme"] = {"s1_son_kare": n - 1, "s2_ilk_kare": n, "t34b_t34_ofset": n, "ton": "#FFF1DC",
+                           "parlama_bas": pb if a.profil == "fiske" else 38,
+                           "kirpim_y_t34": {"bas": 200, "son": 420, "k0": n - 1, "k1": n},
+                           "not": (f"S1 t34a son karesi (t34 {n - 1}) ve S2 t34b ilk karesi (t34 {n}) tam #FFF1DC, fark 0; "
+                                   f"t34a[{n - 1}] kamera durumu = eski (E) t34a[47] (isiklik bandi, ~{KM.kamera('t34a', n - 1, D3)['irtifa']:.0f} m)")}
+        if klip in ("t01", "t12", "t23", "t34a"):
+            js["f_turu"] = {"profil": a.profil, "t34a_kip": a.t34a_kip if klip == "t34a" else None,
+                            "fiske_a_s": KM.FISKE_A, "fiske_k": KM.FISKE_K[klip],
+                            "fiske_m": KM.FISKE_M.get(klip, 1.0), "kare": n,
+                            "ilerleme": [round(KM.ilerleme(klip, f)[0], 6) for f in range(n)],
+                            "not": ("ln d ilerlemesi s = fiske(t) (kamera.py); aci/yon/lens/hedef pencereleri s'ye bagli; "
+                                    "uc kareler E turu ile bit duzeyinde ayni")}
+            if klip == "t34a" and a.profil == "fiske":
+                js["f_turu"].update({"bekle_kare": KM.T34A_BEKLE,
+                                     "eski_kare": [round(KM.ilerleme(klip, f)[1], 4) for f in range(n)]})
+                if a.t34a_kip == "kalkis":
+                    js["f_turu"].update({"fiske_k": None, "fiske_m": None, "kalkis_us": KM.KALKIS_US,
+                                         "not": ("t34a 'kalkis' (F-B): ln d ilerlemesi g = kalkis(u) (kamera.py; fiske kalkisi 0,15 s "
+                                                 "+ surekli ivmelenme t^us); kare 0-1 durgun (l3[0]); pencereler eski yolun ayni "
+                                                 "g'deki karesinde (eski_kare); son kare eski kare 47 ile bit duzeyinde ayni")})
+            if klip == "t23":
+                js["f_turu"].update({"t23_bulut": T23_BULUT, "durgun_kare": KM.T23_DURGUN,
+                                     "pencere_s": {"bas": KM.T23_H, "egim": KM.T23_P, "oy": [KM.T23_OY, 1.0], "lens": [KM.T23_LENS, 1.0]}})
         if klip in ("t23", "t34a"):
             js["c_turu"] = {
                 "sabit_tohum_kareleri": sorted(SABIT.get(klip, ())), "tohum": 31,
                 "tohum_notu": "bu kareler l3 ile ayni sabit tohumla (use_animated_seed=False), digerleri animasyonlu",
-                "pozlama": ({"kip": "egri", "egri_km_k": POZ_EGRI, "exposure": a.exposure, "uzay_ev": a.uzay_ev,
-                             "not": "pozlama = exposure + uzay_ev * k(irtifa); k Fritsch-Carlson, ln irtifa (poz_egri.py)"}
-                            if a.poz == "egri" else {"kip": "rampa", "rampa_m": list(POZ_RAMPA)}),
-                "zaman": ({"T23_FA": KM.T23_FA, "T23_VARIS": KM.T23_VARIS, "perde_karesi": T23_PERDE,
-                           "not": "kare T23_VARIS-83 kamera tam d3 (l3[0]); kare <= T23_FA B turu yolu"} if klip == "t23" else
-                          {"T34A_F": KM.T34A_F, "T34A_BEKLE": KM.T34A_BEKLE,
-                           "not": "kare 0-T34A_BEKLE tam d3 (l3[0]); ln d ilk T34A_F karede besinci derece baslangic"}),
+                "pozlama": ({"kip": a.poz, "egri_km_k": _PE, "exposure": a.exposure, "uzay_ev": a.uzay_ev,
+                             "not": "pozlama = exposure + uzay_ev * k(irtifa); k Fritsch-Carlson, ln irtifa (poz_egri.py)"
+                                    + ("; egri_f: 25-88 km dugumleri luma tabani %22,5 (F turu, bulutsuz)" if a.poz == "egri_f" else "")}
+                            if a.poz in ("egri", "egri_f") else {"kip": "rampa", "rampa_m": list(POZ_RAMPA)}),
+                "zaman": (({"T23_FA": KM.T23_FA, "T23_VARIS": KM.T23_VARIS, "perde_karesi": T23_PERDE,
+                            "not": "kare T23_VARIS-83 kamera tam d3 (l3[0]); kare <= T23_FA B turu yolu"} if klip == "t23" else
+                           {"T34A_F": KM.T34A_F, "T34A_BEKLE": KM.T34A_BEKLE,
+                            "not": "kare 0-T34A_BEKLE tam d3 (l3[0]); ln d ilk T34A_F karede besinci derece baslangic"})
+                          if a.profil == "eski" else
+                          ({"durgun_kareler": [n - KM.T23_DURGUN, n - 1],
+                            "not": f"F turu: kare {n - KM.T23_DURGUN}-{n - 1} kamera tam d3 (l3[0]); zaman egrisi f_turu.ilerleme"}
+                           if klip == "t23" else
+                           {"T34A_BEKLE": KM.T34A_BEKLE,
+                            "not": f"F turu: kare 0-{KM.T34A_BEKLE} tam d3 (l3[0]); kare {n - 1} = eski kare 47; zaman egrisi f_turu.ilerleme"})),
             }
         # poster çapaları (döngünün 0. karesi, master px)
         poster = {"l1": "p1", "l2": "p2", "l3": "p3"}.get(klip)
@@ -1374,9 +1452,9 @@ else:
     ee.taa_render_samples = a.samples or 16
     ee.use_shadows = True; ee.shadow_ray_count = 2; ee.shadow_step_count = 6
     # önizlemenin Cycles'a yaklaşması için: ekran-uzayı ışın izleme + hızlı GI, 16× anizotropik doku süzgeci
-    ee.use_raytracing = True
+    ee.use_raytracing = bool(a.ee_rt)
     ee.ray_tracing_method = "SCREEN"
-    ee.use_fast_gi = True
+    ee.use_fast_gi = bool(a.ee_rt)
     ee.fast_gi_method = "GLOBAL_ILLUMINATION"
     ee.shadow_pool_size = "512"
     ee.motion_blur_steps = 1

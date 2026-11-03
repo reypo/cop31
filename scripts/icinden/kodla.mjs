@@ -4,17 +4,17 @@
 //        [--fragman <dizin>] [--klip t12,r21,l3.av1,p2] [--preset slow] [--esle t34b=<klasör>,l4=<klasör>]
 //        [--crf t23.h264=26,t34.av1=32]   (CRF_TABLO üstüne ayar; ayrıntı CRF_AYAR'da)
 //        [--poster-q p3=72,p6=oto]        (poster WebP kalitesi; POSTER_Q_TABAN üstüne)
-//        [--bolge t23.h264=74-83:-4]      (x264/x265 zones; BOLGE_TABAN üstüne; `=yok` kaldırır)
+//        [--bolge t23.h264=62-71:-4]      (x264/x265 zones; BOLGE üstüne; `=yok` kaldırır)
 //        [--temizle]                      (kodlanan çıktının eski özetli dosyalarını iş sonunda sil)
 //   node scripts/icinden/kodla.mjs --artik [--kuru]   (listede olmayan özetli dosyaları sil / yalnız listele)
 //
 // Kaynak: her klip için `<kaynak>/<klip>/k_%04d.png` (Blender çıktısı). Giriş boyutu serbest: 1920² PNG 16 bit
 // (son render) ya da 960² PNG 8 bit (EEVEE önizleme); kırpım master'a göre oransal (dikey x %21,875, yatay y
-// KIRPIM_Y / 1920 — klip başına, §11.2-5), ölçek lanczos. 16 bit → 8 bit dönüşüm kodlayıcıdan önce, BT.709 matris
+// KIRPIM_Y_TANIM / 1920 — klip başına, §11.2-5), ölçek lanczos. 16 bit → 8 bit dönüşüm kodlayıcıdan önce, BT.709 matris
 // (renk etiketi de 709). Yer tutucu: `<kaynak>/<klip>.mkv`. `--esle` ile tek tek klasör verilebilir.
 //
-// t34 (§9.1): `<kaynak>/t34/` yoksa `t34a/` (S1, 0–47) + `t34b/` (S2, 48–71 ya da 0'dan) art arda birleşir
-// (ffmpeg concat); fragman da birleşir (fragman.mjs).
+// t34 (§9.1; F-B §13.5: 60 kare): `<kaynak>/t34/` (t34-birlestir.py sabit bağları) yoksa `t34a/` (S1, 0–35) +
+// `t34b/` (S2, 36–59; dosyalar 0'dan) art arda birleşir (ffmpeg concat); fragman da birleşir (fragman.mjs).
 //
 // Ad tablosu (§12.1, açık; "r" + klip[2] + klip[1] türetmesi yok): ileri → geri GERI'de (t01→r10 … t78→r87),
 // döngüler l1–l5, posterler POSTER'de: `dongu` (döngünün 0. karesi; p1–p5), `son-kare` (ileri geçişin master SON
@@ -144,39 +144,77 @@ const secildi = (ad, boyut, kodek) => !SECIM.length || SECIM.some((x) => x.ad ==
 const adSecildi = (ad) => !SECIM.length || SECIM.some((x) => x.ad === ad);
 
 // ---------- kırpım ----------
-// Oransal kırpım (master 1920: dikey 1080×1920 @ x 420, yatay 1920×1080 @ y KIRPIM_Y) → teslim boyutu, BT.709.
+// Oransal kırpım (master 1920: dikey 1080×1920 @ x 420, yatay 1920×1080 @ y kirpimY) → teslim boyutu, BT.709.
 const RENK = "out_color_matrix=bt709:out_range=tv";
 /**
- * Yatay kırpımın y ofseti, master px (§11.2-5: d3'te ufuk — Beydağları, körfez — kadraja girsin). Sayı ya da
- * {bas, son, k0, k1}: kare ≤ k0 → bas, ≥ k1 → son, arası easeInOutCubic. t34'te {200 → 420, 47 → 48} basamaktır:
- * geçiş düz parlama karelerinde (#FFF1DC) olur, 47↔48 farkı 0 kalır. Listede olmayan klip 420 (t01/l1/t12/l2 ve
- * S2 klipleri değişmez; lombar hizası bozulmaz). Geri klipler `reverse` kırpımdan SONRA olduğundan kendiliğinden doğru
- * (r43, r65, r76, r87 ileri klibin nesnesini ileri kare numarasıyla kullanır; ters rampa reverse'ten gelir).
- * E2 turu (§12.12, denetim D1-02; render yok): duvar duraklarında yatay kırpım yukarı — d6 293 ("İklim Eylemleri"
- * üstü 844×390'da da görünür), d7 233 ("1.000.000+" üstü 1280×800/1920×1080/844×390'da görünür, "Sen de söz ver."
- * ekranlarının alt kenarı 844×390'da kadrajda). t56[0] ≡ l5[0] (420) ve t78 41–65 (420; d8 kapak geometrisi,
- * brosurDikdortgen, bankoDonusum) değişmez; p6 = t56[59] = 293, p7 = t67[47] = 233.
+ * Yatay kırpımın y ofseti, master px (§11.2-5: d3'te ufuk — Beydağları, körfez — kadraja girsin). Üç biçim:
+ *  - sayı (sabit);
+ *  - {bas, son, k0, k1}: kare ≤ k0 → bas, ≥ k1 → son, arası easeInOutCubic (kare numarasıyla);
+ *  - {bas, son, s0, s1, k0?, k1?} (F turu, §13.5): rampa klibin İLERLEMESİNE bağlı — fragman JSON'unun kare kare
+ *    `ilerleme` (S2) ya da `f_turu.ilerleme` (S1) dizisi s(n); kirpimY(n) = bas + (son − bas)·easeInOutCubic(
+ *    clamp((s(n) − s0) / (s1 − s0))). Kare başına TAM SAYI dizisine çözülür (`kareler`); ffmpeg ifadesi o diziden
+ *    basamak toplamıdır, manifest-birlestir.mjs `kirpimYKare` aynı diziyi listeden okur (ikisi aynı eğri). İlerleme
+ *    yoksa k0/k1 (S2'nin verdiği kare aralığı) ile kare numarası biçimine düşer (uyarı).
+ * t34'te {200 → 420, 35 → 36} basamaktır: geçiş düz parlama karelerinde (#FFF1DC; F-B: t34a 33–35 rampa, 35 tam;
+ * t34b 36 tam, 36–38 iniş) olur, 35↔36 farkı 0 kalır. Listede olmayan klip 420 (t01/l1/t12/l2/t45/l4/l5; lombar hizası
+ * bozulmaz). Geri klipler `reverse` kırpımdan SONRA olduğundan kendiliğinden doğru (r32, r43, r65, r76, r87 ileri
+ * klibin nesnesini ileri kare numarasıyla kullanır; ters rampa reverse'ten gelir).
+ * E2 (§12.12, D1-02): d6 293 ("İklim Eylemleri"), d7 233 ("1.000.000+"). F-B ilerleme eşikleri E kare eşiklerinin
+ * ilerleme karşılığı (S2-F2 rapor §5; t23: E t23.json kadraj_m'den ln ilerlemesi, kare 24 → s 0,1822, kare 72 → 0,985):
+ * t56 E 30→59 ≡ s 0,5133→1 (F-B kare 17→53), t78 E 0→40 ≡ s 0→0,6773 (F-B kare 0→24; 24–59 = 420: d8 kapak
+ * geometrisi, brosurDikdortgen, bankoDonusum, p8 dikişi), p6 = t56[53] = 293, p7 = t67[47] = 233.
  */
-const KIRPIM_Y = {
-  t23: { bas: 420, son: 200, k0: 24, k1: 72 },
+const KIRPIM_Y_TANIM = {
+  t23: { bas: 420, son: 200, s0: 0.1822, s1: 0.985, k0: 8, k1: 57 },
   l3: 200,
-  t34: { bas: 200, son: 420, k0: 47, k1: 48 },
-  t56: { bas: 420, son: 293, k0: 30, k1: 59 },
+  t34: { bas: 200, son: 420, k0: 35, k1: 36 },
+  t56: { bas: 420, son: 293, s0: 0.5133, s1: 1, k0: 17, k1: 53 },
   t67: { bas: 293, son: 233, k0: 0, k1: 47 },
-  t78: { bas: 233, son: 420, k0: 0, k1: 40 },
+  t78: { bas: 233, son: 420, s0: 0, s1: 0.6773, k0: 0, k1: 24 },
 };
 const KIRPIM_Y_VARSAYILAN = 420;
-const kirpimYOf = (klip) => KIRPIM_Y[klip] ?? KIRPIM_Y_VARSAYILAN;
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2);
+const kirpimYCozulmus = new Map();
+/** Klibin kirpimY nesnesi; ilerlemeye bağlı rampa kare başına tam sayı dizisine (`kareler`) çözülür. */
+function kirpimYOf(klip) {
+  if (kirpimYCozulmus.has(klip)) return kirpimYCozulmus.get(klip);
+  const k = KIRPIM_Y_TANIM[klip] ?? KIRPIM_Y_VARSAYILAN;
+  let c = k;
+  if (typeof k === "object" && k.s0 != null) {
+    const fr = fragmanOku(FRAGMAN, klip);
+    const s = fr?.ilerleme ?? fr?.f_turu?.ilerleme;
+    if (Array.isArray(s) && s.length === fr.kare) {
+      const kareler = s.map((v) => Math.round(k.bas + (k.son - k.bas) * easeInOutCubic(Math.min(1, Math.max(0, (v - k.s0) / (k.s1 - k.s0))))));
+      c = { bas: k.bas, son: k.son, s0: k.s0, s1: k.s1, kareler };
+    } else {
+      console.warn(`UYARI ${klip}: fragmanda kare kare 'ilerleme' yok (${s?.length ?? 0}/${fr?.kare ?? "?"}); kirpimY kare ${k.k0} → ${k.k1}`);
+      c = { bas: k.bas, son: k.son, k0: k.k0, k1: k.k1 };
+    }
+  }
+  kirpimYCozulmus.set(klip, c);
+  return c;
+}
 /** kirpimY'nin `n`. karedeki sayısal değeri (son-kare posteri için; ffmpeg crop ifadesiyle aynı eğri). */
 function kirpimYKare(k, n) {
   if (typeof k === "number") return k;
+  if (k.kareler) return k.kareler[Math.min(k.kareler.length - 1, Math.max(0, n))];
   const t = Math.min(1, Math.max(0, (n - k.k0) / (k.k1 - k.k0)));
   return k.bas + (k.son - k.bas) * easeInOutCubic(t);
 }
-/** ffmpeg crop `y` ifadesi (kare numarası `n`; crop sonucu lrint ile tam sayıya yuvarlar, ölçekten önce). */
+/**
+ * ffmpeg crop `y` ifadesi (kare numarası `n`; crop sonucu lrint ile tam sayıya yuvarlar, ölçekten önce). `kareler`
+ * dizisi: y0 + Σ (y_i − y_(i−1))·gte(n, i) (iç içe if yok; yalnız değişen kareler terim olur).
+ */
 function kirpimYIfade(k) {
   if (typeof k === "number") return `ih*${k}/1920`;
+  if (k.kareler) {
+    const t = [String(k.kareler[0])];
+    for (let i = 1; i < k.kareler.length; i++) {
+      const d = k.kareler[i] - k.kareler[i - 1];
+      if (d) t.push(`${d < 0 ? "-" : "+"}${Math.abs(d)}*gte(n,${i})`);
+    }
+    return `ih*(${t.join("")})/1920`;
+  }
   const t = `clip((n-${k.k0})/${k.k1 - k.k0},0,1)`;
   return `ih*(${k.bas}+(${k.son}-${k.bas})*if(lt(${t},0.5),4*pow(${t},3),1-pow(2-2*${t},3)/2))/1920`;
 }
@@ -189,7 +227,7 @@ const BOYUT = {
 /** [H.264, HEVC, AV1]. Önce ad, yoksa tür. §12.5 tablosu; yeniden kodlanmayanlar (t01, l1, r10, l5) aynı değerde. */
 const CRF_TABLO = {
   ileri: [23, 25, 30], // t01, t12, t45
-  t23: [26, 27, 32],
+  t23: [26, 27, 35], // F-B (K-F): bulutsuz t23 AV1 32'de 1.676 kB → d2 kritik 2,314 > 2,1; 35'te 1.359 kB, VMAF 96,13 / 95,26
   t34: [26, 27, 34],
   t56: [23, 25, 32], // duvar ileri: AV1 +2 (oturum bütçesi)
   t67: [23, 25, 32],
@@ -199,7 +237,7 @@ const CRF_TABLO = {
   l3: [23, 25, 34], // yalnız yeniden kodlama (32'de VMAF 97,1)
   geri: [26, 28, 34], // r10, r43, r54
   r21: [27, 28, 34], // F turu (denetim M-1): yatay H.264 d2 penceresi 2,504 → ≤ 2,5; VMAF 92,30 / 92,17
-  r32: [26.5, 28, 34], // H.264 d3 penceresi; F turu (M-2): 27'de VMAF 89,83 / 89,54 < 90 → 26,5 (91,07 / 90,93)
+  r32: [27, 28, 35], // F-B (K-F): bulutsuz r32 H.264 26,5'te d3 penceresi 2,535 > 2,5 → 27 (VMAF 92,52); AV1 34'te d3 2,602 > 2,6 → 35 (96,24 / 95,47). E (M-2) 26,5 idi
   r65: [26, 28, 36], // duvar geri: AV1 +2
   r76: [26, 28, 36],
   r87: [26, 28, 36],
@@ -244,7 +282,7 @@ const POSTER_HEDEF_DIKEY = 60_000;
 // Kare aralığına CRF farkı (t23 → l3 dikişi): `--bolge t23.h264=74-83:-4`. x264/x265 `zones` CRF kipinde `b=` (bit
 // hızı çarpanı; qscale'i böler) ile uygulanır: ΔCRF −4 ≈ b = 2^(4/6). AV1'de yok. Taban: t23.h264 (C turundan beri).
 // `--bolge t23.h264=yok` kaldırır.
-const BOLGE = { "t23.h264": { k0: 74, k1: 83, d: -4 } };
+const BOLGE = { "t23.h264": { k0: 62, k1: 71, d: -4 } }; // F-B: t23 72 kare → son 10 kare 62–71 (E: 84 kare, 74–83)
 for (const s of arg("--bolge", "").split(",").filter(Boolean)) {
   const [k, v] = s.split("=");
   if (v === "yok" || v === "0") {

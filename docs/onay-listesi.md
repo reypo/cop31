@@ -187,3 +187,32 @@ E turunda d1'e ışık yayları, d2'ye tüm Türkiye kadrajı + 12 emanet ışı
 | Geri geçişlerin süresi (F turu, D2-01) | Geri yön klipleri artık 1,0 hızla oynuyor (önce 1,25×; her geri klip bir kare düşürüyordu). Geri geçişler %25 uzadı; F turu ölçümü (prod, headless Chrome, 4× CPU): 7→6 1,62 s, 11→10 ve 1→0 1,82–1,84 s, 3→2 2,82 s, 8→7 2,84–2,85 s (r87 + broşürün DOM dönüşü). | `klipler.json` `hizGeri`, `manifest-birlestir.mjs` | Geri yön temposu uygun mu? (Daha kısa istenirse geri klipler zaman sıkıştırılarak yeniden kodlanır; render gerekmez.) |
 | d6/d7 yatay kadraj (E2 turu, denetim D1-02) | **Düzeltildi (render yok).** Yatayda d7 "1.000.000+" rakamı üstten kesikti (1280×800 ve kiosk 1920×1080'de de), yatay telefonda (844×390) d6 "İklim Eylemleri" başlığı da. Yatay videonun kırpımı duvar duraklarında yukarı alındı (d6 293, d7 233 master px; geçişlerde yumuşak kayar, d5 ve d8 değişmedi). Ölçülen boşluk (rakam/başlık üstü → ekran üstü): d7 1280×800'de 124 px, 1920×1080'de 168 px, 844×390'da 32 px; d6 sırasıyla 120 / 161 / 29 px. "Sen de söz ver." ekranları ve "İstanbul" satırı 844×390'da alttan 21–24 px içeride. Metin bandı her yatay ekranda sağ sütuna, duvar yazısının sağına alındı (iPad yatayında yazısı küçük). Dikey görünüm değişmedi. | brief-icinden-3 §12.12; `kodla.mjs` `KIRPIM_Y`; `icinden3.css` | Yok (bilgi). |
 
+#### 14.1-F F turu (4 Kasım 2026, `docs/brief-icinden-3.md` §13, §13.6): "hızlı yakınlaşma" geçişleri
+
+Kullanıcının isteği üzerine ("önceki tasarımın en güzel yanı geçiş animasyonlarıydı; her geçişte olmalı") dalıştaki
+sekiz render geçişi yeniden render edildi: her biri hızlı bir kalkışla yakınlaşıyor ve hedef durakta yavaşlayarak
+duruyor ("fiske" profili). Duraklar, metinler, döngüler ve posterler değişmedi. Müşteriye video ya da canlı sayfa
+üzerinden gösterilecek; aşağıdaki ölçümler headless Chrome'da (prod) yapıldı, gerçek cihazda değil.
+
+| Konu | Sitede şu an | Dayanak / dosya | Soru |
+|---|---|---|---|
+| Geçiş hızı ve süreleri | Geçişler yolun büyük kısmını ilk yarıda alıyor (t = 0,5'te yolun ≥ %75'i; E'de %50). Süreler kısaldı: d1→d2 2,0 → 1,8 s, d2→d3 2,8 → 2,4 s, d3→d4 2,4 → 2,0 s, d4→d5 ve d5→d6 2,0 → 1,8 s, d7→d8 2,2 → 2,0 s; d0→d1 1,8 s ve d6→d7 1,6 s aynı. Sekiz render geçişinin toplamı 16,8 → 15,2 s. Ölçülen ileri geçişler (390×844, adım → varış): 1,62–2,67 s. Geçiş sonundaki durağan kuyruk çoğunlukla 40–215 ms. Geri yön aynı kliplerin tersi: hızla uzaklaşıp kısa sürede duruyor. Kiosk turu 118,5 s (E2'de 120,2). | brief-icinden-3 §13.1, §13.5; `klipler.json` | Tempo uygun mu? Daha hızlı ya da daha yumuşak istenirse yeniden render gerekir (~40 dk GPU). |
+| d2→d3 Antalya yaklaşımı | Bulut perdesi kalktı: 60 km'den 5 km'ye inerken kent, körfez ve Expo alanı açıkta görünüyor (kullanıcının örneği). Pozlama irtifaya bağlı; kalkıştan hemen sonra (kare 6→7) parlaklık bir an hafifçe artıyor. | brief §13.2, §13.5; `scripts/blender/s1` | Bulutsuz yaklaşım müşteriye gösterilecek. Kısa parlaklık sıçraması fark edilirse düzeltilir (yalnız t23 yeniden render, ~11 dk GPU). |
+| d3→d4 çatıya dalış | Çatıya hızlanarak dalış, ardından kısa beyaz parlama ve hol. Parlama 0,4 s'den ~0,1 s'ye indi (ekranda ölçülen beyaz süre 106 ms telefonda, 125 ms masaüstünde). | brief §13.2, §13.5 | Parlama uygun mu? |
+| Yazı tipleri | Montserrat, Great Vibes ve Lora artık sitenin içinden yükleniyor (Google'a istek yok; OFL lisansı). Lora, lisansın gereği olarak "Cop31 Serif" adıyla. Görünüm aynı; sayfa daha az veri indiriyor (fontlar 301,7 → 242,4 kB). | `src/app/fonts/`, `OFL-*.txt` | Yok (bilgi). |
+| Gerçek cihaz testi | **Hâlâ açık.** F turu da yalnız headless Chrome'da ölçüldü (4× CPU yavaşlatma, 4G benzetimi). | `docs/klip-oynatma.md` §6 | Yayından önce iPhone (normal + Düşük Güç Modu), iOS Chrome ve orta sınıf Android'de denenmeli. |
+
+### 14.1-G `/icinden` G turu: müşteri revizyonu (4 Kasım 2026; G-B ile kesinleşir — brief §14)
+
+Müşterinin 3 Kasım mesajı ("dünya animasyonu masadaki broşüre kadar; sonrasında üçüncü konseptteki fidanın köklenmesi ve
+büyümesi; broşür değişiyor; bir yerde 'dijital broşür' seçeneği; Antalya çöl gibi; geçişler hızlanabilir") şöyle
+uygulanıyor. Aşağıdakiler müşteriye sorulacak ya da gösterilecek.
+
+| Konu | Planlanan | Dayanak / dosya | Soru |
+|---|---|---|---|
+| Fidan bölümü | Broşürden sonra kamera aynı bankodaki cam yüzlü meşe "kök gözlem kasasına" iner; palamuttan 81 uçlu kök, gövde, dallar ve yapraklar dört durakta büyür (Kökler / Gövde / Dallar / Yapraklar; metinler sitedeki "Biz Kimiz?", vizyon, Gençlik Kolları, iklim bölümlerinden). Fidan türü hiçbir metinde yazılmaz. Kapanış fidanla biter, Dünya'ya dönüş yok. | brief §14.3; önizleme `render\_onizleme\s3-posterler.png` | Konsept uygun mu? Kapanışın fidanla bitmesi uygun mu? |
+| "Köklerin ucundaki 81 nokta: 81 il" | Bu cümle sitedeki metin listesinde yok (yalnız /fidan ekranında geçiyordu). Onay gelmezse yalnız "81 İl · 922 İlçe" yazılır. | `src/lib/content.ts` facts | Cümle kullanılsın mı? |
+| Atıf satırı | Kapanış atıflarına "Stant ve fidan görünümü temsilîdir." eklenir. | brief §14.3 K9 | Uygun mu? |
+| Duvar metinleri (d6) | Duvarlar kalıyor; d6 duvarı COP'a özgü metin yerine genel bilgi taşır: "Gençlik Buluşmaları · Bir Gençlik Şöleni" (50+ buluşma, 100.000+ genç · 16 Mayıs 2026 · Kocaeli). Duvara **fotoğraf basılmaz** (render'da insan figürü kuralı); fotoğraflar fidanın dallarındaki polaroidlerde (DOM) gösterilir. 2017 seçilme yaşı ve TBMM bilgisi fidanın gövde boğumlarında. | brief §14.1 G7, §14.3 K7; §12.0 | Metin uygun mu? |
+| "Dijital broşür" bağlantısı | Üst şeritte ve broşür durağında (d8) "Dijital broşür →" düğmesi `/brosur` sayfasına gider. Yeni broşür gelince hem `/brosur` hem bankodaki kapak dokusu değişir (t78 kuyruğu + t89 yeniden render, ~8 dk). | brief §14.1 G3 | Yeni broşür (PDF/kapak görseli) ne zaman gelir? |
+| Antalya görünümü | Kasım Sentinel-2 mozaiği kahverengi ("çöl gibi"). İlkbahar (Nisan–Mayıs) Sentinel-2 mozaiğiyle d2→d3 yaklaşımı ve d3 yeniden render edilir (~25 dk GPU). Gerçek görüntü, tarih atıfı değişir. | brief §14.1 G4 | İlkbahar görüntüsü uygun mu (fuar Kasım'da)? |

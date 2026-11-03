@@ -1,6 +1,6 @@
 {
  "surum": 2,
- "olusturma": "2026-11-03T17:21:56.575Z",
+ "olusturma": "2026-11-03T22:01:04.887Z",
  "kaynak": "render",
  "fps": 30,
  "master": 1920,
@@ -55,24 +55,24 @@
     "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t01.560efd5e.h264.mp4",
-      "hevc": "/icinden/v/d/t01.635131e4.hevc.mp4",
-      "av1": "/icinden/v/d/t01.7fd04edc.av1.mp4"
+      "h264": "/icinden/v/d/t01.a912a662.h264.mp4",
+      "hevc": "/icinden/v/d/t01.e89e2062.hevc.mp4",
+      "av1": "/icinden/v/d/t01.0f8f6133.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t01.724da10c.h264.mp4",
-      "av1": "/icinden/v/y/t01.bdbf6d00.av1.mp4"
+      "h264": "/icinden/v/y/t01.d5ee30c9.h264.mp4",
+      "av1": "/icinden/v/y/t01.9f55a450.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 259465,
-      "hevc": 276716,
-      "av1": 220082
+      "h264": 301169,
+      "hevc": 326555,
+      "av1": 249998
      },
      "yatay": {
-      "h264": 234204,
-      "av1": 203714
+      "h264": 270096,
+      "av1": 234545
      }
     },
     "geri": {
@@ -81,24 +81,24 @@
      "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r10.3b36b8cc.h264.mp4",
-       "hevc": "/icinden/v/d/r10.2cc094ce.hevc.mp4",
-       "av1": "/icinden/v/d/r10.fc31eee5.av1.mp4"
+       "h264": "/icinden/v/d/r10.0cb17e78.h264.mp4",
+       "hevc": "/icinden/v/d/r10.6a471daf.hevc.mp4",
+       "av1": "/icinden/v/d/r10.57ba673a.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r10.6293f08f.h264.mp4",
-       "av1": "/icinden/v/y/r10.ea6e1b83.av1.mp4"
+       "h264": "/icinden/v/y/r10.537b1a80.h264.mp4",
+       "av1": "/icinden/v/y/r10.15a9797a.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 202171,
-       "hevc": 186281,
-       "av1": 177016
+       "h264": 213826,
+       "hevc": 190097,
+       "av1": 206586
       },
       "yatay": {
-       "h264": 179119,
-       "av1": 166161
+       "h264": 187851,
+       "av1": 183110
       }
      }
     },
@@ -109,7 +109,7 @@
    "id": "d1",
    "rol": "dunya",
    "tur": "klip",
-   "okuma": [40200000, 40160000, 40020000, 39790000, 39480000, 39090000, 38610000, 38070000, 37450000, 36770000, 36030000, 35250000, 34420000, 33560000, 32670000, 31750000, 30820000, 29890000, 28950000, 28010000, 27080000, 26170000, 25270000, 24390000, 23540000, 22710000, 21920000, 21150000, 20410000, 19710000, 19040000, 18400000, 17800000, 17230000, 16700000, 16200000, 15730000, 15300000, 14890000, 14520000, 14170000, 13860000, 13570000, 13320000, 13080000, 12880000, 12700000, 12540000, 12410000, 12310000, 12230000, 12170000, 12130000, 12120000],
+   "okuma": [40200000, 40100000, 39520000, 38230000, 36370000, 34370000, 32540000, 30860000, 29330000, 27920000, 26620000, 25440000, 24340000, 23340000, 22410000, 21550000, 20760000, 20040000, 19360000, 18740000, 18160000, 17630000, 17140000, 16680000, 16260000, 15870000, 15510000, 15170000, 14870000, 14580000, 14320000, 14070000, 13850000, 13650000, 13460000, 13290000, 13130000, 12990000, 12860000, 12740000, 12640000, 12550000, 12470000, 12400000, 12330000, 12280000, 12240000, 12200000, 12170000, 12150000, 12140000, 12130000, 12120000, 12120000],
    "poster": {
     "dikey": {
      "dosya": "/icinden/p/d/p1.7f5fcab2.webp",
@@ -151,54 +151,54 @@
    },
    "ileri": {
     "ad": "t12",
-    "sure": 2,
-    "kare": 60,
+    "sure": 1.8,
+    "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t12.424bdbf7.h264.mp4",
-      "hevc": "/icinden/v/d/t12.02543e3c.hevc.mp4",
-      "av1": "/icinden/v/d/t12.548c8056.av1.mp4"
+      "h264": "/icinden/v/d/t12.2e49c6d8.h264.mp4",
+      "hevc": "/icinden/v/d/t12.43b863f1.hevc.mp4",
+      "av1": "/icinden/v/d/t12.498c2551.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t12.8eac9de5.h264.mp4",
-      "av1": "/icinden/v/y/t12.f7b38699.av1.mp4"
+      "h264": "/icinden/v/y/t12.b7a108db.h264.mp4",
+      "av1": "/icinden/v/y/t12.1e980405.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 723087,
-      "hevc": 644270,
-      "av1": 566942
+      "h264": 738921,
+      "hevc": 641466,
+      "av1": 556577
      },
      "yatay": {
-      "h264": 697222,
-      "av1": 547166
+      "h264": 674080,
+      "av1": 517203
      }
     },
     "geri": {
      "ad": "r21",
-     "sure": 2,
-     "kare": 60,
+     "sure": 1.8,
+     "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r21.ef4338aa.h264.mp4",
-       "hevc": "/icinden/v/d/r21.8aba6a02.hevc.mp4",
-       "av1": "/icinden/v/d/r21.13eeb7a3.av1.mp4"
+       "h264": "/icinden/v/d/r21.145c3205.h264.mp4",
+       "hevc": "/icinden/v/d/r21.960a4c26.hevc.mp4",
+       "av1": "/icinden/v/d/r21.1c847851.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r21.87d2c998.h264.mp4",
-       "av1": "/icinden/v/y/r21.2cf8a0f8.av1.mp4"
+       "h264": "/icinden/v/y/r21.ab6a2b14.h264.mp4",
+       "av1": "/icinden/v/y/r21.96030c10.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 418563,
-       "hevc": 432457,
-       "av1": 453100
+       "h264": 388426,
+       "hevc": 375538,
+       "av1": 421652
       },
       "yatay": {
-       "h264": 409892,
-       "av1": 427464
+       "h264": 377971,
+       "av1": 404760
       }
      }
     },
@@ -225,7 +225,7 @@
     ]
    },
    "ozel": {
-    "dunyaR": [115, 115.1, 115.5, 116.2, 117.1, 118.3, 119.7, 121.4, 123.4, 125.7, 128.2, 131, 134.1, 137.5, 141.2, 145.2, 149.5, 154.1, 159, 164.2, 169.7, 175.6, 181.7, 188.2, 194.9, 202, 209.3, 217, 224.9, 233, 241.4, 249.9, 258.6, 267.3, 276.1, 284.9, 293.6, 302.2, 310.6, 318.8, 326.8, 334.4, 341.6, 348.3, 354.6, 360.4, 365.5, 370.1, 374, 377.3, 379.8, 381.6, 382.8, 383.1],
+    "dunyaR": [115, 115.3, 117, 120.9, 127, 134.3, 141.7, 149.3, 157, 164.8, 172.6, 180.6, 188.6, 196.6, 204.7, 212.8, 221, 229.2, 237.3, 245.3, 253.3, 261.1, 268.9, 276.4, 283.8, 291, 297.9, 304.7, 311.2, 317.4, 323.4, 329.1, 334.6, 339.7, 344.5, 349.1, 353.3, 357.3, 360.9, 364.2, 367.3, 370, 372.5, 374.6, 376.5, 378.1, 379.5, 380.6, 381.5, 382.2, 382.6, 382.9, 383.1, 383.1],
     "dunyaC": {
      "dikey": [360, 512],
      "yatay": [640, 232]
@@ -1646,7 +1646,7 @@
    "id": "d2",
    "rol": "emanet",
    "tur": "klip",
-   "okuma": [12120000, 12110000, 12080000, 12030000, 11960000, 11870000, 11760000, 11630000, 11490000, 11330000, 11160000, 10980000, 10790000, 10580000, 10370000, 10090000, 9753000, 9358000, 8918000, 8448000, 7960000, 7468000, 6981000, 6511000, 6062000, 5641000, 5250000, 4892000, 4565000, 4270000, 4006000, 3769000, 3558000, 3372000, 3207000, 3061000, 2932000, 2813000, 2701000, 2597000, 2499000, 2408000, 2323000, 2245000, 2173000, 2106000, 2046000, 1990000, 1940000, 1895000, 1854000, 1818000, 1787000, 1760000, 1738000, 1720000, 1706000, 1696000, 1690000, 1688000],
+   "okuma": [12120000, 12100000, 11930000, 11570000, 11050000, 10500000, 9848000, 9025000, 8161000, 7338000, 6593000, 5939000, 5376000, 4896000, 4489000, 4145000, 3854000, 3607000, 3398000, 3220000, 3069000, 2939000, 2821000, 2714000, 2615000, 2524000, 2440000, 2364000, 2293000, 2229000, 2169000, 2115000, 2065000, 2019000, 1978000, 1940000, 1906000, 1874000, 1846000, 1821000, 1799000, 1779000, 1761000, 1746000, 1733000, 1721000, 1712000, 1704000, 1698000, 1694000, 1691000, 1689000, 1688000, 1688000],
    "poster": {
     "dikey": {
      "dosya": "/icinden/p/d/p2.ab8bb7c6.webp",
@@ -1688,54 +1688,54 @@
    },
    "ileri": {
     "ad": "t23",
-    "sure": 2.8,
-    "kare": 84,
+    "sure": 2.4,
+    "kare": 72,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t23.3e83558b.h264.mp4",
-      "hevc": "/icinden/v/d/t23.f1c5b3ed.hevc.mp4",
-      "av1": "/icinden/v/d/t23.0c98aa2e.av1.mp4"
+      "h264": "/icinden/v/d/t23.a73d3c28.h264.mp4",
+      "hevc": "/icinden/v/d/t23.11b35728.hevc.mp4",
+      "av1": "/icinden/v/d/t23.e1f4f36e.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t23.c98499b2.h264.mp4",
-      "av1": "/icinden/v/y/t23.3283c37c.av1.mp4"
+      "h264": "/icinden/v/y/t23.1d39d34c.h264.mp4",
+      "av1": "/icinden/v/y/t23.6ae3b15d.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 1494512,
-      "hevc": 1262850,
-      "av1": 1322901
+      "h264": 1529877,
+      "hevc": 1512039,
+      "av1": 1359125
      },
      "yatay": {
-      "h264": 1519351,
-      "av1": 1368367
+      "h264": 1507724,
+      "av1": 1304581
      }
     },
     "geri": {
      "ad": "r32",
-     "sure": 2.8,
-     "kare": 84,
+     "sure": 2.4,
+     "kare": 72,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r32.83ef67a3.h264.mp4",
-       "hevc": "/icinden/v/d/r32.850eaeb7.hevc.mp4",
-       "av1": "/icinden/v/d/r32.c7fff21c.av1.mp4"
+       "h264": "/icinden/v/d/r32.b9212e56.h264.mp4",
+       "hevc": "/icinden/v/d/r32.358f62cb.hevc.mp4",
+       "av1": "/icinden/v/d/r32.e0338a5d.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r32.af2ca8b7.h264.mp4",
-       "av1": "/icinden/v/y/r32.c37048bf.av1.mp4"
+       "h264": "/icinden/v/y/r32.7ab9b0e9.h264.mp4",
+       "av1": "/icinden/v/y/r32.78ec1294.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 1202875,
-       "hevc": 1013267,
-       "av1": 1154975
+       "h264": 1327277,
+       "hevc": 1225806,
+       "av1": 1338361
       },
       "yatay": {
-       "h264": 1221257,
-       "av1": 1217526
+       "h264": 1148592,
+       "av1": 1291900
       }
      }
     },
@@ -1992,7 +1992,7 @@
    "id": "d3",
    "rol": "expo",
    "tur": "klip",
-   "okuma": [1688000, 1683000, 1671000, 1651000, 1624000, 1589000, 1548000, 1501000, 1449000, 1392000, 1331000, 1267000, 1201000, 1134000, 1066000, 997400, 929800, 863300, 798500, 735800, 675600, 618200, 563700, 512400, 464400, 419500, 378000, 339600, 304400, 272200, 242900, 216300, 192200, 170600, 151100, 133700, 118200, 104300, 92030, 81130, 71490, 62900, 55200, 48330, 42230, 36850, 32120, 27980, 24360, 21220, 18490, 16120, 14070, 12280, 10740, 9391, 8221, 7202, 6313, 5538, 4861, 4269, 3750, 3296, 2910, 2599, 2348, 2144, 1979, 1844, 1736, 1648, 1579, 1525, 1484, 1455, 1435, 1423, 1420, 1420, 1420, 1420, 1420, 1420],
+   "okuma": [1688000, 1672000, 1578000, 1387000, 1143000, 917100, 737800, 596100, 483600, 394100, 322500, 265100, 218800, 181300, 150900, 126100, 105900, 89220, 75510, 64160, 54750, 46910, 40350, 34850, 30230, 26320, 23010, 20190, 17790, 15700, 13870, 12250, 10820, 9545, 8408, 7396, 6496, 5697, 5005, 4444, 3986, 3608, 3292, 3026, 2800, 2607, 2440, 2296, 2170, 2061, 1965, 1880, 1806, 1741, 1685, 1635, 1592, 1554, 1523, 1496, 1474, 1456, 1442, 1431, 1425, 1421, 1420, 1420, 1420, 1420, 1420, 1420],
    "poster": {
     "dikey": {
      "dosya": "/icinden/p/d/p3.491502ef.webp",
@@ -2034,54 +2034,54 @@
    },
    "ileri": {
     "ad": "t34",
-    "sure": 2.4,
-    "kare": 72,
+    "sure": 2,
+    "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t34.26a05113.h264.mp4",
-      "hevc": "/icinden/v/d/t34.cd545a57.hevc.mp4",
-      "av1": "/icinden/v/d/t34.56606f2d.av1.mp4"
+      "h264": "/icinden/v/d/t34.ceb6da90.h264.mp4",
+      "hevc": "/icinden/v/d/t34.db7f5790.hevc.mp4",
+      "av1": "/icinden/v/d/t34.933cc0b5.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t34.2ae512cb.h264.mp4",
-      "av1": "/icinden/v/y/t34.35619195.av1.mp4"
+      "h264": "/icinden/v/y/t34.0fd7a1ac.h264.mp4",
+      "av1": "/icinden/v/y/t34.1d46f566.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 963770,
-      "hevc": 963049,
-      "av1": 1055262
+      "h264": 864321,
+      "hevc": 797102,
+      "av1": 872186
      },
      "yatay": {
-      "h264": 971537,
-      "av1": 1060214
+      "h264": 895749,
+      "av1": 877741
      }
     },
     "geri": {
      "ad": "r43",
-     "sure": 2.4,
-     "kare": 72,
+     "sure": 2,
+     "kare": 60,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r43.7159d424.h264.mp4",
-       "hevc": "/icinden/v/d/r43.20139e20.hevc.mp4",
-       "av1": "/icinden/v/d/r43.0d652499.av1.mp4"
+       "h264": "/icinden/v/d/r43.b7045440.h264.mp4",
+       "hevc": "/icinden/v/d/r43.f37f5d14.hevc.mp4",
+       "av1": "/icinden/v/d/r43.0e811470.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r43.6315d75e.h264.mp4",
-       "av1": "/icinden/v/y/r43.2b8448ab.av1.mp4"
+       "h264": "/icinden/v/y/r43.8482642a.h264.mp4",
+       "av1": "/icinden/v/y/r43.68a91183.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 1099857,
-       "hevc": 920166,
-       "av1": 1017705
+       "h264": 897105,
+       "hevc": 708682,
+       "av1": 846682
       },
       "yatay": {
-       "h264": 1010994,
-       "av1": 1028684
+       "h264": 836389,
+       "av1": 847117
       }
      }
     },
@@ -2168,7 +2168,7 @@
    "id": "d4",
    "rol": "anatomi",
    "tur": "klip",
-   "okuma": [1420, 1420, 1419, 1417, 1410, 1397, 1377, 1350, 1315, 1274, 1226, 1174, 1117, 1058, 997.8, 937.4, 878.2, 821, 766.6, 715.2, 663.7, 612.3, 561.9, 513.4, 467.4, 424.1, 383.7, 346.3, 311.7, 279.9, 250.7, 223.7, 198.9, 176.4, 155.9, 137.4, 120.8, 106, 92.7, 81, 70.6, 61.4, 53.3, 46.1, 39.9, 34.4, 29.6, 25.4, 25.31, 25.82, 26.12, 26.25, 26.25, 26.15, 25.97, 25.75, 25.5, 25.25, 25, 24.77, 24.56, 24.37, 24.21, 24.08, 23.98, 23.9, 23.85, 23.81, 23.79, 23.77, 23.77, 23.77],
+   "okuma": [1420, 1420, 1414, 1380, 1312, 1221, 1125, 1034, 949.3, 871.3, 799.9, 735.1, 673.2, 611.5, 551.4, 494, 439.9, 389.5, 343.1, 300.7, 262.4, 228, 197.4, 170.4, 146.7, 126, 108.1, 92.6, 79.1, 67.6, 57.6, 49, 41.7, 35.4, 30, 25.4, 25.31, 26.23, 26.14, 25.87, 25.68, 25.47, 25.26, 25.05, 24.86, 24.67, 24.5, 24.36, 24.22, 24.11, 24.02, 23.95, 23.89, 23.84, 23.81, 23.79, 23.78, 23.77, 23.77, 23.77],
    "poster": {
     "dikey": {
      "dosya": "/icinden/p/d/p4.5bc2e1d1.webp",
@@ -2210,54 +2210,54 @@
    },
    "ileri": {
     "ad": "t45",
-    "sure": 2,
-    "kare": 60,
+    "sure": 1.8,
+    "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t45.56b6223a.h264.mp4",
-      "hevc": "/icinden/v/d/t45.1db81ce7.hevc.mp4",
-      "av1": "/icinden/v/d/t45.73959a41.av1.mp4"
+      "h264": "/icinden/v/d/t45.6657e516.h264.mp4",
+      "hevc": "/icinden/v/d/t45.6fd1780f.hevc.mp4",
+      "av1": "/icinden/v/d/t45.2e6ec994.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t45.fc607cab.h264.mp4",
-      "av1": "/icinden/v/y/t45.4872c958.av1.mp4"
+      "h264": "/icinden/v/y/t45.18407723.h264.mp4",
+      "av1": "/icinden/v/y/t45.8c45771e.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 818068,
-      "hevc": 586834,
-      "av1": 653829
+      "h264": 710522,
+      "hevc": 517374,
+      "av1": 568218
      },
      "yatay": {
-      "h264": 808532,
-      "av1": 624291
+      "h264": 706425,
+      "av1": 574265
      }
     },
     "geri": {
      "ad": "r54",
-     "sure": 2,
-     "kare": 60,
+     "sure": 1.8,
+     "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r54.a3a6f76f.h264.mp4",
-       "hevc": "/icinden/v/d/r54.97a20756.hevc.mp4",
-       "av1": "/icinden/v/d/r54.68f66f52.av1.mp4"
+       "h264": "/icinden/v/d/r54.fc31f02d.h264.mp4",
+       "hevc": "/icinden/v/d/r54.cdc3ff46.hevc.mp4",
+       "av1": "/icinden/v/d/r54.3dc7b552.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r54.a123a18c.h264.mp4",
-       "av1": "/icinden/v/y/r54.d34b85ac.av1.mp4"
+       "h264": "/icinden/v/y/r54.9d6ee310.h264.mp4",
+       "av1": "/icinden/v/y/r54.578798f6.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 563241,
-       "hevc": 434185,
-       "av1": 511274
+       "h264": 490320,
+       "hevc": 374362,
+       "av1": 439608
       },
       "yatay": {
-       "h264": 563286,
-       "av1": 489946
+       "h264": 505141,
+       "av1": 444337
       }
      }
     },
@@ -2330,7 +2330,7 @@
    "id": "d5",
    "rol": "sutunlar",
    "tur": "klip",
-   "okuma": [23.78, 23.74, 23.64, 23.47, 23.23, 22.94, 22.59, 22.2, 21.76, 21.28, 20.76, 20.2, 19.62, 19, 18.36, 17.67, 16.94, 16.17, 15.36, 14.54, 13.71, 12.88, 12.06, 11.26, 10.48, 9.733, 9.024, 8.354, 7.724, 7.138, 6.597, 6.1, 5.649, 5.243, 4.881, 4.563, 4.285, 4.044, 3.836, 3.657, 3.503, 3.374, 3.27, 3.187, 3.123, 3.077, 3.046, 3.027, 3.018, 3.016, 3.017, 3.021, 3.025, 3.028, 3.03, 3.032, 3.035, 3.038, 3.038, 3.038],
+   "okuma": [23.78, 23.74, 23.5, 22.96, 22.17, 21.3, 20.48, 19.67, 18.87, 18.07, 17.24, 16.38, 15.49, 14.61, 13.73, 12.88, 12.06, 11.26, 10.5, 9.776, 9.088, 8.438, 7.826, 7.255, 6.726, 6.24, 5.797, 5.397, 5.039, 4.72, 4.438, 4.191, 3.974, 3.783, 3.616, 3.473, 3.356, 3.264, 3.193, 3.141, 3.105, 3.081, 3.066, 3.058, 3.053, 3.05, 3.048, 3.045, 3.043, 3.041, 3.039, 3.038, 3.038, 3.038],
    "poster": {
     "dikey": {
      "dosya": "/icinden/p/d/p5.b35b4c8e.webp",
@@ -2372,54 +2372,54 @@
    },
    "ileri": {
     "ad": "t56",
-    "sure": 2,
-    "kare": 60,
+    "sure": 1.8,
+    "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t56.05e00f59.h264.mp4",
-      "hevc": "/icinden/v/d/t56.64caf6a9.hevc.mp4",
-      "av1": "/icinden/v/d/t56.d7c2481f.av1.mp4"
+      "h264": "/icinden/v/d/t56.f26800ab.h264.mp4",
+      "hevc": "/icinden/v/d/t56.62b51278.hevc.mp4",
+      "av1": "/icinden/v/d/t56.6cd02f12.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t56.449c9425.h264.mp4",
-      "av1": "/icinden/v/y/t56.9825256a.av1.mp4"
+      "h264": "/icinden/v/y/t56.2994a9e3.h264.mp4",
+      "av1": "/icinden/v/y/t56.626b755c.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 612993,
-      "hevc": 456549,
-      "av1": 368607
+      "h264": 524235,
+      "hevc": 382796,
+      "av1": 315135
      },
      "yatay": {
-      "h264": 636100,
-      "av1": 406278
+      "h264": 546612,
+      "av1": 359809
      }
     },
     "geri": {
      "ad": "r65",
-     "sure": 2,
-     "kare": 60,
+     "sure": 1.8,
+     "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r65.48619b7b.h264.mp4",
-       "hevc": "/icinden/v/d/r65.e673ae39.hevc.mp4",
-       "av1": "/icinden/v/d/r65.0be32f17.av1.mp4"
+       "h264": "/icinden/v/d/r65.c449101b.h264.mp4",
+       "hevc": "/icinden/v/d/r65.ad4c6658.hevc.mp4",
+       "av1": "/icinden/v/d/r65.1065e32a.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r65.e5377570.h264.mp4",
-       "av1": "/icinden/v/y/r65.dafeb51f.av1.mp4"
+       "h264": "/icinden/v/y/r65.2e7be6f2.h264.mp4",
+       "av1": "/icinden/v/y/r65.3a1216c8.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 518276,
-       "hevc": 343078,
-       "av1": 291272
+       "h264": 385386,
+       "hevc": 282677,
+       "av1": 251091
       },
       "yatay": {
-       "h264": 549237,
-       "av1": 318325
+       "h264": 422520,
+       "av1": 281978
       }
      }
     },
@@ -2462,18 +2462,18 @@
    "id": "d6",
    "rol": "duvar",
    "tur": "klip",
-   "okuma": [3.048, 3.051, 3.064, 3.09, 3.137, 3.215, 3.337, 3.52, 3.787, 4.167, 4.704, 5.464, 5.271, 5.013, 4.818, 4.666, 4.539, 4.427, 4.321, 4.213, 4.099, 3.981, 3.86, 3.735, 3.608, 3.476, 3.339, 3.197, 3.047, 2.891, 2.721, 2.53, 2.332, 2.183, 2.144, 2.143, 2.156, 2.177, 2.203, 2.233, 2.267, 2.307, 2.355, 2.414, 2.496, 2.603, 2.717, 2.827, 2.929, 3.023, 3.108, 3.184, 3.251, 3.31, 3.36, 3.401, 3.433, 3.456, 3.47, 3.474],
+   "okuma": [3.048, 3.037, 2.972, 2.824, 2.608, 2.393, 2.235, 2.183, 2.26, 2.447, 2.746, 3.151, 2.591, 2.133, 2.05, 2.107, 2.208, 2.342, 2.501, 2.681, 2.884, 3.118, 3.383, 3.642, 3.884, 4.106, 4.31, 4.499, 4.673, 4.836, 4.987, 5.069, 4.993, 4.843, 4.682, 4.536, 4.403, 4.282, 4.171, 4.071, 3.979, 3.897, 3.822, 3.756, 3.698, 3.647, 3.603, 3.566, 3.536, 3.512, 3.494, 3.483, 3.476, 3.474],
    "okumaDurak": "arka duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p6.e2062d48.webp",
-     "bayt": 43468,
-     "lqip": "data:image/webp;base64,UklGRi4BAABXRUJQVlA4ICIBAABQBwCdASoYACsAPtFgp08oJSMiKrgIAQAaCUAW/Wr2wG3/k4YHAnkB80B/sbyRv74U/U+Uvtn4vumX1OPgwjdYTLsAAP74Tb5yOFznUN2KZLfe6VRx8Toi1Lvnl6h+b7OAEhU6tcK+LcVnHJh29U+FFmtb7jt7EsOJ0QTsVyPnsPJJiaHScIWpkJc0h24GKNGe9fCRDe/fg90ngijffkLTPtmiuBzkMA8XRq/sRj6Ft8Wt4JDz/iqSORXxecHtEKCsdVy2UYZNfwnKV6FFjrb3z9lvC/sKwRL/UbdSPo06DuSPzCcYMOeJM6Bw34a1ZGs6X22Dy+PpHnUT3csw5XOzlVXmHwbeI+x6zUkcMQYEI+8ZUvibAcwfS1O7fwwVvAAAAA=="
+     "dosya": "/icinden/p/d/p6.8543b5be.webp",
+     "bayt": 43528,
+     "lqip": "data:image/webp;base64,UklGRigBAABXRUJQVlA4IBwBAAAQBwCdASoYACsAPtFgp08oJaMiKrgIAQAaCUAW/WtIHkwG3/qaILP1gD6YeVUG40yheObvs3vQRAFeybDU1mZhQAD++E23YtddIglVWQBlJELEnXNVE6lpkHYhXKIf5MF4/RdozJUkWaWPtZemnogUhzi0aFWV7FX6JhY2l22fTrJGsVEVMCs99sXPYb53Qmu1wmxILpM/NooiytEQnXLqjeprlPD7rsWFGKqu1A5KQLx9nXggXLQ1nLO2xI6qJOV9nN+/GYdL4hrUPA4hpXqfV2xsXszkT69+9rXZkPZZqstMkUiuGB4ODr8nhqN/ZZicvj6R5t2u3Ud+N8wFVXd+Xzmrd97dPjWwRbltSbj5NgOYPpandv4YK3gAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p6.3de45a8a.webp",
-     "bayt": 44364,
-     "lqip": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUAAvSf99efuuIjiAAMybAotqc9UUW2uFUNGEq3UXLJlKnO0q+B7T4imExK0gA2Ztt8Hs77PVoMYRkgkm5LDAdDGPJo6GdCNQW5BYLlm6A7PoQexSr8WGdEWjaEfE3WZKmWvuycWax/kg4cXafNTiBITAAAA="
+     "dosya": "/icinden/p/y/p6.22d78de6.webp",
+     "bayt": 44380,
+     "lqip": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUAAvSf99efuuIjiAAMybAotqc9UUW2uFUNGEq3UXLJlKnO0q+B7T4imExK0gA2Ztt8Hs77PVoMYRkgkm5LDAdDGPJo6GdCNQW5BYLlm6A7PoQexSr8WGdEWjaEfE3WZKmWvuycWax/kg5JN9LY25JF0TAAA="
     }
    },
    "dongu": null,
@@ -2483,24 +2483,24 @@
     "kare": 48,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t67.82d6ec9c.h264.mp4",
-      "hevc": "/icinden/v/d/t67.d91629c9.hevc.mp4",
-      "av1": "/icinden/v/d/t67.f1baa2fe.av1.mp4"
+      "h264": "/icinden/v/d/t67.aa4fc588.h264.mp4",
+      "hevc": "/icinden/v/d/t67.973aa4cb.hevc.mp4",
+      "av1": "/icinden/v/d/t67.25b49b36.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t67.4017166e.h264.mp4",
-      "av1": "/icinden/v/y/t67.4a9dad7e.av1.mp4"
+      "h264": "/icinden/v/y/t67.23e1b9a5.h264.mp4",
+      "av1": "/icinden/v/y/t67.4a4ae6be.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 301847,
-      "hevc": 238254,
-      "av1": 186414
+      "h264": 315802,
+      "hevc": 237539,
+      "av1": 199521
      },
      "yatay": {
-      "h264": 336399,
-      "av1": 220603
+      "h264": 331595,
+      "av1": 227084
      }
     },
     "geri": {
@@ -2509,24 +2509,24 @@
      "kare": 48,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r76.2d44dfb9.h264.mp4",
-       "hevc": "/icinden/v/d/r76.492c52e6.hevc.mp4",
-       "av1": "/icinden/v/d/r76.0dc0404e.av1.mp4"
+       "h264": "/icinden/v/d/r76.8e15e46c.h264.mp4",
+       "hevc": "/icinden/v/d/r76.7eee5630.hevc.mp4",
+       "av1": "/icinden/v/d/r76.e915af6d.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r76.7b851645.h264.mp4",
-       "av1": "/icinden/v/y/r76.c854da7c.av1.mp4"
+       "h264": "/icinden/v/y/r76.6f810511.h264.mp4",
+       "av1": "/icinden/v/y/r76.7f75f641.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 211997,
-       "hevc": 167565,
-       "av1": 147801
+       "h264": 220141,
+       "hevc": 163113,
+       "av1": 149775
       },
       "yatay": {
-       "h264": 243934,
-       "av1": 177453
+       "h264": 240726,
+       "av1": 174280
       }
      }
     },
@@ -2556,71 +2556,71 @@
    "id": "d7",
    "rol": "duvar",
    "tur": "klip",
-   "okuma": [3.474, 3.476, 3.481, 3.49, 3.503, 3.52, 3.541, 3.567, 3.598, 3.634, 3.676, 3.725, 3.782, 3.846, 3.919, 4.003, 4.097, 4.203, 4.322, 4.457, 4.608, 4.709, 4.519, 4.346, 4.19, 4.048, 3.92, 3.804, 3.701, 3.607, 3.524, 3.45, 3.383, 3.325, 3.273, 3.227, 3.188, 3.153, 3.123, 3.098, 3.076, 3.058, 3.043, 3.032, 3.023, 3.017, 3.013, 3.012],
+   "okuma": [3.474, 3.477, 3.493, 3.533, 3.607, 3.715, 3.856, 4.039, 4.273, 4.572, 4.951, 5.336, 4.97, 4.628, 4.358, 4.146, 3.977, 3.843, 3.735, 3.647, 3.573, 3.512, 3.459, 3.413, 3.373, 3.337, 3.305, 3.275, 3.247, 3.221, 3.196, 3.173, 3.152, 3.132, 3.114, 3.098, 3.083, 3.069, 3.058, 3.047, 3.038, 3.031, 3.024, 3.019, 3.016, 3.013, 3.012, 3.012],
    "okumaDurak": "sol duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p7.b90f0c35.webp",
-     "bayt": 31728,
-     "lqip": "data:image/webp;base64,UklGRmIBAABXRUJQVlA4IFYBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ3TmnuXyi0S7S8cry19y7InjOk8alIOAfXWiN6s8Cfe94ptH2vlpYAA/vSA9vcds4EB2WurFseDd9XTU425yLCqQZcFswfGrujmLiPgF1IUgZyufOi2mDuVVxn8l7cPbtusKM1IZdIFTV9GuauzOYmxcYeoi6HIilD+oE2PhxSi87bhdm1hQAF9xZ1vVV+NsX7Mrl2JliGaOcjRTa6lkBSnhpI0WcnGyUOC72EyjHaa/wNiv4xN6UnfC7zc7fxEJFGpY7pLpuR35DPk4GsIElXjpyKfg20YRAZYQor4k+B96AMEne73NvimN4JcKaysgpx+Q2J4/tPd3v2mWq9uTOGGX9bkMYPHF8M8BXC8ylRPC5ciI4DNFiw+d7LTVKwwpT8jraFrb7MRgguEPA1JFj+R7q0xGusAAAA="
+     "dosya": "/icinden/p/d/p7.f29024f3.webp",
+     "bayt": 31686,
+     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ2pGoWXai0S7S8cry19y7Jwon+BXNRtd+nce6la6pmantatyDWsAAAA/vSA9vcdsIEB2V+zJkjXc9i0AtB5x0Xrj4auh9pYiOQ6CurSIDl2xqkT968X36jqGC30N6Vpygc5NliWiQXpKGSQAgXA/Ur46UxaLVtPtfJlxuaneWTgG1NCowoAC9l7lDmtcnOvLjztDsH3ylcrRI7jYCL/IyTUmEaobE/YgMDDvA548Fgit/T4BG7IcC+gFnXbG9lsm4HfVA4Sc/BoAUG8/shm0nH04w67g+tKciCYvXQVzYsu6yGrR8lC2/PtLejWX+gPvyKbOX9K8tJFWvlXVRotOk2mB9vPvw27HeZSqxW6ybU1LOFpA0Zjney20FiUA4Yrk5K2+0GkwEyhOi4RJMFN1aYjXWAAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p7.c846db3c.webp",
-     "bayt": 27178,
-     "lqip": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4PdOHKTPPgIAAPch2aIwoR/gf0LHZwEYnDvira4rdPlkmTDnG2yTq+/M0h+cDikB7geCmPF8f3wNXPHb+K9wPVBG3HJIA5h/fFRe0U/47D1zkS7U0XCOx7LHjgDD4OCEB2QgtpLwxwgAAA=="
+     "dosya": "/icinden/p/y/p7.8da09e8a.webp",
+     "bayt": 27090,
+     "lqip": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAAAwBACdASoYAA4APtFWpEuoJKOhsAgBABoJQBOmUGMABbZu4PdOHKTPD6AA9yHZojChH+B/QsdnARicO+Ktrit0+WSZMOcbbJOr78zSH5wOKQHuB4KY8Xx/fA1c8dv4r3A9UEbcckgDmH98VF7RT/jsPXORLtTRcI7HsseOEwajH2m3cIT4zY4zDWUQAA=="
     }
    },
    "dongu": null,
    "ileri": {
     "ad": "t78",
-    "sure": 2.2,
-    "kare": 66,
+    "sure": 2,
+    "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t78.d6803e4a.h264.mp4",
-      "hevc": "/icinden/v/d/t78.310f804a.hevc.mp4",
-      "av1": "/icinden/v/d/t78.26c255cf.av1.mp4"
+      "h264": "/icinden/v/d/t78.057a0f54.h264.mp4",
+      "hevc": "/icinden/v/d/t78.b3d5bb5e.hevc.mp4",
+      "av1": "/icinden/v/d/t78.65ac041d.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t78.99abe966.h264.mp4",
-      "av1": "/icinden/v/y/t78.ffe6a435.av1.mp4"
+      "h264": "/icinden/v/y/t78.f309b34a.h264.mp4",
+      "av1": "/icinden/v/y/t78.3d77b399.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 570069,
-      "hevc": 354124,
-      "av1": 304513
+      "h264": 531531,
+      "hevc": 318906,
+      "av1": 265394
      },
      "yatay": {
-      "h264": 583360,
-      "av1": 301227
+      "h264": 524555,
+      "av1": 254012
      }
     },
     "geri": {
      "ad": "r87",
-     "sure": 2.2,
-     "kare": 66,
+     "sure": 2,
+     "kare": 60,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r87.95308cf1.h264.mp4",
-       "hevc": "/icinden/v/d/r87.75a2c90f.hevc.mp4",
-       "av1": "/icinden/v/d/r87.97ebfb6d.av1.mp4"
+       "h264": "/icinden/v/d/r87.6c46fb66.h264.mp4",
+       "hevc": "/icinden/v/d/r87.250da24a.hevc.mp4",
+       "av1": "/icinden/v/d/r87.11828772.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r87.46fe3936.h264.mp4",
-       "av1": "/icinden/v/y/r87.b4b7caef.av1.mp4"
+       "h264": "/icinden/v/y/r87.1e895b20.h264.mp4",
+       "av1": "/icinden/v/y/r87.24e91aba.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 393881,
-       "hevc": 260659,
-       "av1": 235572
+       "h264": 356322,
+       "hevc": 235935,
+       "av1": 205517
       },
       "yatay": {
-       "h264": 394391,
-       "av1": 233174
+       "h264": 358281,
+       "av1": 195824
       }
      }
     },
@@ -2631,7 +2631,7 @@
    "id": "d8",
    "rol": "brosur-kapak",
    "tur": "dom",
-   "okuma": [3.012, 3.005, 2.984, 2.95, 2.904, 2.847, 2.779, 2.702, 2.617, 2.526, 2.427, 2.323, 2.214, 2.101, 1.992, 1.906, 1.848, 1.815, 1.801, 1.804, 1.817, 1.838, 1.864, 1.888, 1.912, 1.941, 1.98, 2.031, 2.101, 2.196, 2.323, 2.482, 2.689, 2.962, 3.3, 3.457, 3.163, 2.881, 2.615, 2.365, 2.134, 1.921, 1.715, 1.52, 1.341, 1.186, 1.047, 0.915, 0.792, 0.681, 0.583, 0.5, 0.432, 0.379, 0.343, 0.318, 0.301, 0.289, 0.28, 0.273, 0.265, 0.251, 0.24, 0.233, 0.228, 0.227],
+   "okuma": [3.012, 2.995, 2.891, 2.656, 2.3, 1.919, 1.711, 1.621, 1.577, 1.548, 1.514, 1.491, 1.488, 1.514, 1.579, 1.674, 1.801, 1.968, 2.137, 2.291, 2.422, 2.456, 1.91, 1.5, 1.199, 0.981, 0.831, 0.737, 0.679, 0.626, 0.564, 0.496, 0.428, 0.369, 0.324, 0.298, 0.288, 0.285, 0.286, 0.289, 0.292, 0.296, 0.3, 0.303, 0.303, 0.291, 0.281, 0.273, 0.266, 0.259, 0.252, 0.246, 0.241, 0.236, 0.233, 0.23, 0.229, 0.227, 0.227, 0.227],
    "okumaDurak": "sayfa 1/12",
    "poster": {
     "dikey": {
@@ -2714,24 +2714,24 @@
     "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t01.560efd5e.h264.mp4",
-      "hevc": "/icinden/v/d/t01.635131e4.hevc.mp4",
-      "av1": "/icinden/v/d/t01.7fd04edc.av1.mp4"
+      "h264": "/icinden/v/d/t01.a912a662.h264.mp4",
+      "hevc": "/icinden/v/d/t01.e89e2062.hevc.mp4",
+      "av1": "/icinden/v/d/t01.0f8f6133.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t01.724da10c.h264.mp4",
-      "av1": "/icinden/v/y/t01.bdbf6d00.av1.mp4"
+      "h264": "/icinden/v/y/t01.d5ee30c9.h264.mp4",
+      "av1": "/icinden/v/y/t01.9f55a450.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 259465,
-      "hevc": 276716,
-      "av1": 220082
+      "h264": 301169,
+      "hevc": 326555,
+      "av1": 249998
      },
      "yatay": {
-      "h264": 234204,
-      "av1": 203714
+      "h264": 270096,
+      "av1": 234545
      }
     },
     "geri": {
@@ -2740,24 +2740,24 @@
      "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r10.3b36b8cc.h264.mp4",
-       "hevc": "/icinden/v/d/r10.2cc094ce.hevc.mp4",
-       "av1": "/icinden/v/d/r10.fc31eee5.av1.mp4"
+       "h264": "/icinden/v/d/r10.0cb17e78.h264.mp4",
+       "hevc": "/icinden/v/d/r10.6a471daf.hevc.mp4",
+       "av1": "/icinden/v/d/r10.57ba673a.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r10.6293f08f.h264.mp4",
-       "av1": "/icinden/v/y/r10.ea6e1b83.av1.mp4"
+       "h264": "/icinden/v/y/r10.537b1a80.h264.mp4",
+       "av1": "/icinden/v/y/r10.15a9797a.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 202171,
-       "hevc": 186281,
-       "av1": 177016
+       "h264": 213826,
+       "hevc": 190097,
+       "av1": 206586
       },
       "yatay": {
-       "h264": 179119,
-       "av1": 166161
+       "h264": 187851,
+       "av1": 183110
       }
      }
     },
@@ -2768,7 +2768,7 @@
    "id": "d11",
    "rol": "dunya",
    "tur": "klip",
-   "okuma": [40200000, 40160000, 40020000, 39790000, 39480000, 39090000, 38610000, 38070000, 37450000, 36770000, 36030000, 35250000, 34420000, 33560000, 32670000, 31750000, 30820000, 29890000, 28950000, 28010000, 27080000, 26170000, 25270000, 24390000, 23540000, 22710000, 21920000, 21150000, 20410000, 19710000, 19040000, 18400000, 17800000, 17230000, 16700000, 16200000, 15730000, 15300000, 14890000, 14520000, 14170000, 13860000, 13570000, 13320000, 13080000, 12880000, 12700000, 12540000, 12410000, 12310000, 12230000, 12170000, 12130000, 12120000],
+   "okuma": [40200000, 40100000, 39520000, 38230000, 36370000, 34370000, 32540000, 30860000, 29330000, 27920000, 26620000, 25440000, 24340000, 23340000, 22410000, 21550000, 20760000, 20040000, 19360000, 18740000, 18160000, 17630000, 17140000, 16680000, 16260000, 15870000, 15510000, 15170000, 14870000, 14580000, 14320000, 14070000, 13850000, 13650000, 13460000, 13290000, 13130000, 12990000, 12860000, 12740000, 12640000, 12550000, 12470000, 12400000, 12330000, 12280000, 12240000, 12200000, 12170000, 12150000, 12140000, 12130000, 12120000, 12120000],
    "okumaDurak": "ortak evimiz",
    "poster": {
     "dikey": {
@@ -2811,7 +2811,7 @@
    },
    "ileri": null,
    "ozel": {
-    "dunyaR": [115, 115.1, 115.5, 116.2, 117.1, 118.3, 119.7, 121.4, 123.4, 125.7, 128.2, 131, 134.1, 137.5, 141.2, 145.2, 149.5, 154.1, 159, 164.2, 169.7, 175.6, 181.7, 188.2, 194.9, 202, 209.3, 217, 224.9, 233, 241.4, 249.9, 258.6, 267.3, 276.1, 284.9, 293.6, 302.2, 310.6, 318.8, 326.8, 334.4, 341.6, 348.3, 354.6, 360.4, 365.5, 370.1, 374, 377.3, 379.8, 381.6, 382.8, 383.1],
+    "dunyaR": [115, 115.3, 117, 120.9, 127, 134.3, 141.7, 149.3, 157, 164.8, 172.6, 180.6, 188.6, 196.6, 204.7, 212.8, 221, 229.2, 237.3, 245.3, 253.3, 261.1, 268.9, 276.4, 283.8, 291, 297.9, 304.7, 311.2, 317.4, 323.4, 329.1, 334.6, 339.7, 344.5, 349.1, 353.3, 357.3, 360.9, 364.2, 367.3, 370, 372.5, 374.6, 376.5, 378.1, 379.5, 380.6, 381.5, 382.2, 382.6, 382.9, 383.1, 383.1],
     "dunyaC": {
      "dikey": [360, 512],
      "yatay": [640, 232]

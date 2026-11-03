@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import { Lora } from "next/font/google";
+import localFont from "next/font/local";
 import { stant } from "@/lib/stant";
 import DunyaIcerik from "@/components/dunya/DunyaIcerik";
 import DunyaScene from "@/components/dunya/DunyaScene";
@@ -12,11 +12,14 @@ import DunyaScene from "@/components/dunya/DunyaScene";
  * Değişken font (wght 400–700): ağırlık listesi gerekmez. Yalnızca normal stil: italik tek bir
  * 13 px İngilizce ifade ("A 12,000-Year Trust") için ~61 KB önyükleniyordu; <i> sentetik eğik çizilir.
  */
-const lora = Lora({
-  style: ["normal"],
-  subsets: ["latin", "latin-ext"],
+const seri = localFont({
+  // Lora 3.008 alt kümesi ("Cop31 Serif", OFL §3); /icinden ile aynı dosya.
+  src: "../fonts/Cop31Serif.woff2",
+  weight: "400 700",
+  style: "normal",
   variable: "--font-serif",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +47,7 @@ const stantRenkleri = {
  */
 export default function DunyaPage() {
   return (
-    <main className={`${lora.variable} dn-kok`} style={stantRenkleri as CSSProperties}>
+    <main className={`${seri.variable} dn-kok`} style={stantRenkleri as CSSProperties}>
       <DunyaScene>
         <DunyaIcerik />
       </DunyaScene>

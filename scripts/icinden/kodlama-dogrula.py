@@ -16,7 +16,8 @@
 #    geçişin 0. karesi (t56[59] ↔ t67[0], t67[47] ↔ t78[0]); t78 son ↔ p8 broşür dikdörtgeninin DIŞINDA; geri:
 #    r(k+1→k) son karesi ↔ l_k 0. karesi ya da (d6/d7) p_k ve gelen geçişin son karesi.
 # 4. Döngü kapanışı: son→ilk fark ↔ ardışık kare farkı (ortalama mutlak /255 ve ΔE00).
-# 5. t34 iç dikişi (kare 47 ↔ 48) ve parlama karelerinin tonu (#FFF1DC).
+# 5. t34 iç dikişi (kesme k0 ↔ k0+1; k0 = t34a kare − 1, F-B'de 35 ↔ 36, E'de 47 ↔ 48) ve parlama karelerinin tonu
+#    (#FFF1DC). Rapor alanları `fark_kesme`, `k0_ort_rgb`… (`kesme` = [k0, k0+1]).
 # 6. Son-kare posterleri (p6 ← t56, p7 ← t67; §12.6): poster ve her kodekte geçişin son karesi ↔ master son karesi
 #    (aynı kırpım/ölçek, rgb24): tüm kare, en kötü karo (8×8 ızgara) ve fragman çapalarının çevresi (±60 video px;
 #    başlık/rakam bölgesi; hedef ΔE00 ortalaması ≤ 2).
@@ -250,6 +251,25 @@ def poster_kare(s):
     return kareler(s["yol"])[0]
 
 
+def t34_kesme():
+    """t34'ün S1 → S2 kesme karesi k0 (S1'in son karesi): t34a fragmanının kare sayısı − 1 (F-B 35; E 47)."""
+    x = fragman("t34a")
+    return (x["kare"] - 1) if x and x.get("kare") else 47
+
+
+def kirpimY_kare(kirpimY, n=-1):
+    """Listedeki `kirpimY` (sayı, {bas, son, k0, k1} ya da F'den beri {…, kareler}) → `n`. karedeki sayı; bilinmezse 420."""
+    if isinstance(kirpimY, (int, float)):
+        return kirpimY
+    if isinstance(kirpimY, dict) and isinstance(kirpimY.get("kareler"), list) and kirpimY["kareler"]:
+        return kirpimY["kareler"][n if n < 0 else min(n, len(kirpimY["kareler"]) - 1)]
+    if isinstance(kirpimY, dict) and "k0" in kirpimY:
+        t = 1.0 if n < 0 else min(1.0, max(0.0, (n - kirpimY["k0"]) / (kirpimY["k1"] - kirpimY["k0"])))
+        e = 4 * t**3 if t < 0.5 else 1 - (2 - 2 * t) ** 3 / 2
+        return kirpimY["bas"] + (kirpimY["son"] - kirpimY["bas"]) * e
+    return 420
+
+
 def dikdortgen_disi(kaynak, boyut, kirpimY, sekil):
     """Fragmanın `brosur_dikdortgen`'inin (master px) dışı, video px maskesi; pay 0 ve 45 master px."""
     fr = fragman(kaynak) or {}
@@ -257,7 +277,7 @@ def dikdortgen_disi(kaynak, boyut, kirpimY, sekil):
         return None
     q = np.array(fr["brosur_dikdortgen"], float)
     x0, y0, x1, y1 = q[:, 0].min(), q[:, 1].min(), q[:, 0].max(), q[:, 1].max()
-    ox, oy = (420, 0) if boyut == "dikey" else (0, kirpimY if isinstance(kirpimY, (int, float)) else 420)
+    ox, oy = (420, 0) if boyut == "dikey" else (0, kirpimY_kare(kirpimY, -1))
     hh, ww = sekil
     yy, xx = np.mgrid[0:hh, 0:ww] * 1.5
     xx, yy = xx + ox, yy + oy
@@ -346,7 +366,9 @@ for boyut, kodekler in {} if a.yalniz_vmaf else KODEK_BOYUT.items():
                     sonuc["geri"].append(g)
             if t == "t34":
                 ard = [fark(T[k], T[k + 1]) for k in range(len(T) - 1)]
-                sonuc["t34"].append({"boyut": boyut, "kodek": kodek, "fark_47_48": round(ard[47], 3), "komsu_43_52": [round(x, 2) for x in ard[43:53]], "k47_ort_rgb": [round(float(v), 1) for v in T[47].reshape(-1, 3).mean(0)], "k48_ort_rgb": [round(float(v), 1) for v in T[48].reshape(-1, 3).mean(0)], "k47_dE00_FFF1DC": round(de00(T[47], np.broadcast_to(np.array([255, 241, 220], np.uint8), T[47].shape)), 2)})
+                k0 = t34_kesme()
+                bej = np.broadcast_to(np.array([255, 241, 220], np.uint8), T[k0].shape)
+                sonuc["t34"].append({"boyut": boyut, "kodek": kodek, "kesme": [k0, k0 + 1], "fark_kesme": round(ard[k0], 3), "komsu": [k0 - 4, k0 + 5], "komsu_fark": [round(x, 2) for x in ard[max(0, k0 - 4) : k0 + 6]], "k0_ort_rgb": [round(float(v), 1) for v in T[k0].reshape(-1, 3).mean(0)], "k1_ort_rgb": [round(float(v), 1) for v in T[k0 + 1].reshape(-1, 3).mean(0)], "k0_dE00_FFF1DC": round(de00(T[k0], bej), 2), "k1_dE00_FFF1DC": round(de00(T[k0 + 1], bej), 2)})
 
 
 # 6. son-kare posterleri ↔ master (§12.6: başlık/rakam bölgesi ΔE00 ≤ 2)
@@ -366,7 +388,7 @@ def bolge_olc(x, m, capa, boyut, kirpimY, R=60, izgara=8):
     karo = [float(h[j * H // izgara : (j + 1) * H // izgara, i * W // izgara : (i + 1) * W // izgara].mean()) for j in range(izgara) for i in range(izgara)]
     o = {"tum": round(float(h.mean()), 3), "karo_maks": round(max(karo), 3), "karo_p90": round(float(np.percentile(karo, 90)), 3)}
     if capa:
-        ox, oy = (420, 0) if boyut == "dikey" else (0, kirpimY if isinstance(kirpimY, (int, float)) else 420)
+        ox, oy = (420, 0) if boyut == "dikey" else (0, kirpimY_kare(kirpimY, -1))
         k = {}
         for ad, (cx, cy) in capa.items():
             vx, vy = (cx - ox) / 1.5, (cy - oy) / 1.5

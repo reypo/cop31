@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     // Paralel ajan derlemeleri (COP_DIST=.next-<ajan>, next.config.ts; denetim D3-01).
     ".next-*/**",
+    // Ajan worktree'leri (Workflow isolation: 'worktree'); kendi derleme çıktılarını taşırlar.
+    ".claude/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

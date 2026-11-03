@@ -6,8 +6,15 @@ k_f = 0,55·u², sonra ışıklığın ekran konumundan (kare 30'dan sonra merke
   α(x, y, f) = sat(a_f · (1,15 − 0,35 r²)),  r = merkezden uzaklık / yarı kenar,  u = (f − 38) / 9
 Kare 47'de α ≡ 1 → tam #FFF1DC (S2 t34b kare 48 ile birebir, aynı 16 bit yuvarlama). Kare 44–47 ort. ≥ %92.
 
-  python -X utf8 -P scripts/blender/s1/parlama.py D:/soft/cop31-varlik/render-son/t34a
+  python -X utf8 -P scripts/blender/s1/parlama.py D:/soft/cop31-varlik/render-son/t34a [--bas 33] [--son 35]
+
+F turu (brief §13.2, t34: parlama ≤ 0,2 s, %80+ beyaz kare ≤ 6): rampa kare bas…son
+(a_f = 3,2 · ((f − bas + 1)/(son + 1 − bas))^2,2: 3 karede 0,29 / 1,31 / 3,2), perde aydınlatma u = (f − bas)/(son − bas);
+son karede α ≡ 1 → tam #FFF1DC. F-B (§13.5, t34a 36 kare): --bas 33 (varsayılan) → rampa 33–35, kare 35 tam #FFF1DC,
+S2 t34b 36–38 iner. --son verilmezse ham/ klasöründeki en büyük kare numarası (F-B 35). F-A: --bas 45 (48 kare, son 47).
+--bas 38 → B/C/E turu tablosu (A_F, son 47) bire bir.
 """
+import argparse
 import json
 import os
 import shutil
@@ -46,25 +53,43 @@ def yaz(yol, a, bit):
                     "-pix_fmt", "rgb48be", yol], input=ham, check=True)
 
 
-def main(dizin):
+def a_f(f, bas, son=47):
+    if bas == 38 and son == 47:
+        return A_F[f]                                  # eski (B/C/E) tablo
+    # F önizlemesi: ham çatı kareleri zaten ~%72 parlak (açık renk çatı + ışıklık bantları) → üs 1,4 rampanın ilk karesini
+    # %85,7 yapıyordu (%80+ beyaz kare S1'de 3, t34'te 6, pay 0); üs 2,2 ile ilk rampa karesi %80'in altında kalır
+    return 3.2 * ((f - bas + 1) / (son + 1.0 - bas)) ** 2.2
+
+
+def son_kare(ham):
+    ks = [int(x[2:6]) for x in os.listdir(ham) if x.startswith("k_") and x.endswith(".png")]
+    if not ks:
+        raise SystemExit(f"ham kare yok: {ham}")
+    return max(ks)
+
+
+def main(dizin, bas=33, son=None):
     ham = os.path.join(dizin, "ham")
-    olcum = {}
-    for f in range(0, 48):
+    son = son_kare(ham) if son is None else son
+    if not 0 < bas < son:
+        raise SystemExit(f"--bas {bas} / son kare {son} uyumsuz")
+    olcum = {"bas": bas, "son": son}
+    for f in range(0, son + 1):
         src = os.path.join(ham, f"k_{f:04d}.png")
         if not os.path.exists(src):
             continue
         dst = os.path.join(dizin, f"k_{f:04d}.png")
-        if f < 38:
+        if f < bas:
             shutil.copyfile(src, dst)
             continue
         a, bit = oku(src)
-        u = (f - 38) / 9.0
+        u = (f - bas) / float(son - bas)
         k = 0.55 * u * u
         a = 1 - (1 - a) * (1 - k)
         h, w = a.shape[:2]
         yy, xx = np.mgrid[0:h, 0:w]
         r2 = ((xx + 0.5 - w / 2) / (w / 2)) ** 2 + ((yy + 0.5 - h / 2) / (h / 2)) ** 2
-        al = np.clip(A_F[f] * (1.15 - 0.35 * r2), 0, 1)[..., None]
+        al = np.clip(a_f(f, bas, son) * (1.15 - 0.35 * r2), 0, 1)[..., None]
         a = a * (1 - al) + TON * al
         yaz(dst, a, bit)
         olcum[f] = {"ort_parlaklik": round(float(a.mean()), 4), "ort_rgb": [round(float(x), 4) for x in a.reshape(-1, 3).mean(0)],
@@ -75,4 +100,9 @@ def main(dizin):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("dizin")
+    ap.add_argument("--bas", type=int, default=33)        # F-B (t34a 36 kare); F-A 45; eski (B/C/E): 38
+    ap.add_argument("--son", type=int, default=None)      # son kare (tam #FFF1DC); boş: ham/'daki en büyük numara
+    g = ap.parse_args()
+    main(g.dizin, g.bas, g.son)

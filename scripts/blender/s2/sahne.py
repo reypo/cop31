@@ -2,7 +2,7 @@
 Bağlayıcı belge: docs/brief-icinden-3.md §9 (+ §2.3 d3–d5 kartları = yeni d4–d6, §3.4 stant tablosu).
 
 Klipler (§9.1 numaralandırması; R3 kart adları parantezde):
-  t34b  t34 kare 48–71 (24): çatı ışıklığı parlamasından hole, makasların altından inip patlatılmış standa (R3 T23 sonu)
+  t34b  t34 kare 36–59 (24; E: 48–71): çatı ışıklığı parlamasından hole, makasların altından inip patlatılmış standa (R3 T23 sonu)
   l4    120 kare döngü: patlatılmış stant, parçalar ±1,5 cm salınır (R3 L3)          p4 = l4[0]
   t45   60 kare: montaj koreografisi + vinçten rotundaya kavisli iniş (R3 T34)
   l5    120 kare döngü: rotunda içi, "Bugün" tepe ışığı ±%6 nefes (R3 L4)            p5 = l5[0]
@@ -16,6 +16,15 @@ Klipler (§9.1 numaralandırması; R3 kart adları parantezde):
   p8    banko plakası = eski p6 plakası (yeniden render yok; render-son/p8, p8.json tip "plaka"; --yigin 0)
   olcum-hol / olcum-rotunda / olcum-banko: Cycles ölçüm kareleri (2'şer)
   --carpisma: render yok; t56/t67/t78 kamera yollarının nesne gruplarına en küçük uzaklığı (BVH, kare başına 8 alt örnek)
+  F turu (brief §13, "fiske" geçişleri): --profil fiske (varsayılan) | eski (E turu, izlenebilirlik: E süreleri ve E kare
+        numaraları). İlerleme ortak.py fiske(u, a, k) (ilk 0,15 s beşinci derece kalkış + ease-out 1 − (1 − u)^k; k klip başına
+        FISKE_K_KLIP); açı / yön / lens / ışık / montaj pencereleri ilerlemeye (s) bağlı (T56_PEN, T67_PEN, T78_PEN; --pen ile
+        deneme). F-B süreleri (§13.5, kuyruk kısaltması): t34b t34 kare 36–59 (24), t45 54, t56 54, t67 48, t78 60 kare
+        (SON_KARE). t34b: ilk 3 kare parlamanın içinde hızlı (t34b_s), parlama 36–38. t45: yay ilerlemesi fiske, montaj aynı
+        eğriyle sıkıştırılır (montaj_kur), eğim gecikmesi ilerleme biriminde + son 8 karede devir (T45_GECIKME). t56: aşırtmalı
+        yol (G2 → A'nın güneybatısı → A'ya yaklaşarak iniş; T56_FISKE). t67: A → C → B "duvara yakınlaşma". t78: kuyruk düşey
+        iniş (T78_KUYRUK_FISKE). Uç kareler E ile bire bir (l4[0], l5[0], p6, p7, eski t56[71]). JSON: kare kare `ilerleme`.
+  --kamera_dok DOSYA: render yok; iki profilin kare kare kamera durumu + kadraj kenarı ışın dökümü (ölçüm: scratchpad f-s2/profil.py)
 
 B turu (orkestratör kararları): EEVEE 1920² TAA 64 son render (son.sh), patlatma ×1,6, P4 14 mm / 11 m, "fuar holü"
 (komşu stant fasya + ışık kutuları, kablo tavaları, hol dolgusu), broşür 0,708 + kapak-dom.png (AgX ön telafisi: renk.py),
@@ -26,8 +35,8 @@ bal meşesi, broşür vurgu spotu. Ölçüm: olc.py, son_olcum.py; maske: --mask
       [--kareler 0-119 | 0,30,60] [--out DIZIN] [--json] [--blend yol.blend] [--kilit] [--kok DIZIN] [--maske]
       [--kalibre beyaz|siyah]
 Çıktı: <kok>/<klip>/k_%04d.png + <kok>/<klip>.json; kok varsayılanı D:/soft/cop31-varlik/render-son (A turu: render).
-t34b ham/'a t34 kare numarasıyla (0048–0071) yazılır; parlama.py (kare 48–55, #FFF1DC, görüntü uzayında) çıktıyı
-0'dan numaralar (k_0000 = t34 kare 48).
+t34b ham/'a t34 kare numarasıyla yazılır (F-B: 0036–0059; E: 0048–0071); parlama.py (F-B: kare 36–38, #FFF1DC, görüntü
+uzayında) çıktıyı 0'dan numaralar (k_0000 = t34 kare 36; t34b.json t34_ofset).
 
 Koordinat: metre; stant merkezi orijin, X doğu (plan sağı), Y kuzey (plan üstü = arka), Z yukarı; stant zemini
 Z0 = 0,05. Plan yüzdeleri docs/stant-icerik.md §5'ten, 15,0 × 9,9 m varsayımıyla (V, AREA SIZE ONAY).
@@ -43,18 +52,18 @@ from ortak import srgb
 T_BASLA = time.perf_counter()
 
 KLIPLER = {
-    # ad: (ilk kare, son kare (dahil), tür)
-    "t34b": (48, 71, "gecis"),
+    # ad: (ilk kare, son kare (dahil), tür). t34b / t45 / t56 / t67 / t78 profil_kur() ile (SON_KARE; aşağıdaki E değerleri)
+    "t34b": (48, 71, "gecis"),     # F-B: t34 kare 36–59
     "l4": (0, 119, "dongu"),
     "p4": (0, 0, "poster"),
-    "t45": (0, 59, "gecis"),
+    "t45": (0, 59, "gecis"),       # F-B: 54 kare (0–53)
     "l5": (0, 119, "dongu"),
     "p5": (0, 0, "poster"),
-    "t56": (0, 59, "gecis"),       # E: 2,0 s; P5 → poz A (d6)
-    "p6": (0, 0, "son-kare"),      # = t56[59]
-    "t67": (0, 47, "gecis"),       # E: 1,6 s; A → B (d7)
+    "t56": (0, 59, "gecis"),       # E: 2,0 s; P5 → poz A (d6). F-B: 54 kare
+    "p6": (0, 0, "son-kare"),      # = t56 son karesi (F-B: t56[53])
+    "t67": (0, 47, "gecis"),       # E / F-B: 1,6 s; A → B (d7)
     "p7": (0, 0, "son-kare"),      # = t67[47]
-    "t78": (0, 65, "gecis"),       # E: 2,2 s; B → banko; son kare ≡ eski t56[71]
+    "t78": (0, 65, "gecis"),       # E: 2,2 s; B → banko; son kare ≡ eski t56[71]. F-B: 60 kare (0–59)
     "p8": (0, 0, "plaka"),         # eski p6 plakası (t78 son karesinin kamerası, üstteki broşür gizli)
     "olcum-hol": (0, 1, "olcum"),
     "olcum-rotunda": (0, 1, "olcum"),
@@ -85,6 +94,14 @@ def ek_arg(p):
     p.add_argument("--t78_rampa", type=float, default=0.0)      # t78 zaman eğrisi: 0 easeInOutSine (eski t56); 0,3 → tepe hız −%9 (bulanıklık yedeği)
     p.add_argument("--carpisma", action="store_true")           # render yok: kamera yolu ↔ nesne en küçük uzaklık raporu
     p.add_argument("--carpisma_json", default="")               # rapor dosyası (boş → <kok>/_onizleme/s2-carpisma.json)
+    # F turu (brief §13): kamera zaman profili. "eski" = E turu (easeInOutSine, E süreleri; izlenebilirlik ve uç kare
+    # kanıtı), "fiske" = §13.1 (hızlı kalkış + uzun yumuşak iniş). t34b'de parlama/kalkış, t45–t78'de bütün kamera.
+    p.add_argument("--profil", default="fiske", choices=["eski", "fiske"])
+    p.add_argument("--fiske_k", type=float, default=0.0)          # ease-out kuvveti k ∈ [2; 3]; 0 → klip tablosu FISKE_K_KLIP
+    p.add_argument("--fiske_a", type=float, default=O.FISKE_A_SN)  # beşinci derece kalkış süresi (s)
+    p.add_argument("--montaj_c", type=float, default=1.0)         # t45 montaj sıkıştırması (fiske saatinde; 1 = aynı eğri; bkz. montaj_kur)
+    p.add_argument("--pen", default="")                           # pencere/k deneme: JSON {"t56.phi1": [0, 0.5], "k.t67": 2.2, …}
+    p.add_argument("--kamera_dok", default="")                    # render yok: iki profilin kare kare kamera + kenar ışın dökümü (JSON)
 
 
 a = O.argumanlar(ek_arg)
@@ -92,6 +109,61 @@ KLIP = a.klip
 # Cycles aynı lamba değerleriyle EEVEE'den belirgin parlak (dolaylı sekmeler; ölçüm s2-cycles-eevee-*.jpg) → motor
 # başına lamba enerji çarpanı (emisyonlu yüzeyler hariç). --isik_carp ile elle.
 CARP = a.isik_carp or (0.45 if a.engine == "CYCLES" else 1.0)
+
+# ---- F turu (brief §13): profil başına son kare dizinleri. "eski" E turudur (t34b t34 kare 48–71, t45 60, t56 60, t67 48,
+# t78 66 kare); "fiske" F-B kararı (§13.5 tablo: kuyruk kısaltması; t34a 36 kare olduğundan t34b t34 kare 36–59):
+# KLIPLER, N_T*, T34B_BAS, POSTER_KAYNAK (p6/p7/p8 kaynak kareleri) buradan türer.
+SON_KARE = {"eski": {"t34b_bas": 48, "t45": 59, "t56": 59, "t67": 47, "t78": 65},
+            "fiske": {"t34b_bas": 36, "t45": 53, "t56": 53, "t67": 47, "t78": 59}}
+PROFIL = a.profil
+N_T45 = N_T56 = N_T67 = N_T78 = 0
+T34B_BAS = 48        # t34b'nin ilk karesi t34 numarasıyla (= t34a kare sayısı; t34 kesmesi T34B_BAS − 1 ↔ T34B_BAS)
+POSTER_KAYNAK = {}
+
+
+def profil_kur(ad):
+    """Profil değiştir (kamera fonksiyonları PROFIL ve N_T*'yi çağrı anında okur; --kamera_dok iki profili sırayla döker)."""
+    global PROFIL, N_T45, N_T56, N_T67, N_T78, T34B_BAS, POSTER_KAYNAK
+    PROFIL = ad
+    n = SON_KARE[ad]
+    N_T45, N_T56, N_T67, N_T78 = n["t45"], n["t56"], n["t67"], n["t78"]
+    T34B_BAS = n["t34b_bas"]
+    KLIPLER["t34b"] = (T34B_BAS, T34B_BAS + 23, "gecis")
+    for k_ in ("t45", "t56", "t67", "t78"):
+        KLIPLER[k_] = (0, n[k_], "gecis")
+    # son-kare posterleri ve plaka: hangi klibin hangi karesi (sahne durumu o kareninki)
+    POSTER_KAYNAK = {"p6": ("t56", N_T56), "p7": ("t67", N_T67), "p8": ("t78", N_T78), "olcum-banko": ("t78", N_T78)}
+
+
+# k klip başına (§13.1: k ∈ [2; 3], varsayılan 2,4). Seçim ölçümle (scratchpad f-s2/rapor.md): döndürme ağırlıklı
+# kliplerde (t56 baş kalkışı, t67 pan) k 2,2 = p(0,5) ≥ 0,75'i sağlayan en küçük k (S1 tanımıyla t56 0,762, t67 0,757; k 2,0
+# → 0,73) — kalkış tepesi en düşük; t45 ve t78'de 2,4 (t78'de son 3 kare ≤ 6 / 3 / 0 px için).
+FISKE_K_KLIP = {"t34b": 2.4, "t45": 2.4, "t56": 2.2, "t67": 2.2, "t78": 2.4}
+PEN_EK = json.loads(a.pen) if a.pen else {}
+for _k, _v in PEN_EK.items():
+    if _k.startswith("k."):
+        FISKE_K_KLIP[_k[2:]] = float(_v)
+
+
+def fiske_k(klip):
+    return a.fiske_k if a.fiske_k > 0 else FISKE_K_KLIP.get(klip, O.FISKE_K)
+
+
+def ilerleme(f, n_son, klip=""):
+    """F: fiske ilerlemesi p(f) (ortak.py; k = fiske_k(klip), kalkış --fiske_a s)."""
+    return O.fiske_kare(f, n_son, a.fiske_a, fiske_k(klip), FPS)
+
+
+def pen(tablo, ad, klip):
+    """Pencere tablosu girdisi (--pen ile "klip.ad" üzerine yazılabilir)."""
+    return tuple(PEN_EK.get(f"{klip}.{ad}", tablo[ad]))
+
+
+def pencere(s, s0, s1):
+    return O.clamp01((s - s0) / (s1 - s0))
+
+
+profil_kur(PROFIL)
 K0, K1, TUR = KLIPLER[KLIP]
 if a.yigin < 0:
     a.yigin = 0 if KLIP == "p8" else 1   # C turu (§11.1 S2-C 2): plaka broşürsüz
@@ -129,9 +201,7 @@ KAPAK_KOMP = DOKU + "kapak-dom-komp.png"     # AgX ön telafili (renk.py): rende
 KAPAK = a.kapak or (KAPAK_KOMP if os.path.exists(KAPAK_KOMP) else KAPAK_DOM)
 P4_LENS = a.p4_lens
 T56_ESKI_SON = 71        # D turu t56'sının son karesi (72 kare): banko_kamera(ESKI_T56) — p8 plakası, t78 sonu ≡ bu kare
-N_T56, N_T67, N_T78 = 59, 47, 65   # E turu son kare dizinleri (60 / 48 / 66 kare)
-# son-kare posterleri ve plaka: hangi klibin hangi karesi (sahne durumu o kareninki)
-POSTER_KAYNAK = {"p6": ("t56", N_T56), "p7": ("t67", N_T67), "p8": ("t78", N_T78), "olcum-banko": ("t78", N_T78)}
+# E turu son kare dizinleri (60 / 48 / 66 kare) ve POSTER_KAYNAK: F'den beri profil_kur() (SON_KARE tablosu)
 # E turu duvar baskıları (brief §12.3): iç yüz düzlemleri ve doku dosyaları (S2a, dokular.mjs, 500 px/m)
 Y_ARKA_IC = DP / 2 - DUVAR_T          # 4,83: arka_kapali iç yüzü (güneye bakar)
 X_SOL_IC = -W / 2 + DUVAR_T           # −7,38: sol_kapali iç yüzü (doğuya bakar)
@@ -1152,13 +1222,43 @@ P5 = {"konum": RC + Vector((0, -0.70, 2.65)), "psi": 0.0, "phi": -78.0, "lens": 
 PSI_SON = -150.0   # t56 son yönü: rotundadan bankoya süzülüş doğrultusu (~−142°) yakını; yığın da bu yöne döndürülür
 
 
+# F (§13.2 t34): parlama 3 kareye iner (parlama.py PARLAMA_KARE 3; F-B t34 kare 36–38, E 48–55); ilk 3 kare (B → B+3,
+# parlamanın içi) hızlı — S1 dalışının devamı —, kare B+3'ten (ilk temiz kare) B+23'e easeOutCubic çıkış (E'nin eğrisi)
+# korunur (B = T34B_BAS: F-B 36, E 48). İlerleme P: kare B–B+3 hız v0'dan v1'e doğrusal azalır (P1'e varır), B+3–B+23
+# P = P1 + (1 − P1)·(1 − (1 − y)³) (y = (f − B − 3) / 20; B+3'te hız v1, C¹). z E'deki gibi önde: 1 − (1 − P)^(4/3)
+# (E: quart ↔ cubic). P1 ölçümle: ilk temiz kareden sonra kenar akışı ≤ 150 px/kare (deklanşör 0,5). F-B: yalnız kare
+# numaraları 12 geri kaydı (S1 t34a 36 kare); eğri, uç pozlar ve 24 kare F-A ile aynı (kare 36 ≡ F-A/E kare 48).
+T34B_P1 = 0.63
+
+
+def t34b_s(f):
+    """t34b ilerlemesi (xy / ψ / φ; z bundan türer). E: easeOutCubic((f − 48) / 23)."""
+    if PROFIL == "eski":
+        return 1 - (1 - O.clamp01((f - T34B_BAS) / 23.0)) ** 3
+    P1 = float(PEN_EK.get("t34b.P1", T34B_P1))
+    v1 = 3.0 * (1.0 - P1) / 20.0
+    v0 = 2.0 * P1 / 3.0 - v1
+    d = f - float(T34B_BAS)
+    if d <= 0:
+        return 0.0
+    if d < 3.0:
+        return v0 * d + (v1 - v0) * d * d / 6.0
+    y = O.clamp01((d - 3.0) / 20.0)
+    return P1 + (1.0 - P1) * (1.0 - (1.0 - y) ** 3)
+
+
 def t34b_poz(f, P4, hol):
-    """t34 kare 48–71: ışıklık bandının içinden (13,85 m, −70°, ψ4−25°) P4'e; z önde (easeOutQuart), yatay
-    easeOutCubic, açılar easeOutCubic. Başlangıç hızı yüksek (S1 dalışının devamı), son 0,25 s yumuşak iniş."""
-    tau = O.clamp01((f - 48) / 23.0)
+    """t34 kare B–B+23 (F-B 36–59, E 48–71): ışıklık bandının içinden (13,85 m, −70°, ψ4−25°) P4'e; z önde (easeOutQuart),
+    yatay easeOutCubic, açılar easeOutCubic. Başlangıç hızı yüksek (S1 dalışının devamı), son 0,25 s yumuşak iniş.
+    F: bkz. t34b_s (ilk 3 kare parlamanın içinde hızlı)."""
+    tau = O.clamp01((f - T34B_BAS) / 23.0)
     bas_xy = Vector((P4["konum"].x - 1.2, hol["y_bas"], 0))
-    z = O.lerp(13.85, P4["konum"].z, 1 - (1 - tau) ** 4)
-    s = 1 - (1 - tau) ** 3
+    if PROFIL == "eski":
+        z = O.lerp(13.85, P4["konum"].z, 1 - (1 - tau) ** 4)
+        s = 1 - (1 - tau) ** 3
+    else:
+        s = t34b_s(f)
+        z = O.lerp(13.85, P4["konum"].z, 1 - (1 - s) ** (4.0 / 3.0))
     xy = bas_xy.lerp(Vector((P4["konum"].x, P4["konum"].y, 0)), s)
     psi = O.lerp(P4["psi"] - 25.0, P4["psi"], s)
     phi = O.lerp(-70.0, P4["phi"], s)
@@ -1194,21 +1294,92 @@ def t45_yol(P4):
 HEDEF5 = P5["konum"] + ileri(0.0, -78.0) * 2.7
 
 
+def t45_yay(f):
+    """F (fiske): t45 yay ilerlemesi a_f = fiske(u) (§13.2 "t45: fiske (yay ilerlemesi)"). E'de yay oranı, ln(uzaklık)
+    easeInOutSine'dan türer (bkz. t45_poz)."""
+    return ilerleme(f, N_T45, "t45")
+
+
+def t45_s(f):
+    """t45 hedef/lens/ışık ilerlemesi s: hedefe uzaklığın ln'i (E tanımı). E (eski): easeInOutSine(f / 59). F: kameranın
+    fiske yay konumundaki ln-uzaklık ilerlemesi — bakış hedefi, lens ve ışık devri yolun her noktasında E ile aynı."""
+    if PROFIL == "eski":
+        return O.ease_in_out_sine(f / 59.0)    # son kare (59) = yolun sonu (u = 1); hız sonda 0
+    L = YOL45[1]
+    d0, d1 = L[-1] + 2.7, 2.7
+    d = L[-1] * (1.0 - t45_yay(f)) + 2.7
+    return (math.log(d0) - math.log(d)) / (math.log(d0) - math.log(d1))
+
+
+def t45_saat(f):
+    """t45 ışık saati (s): E'de gerçek zaman f / 30. F'de ilerlemeye bağlı: s'ye E'nin hangi anında varılıyorsa o an
+    (isik_durum eşikleri E saatinde; yumuşak kutu → rotunda tepe devri kameranın aynı konumunda olur)."""
+    if PROFIL == "eski":
+        return f / 30.0
+    return O.sine_ters(t45_s(f)) * 59.0 / 30.0
+
+
+def montaj_kur():
+    """F: montaj (PARCALAR t0 / sure, E saatinde) fiske zaman eğrisiyle sıkıştırılır. E'deki olay anı τ (s) klibin
+    oranına çevrilir (r = τ / (59/30)), --montaj_c ile ölçeklenir ve fiske'nin tersinden yeni gerçek zamana taşınır:
+    t' = T · fiske⁻¹(c · r). Mıknatıs %2 aşma + 120 ms yerleşme (gerçek zaman) korunur (O.miknatis). Amaç: bütün
+    parçalar kamera kanopi kenarının (R 2,25) altına girmeden yerinde (bkz. --kamera_dok 'montaj')."""
+    T, T_eski = N_T45 / 30.0, 59.0 / 30.0
+    ak = a.fiske_a * 30.0 / N_T45
+    kk = fiske_k("t45")
+    for p in PARCALAR:
+        if PROFIL == "eski":
+            p["t0_f"], p["sure_f"] = p["t0"], p["sure"]
+            continue
+        b = T * O.fiske_ters(a.montaj_c * p["t0"] / T_eski, ak, kk)
+        s_ = T * O.fiske_ters(a.montaj_c * (p["t0"] + p["sure"]) / T_eski, ak, kk)
+        p["t0_f"], p["sure_f"] = b, s_ - b
+
+
 def t45_poz(f, P4, yol):
     t = f / 30.0
     ornek, L = yol
-    # ilerleme: ln(hedef uzaklığı) easeInOutSine; uzaklık ~ kalan yay + 2,7 m
+    # ilerleme: ln(hedef uzaklığı) easeInOutSine; uzaklık ~ kalan yay + 2,7 m. F: yay oranı fiske (t45_yay), s ondan.
     d0 = L[-1] + 2.7
     d1 = 2.7
-    s = O.ease_in_out_sine(f / 59.0)          # son kare (59) = yolun sonu (u = 1); hız sonda 0
-    d = math.exp(math.log(d0) + (math.log(d1) - math.log(d0)) * s)
-    kalan = d - 2.7
-    hedef_L = max(0.0, L[-1] - kalan)
+    s = t45_s(f)
+    if PROFIL == "eski":
+        d = math.exp(math.log(d0) + (math.log(d1) - math.log(d0)) * s)
+        kalan = d - 2.7
+        hedef_L = max(0.0, L[-1] - kalan)
+    else:
+        hedef_L = L[-1] * t45_yay(f)
     import bisect
     i = min(len(L) - 1, max(1, bisect.bisect_left(L, hedef_L)))
     u = (hedef_L - L[i - 1]) / max(1e-9, L[i] - L[i - 1])
     pos = ornek[i - 1].lerp(ornek[i], u)
     return pos, s
+
+
+# F-B (§13.5 t45): eğim gecikmesi ilerleme biriminde, son devir son 8 karede → son 3 kare ≤ 6 / 3 / 0 px. F-A'da gecikme
+# 4,5 kare (zaman) ve devir son 4 kareydi: fiske kuyruğunda kamera 4,5 kare önce ~0,15–0,4 m gerideydi, devir 4 karede
+# 3–5° döndürüyordu (son 3 kare 51,7 / 30,9 / 5,3 px). F-B: gecikmeli eğim, yay ilerlemesinde a_g = a − λ·(1 − a)
+# noktasından okunur ("ilerleme birimi": gecikme kalan yolla orantılı → yolun sonunda kendiliğinden 0; λ, kalkıştan
+# sonraki hızlı fazda E'nin 4,5 karelik gecikmesine denk seçildi, bkz. rapor). Devir: son `devir` karenin ilerleme
+# penceresinde (a(N − devir) → 1) smoother; ağırlık ilerlemeye bağlı olduğu için sonda hem a' hem w' sıfıra iner.
+T45_GEC = {"tip": "ilerleme", "lam": 0.10, "kare": 4.5, "devir": 8.0, "devir_tip": "ilerleme"}
+
+
+def t45_gec(ad):
+    v = PEN_EK.get(f"t45.{ad}", T45_GEC[ad])
+    return v if isinstance(v, str) else float(v)
+
+
+def t45_konum_yay(a_, yol):
+    """F: yay ilerlemesi a_ (0–1) → (konum, s_ln) (t45_poz'un fiske dalı, kare yerine ilerlemeden)."""
+    import bisect
+    ornek, L = yol
+    hedef_L = L[-1] * O.clamp01(a_)
+    i = min(len(L) - 1, max(1, bisect.bisect_left(L, hedef_L)))
+    u = (hedef_L - L[i - 1]) / max(1e-9, L[i] - L[i - 1])
+    d0, d1 = L[-1] + 2.7, 2.7
+    d = L[-1] * (1.0 - O.clamp01(a_)) + 2.7
+    return ornek[i - 1].lerp(ornek[i], u), (math.log(d0) - math.log(d)) / (math.log(d0) - math.log(d1))
 
 
 def t45_kamera(f, P4, yol):
@@ -1217,22 +1388,55 @@ def t45_kamera(f, P4, yol):
     T4b = P4["konum"] + ileri(P4["psi"], P4["phi"]) * (T4 - P4["konum"]).length
     hed = T4b.lerp(HEDEF5, O.smoother(s))
     psi, phi = yon_aci(hed - pos)
-    pos_g, s_g = t45_poz(max(0, f - 4.5), P4, yol)
+    if PROFIL == "eski":
+        pos_g, s_g = t45_poz(max(0, f - 4.5), P4, yol)
+    else:
+        a_ = t45_yay(f)
+        if t45_gec("tip") == "ilerleme":
+            a_g = max(0.0, a_ - t45_gec("lam") * (1.0 - a_))
+        else:   # "zaman": E'nin 4,5 karesi klip oranıyla (F-A: 4,5 kare)
+            a_g = t45_yay(max(0.0, f - t45_gec("kare") * N_T45 / 59.0))
+        pos_g, s_g = t45_konum_yay(a_g, yol)
     hed_g = T4b.lerp(HEDEF5, O.smoother(s_g))
     _, phi_g = yon_aci(hed_g - pos_g)
     # B: geriden gelen eğim son karede P5'e (−78°) tek karede ~1,5° sıçrıyordu (kare 58→59 ΔE00 ort. 8,4, 57→58 4,5;
     # t45[59] ↔ l5[0] ΔE00 1,45). Son 4 karede (56–59) gecikme anlık eğime yumuşakça devredilir; kare ≤ 55 değişmez.
-    if f > 55:
-        w = O.smoother((f - 55) / 4.0)
-        phi_g = O.lerp(phi_g, phi, w)
-    if f >= 59:
+    # F-B: devir son 8 karede (T45_GEC), ağırlık ilerleme penceresinde; son kare P5 bire bir (konum dahil).
+    n = 59 if PROFIL == "eski" else N_T45
+    if PROFIL == "eski":
+        if f > n - 4:
+            phi_g = O.lerp(phi_g, phi, O.smoother((f - (n - 4)) / 4.0))
+    else:
+        dv = t45_gec("devir")
+        if f > n - dv:
+            if t45_gec("devir_tip") == "ilerleme":
+                a0 = t45_yay(n - dv)
+                w = O.smoother((t45_yay(f) - a0) / max(1e-9, 1.0 - a0))
+            else:
+                w = O.smoother((f - (n - dv)) / dv)
+            phi_g = O.lerp(phi_g, phi, w)
+    if f >= n:
         psi, phi_g = P5["psi"], P5["phi"]
+        if PROFIL != "eski":
+            pos = P5["konum"].copy()
     lens = O.lerp(P4_LENS, 18.0, O.smoother(s))     # P4 14 mm → P5 18 mm
     return pos, psi, phi_g, lens, (hed - pos).length
 
 
+_CR_ON = {}
+
+
 def cr_ornek(pts, n=200):
-    """Catmull-Rom (düzgün parametre) örnekleri + yay uzunluğu tablosu; pts[0] ve pts[-1] hayalet noktalar."""
+    """Catmull-Rom (düzgün parametre) örnekleri + yay uzunluğu tablosu; pts[0] ve pts[-1] hayalet noktalar.
+    F: aynı noktalar için önbellek (sonuç değişmez; --kamera_dok / --carpisma binlerce çağrı yapar)."""
+    anahtar = (n,) + tuple(tuple(p) for p in pts)
+    if anahtar in _CR_ON:
+        return _CR_ON[anahtar]
+    _CR_ON[anahtar] = _cr_ornek(pts, n)
+    return _CR_ON[anahtar]
+
+
+def _cr_ornek(pts, n=200):
     def cr(i, tt):
         P0, P1, P2, P3 = pts[i - 1], pts[i], pts[i + 1], pts[i + 2]
         t2, t3 = tt * tt, tt * tt * tt
@@ -1302,29 +1506,59 @@ def zaman_egrisi(u, rampa=0.0):
     return v * (rampa / 2 + (u - rampa))
 
 
+# F (t78): pencereler yay ilerlemesi s üzerinde (E'de u üzerindeydi; E'nin konum eşdeğerleri s = sine(u): ψ 0–0,685,
+# φ 0–0,238 / 0,238–0,685 / 0,685–1, lens 0,42–1, odak düzlemi 0,42–0,976, diyafram 0,5–1, ışık 0,146–0,655). ψ ve ilk iki φ
+# parçası fiske kalkışındaki tepe dönüş hızını düşürmek için genişletildi; iniş (φ −30 → −90, lens 18 → 85) s 0,97'de biter →
+# son ~15 kare yalnız düşey iniş (T78_KUYRUK_FISKE; bakış ekseni boyunca, ekranda saf yakınlaşma).
+# F: kuyruk ara noktaları (son'a göre). E turu / eski t56: tek nokta E = son + (0; 0,10; 0,06) — son yaklaşım %86 yanal,
+# 85 mm'de son kareler 13 / 7 / 2 px (§13.1 ≤ 6 / 3 / 0 tutmaz). F: broşürün tam üstünde iki nokta → son parça düz düşey
+# iniş (bakış ekseni boyunca; ekranda yalnız yakınlaşma). Son kare (son, ψ −150, φ −90, 85 mm) değişmez.
+T78_KUYRUK_FISKE = [(0.0, 0.0, 0.30), (0.0, 0.0, 0.12)]
+T78_PEN = {"psi": (0.0, 0.90), "phi1": (0.0, 0.50), "phi2": (0.50, 0.75), "phi3": (0.75, 0.97), "lens": (0.42, 0.97),
+           "odak": (0.42, 0.95), "fstop": (0.5, 0.97), "isik": (0.146, 0.655)}
+
+
 def banko_kamera(f, n_son, bas, pr):
     u = f / float(n_son)                      # son kare = u 1
     Dn, E, son, ust = banko_noktalari()
-    pts = [bas[0] + (bas[0] - bas[1]) * 0.4] + list(bas) + [Dn, E, son, son + (son - E)]
+    kuyruk = [E]
+    if pr.get("fiske") and PROFIL == "fiske":   # F: kuyruğun son yaklaşımı (bkz. T78_KUYRUK_FISKE)
+        kuyruk = [son + Vector(v) for v in PEN_EK.get("t78.kuyruk", T78_KUYRUK_FISKE)]
+        E = kuyruk[-1]
+    pts = [bas[0] + (bas[0] - bas[1]) * 0.4] + list(bas) + [Dn] + kuyruk + [son, son + (son - E)]
     ornek, L = cr_ornek(pts)
-    pos = cr_konum(ornek, L, zaman_egrisi(u, pr.get("rampa", 0.0)))
-    # yön: ψ0 → PSI_SON; eğim üç parça (eski: −78 → −26 → −32, sonra −30 → −90 easeInOutCubic)
-    a0, du = pr["psi_u"]
-    psi = O.lerp(pr["psi0"], PSI_SON, O.ease_in_out_sine((u - a0) / du))
-    p0, p1, p2, p3 = pr["phi"]
-    if u < 0.34:
-        phi = O.lerp(p0, p1, O.ease_in_out_sine(u / 0.34))
-    elif u < 0.62:
-        phi = O.lerp(p1, p2, O.ease_in_out_sine((u - 0.34) / 0.28))
+    if pr.get("fiske") and PROFIL == "fiske":
+        # F (t78): yay ilerlemesi fiske; ψ / φ / lens / odak / diyafram pencereleri ilerleme s'ye bağlı (T78_PEN)
+        s = ilerleme(f, n_son, "t78")
+        pos = cr_konum(ornek, L, s)
+        P = {k_: pen(T78_PEN, k_, "t78") for k_ in T78_PEN}
+        x_psi = pencere(s, *P["psi"])
+        parca_phi = 0 if s < P["phi2"][0] else (1 if s < P["phi3"][0] else 2)
+        x_phi = pencere(s, *P[("phi1", "phi2", "phi3")[parca_phi]])
+        x_lens, x_odak, x_f = pencere(s, *P["lens"]), pencere(s, *P["odak"]), pencere(s, *P["fstop"])
     else:
-        phi = O.lerp(p3, -90.0, O.ease_in_out_cubic((u - 0.62) / 0.38))
+        pos = cr_konum(ornek, L, zaman_egrisi(u, pr.get("rampa", 0.0)))
+        a0, du = pr["psi_u"]
+        x_psi = (u - a0) / du
+        parca_phi = 0 if u < 0.34 else (1 if u < 0.62 else 2)
+        x_phi = (u / 0.34, (u - 0.34) / 0.28, (u - 0.62) / 0.38)[parca_phi]
+        x_lens, x_odak, x_f = (u - 0.45) / 0.55, (u - 0.45) / 0.45, (u - 0.5) / 0.5
+    # yön: ψ0 → PSI_SON; eğim üç parça (eski: −78 → −26 → −32, sonra −30 → −90 easeInOutCubic)
+    psi = O.lerp(pr["psi0"], PSI_SON, O.ease_in_out_sine(x_psi))
+    p0, p1, p2, p3 = pr["phi"]
+    if parca_phi == 0:
+        phi = O.lerp(p0, p1, O.ease_in_out_sine(x_phi))
+    elif parca_phi == 1:
+        phi = O.lerp(p1, p2, O.ease_in_out_sine(x_phi))
+    else:
+        phi = O.lerp(p3, -90.0, O.ease_in_out_cubic(x_phi))
     # odak uzaklığı: 18 → 85 mm, ln uzayında, u 0,45–1
-    lens = math.exp(math.log(18) + (math.log(85) - math.log(18)) * O.ease_in_out_sine((u - 0.45) / 0.55))
+    lens = math.exp(math.log(18) + (math.log(85) - math.log(18)) * O.ease_in_out_sine(x_lens))
     if f >= n_son:
         pos, psi, phi, lens = son, PSI_SON, -90.0, 85.0
     # odak: bakış doğrultusunun hedef düzlemi (zemin → broşür üstü) ile kesişimi; diyafram f/16 → f/2 (l5 dikişi keskin)
     fw = ileri(psi, phi)
-    z_h = O.lerp(Z0, ust, O.smoother((u - 0.45) / 0.45))
+    z_h = O.lerp(Z0, ust, O.smoother(x_odak))
     if pr["odak"] == "duvar":                 # t78: B pozundaki (t67 sonu) duvar odağından sürekli
         d_d = duvar_mesafe(pos, fw, 8.0)
         odak = min(d_d, max(0.3, min(8.0, (pos.z - z_h) / -fw.z))) if fw.z < -0.05 else d_d
@@ -1332,7 +1566,7 @@ def banko_kamera(f, n_son, bas, pr):
         odak = max(0.3, min(8.0, (pos.z - z_h) / -fw.z))
     else:
         odak = 4.0
-    fstop = math.exp(math.log(16) + (math.log(2) - math.log(16)) * O.ease_in_out_sine((u - 0.5) / 0.5))
+    fstop = math.exp(math.log(16) + (math.log(2) - math.log(16)) * O.ease_in_out_sine(x_f))
     if f >= n_son:
         odak, fstop = pos.z - ust, 2.0
     return pos, psi, phi, lens, odak, fstop
@@ -1360,8 +1594,38 @@ def t56_noktalari():
     P1 = RC + RAD120 * 0.60 + Vector((0, 0, 1.75))
     G = RC + RAD120 * R_SUTUN + Vector((0, 0, 1.60))
     G2 = RC + RAD120 * 2.75 + Vector((0, 0, 1.58))
-    Wk = Vector((-4.15, 2.85, Z0 + 1.55))
-    return [P5["konum"], P1, G, G2, Wk, POZ_A["konum"]]
+    if PROFIL == "eski":
+        return [P5["konum"], P1, G, G2, Vector((-4.15, 2.85, Z0 + 1.55)), POZ_A["konum"]]
+    # F-B: aşırtma noktası (A'nın güneybatısı) ve isteğe bağlı ara noktalar (G2 → Wk arası; bitki/totem payı)
+    wk = PEN_EK.get("t56.Wk", T56_FISKE["Wk"])
+    Wk = Vector((wk[0], wk[1], Z0 + (wk[2] if len(wk) > 2 else T56_FISKE["z"])))
+    ara = [Vector((p[0], p[1], Z0 + (p[2] if len(p) > 2 else T56_FISKE["z"]))) for p in PEN_EK.get("t56.ara", T56_FISKE["ara"])]
+    on = [Vector((p[0], p[1], Z0 + p[2])) for p in PEN_EK.get("t56.on", T56_FISKE["on"])]   # Wk ile A arası (iniş biçimi)
+    return [P5["konum"], P1, G, G2] + ara + [Wk] + on + [POZ_A["konum"]]
+
+
+# F (fiske): pencereler yay ilerlemesi s üzerinde (s = konum; E'de s = sine(u)). E'nin konum eşdeğerleri: ψ1 s 0,035–0,578,
+# ψ2 / φ2 s 0,655–1, kuzey s 0,578–0,994, φ1 (baş kalkar) s 0–0,206. Fiske kalkışında baş kalkışı + ψ1 + hızlı öteleme üst
+# üste biniyordu (kenar akışı 510 px/kare): φ1 s 0–0,60'a yayıldı (sütun aralığında, s ≈ 0,50, φ ≈ −11°), ψ1 s 0,30–0,65'e
+# kaydırıldı (baş kalkarken dönme yok) → 423 (tarama f-s2/tara*.txt). Pencere içi easeInOutSine (E ile aynı).
+T56_PEN = {"psi1": (0.30, 0.65), "psi2": (0.655, 1.0), "phi1": (0.0, 0.60), "phi2": (0.655, 1.0), "kuzey": (0.578, 0.994)}
+# F-B (§13.5 t56, "aşırtmalı yol"): F-A'nın inişi bir uzaklaşmaydı (merkez derinliği orta / son 0,64). Yeni yol: P5 → baş
+# kalkar → 120° sütun aralığı (G, G2) → hızlı fazda A'nın güneybatısına aşırt (Wk) → inişte A'ya YAKLAŞARAK gel. Wk
+# orkestratör adayları (−4,9; 1,0) / (−5,1; 0,9) / (−5,2; 0,8) totem paneline (x −5,03…−4,93, y 0,12…1,22, z 0,19…2,39)
+# 0,03–0,17 m'de (çarpışma ✗). Totemin BATISI (t78 bölgesi, ör. (−5,6; 1,1)): dönüş totemin kuzey ucundan doğuya yanal
+# kayma olur → duvar bloğu son %40'ta ×0,95 (küçülür) ✗. Seçilen: totemin DOĞUSU, A'nın güneyi; döngü (A'nın batısından
+# aşağı, dipten doğuya, güney-güneydoğudan A'ya). Yol: G2 → ara (−4,40; 2,40) (hızlı fazda A'nın 0,5 m kuzeybatısından
+# geçer) → Wk (−4,29; 0,79) (dip; totem 0,51 m) → on (−3,96; 0,86) (dönüş; sütun 1'e ≥ 0,45 m) → A: son yaklaşma bakış
+# eksenine yakın → merkez derinliği orta / son 1,24, blok (fidan ↔ genç iklim) son %40'ta ×1,36, ψ s 0,655–1 easeInOutSine
+# ile −18'e. İlk deneme (Wk (−4,5; 0,75), on (−4,15; 0,9); önizleme render/_onizleme/s2-f2-t56-v1.png): kare 29–31'de
+# totem dikey kırpımın %32'sini örttü → dip doğuya alındı (dikey kırpımda totem 0). Tarama: scratchpad f-s2b/t56_model.py,
+# t56_tara*.py, tara-g1. Pencereler s üzerinde (T56_PEN_FISKE; F-A ile aynı). Son kare POZ_A bire bir (f ≥ N_T56).
+T56_FISKE = {"Wk": (-4.29, 0.79), "z": 1.55, "ara": [(-4.40, 2.40)], "on": [(-3.96, 0.86, 1.55)]}
+T56_PEN_FISKE = dict(T56_PEN)
+
+
+def t56_s(f):
+    return O.ease_in_out_sine(O.clamp01(f / float(N_T56))) if PROFIL == "eski" else ilerleme(f, N_T56, "t56")
 
 
 def t56_kamera(f):
@@ -1370,17 +1634,30 @@ def t56_kamera(f):
     A = bas[-1]
     pts = [bas[0] + (bas[0] - bas[1]) * 0.4] + bas + [A + (A - bas[-2]) * 0.4]
     ornek, L = cr_ornek(pts)
-    pos = cr_konum(ornek, L, O.ease_in_out_sine(u))     # son 0,25 s yumuşak iniş (easeInOutSine)
-    # yön: 0 (u < 0,12; yere bakarken dönme yok) → −27 (u 0,55; radyal geçiş doğrultusu) → −18 (A)
-    if u < 0.6:
-        psi = O.lerp(P5["psi"], -27.0, O.ease_in_out_sine((u - 0.12) / 0.43))
+    if PROFIL == "eski":
+        pos = cr_konum(ornek, L, O.ease_in_out_sine(u))     # son 0,25 s yumuşak iniş (easeInOutSine)
+        # yön: 0 (u < 0,12; yere bakarken dönme yok) → −27 (u 0,55; radyal geçiş doğrultusu) → −18 (A)
+        if u < 0.6:
+            psi = O.lerp(P5["psi"], -27.0, O.ease_in_out_sine((u - 0.12) / 0.43))
+        else:
+            psi = O.lerp(-27.0, POZ_A["psi"], O.ease_in_out_sine((u - 0.6) / 0.4))
+        # eğim: −78 → −6 (u 0–0,30, baş kalkar) → −6 → +4 (u 0,60–1)
+        if u < 0.6:
+            phi = O.lerp(P5["phi"], -6.0, O.ease_in_out_sine(u / 0.30))
+        else:
+            phi = O.lerp(-6.0, POZ_A["phi"], O.ease_in_out_sine((u - 0.6) / 0.4))
     else:
-        psi = O.lerp(-27.0, POZ_A["psi"], O.ease_in_out_sine((u - 0.6) / 0.4))
-    # eğim: −78 → −6 (u 0–0,30, baş kalkar) → −6 → +4 (u 0,60–1)
-    if u < 0.6:
-        phi = O.lerp(P5["phi"], -6.0, O.ease_in_out_sine(u / 0.30))
-    else:
-        phi = O.lerp(-6.0, POZ_A["phi"], O.ease_in_out_sine((u - 0.6) / 0.4))
+        s = t56_s(f)
+        pos = cr_konum(ornek, L, s)
+        P = {k_: pen(T56_PEN_FISKE, k_, "t56") for k_ in T56_PEN_FISKE}
+        if s < P["psi2"][0]:
+            psi = O.lerp(P5["psi"], -27.0, O.ease_in_out_sine(pencere(s, *P["psi1"])))
+        else:
+            psi = O.lerp(-27.0, POZ_A["psi"], O.ease_in_out_sine(pencere(s, *P["psi2"])))
+        if s < P["phi2"][0]:
+            phi = O.lerp(P5["phi"], -6.0, O.ease_in_out_sine(pencere(s, *P["phi1"])))
+        else:
+            phi = O.lerp(-6.0, POZ_A["phi"], O.ease_in_out_sine(pencere(s, *P["phi2"])))
     if f <= 0:
         pos, psi, phi = P5["konum"].copy(), P5["psi"], P5["phi"]
     if f >= N_T56:
@@ -1389,12 +1666,45 @@ def t56_kamera(f):
     return pos, psi, phi, 18.0, odak, 16.0
 
 
+# F (§13.2 "duvara yakınlaşma"): A → C (duvardan uzak ara nokta) → B; pan (ψ −18 → −80) ilk yarıda, son yarıda sol
+# duvara dolly. Yol Catmull-Rom (A, C, B), yay ilerlemesi s = fiske. Lens 18 sabit, eğim +4 sabit.
+# C = B'nin son bakış ekseninin 0,8 m gerisi (≈ B − 0,8·ileri(−80°, 0)): A'nın güneydoğusu, bitki (−3,7; 1,9), sütun 1
+# (−3,41; 1,30) ve totemin arasında. "1.000.000+" ölçeği (§13.2: duvar düzlemine uzaklık ve lens) son yarıda (s 0,5 → 1)
+# ×1,257 (E ×1,086). Denenenler (scratchpad f-s2/tara5–9): öneri (−3,9; 1,7) ×1,19 (yayın %34'ünde); yay ortasındaki güneyli
+# (−3,86; 0,75) ×1,33 ama totem dikey kırpımın %53'ünü kare 13–26'da örtüyordu (ilk önizleme); (−3,30; 1,75) sütun halkasının
+# içinde (kanopi 0,06 m ✗). Pan s 0–0,80 (s 0,5'te %69'u bitmiş): 0–0,6'da totem görüntüye giriyor (%13–28) ve kenar akışı
+# ~240; 0–0,8'de 191 px/kare, totem 0. Işık devri pan ile.
+T67_C = Vector((-3.96, 1.46, Z0 + 1.55))
+T67_PEN = {"pan": (0.0, 0.80), "isik": (0.0, 0.80)}
+
+
+def t67_s(f):
+    return O.ease_in_out_sine(f / float(N_T67)) if PROFIL == "eski" else ilerleme(f, N_T67, "t67")
+
+
+def t67_yol():
+    A, B = POZ_A["konum"], POZ_B["konum"]
+    C = Vector((*PEN_EK["t67.C"], T67_C.z)) if "t67.C" in PEN_EK else T67_C
+    return cr_ornek([A + (A - C) * 0.5, A, C, B, B + (B - C) * 0.5])
+
+
 def t67_kamera(f):
-    """A → B: 0,54 m kayma + 62° sola pan (easeInOutSine), eğim +4°, 18 mm."""
-    e = O.ease_in_out_sine(f / float(N_T67))
-    pos = POZ_A["konum"].lerp(POZ_B["konum"], e)
-    psi = O.lerp(POZ_A["psi"], POZ_B["psi"], e)
-    phi = O.lerp(POZ_A["phi"], POZ_B["phi"], e)
+    """A → B. E (eski): 0,54 m kayma + 62° sola pan (easeInOutSine), eğim +4°, 18 mm. F: A → C → B (bkz. T67_C)."""
+    if PROFIL == "eski":
+        e = O.ease_in_out_sine(f / float(N_T67))
+        pos = POZ_A["konum"].lerp(POZ_B["konum"], e)
+        psi = O.lerp(POZ_A["psi"], POZ_B["psi"], e)
+        phi = O.lerp(POZ_A["phi"], POZ_B["phi"], e)
+    else:
+        s = t67_s(f)
+        ornek, L = t67_yol()
+        pos = cr_konum(ornek, L, s)
+        psi = O.lerp(POZ_A["psi"], POZ_B["psi"], O.ease_in_out_sine(pencere(s, *pen(T67_PEN, "pan", "t67"))))
+        phi = POZ_A["phi"]
+        if f <= 0:
+            pos = POZ_A["konum"].copy()
+        if f >= N_T67:
+            pos, psi, phi = POZ_B["konum"].copy(), POZ_B["psi"], POZ_B["phi"]
     odak = duvar_mesafe(pos, ileri(psi, phi), 8.0)
     return pos, psi, phi, 18.0, odak, 16.0
 
@@ -1406,7 +1716,7 @@ T78_WA = Vector((-5.70, 1.50, Z0 + 1.58))
 T78_W1 = Vector((-6.00, 0.40, Z0 + 1.62))
 T78_W2 = Vector((-6.00, -1.60, Z0 + 1.62))
 T78_PROFIL = {"psi0": POZ_B["psi"], "psi_u": (0.0, 0.62), "phi": (POZ_B["phi"], -16.0, -30.0, -30.0), "odak": "duvar",
-              "rampa": a.t78_rampa}
+              "rampa": a.t78_rampa, "fiske": True}   # fiske: yalnız PROFIL == "fiske" iken (eski: rampa / easeInOutSine)
 
 
 def t78_kamera(f):
@@ -1429,7 +1739,8 @@ def parca_durum(p, t_montaj, t_dongu):
         faz = 2 * math.pi * p["sira"] / max(1, len(PARCALAR))
         bob = A_SALINIM * (math.sin(2 * math.pi * t_dongu / P_DONGU + faz) - math.sin(faz)) if t_dongu is not None else 0.0
         return p["pivot"] + ofs + Vector((0, 0, bob)), Euler(rot)
-    k = O.miknatis(t_montaj, p["t0"], p["sure"])
+    # F: montaj_kur() fiske saatine taşınmış t0_f / sure_f (eski profilde t0 / sure'nin aynısı)
+    k = O.miknatis(t_montaj, p.get("t0_f", p["t0"]), p.get("sure_f", p["sure"]))
     return p["pivot"] + ofs * (1 - k), Euler(rot * (1 - k))
 
 
@@ -1488,14 +1799,25 @@ def isik_durum(t_montaj, nefes=1.0, kuzey=0.0, bati=0.0):
 def duvar_isik(klip, f):
     """(kuzey, bati) ışık devri, klip karesi f'de (brief §12.3 tablosu). Sınırlarda dikiş: t56 sonu (1; 0,15) = t67 başı;
     t67 sonu (0,3; 1) = t78 başı; t78 sonu (0; 0) = eski t56[71] (banko anı)."""
+    # F (fiske): anahtarlar ilerlemeye (s) bağlı — t56 kuzey s penceresi (E'de u 0,55–0,95 ≡ s 0,578–0,994), t67 pan
+    # ilerlemesiyle, t78 T78_PEN["isik"] (E'de u 0,25–0,60 ≡ s 0,146–0,655).
     if klip == "t56":   # kuzey u 0,55–0,95'te 0 → 1; bati t67 başının 0,15'ine aynı rampayla
-        k = O.ease_in_out_sine((f / N_T56 - 0.55) / 0.40)
+        if PROFIL == "eski":
+            k = O.ease_in_out_sine((f / N_T56 - 0.55) / 0.40)
+        else:
+            k = O.ease_in_out_sine(pencere(t56_s(f), *pen(T56_PEN_FISKE, "kuzey", "t56")))
         return k, 0.15 * k
     if klip == "t67":   # kuzey 1 → 0,3, bati 0,15 → 1 (pan ile aynı easeInOutSine)
-        e = O.ease_in_out_sine(f / N_T67)
+        if PROFIL == "eski":
+            e = O.ease_in_out_sine(f / N_T67)
+        else:
+            e = O.ease_in_out_sine(pencere(t67_s(f), *pen(T67_PEN, "isik", "t67")))
         return O.lerp(1.0, 0.3, e), O.lerp(0.15, 1.0, e)
     if klip == "t78":   # ikisi de u 0,25–0,60'ta 0'a
-        d = 1.0 - O.ease_in_out_sine((f / N_T78 - 0.25) / 0.35)
+        if PROFIL == "eski":
+            d = 1.0 - O.ease_in_out_sine((f / N_T78 - 0.25) / 0.35)
+        else:
+            d = 1.0 - O.ease_in_out_sine(pencere(ilerleme(f, N_T78, "t78"), *pen(T78_PEN, "isik", "t78")))
         return 0.3 * d, 1.0 * d
     return 0.0, 0.0
 
@@ -1546,6 +1868,7 @@ def kamera_uygula(f, pos, psi, phi, lens, odak=None, dof=False, fstop=2.0):
 
 
 YOL45 = t45_yol(P4)
+montaj_kur()   # F: PARCALAR t0_f / sure_f (eski profilde t0 / sure)
 KAYIT = {"kadraj_m": {}, "kamera": {}}
 ISIK_KAYIT = {}   # f → (kuzey, bati)
 
@@ -1579,13 +1902,13 @@ def kare_kur(f):
     if KLIP == "t45":
         t = f / 30.0
         for p in PARCALAR:
-            l_, r_ = parca_durum(p, t, None)
+            l_, r_ = parca_durum(p, t, None)     # F: montaj_kur() sıkıştırması (gerçek zamanda)
             p["o"].location = l_; p["o"].rotation_euler = r_
             p["o"].keyframe_insert("location", frame=f); p["o"].keyframe_insert("rotation_euler", frame=f)
-        isik_uygula(isik_durum(t), f)
+        isik_uygula(isik_durum(t45_saat(f)), f)  # F: ışık devri ilerlemeye bağlı (E'de t45_saat = f / 30)
         pos, psi, phi, lens, _ = t45_kamera(f, P4, YOL45)
         kamera_uygula(f, pos, psi, phi, lens)
-        s = O.ease_in_out_sine(f / 59.0)
+        s = t45_s(f)
         T4b = P4["konum"] + ileri(P4["psi"], P4["phi"]) * (T4 - P4["konum"]).length
         return kadraj(pos, psi, phi, lens, T4b.lerp(HEDEF5, O.smoother(s))), (pos, psi, phi, lens)
     # d5 / d6: montaj tamam
@@ -1636,6 +1959,9 @@ CARPISMA_GRUP = [   # (grup, ad süzgeci, eşik m | None = bilgi)
 
 
 def carpisma_raporu():
+    """t56/t67/t78: montajı tamam sahne (E ile aynı). F: t45 (montaj sürerken; hareketli parça başına BVH, kamera parçanın
+    o anki dönüşümünün tersiyle montajlı çerçeveye taşınır — katı dönüşüm uzaklığı korur) ve t34b (patlatılmış) eklendi;
+    t45/t34b'de hol nesneleri (makas, ışıklık, fasya, komşu stantlar) de sayılır. Profil: --profil."""
     from mathutils.bvhtree import BVHTree
     for p in PARCALAR:   # d5+ : montaj tamam
         l_, r_ = parca_durum(p, 9.0, None)
@@ -1643,25 +1969,78 @@ def carpisma_raporu():
         p["o"].rotation_euler = r_
     bpy.context.view_layer.update()
     dg = bpy.context.evaluated_depsgraph_get()
-    gruplar = {g: ([], []) for g, _, _ in CARPISMA_GRUP}
+
+    def ag_topla(objeler):
+        vs, ps = [], []
+        for o in objeler:
+            oe = o.evaluated_get(dg)
+            me = oe.to_mesh()
+            b = len(vs)
+            mw = oe.matrix_world
+            vs.extend(mw @ v.co for v in me.vertices)
+            ps.extend([b + i for i in pl.vertices] for pl in me.polygons)
+            oe.to_mesh_clear()
+        return BVHTree.FromPolygons(vs, ps) if ps else None
+
+    gruplar = {g: [] for g, _, _ in CARPISMA_GRUP}
     for o in COL["stant"].objects:
         if o.type != "MESH" or o.name in ("zemin_plaka", "oyun_zemin", "halka"):
             continue
         g = next((g for g, fn, _ in CARPISMA_GRUP if fn and fn(o.name)), "diger")
-        oe = o.evaluated_get(dg)
-        me = oe.to_mesh()
-        vs, ps = gruplar[g]
-        b = len(vs)
-        mw = oe.matrix_world
-        vs.extend(mw @ v.co for v in me.vertices)
-        ps.extend([b + i for i in pl.vertices] for pl in me.polygons)
-        oe.to_mesh_clear()
-    agac = {g: BVHTree.FromPolygons(vs, ps) for g, (vs, ps) in gruplar.items() if ps}
+        gruplar[g].append(o)
+    agac = {g: t for g, t in ((g, ag_topla(ob)) for g, ob in gruplar.items()) if t}
+    # F: hareketli parçalar (t45) ve hol
+    bos_parca = {p["o"].name: p for p in PARCALAR if not (p["ofs"].length == 0 and p["rot"].length == 0)}
+
+    def parca_bul(o):
+        q = o.parent
+        while q is not None:
+            if q.name in bos_parca:
+                return bos_parca[q.name]
+            q = q.parent
+        return None
+    parca_ob, sabit_ob = {}, []
+    for o in COL["stant"].objects:
+        if o.type != "MESH" or o.name in ("zemin_plaka", "oyun_zemin", "halka"):
+            continue
+        pp = parca_bul(o)
+        if pp is None:
+            sabit_ob.append(o)
+        else:
+            parca_ob.setdefault(pp["ad"], []).append(o)
+    hol_ob = [o for o in COL["hol"].objects if o.type == "MESH" and not o.name.startswith(("hol_zemin", "zemin"))]
+    agac_parca = {ad: ag_topla(ob) for ad, ob in parca_ob.items()}
+    agac_sabit = ag_topla(sabit_ob)
+    agac_hol = ag_topla(hol_ob)
+    parca_ad = {p["ad"]: p for p in PARCALAR}
+
+    def en_yakin_hareketli(pos, t):
+        """(grup, uzaklık) listesi: parçalar t anındaki konumlarında (t None → patlatılmış), sabit stant + hol."""
+        cik = []
+        for ad, tr in agac_parca.items():
+            if tr is None:
+                continue
+            pp = parca_ad[ad]
+            l_, r_ = parca_durum(pp, t, None)
+            Mt = Matrix.Translation(l_) @ Euler(r_).to_matrix().to_4x4()
+            M1 = Matrix.Translation(pp["pivot"])
+            q = M1 @ Mt.inverted() @ pos
+            r = tr.find_nearest(q, 50.0)
+            if r[0] is not None:
+                cik.append((ad, r[3]))
+        for ad, tr in (("stant_sabit", agac_sabit), ("hol", agac_hol)):
+            if tr is not None:
+                r = tr.find_nearest(pos, 50.0)
+                if r[0] is not None:
+                    cik.append((ad, r[3]))
+        return cik
+
     yollar = {"t56": (t56_kamera, N_T56), "t67": (t67_kamera, N_T67), "t78": (t78_kamera, N_T78)}
     ALT = 8
-    rapor = {"esik_m": 0.25, "alt_ornek": ALT, "klipler": {}, "uretim": time.strftime("%Y-%m-%dT%H:%M:%S"),
+    rapor = {"esik_m": 0.25, "alt_ornek": ALT, "klipler": {}, "uretim": time.strftime("%Y-%m-%dT%H:%M:%S"), "profil": PROFIL,
              "tanim": "kamera merkezinin (z Z0 + …) grup yüzeylerine en küçük uzaklığı (BVH, montajı tamam sahne); kare başına "
-                      f"{ALT} alt örnek (hareket bulanıklığı aralığını kapsar)"}
+                      f"{ALT} alt örnek (hareket bulanıklığı aralığını kapsar). F: t45 montaj sürerken (parça başına), t34b "
+                      "patlatılmış; ikisinde hol dahil (t34b'de hol yalnız bilgi: kamera ışıklık bandının içinden girer)"}
     tutmayan = []
     for klip, (fn, n) in yollar.items():
         en = {g: (1e9, None, None) for g in agac}
@@ -1689,6 +2068,34 @@ def carpisma_raporu():
         rapor["klipler"][klip] = {"grup": rk, "hiz_tepe_m_s": round(max(hiz), 2), "hiz_tepe_kare": round(hiz.index(max(hiz)) / ALT, 2)}
         print(f"[CARPISMA] {klip}: " + "  ".join(f"{g} {v['min_m']:.3f}@{v['kare']:.1f}{'' if v['tamam'] is None else (' ✓' if v['tamam'] else ' ✗')}"
                                                for g, v in rk.items()) + f"  | hız tepe {max(hiz):.2f} m/s", flush=True)
+    # F: t45 (montaj sürerken) ve t34b (patlatılmış, hol)
+    for klip, n, ilk in (("t45", N_T45, 0), ("t34b", T34B_BAS + 23, T34B_BAS)):
+        en, hiz, onceki = {}, [], None
+        for i in range((n - ilk) * ALT + 1):
+            f = ilk + i / ALT
+            if klip == "t45":
+                pos = t45_kamera(f, P4, YOL45)[0]
+                yak = en_yakin_hareketli(pos, f / 30.0)
+            else:
+                pos = t34b_poz(f, P4, hol)[0]
+                yak = en_yakin_hareketli(pos, None)
+            if onceki is not None:
+                hiz.append((pos - onceki).length * FPS * ALT)
+            onceki = pos
+            for g, d in yak:
+                if d < en.get(g, (1e9,))[0]:
+                    en[g] = (d, f, [round(v, 3) for v in pos])
+        rk = {}
+        for g, (d, f, p) in sorted(en.items(), key=lambda kv: kv[1][0]):
+            esik = None if (g == "hol" and klip == "t34b") else 0.25
+            ok = None if esik is None else d >= esik
+            rk[g] = {"min_m": round(d, 3), "kare": round(f, 3), "konum_m": p, "esik_m": esik, "tamam": ok}
+            if ok is False:
+                tutmayan.append(f"{klip}/{g} {d:.3f} m (kare {f:.2f})")
+        rapor["klipler"][klip] = {"grup": rk, "hiz_tepe_m_s": round(max(hiz), 2), "hiz_tepe_kare": round(ilk + hiz.index(max(hiz)) / ALT, 2)}
+        enk = list(rk.items())[:6]
+        print(f"[CARPISMA] {klip}: " + "  ".join(f"{g} {v['min_m']:.3f}@{v['kare']:.1f}{'' if v['tamam'] is None else (' ✓' if v['tamam'] else ' ✗')}"
+                                               for g, v in enk) + f"  | hız tepe {max(hiz):.2f} m/s", flush=True)
     rapor["tutmayan"] = tutmayan
     yol = a.carpisma_json or os.path.join(O.RENDER, "_onizleme", "s2-carpisma.json")
     os.makedirs(os.path.dirname(yol), exist_ok=True)
@@ -1696,6 +2103,151 @@ def carpisma_raporu():
         json.dump(rapor, fh, ensure_ascii=False, indent=1)
     print(f"[CARPISMA] {'TAMAM' if not tutmayan else 'TUTMAYAN: ' + '; '.join(tutmayan)} → {yol}", flush=True)
 
+
+# ================================================================== KAMERA DÖKÜMÜ (--kamera_dok; render yok, GPU yok)
+# F turu ölçümü (brief §13.3): iki profil (eski = E, fiske = F) × t34b/t45/t56/t67/t78, kare kare kamera durumu +
+# kadraj kenarı örnek piksellerinden sahneye atılan ışınların çarptığı noktalar (dünya, m). Ekran hareketi (px/kare),
+# ilerleme, uç kare eşitliği vb. Blender dışında hesaplanır (scratchpad f-s2/profil.py). Kenar pikselleri: dikey kırpım
+# (x 420 / 1500, y 0–1920; üst/alt kenar), yatay kırpım (y 420 / 1500, x 0–1920; sol/sağ kenar), iç 7×7 ızgara.
+# "1.000.000+" bloğu (sol duvar baskısı, _duvar-olcum.json kutusu): t67 ekran ölçeği için.
+METIN_1M = {"x": X_SOL_IC + BASKI_T, "y": (0.996, 3.289), "z": (Z0 + 2.922, Z0 + 3.25)}
+
+
+def kenar_pikselleri():
+    def ara(a0, a1, n):
+        return [a0 + (a1 - a0) * i / (n - 1) for i in range(n)]
+    P = []
+    for x in (420.5, 1499.5):
+        P += [(x, y, "dikey_yan") for y in ara(0.5, 1919.5, 17)]
+    for y in (0.5, 1919.5):
+        P += [(x, y, "dikey_ustalt") for x in ara(420.5, 1499.5, 9)]
+    for y in (420.5, 1499.5):
+        P += [(x, y, "yatay_ustalt") for x in ara(0.5, 1919.5, 17)]
+    for x in (0.5, 1919.5):
+        P += [(x, y, "yatay_yan") for y in ara(420.5, 1499.5, 9)]
+    P += [(x, y, "ic") for x in ara(240, 1680, 7) for y in ara(240, 1680, 7)]
+    return P
+
+
+def kamera_durum(klip, f):
+    """Klip karesi f (kesirli olabilir) → kamera durumu (konum, ψ, φ, lens, odak, diyafram, ilerleme s)."""
+    if klip == "t34b":
+        pos, psi, phi, lens = t34b_poz(f, P4, hol)
+        return {"pos": pos, "psi": psi, "phi": phi, "lens": lens, "odak": None, "fstop": None, "s": t34b_s(f)}
+    if klip == "t45":
+        pos, psi, phi, lens, _ = t45_kamera(f, P4, YOL45)
+        return {"pos": pos, "psi": psi, "phi": phi, "lens": lens, "odak": None, "fstop": None,
+                "s": t45_yay(f) if PROFIL == "fiske" else t45_s(f), "s_ln": t45_s(f)}
+    fn = {"t56": (t56_kamera, t56_s), "t67": (t67_kamera, t67_s),
+          "t78": (t78_kamera, lambda ff: ilerleme(ff, N_T78, "t78") if PROFIL == "fiske" else zaman_egrisi(ff / N_T78, a.t78_rampa))}[klip]
+    pos, psi, phi, lens, odak, fstop = fn[0](f)
+    return {"pos": pos, "psi": psi, "phi": phi, "lens": lens, "odak": odak, "fstop": fstop, "s": fn[1](f)}
+
+
+def kamera_dokumu(yol):
+    t_bas = time.perf_counter()
+    PIK = kenar_pikselleri()
+    ad_tablo = {}
+
+    def parcalar(t):
+        for p in PARCALAR:
+            l_, r_ = parca_durum(p, t, None)
+            p["o"].location = l_
+            p["o"].rotation_euler = r_
+        bpy.context.view_layer.update()
+        return bpy.context.evaluated_depsgraph_get()
+
+    def isinlar(dg, st):
+        fw, sag, ust = ileri(st["psi"], st["phi"]), None, None
+        p_, f_ = math.radians(st["psi"]), math.radians(st["phi"])
+        sag = Vector((math.cos(p_), -math.sin(p_), 0.0))
+        ust = Vector((-math.sin(f_) * math.sin(p_), -math.sin(f_) * math.cos(p_), math.cos(f_)))
+        fpx = st["lens"] * 1920.0 / 36.0
+        cik = []
+        for x, y, _ in PIK:
+            d = (fw + sag * ((x - 960.0) / fpx) - ust * ((y - 960.0) / fpx)).normalized()
+            hit, loc, _n, _i, ob, _m = sc.ray_cast(dg, st["pos"], d, distance=300.0)
+            if not hit:
+                loc, ad = st["pos"] + d * 300.0, "-"
+            else:
+                ad = ob.name
+            cik.append([round(loc.x, 5), round(loc.y, 5), round(loc.z, 5), ad_tablo.setdefault(ad, len(ad_tablo))])
+        return cik
+
+    def durum_js(st):
+        return {"pos": [st["pos"].x, st["pos"].y, st["pos"].z], "psi": st["psi"], "phi": st["phi"], "lens": st["lens"],
+                "odak": st["odak"], "fstop": st["fstop"], "s": st["s"]}
+
+    js = {"uretim": time.strftime("%Y-%m-%dT%H:%M:%S"), "kaynak": "scripts/blender/s2/sahne.py --kamera_dok",
+          "fiske": {"k": a.fiske_k, "a_sn": a.fiske_a, "montaj_c": a.montaj_c}, "fps": FPS, "master": 1920,
+          "pikseller": [[x, y, e] for x, y, e in PIK], "metin_1m": METIN_1M, "rc": [RC.x, RC.y], "r_kanopi": R_KANOPI,
+          "kanopi_alt_z": Z0 + KANOPI_ALT, "profiller": {}}
+    profil0 = PROFIL
+    for prof in ("eski", "fiske"):
+        profil_kur(prof)
+        montaj_kur()
+        P = {}
+        for klip in ("t34b", "t45", "t56", "t67", "t78"):
+            n = {"t34b": T34B_BAS + 23, "t45": N_T45, "t56": N_T56, "t67": N_T67, "t78": N_T78}[klip]
+            ilk = T34B_BAS if klip == "t34b" else 0
+            dg = parcalar(None if klip == "t34b" else 9.0) if klip != "t45" else None
+            if klip == "t34b":   # t34b: patlatılmış, salınımsız (kare_kur ile aynı)
+                for p in PARCALAR:
+                    l_, r_ = parca_durum(p, None, None)
+                    p["o"].location = l_; p["o"].rotation_euler = r_
+                bpy.context.view_layer.update()
+                dg = bpy.context.evaluated_depsgraph_get()
+            kareler = []
+            for f in range(ilk, n + 1):
+                if klip == "t45":
+                    dg = parcalar(f / 30.0)
+                st = kamera_durum(klip, f)
+                k_ = durum_js(st)
+                k_["f"] = f
+                k_["isin"] = isinlar(dg, st)
+                if klip in ("t56", "t67", "t78"):
+                    k_["isik"] = list(duvar_isik(klip, f))
+                if klip == "t45":
+                    k_["isik_saat"] = t45_saat(f)
+                    k_["isik"] = isik_durum(t45_saat(f))
+                kareler.append(k_)
+            # yarım kare durumları (deklanşör aralığı; ekran hareketi yalnız tam karelerden)
+            P[klip] = {"ilk": ilk, "son": n, "kareler": kareler}
+            if klip == "t45":   # montaj çizelgesi + kanopi kenarı geçişi (alt örnek 1/16 kare)
+                gecis = None
+                for i in range(n * 16 + 1):
+                    ff = i / 16.0
+                    q = kamera_durum("t45", ff)["pos"]
+                    if math.hypot(q.x - RC.x, q.y - RC.y) <= R_KANOPI:
+                        gecis = ff
+                        break
+                cizelge = []
+                for p in PARCALAR:
+                    if p["ofs"].length == 0 and p["rot"].length == 0:
+                        continue
+                    t0, su = p.get("t0_f", p["t0"]), p.get("sure_f", p["sure"])
+                    cizelge.append({"ad": p["ad"], "t0": round(t0, 4), "sure": round(su, 4), "bitis_s": round(t0 + su + 0.12, 4),
+                                    "t0_eski": p["t0"], "sure_eski": p["sure"]})
+                P[klip]["montaj"] = {"kanopi_gecis_kare": gecis, "kanopi_gecis_s": None if gecis is None else round(gecis / 30.0, 4),
+                                     "cizelge": cizelge, "son_bitis_s": max(c["bitis_s"] for c in cizelge)}
+            if klip == "t78":
+                e = eski_t56_kamera(T56_ESKI_SON)
+                P[klip]["eski_t56_71"] = {"pos": list(e[0]), "psi": e[1], "phi": e[2], "lens": e[3], "odak": e[4], "fstop": e[5]}
+        js["profiller"][prof] = P
+        print(f"[DOKUM] {prof}: " + ", ".join(f"{k} {len(v['kareler'])}" for k, v in P.items()), flush=True)
+    profil_kur(profil0)
+    montaj_kur()
+    js["nesneler"] = {v: k for k, v in ad_tablo.items()}
+    js["sure_sn"] = round(time.perf_counter() - t_bas, 2)
+    os.makedirs(os.path.dirname(os.path.abspath(yol)), exist_ok=True)
+    with open(yol, "w", encoding="utf-8") as fh:
+        json.dump(js, fh, ensure_ascii=False)
+    print(f"[DOKUM] {yol} ({js['sure_sn']} s)", flush=True)
+
+
+if a.kamera_dok:
+    kamera_dokumu(a.kamera_dok)
+    raise SystemExit(0)
 
 if a.carpisma:
     carpisma_raporu()
@@ -1899,7 +2451,20 @@ def json_yaz():
         js["esdeger"] = {"eski": "t56[71] (D turu; render-son-d/t56/k_0071.png, p8 plakası)",
                          "konum_fark_m": round((k[0] - e[0]).length, 6), "yon_fark_deg": round(abs(k[1] - e[1]), 6),
                          "egim_fark_deg": round(abs(k[2] - e[2]), 6), "lens_fark_mm": round(abs(k[3] - e[3]), 6),
-                         "olcut": "§12.6: t78[65] ↔ eski t56[71] ΔE00 ≤ 0,05"}
+                         "olcut": f"§12.6: t78[{K1}] ↔ eski t56[71] ΔE00 ≤ 0,05"}
+    if KLIP in ("t34b", "t45", "t56", "t67", "t78"):
+        # F-B (§13.5): K'nin kirpimY rampaları ve manifest kirpimYKare bu alana bağlanır (E2 §12.12 eşikleri ilerlemeyle).
+        il = [kamera_durum(KLIP, f) for f in range(K0, K1 + 1)]
+        js["ilerleme"] = [round(float(d_["s"]), 5) for d_ in il]
+        js["ilerleme_tanim"] = {
+            "t34b": "t34b_s: ışıklık bandı (13,85 m) → P4 konum/açı ilerlemesi (0 → 1); dizin = dosya k_0000…",
+            "t45": "yay ilerlemesi (fiske; E'de ln-uzaklık ilerlemesi); 'ilerleme_ln' = hedef uzaklığının ln ilerlemesi",
+            "t56": "yay ilerlemesi s (konum; E'de easeInOutSine(u))", "t67": "yay ilerlemesi s (A → C → B)",
+            "t78": "yay ilerlemesi s (B → … → banko; E'de easeInOutSine(u))"}[KLIP]
+        js["profil"] = PROFIL
+        js["fiske_k"] = fiske_k(KLIP)
+        if KLIP == "t45":
+            js["ilerleme_ln"] = [round(float(d_["s_ln"]), 5) for d_ in il]
     if KLIP in ("t56", "t67", "t78"):
         js["deklansor"] = DEKLANSOR_E
         js["kamera"]["lens_mm_kare"] = [round(KAYIT["kamera"][f][3], 3) for f in range(K0, K1 + 1)]
@@ -1928,9 +2493,9 @@ def json_yaz():
                      "Kamera t78 son karesi = eski t56[71]; üstteki broşür hep gizli. yigin 0 → broşür yığını tamamen yok "
                      "(dikdörtgen x 606–1314, y 460–1460 içinde yalnız banko meşesi).")
     if KLIP == "t34b":
-        js["not"] = ("t34'ün S2 parçası: dosyalar k_0000–k_0023 = t34 kare 48–71 (t34_ofset). "
-                     "t34 kare 48–55 parlaması parlama.py ile (#FFF1DC, kare 48 tam).")
-        js["t34_ofset"] = 48
+        js["not"] = (f"t34'ün S2 parçası: dosyalar k_0000–k_0023 = t34 kare {K0}–{K1} (t34_ofset). "
+                     f"t34 kare {K0}–{K0 + 2} parlaması parlama.py ile (#FFF1DC, kare {K0} tam; {K0 + 3} temiz).")
+        js["t34_ofset"] = K0
         js["isiklik_y_m"] = round(hol["y_bas"], 3)
     yol = os.path.join(O.RENDER, f"{ad}.json")
     os.makedirs(O.RENDER, exist_ok=True)
@@ -1987,7 +2552,7 @@ if YEDEK_DOKU and not a.onizleme and os.environ.get("S2_GECICI") != "1":
     raise SystemExit(3)
 out = a.out or os.path.join(O.RENDER, KLIP if not a.onizleme else f"_onizleme/s2-{KLIP}")
 if KLIP == "t34b":
-    out = os.path.join(out, "ham")      # parlama.py ham/ → üst klasör (kare 48–55 parlama; çıktı 0'dan: k_0000 = t34 kare 48)
+    out = os.path.join(out, "ham")      # parlama.py ham/ → üst klasör (F-B kare 36–38 parlama; çıktı 0'dan: k_0000 = t34 kare 36)
 os.makedirs(out, exist_ok=True)
 t_kurulum = time.perf_counter() - T_BASLA
 sure = O.Sure(a, f"{KLIP}-{a.engine}-{a.res}", {"klip": KLIP, "kare_aralik": [KARELER[0], KARELER[-1]], "out": out})

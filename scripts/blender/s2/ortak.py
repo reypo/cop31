@@ -38,6 +38,70 @@ def smoother(x):
     return x * x * x * (x * (6 * x - 15) + 10)
 
 
+# ------------------------------------------------------------------ F turu "fiske" (flick) ilerlemesi (brief §13.1)
+# S1 scripts/blender/s1/kamera.py fiske() ile BİRE BİR aynı tanım (iki sahne aynı eğri): p(t), t ∈ [0, 1] (t = kare / son kare;
+# a = kalkış süresi / klip süresi, ör. 0,15 s · 30 / son kare).
+#   t ≥ a: p = P0 + (1 − P0) · E((t − a) / (1 − a)),  E(u) = (1 − (1 − m·u)^k) / (1 − (1 − m)^k)  (m = 1: tam ease-out, sonda hız 0)
+#   t < a: beşinci derece kalkış q(s) = c3 s³ + c4 s⁴ + c5 s⁵ (s = t / a; p, p', p'' sürekli, hız 0'dan); t = a'da değer, eğim,
+#          eğrilik ease-out ile eşit. P0 "yarı hız" kuralı: kalkışın ortalama hızı birleşme hızının yarısı → hız tekdüze artar,
+#          birleşmede aşma yok (ease-out'a değerden eşlemek hızı %40–60 aşırtıyordu; S2 ölçümü: tepe kalkışta 1,4–1,6×).
+# k ∈ [2; 3] (varsayılan 2,4). Kabul p(0,5) ≥ 0,75: bu tanımda S2 sürelerinde k ≥ 2,2 gerekir (k 2,0 → 0,73).
+FISKE_A_SN, FISKE_K = 0.15, 2.4
+_FISKE_ONBELLEK = {}
+
+
+def _besinci(Q, V, A):
+    """q(s) = c3 s³ + c4 s⁴ + c5 s⁵, s ∈ [0, 1]: q(0) = q'(0) = q''(0) = 0; q(1) = Q, q'(1) = V, q''(1) = A."""
+    M = np.array([[1.0, 1.0, 1.0], [3.0, 4.0, 5.0], [6.0, 12.0, 20.0]])
+    return np.linalg.solve(M, np.array([Q, V, A], np.float64))
+
+
+def fiske(t, a, k=FISKE_K, m=1.0):
+    """Fiske ilerlemesi p(t) ∈ [0, 1] (S1 kamera.fiske ile aynı; bkz. yukarı)."""
+    if t >= 1.0:
+        return 1.0
+    if t <= 0.0:
+        return 0.0
+    anahtar = (a, k, m)
+    if anahtar not in _FISKE_ONBELLEK:
+        Z = 1.0 - (1.0 - m) ** k
+        e1 = k * m / Z                       # E'(0)
+        e2 = -k * (k - 1.0) * m * m / Z      # E''(0)
+        c = 0.5 * a * e1 / (1.0 - a)
+        P0 = c / (1.0 + c)
+        A = (1.0 - P0) * e2 * (a / (1.0 - a)) ** 2
+        _FISKE_ONBELLEK[anahtar] = (Z, P0, tuple(_besinci(P0, 2.0 * P0, A)))
+    Z, P0, (c3, c4, c5) = _FISKE_ONBELLEK[anahtar]
+    if t >= a:
+        u = (t - a) / (1.0 - a)
+        return P0 + (1.0 - P0) * (1.0 - (1.0 - m * u) ** k) / Z
+    s = t / a
+    return c3 * s ** 3 + c4 * s ** 4 + c5 * s ** 5
+
+
+def fiske_kare(f, n_son, a_sn=FISKE_A_SN, k=FISKE_K, fps=30.0):
+    """Kare f (0 … n_son) → p. Kalkış payı saniye cinsinden (a_sn) klip süresine (n_son / fps) oranlanır."""
+    return fiske(f / float(n_son), a_sn * fps / float(n_son), k)
+
+
+def fiske_ters(p, a, k=FISKE_K):
+    """p → u (fiske'nin tersi; ikiye bölme, 1e-10)."""
+    p = clamp01(p)
+    lo, hi = 0.0, 1.0
+    for _ in range(60):
+        m = (lo + hi) / 2
+        if fiske(m, a, k) < p:
+            lo = m
+        else:
+            hi = m
+    return (lo + hi) / 2
+
+
+def sine_ters(s):
+    """easeInOutSine'ın tersi: s → u (E turu zaman eğrisinde s ilerlemesine varılan u)."""
+    return math.acos(1.0 - 2.0 * clamp01(s)) / math.pi
+
+
 def miknatis(t, t0, sure, asma=0.02, yerlesme=0.12):
     """Montaj oturması (R3 T34 kartı): t0'da başlar, `sure` içinde easeInOutCubic ile 0 → 1+asma,
     sonra `yerlesme` (120 ms) içinde easeInOutSine ile 1+asma → 1. Sekme yok."""

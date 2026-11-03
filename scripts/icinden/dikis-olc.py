@@ -6,7 +6,8 @@
 # 1. Her ileri geçişin kodlanmış SON karesi ↔ hedef durağın posteri (WebP, döngünün 0. karesi) ve döngünün
 #    kodlanmış 0. karesi: ortalama ΔE00 (hedef ≤ 3) ve ortalama mutlak fark (/255).
 # 2. Döngü kapanışı: son→ilk kare farkı ↔ ardışık kare farkı ortalaması (eşit olmalı).
-# 3. t34 iç dikişi (S1 kare 47 ↔ S2 kare 48): fark ↔ komşu kare farkları.
+# 3. t34 iç dikişi (S1 son karesi ↔ S2 ilk karesi; kesme = t34a kare − 1: F-B 35 ↔ 36, E 47 ↔ 48): fark ↔ komşu
+#    kare farkları.
 # Kod çözme ffmpeg ile (renk matrisi dosyadaki BT.709 etiketinden), rgb24.
 import argparse
 import json
@@ -84,6 +85,10 @@ def bul(klip, tur, boyut, kodek=None):
 
 
 sonuc = {"gecis": [], "dongu": [], "t34": []}
+# t34 kesmesi: t34a (S1) kare sayısı − 1 (liste adıyla aynı fragman klasörü: kodlama/render-son.json → render-son/;
+# F-B 36 kare → 35, E 48 → 47).
+_fr = Path(a.liste).parent.parent / Path(a.liste).stem / "t34a.json"
+K0 = (json.load(open(_fr, encoding="utf8"))["kare"] - 1) if _fr.exists() else 47
 HEDEF = {"t01": "1", "t12": "2", "t23": "3", "t34": "4", "t45": "5", "t56": "6"}
 for boyut in ("dikey", "yatay"):
     for t, n in HEDEF.items():
@@ -103,9 +108,9 @@ for boyut in ("dikey", "yatay"):
             ard = [fark(L0[i], L0[i + 1]) for i in range(len(L0) - 1)]
             sonuc["dongu"].append({"boyut": boyut, "dongu": f"l{n}", "son_ilk": round(fark(L0[-1], L0[0]), 3), "ardisik_ort": round(float(np.mean(ard)), 3), "ardisik_maks": round(float(np.max(ard)), 3)})
         sonuc["gecis"].append(satir)
-        if t == "t34" and len(K) >= 50:
+        if t == "t34" and len(K) > K0 + 1:
             ard = [fark(K[i], K[i + 1]) for i in range(len(K) - 1)]
-            sonuc["t34"].append({"boyut": boyut, "fark_47_48": round(ard[47], 2), "komsu_44_51": [round(x, 2) for x in ard[44:52]]})
+            sonuc["t34"].append({"boyut": boyut, "kesme": [K0, K0 + 1], "fark_kesme": round(ard[K0], 2), "komsu": [K0 - 3, K0 + 4], "komsu_fark": [round(x, 2) for x in ard[max(0, K0 - 3) : K0 + 5]]})
 Path(a.cikti).parent.mkdir(parents=True, exist_ok=True)
 json.dump(sonuc, open(a.cikti, "w", encoding="utf8"), ensure_ascii=False, indent=1)
 for k, v in sonuc.items():

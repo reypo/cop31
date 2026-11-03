@@ -1680,3 +1680,324 @@ kırpım kayması kamera hareketi içinde okunmuyor; bant geçişte sönük.
   y 1434) 293 kırpımında kadraj dışı (video y 760,8) → uyarı. Site duvarda kılavuz çizmediği için (F, D1-11) etkisiz.
 - 1024×768 gibi 4:3 ekranlarda duvar bandı dar (176 px); metin küçük. Gerçek iPad'de görülmedi.
 - Gerçek iPhone testi açık (değişmedi).
+
+## 13. F turu: "hızlı yakınlaşma" geçişleri (orkestratör kararları, 3 Kasım 2026 ~21.45; bağlayıcı — §9/§11/§12 ile çelişirse bu bölüm geçerli)
+
+### 13.0 İstek ve okuma
+
+Kullanıcı (E ve E2 push edildikten sonra): "Önceki tasarımda en güzel olan şeyler geçiş animasyonlarıydı; Antalya'dan fuar
+alanına geçerken şehre hızlıca yakınlaşma gibi. Bunları çıkarmışsın; her geçişte olmalı."
+
+Okuma: v2'de (b9cd9db, `derinlik.ts`) her geçiş sürekli bir ölçek artışıydı: ln z doğrusal, ease yok, parmağın fiske
+hareketi → hızlı yakınlaşma + yönlü yerleşme (hız sonda 0). v3'te ölçülen eksikler (kare şeritleri `scratchpad/gecis/hepsi.png`):
+
+| Geçiş | Bugün | Eksik |
+|---|---|---|
+| t12 d1→d2 | ×7 iniş, easeInOutSine (yarı zamanda yolun yarısı) | ağır dolly; fiske hissi yok |
+| t23 d2→d3 | 60 → 5 km aralığı (kare 36–76) bulut perdesi + yerel kümülüs altında | **kent yaklaşımı görünmüyor** (kullanıcının örneği) |
+| t34 d3→d4 | çatıya dalış → 44–55 beyaz parlama → hol | kesme 0,4 s; dalış yarıda saklanıyor |
+| t45 d4→d5 | montaj + kavisli iniş, easeInOutSine | ağır |
+| t56 d5→d6 | baş kalkar → sütun aralığı → yana kayma | yakınlaşma değil, tur |
+| t67 d6→d7 | 0,54 m kayma + 62° pan | yakınlaşma değil, pan |
+| t78 d7→d8 | totem yanından → bankoya iniş, easeInOutSine | sonu iyi, başı ağır |
+| t01 d0→d1 | ×3,3 yaklaşma, easeInOutSine | ağır |
+| DOM (d8→d9→d10 çevirme, d10→d11 dalış) | v2 ile aynı türde | bu turda değişmez |
+
+Kilitli adımlama, klip oynatıcı, süre aralığı (1,6–2,8 s), geri = reverse ×1,0, bütçe kapıları (§11.2, §12.6, §12.11) değişmez.
+
+### 13.1 Karar: "fiske" (flick) profili, bütün render geçişlerinde
+
+- **Tanım.** Ölçek değişen kliplerde ln(kadraj) (S2'de yay ilerlemesi) üzerinde p(t): ilk **a = 0,15 s** beşinci derece
+  kalkış (p, p', p'' sürekli; hız 0'dan; `kamera.py` `_besinci_katsayi` kalıbı), ardından **ease-out kuvvet k** (p = 1 −
+  (1 − t)^k, k ∈ [2; 3], varsayılan 2,4), son 0,25 s'de hız → 0 (ekranda son 3 kare ≤ 6 / 3 / 0 px). Kabul: **t = 0,5'te
+  p ≥ 0,75** (bugün 0,50). Tepe hareket kadraj kenarında ≤ 150 master px/kare (deklanşör 0,5) / ≤ 110 (deklanşör 0,25–0,35).
+  Açı, yön, lens ve montaj pencereleri **ilerlemeye (s)** bağlanır, ham zamana (u) değil.
+- **Süre.** 1,6–2,8 s; tasarımcı kısaltabilir (fiske profilinde iniş uzun; kısa klip = az bayt). Kiosk turu 115–125 s
+  kalır (W ayarlar).
+- **Uç pozlar değişmez** (dikişler): t01 sonu ≡ l1[0], t12 sonu ≡ l2[0], t23 sonu ≡ l3[0], t34 sonu ≡ l4[0], t45 sonu ≡ l5[0],
+  t56 sonu ≡ p6, t67 sonu ≡ p7, t78 sonu ≡ eski t56[71] ≡ p8 bankosu (broşür dikdörtgeni). t01[0] amblem diski, lombar
+  geometrisi, döngüler, p1–p5/p8, DOM çapaları değişmez. `dunyaR`, kadraj okuması, çapalar yeniden dışa aktarılır
+  (manifest-birlestir).
+- **Geri klipler** yine ileri klibin tersi (×1,0): dönüşte "hızla uzaklaşıp 0,15 s'de durma" kabul.
+
+### 13.2 Klip klip
+
+- **t01**: fiske (k 2,4). `dunyaR` yeniden; lombar DOM otomatik.
+- **t12**: fiske; süre ≤ 2,0 s (tasarımcı).
+- **t23**: **bulut perdesi kalkar** (`perde_k` = 0; `yerel_bulut_k` yalnız kaplama ≤ %35/kare ve kent/körfez görünür
+  kalıyorsa, yoksa 0). Fiske; 60 → 5 km kent yaklaşımı açıkta. LOD dikişi (yakın alan ±1 km sınırı, Voronoi parsel sönümü
+  9 km, S2 10 m dokusu) önizlemede kare kare denetlenir; görünür kenar varsa sönüm genişletilir/bulanıklaştırılır,
+  **perdeyle gizleme yok**. Pozlama irtifaya bağlı kalır (POZ_EGRI; doğrula). `--sabit_tohum` iniş karelerine taşınır.
+  C turunun T23_FA/T23_VARIS zaman eğrisi yeni profilin içinde erir (iniş yine 6 kare durgun).
+- **t34** (t34a + t34b): fiske dalış; **parlama ≤ 0,2 s** (%80+ beyaz kare ≤ 6; ör. t34a 45–47 rampa + t34b 48–50 iniş);
+  kesme karesi 47 ≡ 48 (`#FFF1DC`) aynen; t34b'nin easeOut çıkışı korunur.
+- **t45**: fiske (yay ilerlemesi); **montaj** aynı zaman eğrisiyle sıkıştırılır (parçalar kamera kanopi kenarına varmadan
+  yerinde; mıknatıs korunur); `--carpisma`.
+- **t56**: yol geometrisi (baş kalkar → 120° aralık → batıya) kalır; zaman eğrisi fiske; ψ/φ pencereleri s'ye; duvara
+  yaklaşma = iniş.
+- **t67**: **"duvara yakınlaşma"**: A → C (duvardan daha uzak ara nokta, ör. x ≈ −3,9, y ≈ 1,7) → B; pan ilk yarıda,
+  son yarıda duvara dolly; "1.000.000+" bloğunun ekran ölçeği son %50'de ≥ 1,25× büyür. Lens 18 sabit. Çarpışma ≥ 0,25 m.
+- **t78**: `banko_kamera` yay ilerlemesi fiske; lens 18 → 85 ve φ pencereleri s'ye; son kare bire bir eski t56[71].
+- **DOM**: sayfa çevirmeleri, d10→d11 dalışı, lombar değişmez. **W-F**: fontlar `next/font/local` ile depoya sabitlenir
+  (M3 font sapması: Google Fonts derleme anında +54,7 kB verdi, oturum 12,010 MB); OFL kaynak (google/fonts), pyftsubset
+  ile Latin + Latin-ext (Türkçe) + içerikte geçen özel karakterler; toplam ≤ E'nin 301,7 kB'ı; `.notdef` 0. Kiosk 120 s.
+
+### 13.3 Ölçüm ve kabul
+
+- GPU'suz, kamera modelinden kare kare: p(t), kadraj kenarı px/kare, son 3 kare px; rapor tablosu (klip × {p(0,5), tepe
+  px/kare, son 3 kare, süre}).
+- Önizleme EEVEE 960² (`render/_onizleme/`): kontak sayfaları `s1-f-*.png`, `s2-f-*.png`; t23 bulut kaplaması kare kare
+  (luma > 0,9 ∧ doygunluk < 0,08 oranı) ≤ 0,35 ve 60 → 5 km aralığında kent/körfez görünür; t34 beyaz kare ≤ 6; LOD
+  dikişi notu; çarpışma ≥ 0,25 m.
+- Son render sonrası: dikişler C/D/E ölçütleriyle (master uç kareler döngülerle/posterlerle birebir; kodlanmış ΔE00 ≤ 3);
+  bütçe §11.2/§12.6 (mobil AV1 oturum ≤ 12,00 MB; merdiven §12.7-1); perf §12.11; kiosk 115–125 s.
+
+### 13.4 Sıra
+
+1. **F-A** (bu workflow): S1-F ∥ S2-F tasarım + önizleme (GPU kilidi, EEVEE 960²; render-son'a dokunulmaz) → orkestratör
+   kontak sayfalarına bakar, onaylar ya da düzeltir.
+2. **F-B**: E master yedeği `render-son-e\` (yalnız değişen klipler, kopya) → son render S1 (Cycles) ∥ S2 (EEVEE) → K-F
+   kodlama (8 ileri + 8 geri + p6/p7 son-kare) → W-F (fontlar, kiosk) → denetim D1 (görsel, geçiş kareleri) + M (kapılar)
+   → F düzeltme → ayrı commit → push.
+- GPU tahmini: önizleme ~15 dk; son render S1 ~30 dk (t01 4,5 + t12 5,1 + t23 13,1 + t34a 7,5) + S2 ~23 dk.
+
+### 13.5 F-A sonucu ve F-B kararları (orkestratör, 3 Kasım 2026 ~23.20; bağlayıcı)
+
+F-A (S1-F ∥ S2-F, EEVEE/Cycles 960² önizleme, raporlar scratchpad `f-s1/rapor.md`, `f-s2/rapor.md`; kontak sayfaları
+`render/_onizleme/s1-f-*.png`, `s2-f-*.png`, `s2-f-*-ef.png`) sonucu:
+
+- **Fiske tanımı düzeltildi:** ilk a = 0,15 s beşinci derece kalkış "yarı hız" kuralıyla (aşma yok), sonra ease-out
+  [a, 1] aralığında; bu tanımla p(0,5) ≥ 0,75 için **k ≥ 2,2** (§13.1'deki "k ∈ [2; 3]" buna göre okunur). S1 `kamera.py`
+  `fiske()` ve S2 `ortak.py` `fiske()` aynı kod. Uç kareler E ile bit düzeyinde aynı (S1 ve S2'de konum/açı/lens farkı 0;
+  önizleme ΔE00 ≤ 0,04). t23 bulutsuz: kent ve körfez 60 → 5 km'de açıkta (kaplama ≤ %0,9), pozlama `egri_f`. ✓
+- **px/kare eşikleri (§13.1) E'de de tutmuyordu;** kabul ölçütü değişti: kalkış patlaması (ilk 0,3 s) serbest, geri kalan
+  kısımda K ≤ 110/150; S1 t23 (a) olduğu gibi kabul; S2 t45 218, t56 489, t67 191, t78 441 kabul (deklanşör 0,35 kalır; S2-F2
+  önizlemede strob görürse t56/t78 için 0,5 yapabilir — son kareler durgun, p6/p7/p8 etkilenmez).
+- **Kuyruk sorunu (orkestratör gözlemi):** fiske profilinde her klibin son ~%25–30'u neredeyse durağan (t23 kare 60–83'te
+  1,2 km → 920 m; t56 kare 42–59; t45 42–59; t67 34–47; t78 46–65). Kilitli adımlamada bu ölü zaman. Çözüm: **klipler
+  kısalır**, profil aynı:
+
+| Klip | E / F-A kare (s) | **F-B kare (s)** | Not |
+|---|---|---|---|
+| t01 | 54 (1,8) | 54 (1,8) | değişmez (d10→d11 tekrarı, lombar) |
+| t12 | 60 → 54 (1,8) | **54 (1,8)** | onay |
+| t23 | 84 (2,8) | **72 (2,4)**, k 2,2 | son 6 kare durgun (C kuralı) kalır |
+| t34a | 48 (1,6) | **36 (1,2)** | **"kalkis" kipi** (sürekli ivmelenme, çatı üstünde takılma yok): fiske kalkışı (0,15 s) + kuvvet ~1,3; kare 35'te ışıklık bandı (~106 m), hız yüksek; kare 10–35'te hız tepe'nin ≥ %50'si; parlama rampası **33–35**, 35 tam `#FFF1DC` |
+| t34b | 24 (0,8) | **24 (0,8)**, t34 kare **36–59** | iniş **36–38**, 39 temiz; kare 36 tam `#FFF1DC`; t34 toplamı **60 kare (2,0 s)**, p(0,5) ≥ 0,75 (t34a taşır: kare 30'da p ≥ 0,75) |
+| t45 | 60 (2,0) | **54 (1,8)** | eğim gecikmesi ilerleme birimine, son devir son 8 kareye → son 3 kare ≤ 6/3/0 px (izin verildi); montaj payı ≥ 0,25 s; `--carpisma` |
+| t56 | 60 (2,0) | **54 (1,8)** | **aşırtmalı yol:** aralık çıkışı (G2) → hızlı fazda A'nın GÜNEYBATISINA aşırt (Wk ≈ (−4,9; 1,0)…(−5,2; 0,8), z 1,55; t78'in geçtiği boş bölge) → inişte A'ya **yaklaşarak** gel (merkez derinliği orta/son ≥ 1,2; son %40'ta duvar bloğu ≥ ×1,2 büyür); çarpışma ≥ 0,25 m; **önizle** (~35 s GPU), kontak `s2-f2-t56.png` |
+| t67 | 48 (1,6) | **48 (1,6)** | F-A hâli kabul (pan s 0–0,80; C = (−3,96; 1,46); ×1,257) |
+| t78 | 66 (2,2) | **60 (2,0)** | F-A yolu (düşey iniş) kabul; son kare ≡ eski t56[71] |
+
+  Kiosk turu ≈ 120,2 − 1,2 − 0,4 (t34) ≈ **118,6 s** (115–125 ✓; W doğrular).
+- **Kare sayısı değişen her şey güncellenir:** S1 `KLIPLER` (t23 72, t34a 36 + `toplam` 60), `--sabit_tohum` (t23 son 6, t34a
+  0–2), parlama.py `--bas 33`; S2 `KLIPLER` t34b (36, 59), t34b_poz (f − 36)/23, parlama.py iniş 36–38, N_T45 54 / N_T56 54 /
+  N_T78 60, `POSTER_KAYNAK` (p6 = t56[53], p7 = t67[47], p8 = t78[59]), son.sh/onizleme.sh/son_olcum.py/t34-birlestir (K);
+  K `KIRPIM_Y` rampaları **ilerlemeye** göre yeniden anahtarlanır (t34 {200→420, k0 35, k1 36}; t56 {420→293} ve t78 {233→420}
+  S2'nin fragman JSON'una yazacağı kare kare `ilerleme` alanıyla ya da S2'nin vereceği kare numaralarıyla); `manifest-birlestir`
+  `kirpimYKare` aynı eğri. `render-son/<klip>/` eski kare dosyaları (ör. t12 k_0054–0059, t23 72–83, t34a 36–47) son render
+  ÖNCE silinir (yedek `render-son-e\`'ye kopyalandıktan sonra).
+- **Son render sıralı** (tek R-F ajanı; iki Blender süreci aynı anda bellekte olmasın: C: %96 dolu, sayfa dosyası
+  büyüyemiyor; t23 EEVEE 4,5 GB RSS): S1 Cycles 1920² (t01, t12, t23, t34a; `--kilit`, aralarda ≥ 20 s) → parlama → S2 `son.sh
+  t34b t45 t56 t67 t78` → `son_olcum.py` → kontak/dikiş ölçümleri. Tahmin S1 ~27 + S2 ~24 = **~55 dk GPU**.
+- **t23 Cycles sonrası:** luma eğrisi (egri_f) ve LOD dikişi (kare 36–47, 5 → 2,7 km) kontak.py `olc` ile; deniz rüzgâr
+  lekesi (kare 32–35, 25–15 km, iri benek) ve sol alt parıltı (kare 7–11) bilgi; dalış karesi "kent görünür" görsel denetim D1'de.
+- **W-F:** fontlar `next/font/local` (OFL; Montserrat `src/app/layout.tsx`, Great Vibes aynı dosya, Lora `src/app/icinden/page.tsx`;
+  pyftsubset Latin + Latin-ext + içerikteki özel karakterler; toplam ≤ 301,7 kB; `.notdef` 0; tüm rotalar); kiosk süresi
+  ölçümü; manifestten kare sayıları/okuma/dunyaR/çapalar otomatik (kod değişikliği beklenmiyor; varsa yaz).
+- **DOM broşür kesişmesi (d7→d8):** t78'in son ~15 karesi broşürün üstüne düşey iniş (kapak ekranda büyür); son kare aynı
+  olduğundan 200 ms kesişme ve FLIP değişmez; D1 bu geçişi CDP screencast ile denetler.
+
+### 13.6 F turu sonucu (R-F son render + K-F kodlama + W-F fontlar + V doğrulama, 4 Kasım 2026)
+
+Ortam (V): prod `.next-f`, `next start -p 3101`, headless Chrome (playwright-core, sistem Chrome), **gerçek cihaz değil**;
+QA `.qa/icinden3/f/v/`; MB = 10^6 B. Araçlar M3 ile aynı (`scratchpad/e2m/icinden3.mjs`, `font.mjs`, `kapak-geo.mjs`,
+`scrim-olc-m3.mjs`, `poster.mjs`; `b2/dikis-analiz.py`); geçiş kareleri `f-v/gecis-kontak.mjs` + `kontak.py`.
+
+**1. Kare ve süre (E2 → F)** — ölçülen: tuşa basıştan sonra faz `gecis` → `dur` (CDP screencast, ms). Durağan kuyruk:
+geçiş penceresinde ardışık kare farkı (ortalama mutlak RGB) ≥ 2/255 olan son kareden varışa kadar geçen süre.
+
+| Geçiş | Klip | E2 kare (s) | **F kare (s)** | Ölçülen 390×844 / 1280×800 (ms) | Durağan kuyruk m / yt (ms) |
+|---|---|---|---|---|---|
+| d0→d1 | t01 | 54 (1,8) | 54 (1,8) | 2.408 / 2.404 (lombar DOM ~620 ms + klip) | 130 / 190 |
+| d1→d2 | t12 | 60 (2,0) | **54 (1,8)** | 1.803 / 1.806 | 68 / 143 |
+| d2→d3 | t23 | 84 (2,8) | **72 (2,4)** | 2.403 / 2.412 | 213 / 35 (son 6 kare durgun, C kuralı) |
+| d3→d4 | t34 (t34a 0–35 + t34b 36–59) | 72 (2,4) | **60 (2,0)** | 2.002 / 2.005; **beyaz 106 / 125 ms** (≤ 0,2 s ✓) | 105 / 131 |
+| d4→d5 | t45 | 60 (2,0) | **54 (1,8)** | 1.817 / 1.813 | 38 / 42 |
+| d5→d6 | t56 | 60 (2,0) | **54 (1,8)** | 1.808 / 1.813 | 44 / 69 |
+| d6→d7 | t67 | 48 (1,6) | 48 (1,6) | 1.619 / 1.615 | 44 / 374 |
+| d7→d8 | t78 + 200 ms kesişme + 420 ms FLIP | 66 (2,2) | **60 (2,0)** | 2.668 / 2.685 | 148 / 179 |
+| d8→d9 · d9→d10 | DOM | — | — | 2.003 / 2.014 · 1.814 / 1.802 | 90 / 91 · 74 / 62 |
+| d10→d11 | t01 (dalış) | 54 | 54 | 2.605 / 2.608 | 128 / 171 |
+| **Toplam render geçişi** | 8 klip | 504 kare (16,8 s) | **456 kare (15,2 s)** | | |
+
+Geri (390×844, reverse ×1,0): 11→10 2.636 · 10→9 1.785 · 9→8 2.016 · 8→7 2.623 · 7→6 1.604 · 6→5 1.816 · 5→4 1.817 ·
+4→3 2.015 (beyaz 94 ms) · 3→2 2.415 · 2→1 1.807 · 1→0 2.437 ms; kuyruk 6–94 ms, yalnız 1→0 714 ms (r10 sonu = t01'in
+amblem diski; ardından lombar DOM'u, render değil). Kiosk turu **118,47 s** (E2/M3 120,19; hesap 118,6).
+
+**2. Kapılar (M3 = E2 commit'i ↔ F)**
+
+| Kapı | Eşik | M3 | **F** | |
+|---|---|---|---|---|
+| Mobil AV1 oturum (4G, önbelleksiz, 0→12) | ≤ 12,00 | 11,955 | **11,470** | ✓ |
+| Masaüstü AV1 / mobil H.264 oturum | bilgi | 11,727 / 13,705 | 11,046 / 13,083 | |
+| İlk yükleme (temel + t01 + p1 + l1 + t12): mobil AV1 / masaüstü AV1 / mobil H.264 | ≤ 2,5 | 2,041 / 1,883 / 2,350 | 1,998 / 1,821 / 2,345 | ✓ |
+| d1 hazır (mobil AV1) | | 1,473 | 1,441 (font 0,242, JS 0,192, video 0,661) | |
+| Adım penceresi maks, ölçülen (geçiş + 4 s): mobil AV1 / masaüstü AV1 / mobil H.264 | ≤ 2,5 | 1,871 / 1,904 / 2,040 | 1,849 / 1,852 / 2,076 | ✓ |
+| Hesap (K-F `dogrula-render-son-F.json`): dikey AV1 kritik / pencere / set | ≤ 2,1 (d2) / 2,6 (d3) / 15 | — | 1,997 (d2) / 2,493 (d3) / 10,542 | ✓ |
+| Hesap: yatay AV1 · dikey H.264 · yatay H.264 kritik / pencere | ≤ 2,1 / 2,5 (AV1 d3 2,6) | yatay AV1 2,045 / 2,519; yatay H.264 2,045 / 2,454 (§12.12) | 1,981 / 2,411 · 2,023 / 2,448 · 2,033 / 2,411 | ✓ |
+| Rota JS (gz) · HTML gz · RSC gz | ≤ 50 · ≤ 56,0 kB | 20,9 · 55,5 · 30,1 | 20,9 · **55,1** · 29,8 | ✓ |
+| Font (`/icinden`, mobil = masaüstü) | ≤ 301,7 kB | 301,7 (8 istek) | **242,4 (4 istek)**, Google isteği 0 | ✓ |
+| Perf 4× CPU (0→11→0, 22 adım; mobil dokunma / masaüstü fare): fps · > 50 ms kare · düşen | ≥ 59,5 · ≤ 3 · bilgi | 59,9 / 59,9 · 1 (7→8, 60 ms) / 0 · 1 / 4 (/1.044) | **59,9 / 60,0 · 1 (7→8, 61 ms) / 0 · 0 / 1 (/948)**; yedek 0 | ✓ |
+| Perf 1× CPU (mobil / masaüstü): düşen kare | ≤ 1/1.000 | 0 / 0 (/1.044); > 50 ms 1 / 0 | **0 / 0 (/948)**; fps 59,9 / 60,0; > 50 ms 1 (7→8, 52 ms) / 0 | ✓ |
+| Kiosk tam tur | 115–125 s | 120,19 | **118,47**; yedek 0 | ✓ |
+| Kapak DOM ↔ video (3 görünüm, kesişmenin ilk karesi) | ≤ 0,5 px | ≤ 0,004 | dx/dy ≤ 0,002, dw/dh ≤ 0,004 | ✓ |
+| Lombar (t01 kare 0 disk ↔ DOM amblem; m / D / yt) | ≤ 2 px | merkez 0,31 / 0,48 / 0,76 | merkez 0,30 / 0,55 / 0,76; dr 0,78 / 1,18 / 0,72 | ✓ |
+| Scrim ≥ 4,5:1 (d2, d3, d4, d6, d7 × m, D, yt, fhd, iPad) | 25/25 | 25/25 | 25/25 | ✓ |
+| Stale (`scrollY` gecikmesi 0/1/2 kare) · tuzak (geçişte jest, uç, hızlı ileri-geri, kapanış, tekerlek) | | 3/3 · ✓ | 3/3 · ✓ | ✓ |
+| Reduced motion · poster kipi: video isteği | 0 | 0 · 0 | 0 (poster 7 istek, 0,509 MB) · 0 (`?poster=1` ve saveData; 22 adım, poster 8 istek 0,535 MB) | ✓ |
+| Konsol hatası (bütün koşular) | 0 | 0 | 0 | ✓ |
+| tsc · eslint `src scripts` · build | 0 | ✓ · 0 · ✓ | ✓ · 0 hata (2 uyarı) · ✓ | ✓ |
+
+Argümansız `npx eslint` F'de 518 hata veriyor: hepsi `.claude/worktrees/` (G6 akıcılık ajanının worktree'si, F'nin dışı;
+`eslint.config.mjs` `.claude/**`'u yok saymıyor) + `.qa/` ve `scripts/blender/s3/` (G-A) uyarıları.
+
+**3. GPU ve süre.** R-F son render sıralı, 23:48:23 → 00:37:25 (49 dk duvar saati): S1 Cycles 23,0 dk (t01, t12, t23,
+t34a) + S2 EEVEE 18,2 dk (t34b, t45, t56, t67, t78) = **41,2 dk GPU** (tahmin ~55); VRAM tepe 4,52 GiB. K-F kodlama 5 dk
+(84 dosya, iki paralel süreç) + `kodlama-dogrula --vmaf` iki tam koşu (8 + 10 dk). F-A/S1-F2/S2-F2 önizleme GPU
+süreleri bu bölümde toplanmadı (raporlarda).
+
+**4. Dikişler.** Master (R-F): bütün uç kareler ΔE00 ≤ 0,135; t34 kesmesi 35 ↔ 36 bit düzeyinde aynı (ikisi tam
+`#FFF1DC`); t78[59] ↔ eski t56[71] 0,0072. Kodlanmış (K-F, ΔE00 ≤ 3): ileri son ↔ döngü 0 en çok 2,94 ✓; t34 kesme farkı
+≤ 0,25 (8 bit) ✓. Aşanlar (hepsi kodekten, master temiz): **d3 kalkışı** l3[0] ↔ t34[0] 3,03–3,27 (H.264/HEVC; AV1 ≤ 2,73;
+E2 ≤ 3,00); **r43 son** ↔ l3[0] 3,00–3,98 (E2 2,86–3,60; §11.6-5 kabulü), ↔ p3 3,42–4,18; t23 son ↔ p3 3,24–3,45 (p3 q68,
+bilinen; döngüye 2,94 ✓). Lombar ve kapak yukarıda ✓. VMAF: 84 dosyada eşik altı yok; CRF değişiklikleri t23 AV1 32→35,
+r32 AV1 34→35, r32 H.264 26,5→27 (d2 kritik ve d2/d3 pencereleri için; `kodla.mjs` `CRF_TABLO`).
+
+**5. Görsel kanıt** (`.qa/icinden3/f/v/`): `gecisler-m.png` (390×844), `gecisler-yt.png` (1280×800), `gecisler-geri-m.png`
+(satır = geçiş; sütun %0/15/30/50/70/85/100, altta kare zamanı ms), `lombar-5kare-{m,yt}.png` (0→1, ilk video karesi
+çevresi ~620–680 ms), `brosur-5kare-{m,yt}.png` (7→8 kesişmesi), sayılar `gecisler-F.json`. 390×844 ileri: d2→d3'te
+kent ve körfez %30–%70 karelerinde açıkta; d3→d4 %50 karesi parlama; d5→d6, d6→d7 duvara yaklaşma; d7→d8 bankoya iniş →
+broşür.
+
+**6. Bilinenler / açıklar**
+- t23 kare 6→7 pozlama sıçraması (+4,69 luma, `egri_f` tümseği; R-F); kalkış patlamasının içinde. Düzeltme render ister.
+- d3 kalkış dikişi (3,03–3,27) ve r43 aralığının genişlemesi (3,98): K-F seçenekleri (kabul ya da BOLGE t34 0-2:-4 +
+  r32 H.264 27,5); karar bekliyor.
+- Yatay d6→d7 durağan kuyruk 374 ms (dikeyde 44 ms): t67'nin son kareleri yatay kırpımda daha az piksel değiştiriyor
+  (tepe farkın %5'i eşiğiyle 170 ms). Bilgi.
+- Gerçek iPhone/Android testi açık (§14.1, §14.1-F).
+- 4:3 duvar bandı darlığı (E2) ve t56/t78 rampalarının görsel denetimi (D1) değişmedi / açık.
+
+**7. Render gerektiren bulgular:** yalnız t23 pozlama sıçraması (isteğe bağlı; POZ_EGRI 78–1.580 km düğümleri, yalnız
+t23, ~11 dk Cycles GPU; t23[71] ↔ l3[0] etkilenmez). Kapı aşımı yok; V'de düzeltme yapılmadı.
+
+### 13.7 F-B kabulleri (orkestratör, 4 Kasım 2026 ~01.45; bağlayıcı)
+
+Ajanların (S1-F2, S2-F2, R-F, K-F, W-F, V) açık bıraktığı maddeler şöyle karara bağlandı; F bu hâliyle commit edildi.
+
+| madde | karar |
+|---|---|
+| t23 kalkış sonrası K hızı 141 px/kare (sınır 110) | **kabul** (§13.5 "kalkış patlaması serbest"); aynı yol %14 daha az kareye sığıyor |
+| t34a `KALKIS_US` 1,25 (brief "~1,3") | kabul; 1,3'te kare 10–35 K hızı tepenin %48'ine düşüyordu (< %50) |
+| t56 aşırtmalı yol totemin doğusundan (G2 → (−4,40; 2,40) → dip (−4,29; 0,79) → (−3,96; 0,86) → A), tepe 729 px/kare | kabul; batı yolu duvar bloğunu küçültüyordu |
+| d3 kalkış dikişi l3[0] ↔ t34[0] kodlanmışta 3,03–3,27 ΔE00 (AV1 ≤ 2,73) | **kabul**, §11.6-5 kapsamına alınır; zones −4 çözümü d3 H.264 penceresini 2,502'ye çıkarıyordu |
+| r43 son ↔ l3[0] 3,98 (önceki kabul aralığı 2,88–3,60) | kabul aralığı **≤ 4,2**'ye genişler (geri klip, zones yok) |
+| CRF: t23 AV1 32 → 35, r32 AV1 34 → 35, r32 H.264 26,5 → 27 | kabul (VMAF ≥ 95,3 / 90,86; d2 kritik ve d3 pencereleri ancak böyle tutuyor) |
+| t23 pozlama sıçraması kare 6 → 7 (+4,69 luma, `egri_f` tümseği) | F'de kabul (kalkış patlamasının 0,2. saniyesi); **G4'te** t23 zaten yeniden render edilecek: `POZ_EGRI` 78–1.580 km düğümleri yumuşatılır, "tek yönlü ±3" ölçütü o zaman aranır |
+| Yatay 6→7 durağan kuyruk 374 ms (dikey 44) | bilgi; G7'de t67 yeniden render edilirse kuyruk 2–3 kare kısaltılır |
+| W-F: Lora alt kümesi "Cop31 Serif" adıyla (OFL §3 Reserved Font Name) | kabul; lisans metni `src/app/fonts/OFL-Lora.txt` |
+| W-F: ← → ↔ sistem yazısından (E'deki gibi); `.ic-br-imza-ad` 800 → 900 | kabul |
+| eslint kökten koşunca `.claude/worktrees/` taranıyordu | `eslint.config.mjs` ignore listesine `.claude/**` eklendi (bu commit) |
+| `render-son-e` (8,2 GB, D:) | G-B bitene kadar durur; sonra silinebilir |
+| Gerçek cihaz (iPhone 16) testi | **açık**; akıcılık ajanının yaması ve kontrol listesi ayrı commit |
+
+## 14. G turu: müşteri revizyonu (3 Kasım 2026 gece; orkestratör okuması — bağlayıcı taslak, kullanıcı onayıyla kesinleşir)
+
+### 14.0 Müşteri mesajı ve kullanıcı ekleri
+
+Müşteri: "Dünya animasyonunu seçtik, ama standa gelip masadaki broşürü gösteren kısma kadar. Sonrasında ise o broşür
+yerine, üçüncü konseptteki fidan köklenmesi ve büyümesini görelim. Bizi tanıtan bir fidan yani. Broşürü de değiştiriyoruz.
+Site açılınca dünya ile başlasa bile bir yerde 'dijital broşür' seçeneği olsun. O atacağımız broşürü oraya yedirelim.
+Antalya çö[l] gibi gözüküyor değiştirebiliriz görüntüyü. Bir de kaydırmalı geçişler hızlanabilir."
+Kullanıcı: animasyonlarda hafif takılmalar var, daha akıcı olmalı; duvarlar kalıyor ama COP'tan ziyade genel bilgi;
+**fidan kısmı /fidan'daki gibi (kaydırmayla çizilen SVG) değil, animasyonlu olsun** (render edilmiş, dalışla aynı dilde).
+
+### 14.1 İş listesi
+
+| # | İş | Kaynak | Durum |
+|---|---|---|---|
+| G1 | Dalış d0–d8 kalır (logo → … → masadaki broşür) | müşteri | değişmez |
+| G2 | **Fidan bölümü**: d9+ broşür sayfaları ve d11 Dünya dönüşü yerine render edilmiş fidan (köklenme → gövde → dallar → yaprak), kilitli adımlama, metin kartları DOM | müşteri + kullanıcı | **G-A tasarım paneli** (bu bölüm) |
+| G3 | "Dijital broşür" bağlantısı: üst şerit + kapanış → `/brosur`; yeni broşür gelince /brosur sayfaları ve masadaki kapak dokusu (t78 kuyruğu yeniden render, ~6 dk) | müşteri | broşür gelince |
+| G4 | Antalya çöl görünümü: d3/t23/t34a için ilkbahar Sentinel-2 L2A sahnesi (Copernicus; lisans aynı), `hazirla.py` yeniden; t23/l3/t34a/p3 yeniden render (~25 dk GPU) | müşteri | F'den sonra |
+| G5 | Geçişler hızlansın | müşteri | **F turu** (§13) |
+| G6 | Takılmalar (akıcılık): d7/d11 dinlenme 101/233 ms, FLIP 54–60 ms, klip devirleri | kullanıcı | `icinden-akicilik` ajanı (worktree) |
+| G7 | Duvarlar genel bilgi: **varsayım** d6 arka duvar "Gençlik Buluşmaları · Bir Gençlik Şöleni" (50+ buluşma/5 yıl; 100.000+ genç · 16 Mayıs 2026 · Kocaeli Stadyumu; 2017 seçilme yaşı 18; TBMM'de 30 yaş altı 5 vekilden 4'ü; fotoğraf p18/p22 şölen), d7 sol duvar aynen; dokular + t56/t67/t78/p6/p7 yeniden render (~15 dk) | kullanıcı | kullanıcı onayı bekliyor |
+
+Varsayımlar (kullanıcı düzeltmezse geçerli): kapanış fidanla biter, Dünya'ya dönüş (d11) kalkar; fidan içerikleri
+content.ts'ten (bizKimiz, vizyon, genclikKollari, baskanMesaji, iklim, kapanis; olgular `facts`), fotoğraflar photos.ts
+(foto-yeni.md kuralları; p06 portre değil); parti içeriği stant içinde serbest. Bütçe: fidan bölümü +4 geçiş +4 döngü ≈
++2,5–3 MB mobil AV1; F'nin kısalttığı kliplerle oturum ~10,8 → ~13,5–14 MB; **yeni oturum kapısı kullanıcıya sorulacak**
+(öneri ≤ 14,0 MB; alternatif: döngüler 3 s, fidan döngüleri DOM'suz poster + hafif CSS salınım).
+
+### 14.2 G-A tasarım paneli (fidan bölümü)
+
+Üç bağımsız tasarımcı (Opus) + üç jüri. Her öneri: storyboard (d8'den kapanışa; d8 masadaki broşürden fidana GEÇİŞ nasıl:
+ör. kapaktaki Dünya fotoğrafı dairesine dalış → toprak kesiti → tohum; ya da stanttaki ahşap saksı), duraklar (3–4: kök →
+gövde → dallar → yaprak/ağaç; her durak = geçiş klibi 1,6–2,4 s + döngü 3–4 s + poster; kadraj okuması "kök", "gövde"…),
+teknik (Blender 5.2 S3 sahnesi: geometry nodes ile büyüme parametresi — eğri kırpma + yarıçap + yaprak örnekleme; kökler
+toprak kesitinde 81 uç [81 il, /fidan tree.ts]; polaroidler dallarda [p18/p22]; ışık: stant dili [3.200 K spot, karanlık]
+→ büyüdükçe 16.00 güneşi; EEVEE TAA 64 1920²; kare sayısı ve GPU tahmini), DOM (kartlar /fidan'dan; d8→d9 devri; kapanış),
+bütçe tahmini (bayt), riskler (bitki büyümesinin "oyuncak" görünmesi, köklerin okunurluğu, telefon dikey kadraj güvenli
+alan §2.1). Jüri ölçütleri: müşterinin cümlesi ("bizi tanıtan bir fidan", "köklenmesi ve büyümesi"), dalışla üslup birliği
+(§1, §2.1), gerçekçilik/uygulanabilirlik (Blender'da 1 gün içinde), bütçe, telefonda okunurluk. Kazanan: S3 kurulumu +
+EEVEE 960² önizleme (GPU kilidi; F renderları bitince) → kullanıcı sabah bakar → G-B son render + DOM.
+
+### 14.3 G-A sonucu ve G-B kararları (orkestratör, 4 Kasım 2026 ~01.30; bağlayıcı taslak — kullanıcının sabah bakışıyla kesinleşir)
+
+**Panel:** üç bağımsız öneri (anlatı-önce "Kâğıttan Toprağa"; üslup-önce "Işık devri: palamuttan meşeye"; uygulanabilirlik-önce "Masadaki kök kasası") ve üç jüri. İki jüri Öneri 3'ü, biri Öneri 2'yi seçti; üçünün aşı listesi büyük ölçüde aynı. Uygulanan: **Öneri 3'ün iskeleti + Öneri 2'nin ışık/gerçekçilik disiplini + Öneri 1'in bant/bütçe kuralları.** Kurulum ve 960² önizleme bitti (`scripts/blender/s3/`, rapor `scratchpad/g-a/s3/rapor.md`, ilk bakılacak `render\_onizleme\s3-posterler.png`).
+
+**Fidan bölümü (kesin tasarım):**
+
+| durak | klip | süre | içerik |
+|---|---|---|---|
+| d8 (davranış değişir) | t78f (t78'in yerine; kasa inişte bulanık geçer, son karede kadrajda değil) | 2,0 s | son-kare durak: render'daki broşür kapağı; DOM kapak katmanı, FLIP ve 200 ms kesişme **kalkar**; bantta "Dijital broşür →" (`/brosur`) |
+| d9 Kökler | t89 | 2,0 s | kamera broşürden kalkar, bankoda broşürün 0,53 m batısındaki cam yüzlü meşe kök gözlem kasasına iner; fidan_spot akkor ısınmasıyla yanar (2.400 → 3.200 K); kamera yavaşlarken palamuttan kazık kök, 6 ana kök, 74 kökçük: **81 krem uç**. Kart: `bizKimiz.title` + "81 İl · 922 İlçe" (facts) |
+| d10 Gövde | t9a | 1,8 s | gövde kanca hâlinde topraktan çıkar, S biçiminde boy atar; iki boğum. DOM etiketleri 2017 / TBMM (`vizyon`) |
+| d11 Dallar | tab | 1,8 s | önder + 6 ana + 16 alt dal, tomurcuklar. DOM'da 4 polaroid (dal uçlarına çapalı, yalnız dinlenmede). Kart: `genclikKollari` / Buluşmalar |
+| d12 Yapraklar | tbc + lc (4 s döngü) | 2,2 s | yapraklar uçtan gövdeye açılır; 16.00 güneşi (s1/gunes.py: 18,51° / 230,47°) arkadan güçlenir, spot 0,3'e iner; tek karede bütün ağaç. Kart: `iklim` + 300 fidan |
+| kapanış | DOM | — | slogan + "Dijital broşür" + sosyal + atıflar; Dünya'ya dönüş yok (d11 küre dönüşü ve broşür sayfaları kalkar) |
+
+- Geri: yalnız **r98** (d9→d8) ters klip; fidan içi geri adımlar (d10→d9, d11→d10, d12→d11) **350 ms poster çapraz sönmesi** (§13.1 "geri = reverse" kuralına bilinçli istisna: −0,6…−0,75 MB, iPhone'da üç çözücü devri daha az, "köklerin geri çekilmesi" görüntüsü yok).
+- d9–d11 döngüsüz son-kare durak; döngü yalnız lc (yaprak titremesi). Posterler p9 = t89[59], pa = t9a[53], pb = tab[53], pc = lc[0].
+- Bant hep altta (y ≥ %68), /fidan `leaf-tag` çipleri (Kökler / Gövde / Dallar / Yapraklar); metinler yalnız `content.ts`'ten.
+- 81 uç DOM güvencesi: tek SVG katmanı, tek 300 ms opaklık, 1,5 px krem halka (turuncu nokta değil); 7 dalga ancak gerçek iPhone ölçümü temiz çıkarsa. Reduced-motion: statik halkalar.
+- Polaroidler: 4 kart, opaklık + 8 px translateY (easeOutBack yok), d10 dinlenmesinde `img.decode()`, sarkaç yalnız transform ±1,2°.
+- Render'da insan yok (polaroid plakaları render'a konmadı, §12.0), yazı yok (`pankart_gel` S3 kliplerinde gizli; harfler okunuyordu).
+- Ağaç geometrisi `tree.ts`'ten Node ile (`agac_disa.mjs`; 81 kök şeridi / 81 uç / 23 dal / 274 yaprak / 2 boğum assert), GN sabit topolojili büyüme; S2 `sahne.py` MASKE işaretinden kesilip aynı süreçte çalışır (S2'ye dokunulmadı).
+
+**Önizleme ölçümleri (960² TAA 16; `s3-olcum.json`, `s3-olc.json`):** dikişler ΔE00 ≤ 0,0011 (lc kapanışı 0,061 ≈ ardışık kare); 81 uç blob sayımı 80 (81 ± 2), uç ↔ toprak ΔL* min 28 (≥ 20), uç aralığı min 12,6 video px, kapak çapı 4,14 px; yaprak doygunluk 0,544 (≤ 0,55) ve ton IQR 12,1° (≥ 12°) **sınırda**; cam yansıması ΔL* 2,4 (≤ 5); son 3 kare ≤ 1,6/0,8/0,2 px; büyüme cephesi kuyrukta ≥ 2 px/kare (plato 0); güvenli alan ∩ bant 0; 1920² probu 5,2 s/kare, VRAM tepe 4,33 GiB, RAM 1,81 GB. Tek sapma: tbc sonunda 13 durgun kare (hedef 6–8; `g_yaprak` 0,93 → 0,97 ile GPU'suz düzelir).
+
+**Bütçe:** fidan bölümü mobil AV1 ≈ 1,27 MB (son posterlerle 1,33–1,37 MB); DOM broşür görselleri ve eski d9–d11 dosyaları düşülünce oturum **≈ 11,9–12,1 MB** (K ölçer). §14.1'deki "14 MB kapısı" sorusu büyük ihtimalle gereksiz: hedef **≤ 12,0 MB korunur**, aşarsa önce lc CRF 30 → 32, sonra r98 düşer; kapı en çok 12,5 MB'a esner (kullanıcıya bildirilir).
+
+**GPU (G-B son render, 1920² TAA 64):** t78f 61 + t89 60 + t9a 54 + tab 54 + tbc 66 + lc 120 = 415 kare ≈ **38 dk** (34–43). Komut: `bash scripts/blender/s3/son.sh` (render-son/t78 → t78f ile değişir, eski kareler `render-son-f\t78\`).
+
+**Orkestratör gözlemleri (kontaklardan):** (1) t9a'da gövde ince ve tel gibi okunuyor; fidan için doğru ama "oyuncak" sınırında → gövde tabanı çapı ×1,3 denenir (GPU'suz, önizlemede bakılır). (2) Kökler kesit yüzüne çizilmiş gibi düz; Geometry Proximity nemi var ama derinlik az → kök gömülme derinliği +1 mm, spot açısı biraz yan. (3) Yaprak tonu soluk-zeytin; ölçüt sınırında. Daha yeşil istenirse doygunluk ölçütü 0,55 → 0,62'ye gevşer (ölçütün amacı neon yeşili engellemek). (4) t89'un 14–27. kareleri (hızlı bölüm) neredeyse boş ve karanlık: fiske kalkışı bunu 0,4 s'de geçiyor, kabul.
+
+**Kararlar (varsayılanlar; kullanıcı "devam" derse bunlarla gidilir):**
+
+| # | konu | varsayılan | gerekçe |
+|---|---|---|---|
+| K1 | Kasa d4'te (l4/t34b/t45 ilk 17 kare) görünmüyor, d8'de var | **kabul** | 11 m'den ~23 × 19 video px; yeniden render +16 dk GPU, G1'i bozar |
+| K2 | `pankart_gel` S3 kliplerinde gizli | kabul | yazı render'da okunmamalı |
+| K3 | Meşe / palamut | meşe (tür adı hiçbir metinde yazılmaz) | banko meşe; /fidan'da tür yok |
+| K4 | Fidan içi geri adım = poster çapraz sönmesi | kabul | bayt + iPhone |
+| K5 | d12 arka planı | **A (karanlık hol)**; B (altın pus) yedek | hol fiziksel kalır; `s3-pc.png` ↔ `s3-pc-altin.png` |
+| K6 | d11 polaroid seti | sol p12 + p17, sağ p19 + p22 (J1/J2) | p22 kapanışta da kullanılıyorsa J3'ün p08'i |
+| K7 | G7 duvar metni | d6 duvarı **fotoğrafsız** metin/sayı (Buluşmalar · Şölen); 2017/TBMM fidan gövdesinde kalır | §12.0: render'da insanlı fotoğraf yok; §14.1 G7'deki p18/p22 varsayımı **geri çekildi** |
+| K8 | "Köklerin ucundaki 81 nokta: 81 il" cümlesi | yalnız "81 İl" (`facts.provinces`) | cümle content.ts'te yok, onay-listesine yazılır |
+| K9 | Atıf satırı | "Stant ve fidan görünümü temsilîdir." | onay-listesine |
+| K10 | Görünüş ayarları (gövde, kök gömülme, yaprak tonu, tbc kuyruğu) | sabah bakışı | GPU'suz, önizlemede doğrulanır |
+
+**G-B sırası (F push'tan sonra, tek commit):** (1) K1–K10 kesinleşir → S3 görünüş düzeltmeleri + 960² kısa önizleme (~5 dk GPU) → `son.sh` (~38 dk GPU) ∥ Antalya ilkbahar Sentinel-2 hazırlığı (G4; t23/l3/t34a/p3 yeniden render ~25 dk, S1 kilitle sırayla) ∥ duvar dokuları (G7; t56/t67/t78f/p6/p7 yeniden render ~15 dk; t78f S3 ile birleşir) → (2) K: `kodla.mjs` ad tablosu (t89 t9a tab tbc lc r98, p9 pa pb pc; CRF AV1 32 / lc 30 / r98 36), `manifest-birlestir` S3 JSON (kirpimY: p9 420, pa 222, pb 194, pc 165; `capalar`) → (3) W: rol tablosu (`masa`, `fidan-kok/govde/dal/yaprak`, N = 13), d8 son-kare + "Dijital broşür →" (üst şeritte de), kartlar, 81 halka, polaroidler, kapanış, kiosk 115–125 s, akıcılık yaması birleşik → (4) V: bütçe (≤ 12,0), perf, kiosk, kontaklar, belgeler → commit + push. Yeni broşür gelince (G3) kapak dokusu + t78f kuyruğu + t89 yeniden (~8 dk).

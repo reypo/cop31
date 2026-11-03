@@ -1,4 +1,5 @@
-"""S2 son render ölçümleri (B turu; C turu: plaka, t34b_k0000; E turu: §12.6 dikiş listesi, t78[65] ↔ eski t56[71] / p8) → D:/soft/cop31-varlik/render-son/_onizleme/s2-olcum.json (+ poster JPG'leri).
+"""S2 son render ölçümleri (B turu; C turu: plaka, t34b_k0000; E turu: §12.6 dikiş listesi, t78[son] ↔ eski t56[71] / p8;
+F-B: son kare dizinleri render-son/<klip>.json'dan, t34 kesmesi t34b.json t34_ofset'ten (35 ↔ 36)) → D:/soft/cop31-varlik/render-son/_onizleme/s2-olcum.json (+ poster JPG'leri).
 Kare süreleri (s2-son.jsonl, medyan), VRAM (nvidia-smi kart toplamı, s2-vram-<klip>.csv), dikişler (ΔE00 + ort. mutlak
 fark /255), döngü kapanışı (119→0 ↔ ardışık kare farkı), metin bandı en parlak %5 (p4 üst, p5 alt; dikey + yatay),
 malzeme maskesiyle en parlak kanal (p4, p5), kapak renk sadakati (t56 son kare, p6), parlama (t34b).
@@ -20,6 +21,14 @@ SONRA = ""   # --sonra: bu ISO zamandan önce biten koşular (s2-son.jsonl) yok 
 
 def k(klip, n):
     return f"{R}/{klip}/k_{n:04d}.png"
+
+
+def son(klip, varsayilan):
+    """F turu: son kare dizini render-son/<klip>.json'dan (kare − 1); yoksa E değeri."""
+    try:
+        return json.load(open(f"{R}/{klip}.json", encoding="utf-8"))["kare"] - 1
+    except Exception:
+        return varsayilan
 
 
 def sureler():
@@ -150,21 +159,30 @@ RD = "D:/soft/cop31-varlik/render-son-d"   # D turu master yedekleri (§12.9-4)
 def main(maske_dizin):
     """E turu (brief §12.6): S2 dikişleri master ΔE00 ≤ 0,3; t78[65] ↔ eski t56[71] (render-son-d) ≤ 0,05 tam kare;
     t78[65] ↔ p8 (eski p6 plakası, broşürsüz) broşür dikdörtgeni dışında ≤ 0,05."""
-    out = {"tur": "E", "sure": sureler(), "vram": vram(), "dikis": {}, "dongu": {}, "bant": {}, "maske": {}, "kapak": {},
+    out = {"tur": "F-B", "sure": sureler(), "vram": vram(), "dikis": {}, "dongu": {}, "bant": {}, "maske": {}, "kapak": {},
            "poster_jpg": []}
-    ciftler = {"t34[47]↔t34[48]": (k("t34", 47), k("t34", 48)), "t34[71]↔l4[0]": (k("t34", 71), k("l4", 0)),
-               "t45[0]↔l4[0]": (k("t45", 0), k("l4", 0)), "t45[59]↔l5[0]": (k("t45", 59), k("l5", 0)),
-               "l5[0]↔t56[0]": (k("l5", 0), k("t56", 0)), "t56[59]↔t67[0]": (k("t56", 59), k("t67", 0)),
-               "t67[47]↔t78[0]": (k("t67", 47), k("t78", 0)), "p6↔t56[59]": (k("p6", 0), k("t56", 59)),
-               "p7↔t67[47]": (k("p7", 0), k("t67", 47))}
+    n45, n56, n67, n78 = son("t45", 59), son("t56", 59), son("t67", 47), son("t78", 65)
+    # F-B (§13.5): t34 kesmesi t34a son karesi ↔ t34b ilk karesi = (b − 1) ↔ b; b = t34b.json t34_ofset (F-B 36, E 48);
+    # t34 son karesi b + 23 (F-B 59, E 71) ↔ l4[0]. t34/ K'nin t34-birlestir.py çıktısı (t34a 0…b−1 + t34b → b…b+23).
+    try:
+        b34 = int(json.load(open(f"{R}/t34b.json", encoding="utf-8"))["t34_ofset"])
+    except Exception:
+        b34 = 36
+    out["t34_kesme"] = [b34 - 1, b34]
+    ciftler = {f"t34[{b34 - 1}]↔t34[{b34}]": (k("t34", b34 - 1), k("t34", b34)),
+               f"t34[{b34 + 23}]↔l4[0]": (k("t34", b34 + 23), k("l4", 0)),
+               "t45[0]↔l4[0]": (k("t45", 0), k("l4", 0)), f"t45[{n45}]↔l5[0]": (k("t45", n45), k("l5", 0)),
+               "l5[0]↔t56[0]": (k("l5", 0), k("t56", 0)), f"t56[{n56}]↔t67[0]": (k("t56", n56), k("t67", 0)),
+               f"t67[{n67}]↔t78[0]": (k("t67", n67), k("t78", 0)), f"p6↔t56[{n56}]": (k("p6", 0), k("t56", n56)),
+               f"p7↔t67[{n67}]": (k("p7", 0), k("t67", n67))}
     for ad, (a, b) in ciftler.items():
         if os.path.exists(a) and os.path.exists(b):
             out["dikis"][ad] = olc.dikis(a, b)
     eski71 = f"{RD}/t56/k_0071.png"
-    if os.path.exists(k("t78", 65)) and os.path.exists(eski71):
-        out["dikis"]["t78[65]↔eski t56[71] (tam kare, tam çözünürlük)"] = tam_de00(k("t78", 65), eski71)
-    if os.path.exists(k("t78", 65)) and os.path.exists(k("p8", 0)):
-        out["p8_e"] = plaka_kars(k("t78", 65), k("p8", 0))
+    if os.path.exists(k("t78", n78)) and os.path.exists(eski71):
+        out["dikis"][f"t78[{n78}]↔eski t56[71] (tam kare, tam çözünürlük)"] = tam_de00(k("t78", n78), eski71)
+    if os.path.exists(k("t78", n78)) and os.path.exists(k("p8", 0)):
+        out["p8_e"] = plaka_kars(k("t78", n78), k("p8", 0))
     for kl in ("l4", "l5"):
         if os.path.exists(k(kl, 119)):
             out["dongu"][kl] = dongu(kl)
@@ -176,8 +194,8 @@ def main(maske_dizin):
         m = f"{maske_dizin}/maske-{kl}/k_0000.png"
         if os.path.exists(k(kl, 0)) and os.path.exists(m):
             out["maske"][ad] = olc.maske_stat(k(kl, 0), m)
-    if os.path.exists(k("t78", 65)):
-        out["kapak"]["t78_65"] = olc.kapak(k("t78", 65))
+    if os.path.exists(k("t78", n78)):
+        out["kapak"][f"t78_{n78}"] = olc.kapak(k("t78", n78))
     if os.path.exists(R + "/t78.json"):
         j = json.load(open(R + "/t78.json", encoding="utf-8"))
         out["kapak"]["brosur_dikdortgen"] = j.get("brosur_dikdortgen")
@@ -189,8 +207,9 @@ def main(maske_dizin):
                              "tam_FFF1DC": bool(len(u) == 1 and u[0].tolist() == [65535, 61937, 56540])}
     if os.path.exists(R + "/t34b/_parlama.json"):
         p = json.load(open(R + "/t34b/_parlama.json", encoding="utf-8"))
-        out["parlama"] = {f: {"ort": v["ort_parlaklik"], "rgb": RB.hex_(np.array(v["ort_rgb"]))} for f, v in p.items() if int(f) <= 56}
-    for src, ad in ((k("l4", 0), "p4"), (k("p6", 0), "p6"), (k("p7", 0), "p7"), (k("p8", 0), "p8"), (k("t78", 65), "t78-son")):
+        out["parlama"] = {f: {"ort": v["ort_parlaklik"], "rgb": RB.hex_(np.array(v["ort_rgb"]))} for f, v in p.items()
+                          if int(f) <= b34 + 8}   # F-B: 36–44 (parlama 36–38 + 6 temiz); E: 48–56
+    for src, ad in ((k("l4", 0), "p4"), (k("p6", 0), "p6"), (k("p7", 0), "p7"), (k("p8", 0), "p8"), (k("t78", n78), "t78-son")):
         if os.path.exists(src):
             out["poster_jpg"].append(poster_jpg(src, ad))
     with open(O + "/s2-olcum.json", "w", encoding="utf-8") as fh:
@@ -201,7 +220,7 @@ def main(maske_dizin):
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--maske_dizin", default="D:/soft/cop31-varlik/render-son/_onizleme/maske")
-    p.add_argument("--sonra", default="2026-11-03T15:00:00")   # E turu son render'ı bu saatten sonra
+    p.add_argument("--sonra", default="2026-11-03T23:45:00")   # F-B son render'ı bu saatten sonra (E: 2026-11-03T15:00:00)
     x = p.parse_args()
     SONRA = x.sonra
     main(x.maske_dizin)

@@ -2,9 +2,10 @@
 #
 #   python -X utf8 -P scripts/icinden/t34-birlestir.py [--kok D:/soft/cop31-varlik/render-son]
 #
-# S1 `t34a/k_0000–0047` → `t34/k_0000–0047`, S2 `t34b/k_<bas>–<bas+23>` → `t34/k_0048–0071` (NTFS sabit bağ: disk
+# S1 `t34a/k_0000–<NA−1>` → `t34/k_0000–<NA−1>`, S2 `t34b/k_<bas>–<bas+23>` → `t34/k_<NA>–<NA+23>` (NA = t34a.json "kare";
+# E: 48 → kesme 47↔48, t34 72 kare; F-B §13.5: 36 → kesme 35↔36, t34 60 kare) (NTFS sabit bağ: disk
 # kullanımı 0, kopya yok). `t34/` önce tümüyle silinir (yalnız bağlar gider, t34a/t34b kareleri kalır), sonra yeniden
-# kurulur; `t34.json` iki fragmandan yazılır. Doğrulama: her bağ kaynağıyla aynı dosya (samefile), kare 47 ↔ 48
+# kurulur; `t34.json` iki fragmandan yazılır. Doğrulama: her bağ kaynağıyla aynı dosya (samefile), kesme NA−1 ↔ NA
 # 16 bit fark (ffmpeg rgb48le), ikisinin de #FFF1DC tonu. t34a ya da t34b yeniden render edilirse bu betik yeniden
 # çalıştırılır (kodla.mjs ve kodlama-dogrula.py `t34/`'ü doğrudan okur).
 import argparse
@@ -53,6 +54,7 @@ ort = k47.reshape(-1, 3).mean(0) / 65535
 lum = float(ort @ np.array([0.2126, 0.7152, 0.0722]))
 FFF1DC = np.array([255, 241, 220]) * 257
 dikis = {
+    "kesme": [NA - 1, NA],   # anahtar adları E'den ("47_48"); değerler gerçek kesmenin (F-B 35 ↔ 36)
     "ort_rgb_8bit": [round(float(v) * 255, 2) for v in ort],
     "luma709": round(lum, 4),
     "ort_rgb": round(float(ort.mean()), 4),
@@ -80,7 +82,7 @@ t = {
 }
 json.dump(t, open(f"{R}/t34.json", "w", encoding="utf8"), ensure_ascii=False, indent=1)
 print(f"{len(bag)} sabit bağ (samefile {ayni}/{len(bag)}); kadraj {len(t['kadraj_m'])}: {t['kadraj_m'][0]} … {t['kadraj_m'][NA - 1]} | {t['kadraj_m'][NA]} … {t['kadraj_m'][-1]}")
-print("dikiş 47↔48:", json.dumps(dikis, ensure_ascii=False))
+print(f"dikiş {NA - 1}↔{NA}:", json.dumps(dikis, ensure_ascii=False))
 if dikis["fark_47_48_maks_16bit"] != 0:
-    print("UYARI: kare 47 ↔ 48 farkı 0 değil", file=sys.stderr)
+    print(f"UYARI: kare {NA - 1} ↔ {NA} farkı 0 değil", file=sys.stderr)
     sys.exit(2)

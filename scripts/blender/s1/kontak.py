@@ -3,6 +3,7 @@
 
     python -X utf8 -P kontak.py hepsi [--render D:/soft/cop31-varlik/render]
     python -X utf8 -P kontak.py kontak t01 | poster | mp4 | olc
+    python -X utf8 -P kontak.py kontak t23 --n 0 --onek s1-f- --bicim png --on <dizin>     # F turu: bütün kareler ızgarada
 
 Kırpım kutuları master (1920²) uzayında: dikey 1080×1920 (x 420–1500), yatay 1920×1080 (y 420–1500).
 """
@@ -20,9 +21,18 @@ ap.add_argument("is_", nargs="?", default="hepsi")
 ap.add_argument("klip", nargs="?", default="")
 ap.add_argument("--render", default="D:/soft/cop31-varlik/render")
 ap.add_argument("--ek", default="")                 # Cycles kareleri klasörü (yan yana)
+# F turu: --n 0 → bütün kareler ızgarada (--sutun, --T); çıktı adı <onek><klip>.<bicim>, dizin --on
+ap.add_argument("--n", type=int, default=6)
+ap.add_argument("--sutun", type=int, default=12)
+ap.add_argument("--T", type=int, default=240)
+ap.add_argument("--onek", default="s1-")
+ap.add_argument("--bicim", default="jpg", choices=["jpg", "png"])
+ap.add_argument("--on", default="")
+ap.add_argument("--baslik", default="")
+ap.add_argument("--motor", default="")                # başlıktaki motor adı (boş: yoldan tahmin)
 a = ap.parse_args()
 RD = a.render
-ON = os.path.join(RD, "_onizleme")
+ON = a.on or os.path.join(RD, "_onizleme")
 os.makedirs(ON, exist_ok=True)
 KLIPLER = ["t01", "l1", "t12", "l2", "t23", "l3", "t34a"]
 POSTER = {"p1": "l1", "p2": "l2", "p3": "l3"}
@@ -50,7 +60,38 @@ def kutular(dr, olcek, ox=0, oy=0, kalin=2):
     dr.rectangle([ox, oy + 420 * m, ox + 1920 * m - 1, oy + 1500 * m - 1], outline=YATAY[1], width=kalin)
 
 
+def kontak_izgara(klip):
+    """F turu: bütün kareler, --sutun sütunlu ızgara, kare numarası + kadraj (km/m) + irtifa, kırpım kutuları."""
+    ks = kareler(klip)
+    if not ks:
+        return None
+    T, C = a.T, a.sutun
+    satir = (len(ks) + C - 1) // C
+    W = Image.new("RGB", (C * (T + 6) + 6, satir * (T + 22) + 40), "#f4f2ee")
+    dr = ImageDraw.Draw(W)
+    jy = os.path.join(RD, f"{klip}.json")
+    js = json.load(open(jy, encoding="utf-8")) if os.path.exists(jy) else {}
+    kam = js.get("kamera", {}).get("kareler", [])
+    motor = a.motor or ("Cycles 1920² son render" if "render-son" in RD else "EEVEE önizleme")
+    dr.text((8, 8), f"S1 {klip} — {motor} {yukle(klip, ks[0]).size[0]}², {len(ks)} kare (bütün kareler). {a.baslik}",
+            fill="#222", font=FONT)
+    for i, f in enumerate(ks):
+        x = 6 + (i % C) * (T + 6); y = 36 + (i // C) * (T + 22)
+        W.paste(yukle(klip, f).resize((T, T), Image.LANCZOS), (x, y + 18))
+        kutular(ImageDraw.Draw(W), T / 1920, x, y + 18, kalin=1)
+        et = f"{f}"
+        if f < len(kam):
+            irt = kam[f]["irtifa_m"]
+            et += f"  {irt / 1000:.1f} km" if irt >= 1000 else f"  {irt:.0f} m"
+        dr.text((x, y + 2), et, fill="#222", font=FONT_K)
+    yol = os.path.join(ON, f"{a.onek}{klip}.{a.bicim}")
+    W.save(yol, **({"quality": 90} if a.bicim == "jpg" else {"optimize": True}))
+    return yol
+
+
 def kontak(klip, n=6, ek_dir=""):
+    if n == 0:
+        return kontak_izgara(klip)
     ks = kareler(klip)
     if not ks:
         return None
@@ -79,8 +120,8 @@ def kontak(klip, n=6, ek_dir=""):
                 W.paste(im2, (x, y + T + 58))
                 kutular(ImageDraw.Draw(W), T / 1920, x, y + T + 58)
                 dr.text((x, y + T + 36), f"Cycles kare {f}", fill="#222", font=FONT_K)
-    yol = os.path.join(ON, f"s1-{klip}.jpg")
-    W.save(yol, quality=90)
+    yol = os.path.join(ON, f"{a.onek}{klip}.{a.bicim}")
+    W.save(yol, **({"quality": 90} if a.bicim == "jpg" else {"optimize": True}))
     return yol
 
 
@@ -105,7 +146,7 @@ def mp4(klip):
     ks = kareler(klip)
     if not ks:
         return None
-    yol = os.path.join(ON, f"s1-{klip}.mp4")
+    yol = os.path.join(ON, f"{a.onek}{klip}.mp4")
     vf = ("scale=720:720:flags=lanczos,"
           "drawbox=x=158:y=0:w=405:h=720:color=0x33d6ff@0.6:t=2,"
           "drawbox=x=0:y=158:w=720:h=405:color=0xffb020@0.6:t=2,format=yuv420p")
@@ -251,16 +292,19 @@ def olc():
                                  "hedef": {"merkez": [960, 768], "cap": 345}}
     # dikişler: geçiş son karesi ≡ döngü 0 ≡ poster; geçiş 0 ≡ önceki döngü 0
     dik = {}
-    for a1, f1, a2, f2 in (("t01", 53, "l1", 0), ("l1", 0, "t12", 0), ("t12", 59, "l2", 0), ("l2", 0, "t23", 0),
-                           ("t23", 83, "l3", 0), ("l3", 0, "t34a", 0)):
+    for a1, f1, a2, f2 in (("t01", -1, "l1", 0), ("l1", 0, "t12", 0), ("t12", -1, "l2", 0), ("l2", 0, "t23", 0),
+                           ("t23", -1, "l3", 0), ("l3", 0, "t34a", 0)):
+        if f1 == -1:                                   # F turu: geçişin son karesi (t12 54 kare → 53)
+            f1 = kareler(a1)[-1] if kareler(a1) else -1
         if f1 in kareler(a1) and f2 in kareler(a2):
             i1_, i2_ = yukle(a1, f1), yukle(a2, f2)
             dik[f"{a1}[{f1}]↔{a2}[{f2}]"] = {"ort_mutlak_fark_255": round(fark(i1_, i2_), 3), "dE00_ort": round(de00(i1_, i2_), 3)}
-    # t34: S1 kare 47 ↔ S2 kare 48 (ikisi de parlamanın içinde)
-    p48 = os.path.join(RD, "t34b", "k_0000.png")                      # S2: t34b k_0000 = t34 kare 48 (t34_ofset)
-    if 47 in kareler("t34a") and os.path.exists(p48):
-        i1_, i2_ = yukle("t34a", 47), Image.open(p48).convert("RGB")
-        dik["t34a[47]↔t34b[48]"] = {"ort_mutlak_fark_255": round(fark(i1_, i2_), 3), "dE00_ort": round(de00(i1_, i2_), 3)}
+    # t34: S1 son kare ↔ S2 ilk kare (ikisi de parlamanın içinde; E 47 ↔ 48, F-B 35 ↔ 36)
+    p48 = os.path.join(RD, "t34b", "k_0000.png")                      # S2: t34b k_0000 = t34 kare n (t34_ofset)
+    if kareler("t34a") and os.path.exists(p48):
+        n34 = kareler("t34a")[-1]
+        i1_, i2_ = yukle("t34a", n34), Image.open(p48).convert("RGB")
+        dik[f"t34a[{n34}]↔t34b[{n34 + 1}]"] = {"ort_mutlak_fark_255": round(fark(i1_, i2_), 3), "dE00_ort": round(de00(i1_, i2_), 3)}
     out["dikisler"] = dik
     # döngü dikişi: son→ilk fark ile ardışık kare farkı
     dd = {}
@@ -274,11 +318,12 @@ def olc():
     out["dongu_dikisi"] = dd
     # t23 devir: ardışık kare farkları (küre görünürlüğü irtifa < 1.500 m'de kapanır)
     ks = kareler("t23")
-    if len(ks) == 84:
-        fs = [round(fark(yukle("t23", i), yukle("t23", i + 1)), 2) for i in range(83)]
+    if len(ks) > 1 and ks == list(range(len(ks))) and os.path.exists(os.path.join(RD, "t23.json")):     # E 84, F-B 72 kare
+        n23 = len(ks)
+        fs = [round(fark(yukle("t23", i), yukle("t23", i + 1)), 2) for i in range(n23 - 1)]
         js = json.load(open(os.path.join(RD, "t23.json"), encoding="utf-8"))
         irt = [k["irtifa_m"] for k in js["kamera"]["kareler"]]
-        devir = next((i for i in range(84) if irt[i] < 1500), None)
+        devir = next((i for i in range(min(n23, len(irt))) if irt[i] < 1500), None)
         out["t23_ardisik_fark"] = fs
         out["t23_kure_gizleme_karesi"] = devir
         if devir:
@@ -287,7 +332,7 @@ def olc():
     ks = kareler("t34a")
     if ks:
         par = {}
-        for f in range(36, 48):
+        for f in range(ks[-1] - 11, ks[-1] + 1):                   # son 12 kare (E 36–47, F-B 24–35)
             if f in ks:
                 a_ = np.asarray(yukle("t34a", f), np.float64)
                 par[f] = {"ort_parlaklik_%": round(a_.mean() / 255 * 100, 1), "ort_renk": [round(v) for v in a_.reshape(-1, 3).mean(0)]}
@@ -331,7 +376,10 @@ def olc():
 
 
 def olc_c():
-    """C turu kabul ölçütleri (brief §11.1), PNG16 ile (olcum16.py): dikiş ΔE00, durgun uçlar, t23 luma, parlama."""
+    """C turu kabul ölçütleri (brief §11.1), PNG16 ile (olcum16.py): dikiş ΔE00, durgun uçlar, t23 luma, parlama.
+    F turu: kare sayıları klasörden (t23 E 84 / F-B 72; t34a E 48 / F-B 36); t23 luma pencereleri irtifadan (E'nin kare
+    0–60 ≈ irtifa ≥ 2,9 km, kare 10–40 ≈ 78–1.580 km; t23.json); parlama ölçütü _parlama.json "bas"a göre (38: E, kare
+    44–47 ≥ %92; diğer: F, %80+ beyaz kare S1'de ≤ 3 — t34 toplamı S2'nin 3 iniş karesiyle ≤ 6 — ve rampa öncesi < %80)."""
     import sys
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from olcum16 import oku, fark255, de00, luma
@@ -343,53 +391,75 @@ def olc_c():
         return os.path.exists(yol(klip, f))
 
     c, kab = {}, {}
-    if not (var("t23", 83) and var("l3", 0) and var("t34a", 0)):
+    k23, k34 = kareler("t23"), kareler("t34a")
+    if not (k23 and var("l3", 0) and k34 and 0 in k34):
         return {"hata": "t23/l3/t34a kareleri eksik"}
-    t23 = {f: oku(yol("t23", f)) for f in range(72, 84)}
+    n23, n34 = k23[-1], k34[-1]                                 # son kare numaraları (E 83/47, F-B 71/35)
+    c["kare"] = {"t23_son": n23, "t34a_son": n34}
+    t23 = {f: oku(yol("t23", f)) for f in range(n23 - 11, n23 + 1)}
     l3 = oku(yol("l3", 0)); ta = {f: oku(yol("t34a", f)) for f in range(0, 7)}
-    c["t23[83]↔l3[0]"] = {"fark_255": round(fark255(t23[83], l3), 4), "dE00": round(de00(t23[83], l3), 4)}
+    c[f"t23[{n23}]↔l3[0]"] = {"fark_255": round(fark255(t23[n23], l3), 4), "dE00": round(de00(t23[n23], l3), 4)}
     c["l3[0]↔t34a[0]"] = {"fark_255": round(fark255(l3, ta[0]), 4), "dE00": round(de00(l3, ta[0]), 4)}
     c["t23_ardisik_son12"] = {f"{f - 1}→{f}": {"fark_255": round(fark255(t23[f - 1], t23[f]), 4), "dE00": round(de00(t23[f - 1], t23[f]), 4)}
-                              for f in range(73, 84)}
+                              for f in range(n23 - 10, n23 + 1)}
     c["t34a_ardisik_ilk6"] = {f"{f - 1}→{f}": {"fark_255": round(fark255(ta[f - 1], ta[f]), 4), "dE00": round(de00(ta[f - 1], ta[f]), 4)}
                               for f in range(1, 7)}
-    son4 = [c["t23_ardisik_son12"][f"{f - 1}→{f}"]["fark_255"] for f in range(80, 84)]
-    kab["t23[83]↔l3[0] dE00 ≤ 0,3"] = c["t23[83]↔l3[0]"]["dE00"] <= 0.3
+    son4 = [c["t23_ardisik_son12"][f"{f - 1}→{f}"]["fark_255"] for f in range(n23 - 3, n23 + 1)]
+    kab[f"t23[{n23}]↔l3[0] dE00 ≤ 0,3"] = c[f"t23[{n23}]↔l3[0]"]["dE00"] <= 0.3
     kab["l3[0]↔t34a[0] dE00 ≤ 0,3"] = c["l3[0]↔t34a[0]"]["dE00"] <= 0.3
     kab["t23 son 4 ardışık fark ≤ 1,5/255"] = max(son4) <= 1.5
     kab["t34a 0→1 ≤ 1,5/255"] = c["t34a_ardisik_ilk6"]["0→1"]["fark_255"] <= 1.5
-    # t23 luma (her kare), kare 0–60 en düşük, kare 10–40 tek yönlülük
-    lu = [round(luma(oku(yol("t23", f))), 2) for f in range(84)]
+    # t23 luma (her kare); pencereler irtifadan (t23.json yoksa E kare numaraları)
+    lu = [round(luma(oku(yol("t23", f))), 2) for f in range(n23 + 1)]
     c["t23_luma_%"] = lu
-    c["t23_luma_her_3_kare"] = {f: lu[f] for f in range(0, 84, 3)}
-    v = lu[10:41]
+    c["t23_luma_her_3_kare"] = {f: lu[f] for f in range(0, n23 + 1, 3)}
+    jy = os.path.join(RD, "t23.json")
+    irt = [k["irtifa_m"] for k in json.load(open(jy, encoding="utf-8"))["kamera"]["kareler"]] if os.path.exists(jy) else []
+    if len(irt) == n23 + 1:
+        on = [f for f in range(n23 + 1) if irt[f] >= 2900.0]
+        ty = [f for f in range(n23 + 1) if 77e3 <= irt[f] <= 1.58e6]
+    else:
+        on, ty = list(range(61)), list(range(10, 41))
+    c["t23_luma_pencere"] = {"inis_oncesi_irtifa_2_9km_ustu": [on[0], on[-1]], "tek_yon_78_1580km": [ty[0], ty[-1]]}
+    v = [lu[f] for f in ty]
     yuk = max(v[j] - min(v[:j + 1]) for j in range(len(v)))           # azalan yönde en büyük geri yükseliş
     dus = max(max(v[:j + 1]) - v[j] for j in range(len(v)))           # artan yönde en büyük geri düşüş
-    c["t23_luma_0_60_min"] = {"luma_%": min(lu[:61]), "kare": lu.index(min(lu[:61]))}
-    c["t23_luma_10_40_tek_yon"] = {"azalan_yonde_maks_geri_yukselis": round(yuk, 2), "artan_yonde_maks_geri_dusus": round(dus, 2),
-                                  "yon": "azalan" if yuk <= dus else "artan"}
-    kab["t23 kare 0–60 luma ≥ %20"] = min(lu[:61]) >= 20.0
-    kab["t23 kare 10–40 tek yönlü (±3)"] = min(yuk, dus) <= 3.0
+    lo = min(lu[f] for f in on)
+    c["t23_luma_inis_oncesi_min"] = {"luma_%": lo, "kare": next(f for f in on if lu[f] == lo)}
+    c["t23_luma_tek_yon"] = {"azalan_yonde_maks_geri_yukselis": round(yuk, 2), "artan_yonde_maks_geri_dusus": round(dus, 2),
+                             "yon": "azalan" if yuk <= dus else "artan"}
+    kab["t23 iniş öncesi (≥ 2,9 km) luma ≥ %20"] = lo >= 20.0
+    kab["t23 78–1.580 km tek yönlü (±3)"] = min(yuk, dus) <= 3.0
     if var("l2", 0):
         a_, b_ = oku(yol("l2", 0)), oku(yol("t23", 0))
         c["t23[0]↔l2[0]"] = {"fark_255": round(fark255(a_, b_), 4), "dE00": round(de00(a_, b_), 4)}
         kab["t23[0]↔l2[0] dE00 ≤ 0,3"] = c["t23[0]↔l2[0]"]["dE00"] <= 0.3
-    # parlama: kare 44–47 ortalama ≥ %92; kare 47 tam #FFF1DC (16 bit: 257 × (255, 241, 220)); S2 t34b k_0000 ile fark
+    # parlama: son kare tam #FFF1DC (16 bit: 257 × (255, 241, 220)); S2 t34b k_0000 ile fark 0
+    pj = os.path.join(RD, "t34a", "_parlama.json")
+    bas = json.load(open(pj, encoding="utf-8")).get("bas", 38) if os.path.exists(pj) else (38 if n34 == 47 else n34 - 2)
     par = {}
-    for f in range(36, 48):
+    for f in range(n34 - 11, n34 + 1):
         if var("t34a", f):
             a_ = oku(yol("t34a", f)); par[f] = round(float(a_.mean(dtype=np.float64)) * 100, 2)
     c["t34a_parlama_ort_%"] = par
-    k47 = oku(yol("t34a", 47))
+    c["t34a_parlama_bas"] = bas
+    kson = oku(yol("t34a", n34))
     ton = np.array([255, 241, 220], np.float32) / 255
-    c["t34a[47]_tam_FFF1DC"] = bool(np.all(np.abs(k47 - ton) < 0.5 / 65535))
-    kab["parlama kare 44–47 ort ≥ %92"] = all(par.get(f, 0) >= 92.0 for f in range(44, 48))
-    kab["parlama kare 47 tam #FFF1DC"] = c["t34a[47]_tam_FFF1DC"]
+    c[f"t34a[{n34}]_tam_FFF1DC"] = bool(np.all(np.abs(kson - ton) < 0.5 / 65535))
+    if bas == 38:
+        kab["parlama kare 44–47 ort ≥ %92"] = all(par.get(f, 0) >= 92.0 for f in range(44, 48))
+    else:
+        beyaz = sorted(f for f, v_ in par.items() if v_ >= 80.0)
+        c["t34a_beyaz_80_kareler"] = beyaz
+        kab["parlama %80+ beyaz kare S1'de ≤ 3 (t34 ≤ 6)"] = len(beyaz) <= 3
+        kab[f"rampa öncesi (kare < {bas}) < %80"] = all(v_ < 80.0 for f, v_ in par.items() if f < bas)
+    kab[f"parlama kare {n34} tam #FFF1DC"] = c[f"t34a[{n34}]_tam_FFF1DC"]
     p48 = os.path.join(RD, "t34b", "k_0000.png")
     if os.path.exists(p48):
         b48 = oku(p48)
-        c["t34a[47]↔t34b[48]"] = {"fark_255": round(fark255(k47, b48), 4), "maks_mutlak_255": round(float(np.abs(k47 - b48).max() * 255), 4)}
-        kab["t34a[47]↔t34b[48] fark 0"] = c["t34a[47]↔t34b[48]"]["maks_mutlak_255"] == 0.0
+        ad = f"t34a[{n34}]↔t34b[{n34 + 1}]"
+        c[ad] = {"fark_255": round(fark255(kson, b48), 4), "maks_mutlak_255": round(float(np.abs(kson - b48).max() * 255), 4)}
+        kab[f"{ad} fark 0"] = c[ad]["maks_mutlak_255"] == 0.0
     c["kabul"] = kab
     return c
 
@@ -397,7 +467,7 @@ def olc_c():
 if __name__ == "__main__":
     if a.is_ in ("kontak", "hepsi"):
         for k in ([a.klip] if a.klip else KLIPLER):
-            print("kontak", kontak(k, ek_dir=a.ek))
+            print("kontak", kontak(k, n=a.n, ek_dir=a.ek))
     if a.is_ in ("poster", "hepsi"):
         for p in POSTER:
             if kareler(POSTER[p]):

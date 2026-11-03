@@ -18,7 +18,7 @@
 // dunyaC [cx, cy] (t01; tek nokta ya da kare başına), capalar {ad: [x, y]} (poster karesi), brosur_dikdortgen
 // [4×[x, y]] (t78 son kare; E turundan önce t56), kamera{}}. Master → video uzayı: dikey ((x−420)/1,5, y/1,5), yatay
 // (x/1,5, (y − kirpimY)/1,5); kirpimY klip başına (kodla.mjs KIRPIM_Y → liste öğesinin `kirpimY`'si; yoksa 420; §11.2-5:
-// d3'te l3/p3 200). Çapanın klibi ve karesi: etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son
+// d3'te l3/p3 200; F turundan beri rampa ilerlemeye bağlı olabilir → `kareler` dizisi). Çapanın klibi ve karesi: etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son
 // karesi), dunyaC → t01 0. kare, brosurDikdortgen → t78 son kare, duvarCapalari → p6 (yoksa t56 son kare; yatayda
 // t56 son karesinin kirpimY'si, E2'den beri 293).
 // yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; d1 ve d11'e aynen.
@@ -153,11 +153,18 @@ for (const ad of ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5
 const liste = JSON.parse(readFileSync(LISTE, "utf8"));
 const bul = (klip, tur) => liste.filter((x) => x.klip === esle(klip) && x.tur === tur);
 
-/** Yatay kırpımın y ofseti: kaynak klibin `kirpimY`'si (sayı ya da {bas, son, k0, k1}, easeInOutCubic) `kare`de. */
+/**
+ * Yatay kırpımın y ofseti `kare`de: kaynak klibin `kirpimY`'si — sayı, {bas, son, k0, k1} (easeInOutCubic, kare
+ * numarasıyla) ya da F turundan beri ilerlemeye bağlı rampanın kodla.mjs'in çözdüğü kare başına tam sayı dizisi
+ * ({bas, son, s0, s1, kareler}; ffmpeg crop ifadesi aynı diziden kurulur → ikisi aynı eğri). Klip kaydı (ileri/geri)
+ * önce; poster kaydı (son-kare posterinde o karedeki sayı) yalnız klip kaydı yoksa.
+ */
 const KIRPIM_Y_VARSAYILAN = 420;
 function kirpimYKare(klip, kare = 0) {
-  const k = liste.find((x) => x.kaynakKlip === esle(klip) && x.boyut === "yatay" && x.kirpimY != null)?.kirpimY ?? KIRPIM_Y_VARSAYILAN;
+  const yatay = liste.filter((x) => x.kaynakKlip === esle(klip) && x.boyut === "yatay" && x.kirpimY != null);
+  const k = (yatay.find((x) => x.tur !== "poster") ?? yatay[0])?.kirpimY ?? KIRPIM_Y_VARSAYILAN;
   if (typeof k === "number") return k;
+  if (Array.isArray(k.kareler)) return k.kareler[Math.min(k.kareler.length - 1, Math.max(0, kare))];
   const t = Math.min(1, Math.max(0, (kare - k.k0) / (k.k1 - k.k0)));
   return Math.round(k.bas + (k.son - k.bas) * (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2));
 }

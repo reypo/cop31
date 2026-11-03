@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
 # S2 son render: EEVEE 1920² TAA 64, PNG 16 bit → D:/soft/cop31-varlik/render-son/<klip>/k_%04d.png (0'dan) + <klip>.json.
-# Her klip GPU kilidiyle (sahne.py --kilit; 10 s'de bir dener). t34b: ham/ (t34 kare 48–71) → parlama.py → k_0000–k_0023.
+# Her klip GPU kilidiyle (sahne.py --kilit; 10 s'de bir dener). t34b: ham/ (t34 kare F-B 36–59; E 48–71) → parlama.py →
+# k_0000–k_0023.
 # VRAM: nvidia-smi kart toplamı 250 ms'de bir (render-son/_onizleme/s2-vram-<klip>.csv); klip sonunda tepe / boşta özeti
 # [VRAM] satırı ve s2-vram.txt (eşik §12.6: tepe ≤ 7,6 GiB = 7.782 MiB). Süre: s2-son.jsonl.
 # C turu (brief §11): klipler arasında ≥ 20 s boşluk (öteki ajan kilidi yakalayabilsin; B'de 62 dk açlık).
 # t34b/k_*.png K'nin render-son/t34/ dizinine sabit bağlı (hard link): parlama.py yazmadan önce yalnız t34b'deki adlar
 # silinir, t34/ eski içeriğini korur (K yeniden kurar).
 # E turu (brief §12.3, §12.9-4): klipler t34b l4 t45 t56 t67 t78 (l5/p5 değişmez). Posterler:
-#   p6 = t56 son karesi (k_0059), p7 = t67 son karesi (k_0047): "son-kare" — render yok, kopya + <p>.json (tip son-kare);
+#   p6 = t56 son karesi (E k_0059, F-B k_0053), p7 = t67 son karesi (k_0047): "son-kare" — render yok, kopya + <p>.json (tip son-kare);
 #   p8 = eski p6 plakası: render yok; S2c ÖNCE render-son/p6 → render-son/p8 taşır (ve p6.json → p8.json); son.sh p8.json'u
 #   tip "plaka" ile yeniden yazar. p8 yoksa p6 kopyası YAPILMAZ (eski plaka ezilmesin).
 #   p4 = l4[0] ("dongu"; kodla.mjs tablosu) — ayrıca render yok.
 # Dokular: duvar-arka / duvar-sol / ekran-soz / cephe-on (S2a) yoksa son render reddedilir (S2_GECICI=1 ile geçilir).
 # Ortam: S2_EK="--yikama_w 300 …" (sahne.py'ye ek argüman), S2_BOSLUK (s), S2_GECICI=1.
+# F turu (brief §13, §13.5 F-B): sahne.py varsayılanı --profil fiske (eski için S2_EK="--profil eski"). F-B süreleri: t34b
+#   t34 kare 36–59 (24), t45 54, t56 54, t67 48, t78 60 kare (sahne.py SON_KARE). Parlama: F-B t34 kare 36–38 (36 tam
+#   #FFF1DC, 39 temiz; parlama.py 36 3 36); "--profil eski" → 48–55 (48 8 48). Son kare dizinleri klibin render-son/<klip>.json'undan
+#   (kare − 1): p6 = t56[53], p7 = t67[47], t78 tek kare yeniden = t78[59]. t34b ham/ önce temizlenir (E'nin 0048–0071'i kalmasın).
 # Kullanım: bash scripts/blender/s2/son.sh [klip ...]   (varsayılan: t34b l4 t45 t56 t67 t78)
 set -uo pipefail
 KOK="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -23,6 +28,7 @@ O=$R/_onizleme
 LOG=$O/s2-son.jsonl
 BOSLUK=${S2_BOSLUK:-20}   # klipler arası bekleme (s), kilit bırakıldıktan sonra
 EKG=${S2_EK:-}
+if echo " $EKG " | grep -q -- " --profil eski "; then T34B_BAS=48; PARLAMA_N=8; else T34B_BAS=36; PARLAMA_N=3; fi   # F-B / E
 VRAM_ESIK=7782            # MiB (7,6 GiB)
 mkdir -p $O
 KLIPLER=${*:-"t34b l4 t45 t56 t67 t78"}
@@ -49,6 +55,10 @@ vram_ozet() {   # $1 klip. S2c: pencere = bu koşunun kilit süresi (günlüktek
     END{d=(t<=e)?"✓":"✗"; printf "[VRAM] %s tepe %d MiB (%.2f GiB), boşta %d MiB, render payı %d MiB, eşik %d MiB %s; pencere %s–%s, %d örnek\n",
         k, t, t/1024, b, t-b, e, d, (t0 == "" ? "tümü" : t0), (t1 == "" ? "son" : t1), n}' "$f" \
     | tee -a $O/s2-vram.txt
+}
+
+son_kare_no() {   # $1 klip → son kare dizini (render-son/<klip>.json "kare" − 1)
+  python -X utf8 -c "import json,sys; print(json.load(open(sys.argv[1], encoding='utf-8'))['kare'] - 1)" "$R/$1.json"
 }
 
 son_kare() {   # $1 poster, $2 kaynak klip, $3 kaynak kare
@@ -81,23 +91,26 @@ for k in $KLIPLER; do
   touch $O/.s2-basla-$k
   # S2c: eski kareler kalmasın (D'de t56 72 kareydi, E'de 60; yedek render-son-d\). t34b ham/'a yazar, parlamada temizlenir.
   [ "$k" != "t34b" ] && rm -f $R/$k/k_*.png
+  [ "$k" = "t34b" ] && rm -f $R/t34b/ham/k_*.png   # F-B: ham/ t34 numarasıyla (36–59); E'nin 48–71'i karışmasın
   sahne --klip $k --kok $R --json --kilit --log $LOG | tee $O/s2-gunluk-$k.txt
   kill $NV 2>/dev/null || true
   vram_ozet $k
   if [ "$k" = "t34b" ]; then
-    if [ "$(find $R/t34b/ham -name 'k_00[4-7]?.png' -newer $O/.s2-basla-$k | wc -l)" -eq 24 ]; then   # bu koşunun 24 karesi
+    yeni=0   # bu koşunun 24 karesi: t34 kare T34B_BAS … T34B_BAS + 23, başlangıç işaretinden yeni
+    for i in $(seq $T34B_BAS $((T34B_BAS + 23))); do [ "$R/t34b/ham/k_$(printf %04d $i).png" -nt $O/.s2-basla-$k ] && yeni=$((yeni + 1)); done
+    if [ $yeni -eq 24 ]; then
       rm -f $R/t34b/k_*.png   # sabit bağı kopar (t34/ dokunulmaz)
-      python -X utf8 -P "$KOK/scripts/blender/s2/parlama.py" $R/t34b 48 | tail -n 24 > $O/s2-t34b-parlama.txt
+      python -X utf8 -P "$KOK/scripts/blender/s2/parlama.py" $R/t34b $T34B_BAS $PARLAMA_N $T34B_BAS | tail -n 24 > $O/s2-t34b-parlama.txt
     else
-      echo "[HATA] t34b ham/ eksik; parlama atlandı"
+      echo "[HATA] t34b ham/ eksik ($yeni/24, t34 kare $T34B_BAS–$((T34B_BAS + 23))); parlama atlandı"
     fi
   fi
-  [ "$k" = "t56" ] && son_kare p6 t56 59
-  [ "$k" = "t67" ] && son_kare p7 t67 47
+  [ "$k" = "t56" ] && son_kare p6 t56 $(son_kare_no t56)
+  [ "$k" = "t67" ] && son_kare p7 t67 $(son_kare_no t67)
   # S2c (E, ölçüldü): EEVEE dizide son kareyi önceki kareye bağlı işliyor (64→65 kamera hâlâ ~3,5 mm/kare iniyor):
   # dizideki t78[65] ↔ eski t56[71] ΔE00 0,187 (✗ > 0,05); tek başına işlenen t78[65] 0,0073 ✓ (eski t56[71] de böyle).
   # p8 plakası, brosur_dikdortgen, renk.py RECT ve kapakTon eski t56[71]'e bağlı → son kare ayrı oturumda yeniden işlenir.
-  if [ "$k" = "t78" ]; then sleep 5; sahne --klip t78 --kareler 65 --kok $R --kilit --log $LOG; echo "[SON-KARE] t78[65] tek kare yeniden"; fi
+  if [ "$k" = "t78" ]; then n=$(son_kare_no t78); sleep 5; sahne --klip t78 --kareler $n --kok $R --kilit --log $LOG; echo "[SON-KARE] t78[$n] tek kare yeniden"; fi
   python -X utf8 -P "$KOK/scripts/blender/s2/kontak.py" kontak $k --kaynak $R/$k --cikis $O/s2-$k.jpg --baslik "son render EEVEE TAA 64" --mp4 0
   echo "[BITTI] $k $(date +%H:%M:%S)"
 done

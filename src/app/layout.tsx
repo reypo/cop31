@@ -1,19 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { Great_Vibes, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const montserrat = Montserrat({
-  weight: ["400", "500", "600", "700", "900"],
-  subsets: ["latin", "latin-ext"],
+/*
+ * Yazılar depoya sabit (src/app/fonts/, OFL; kaynak github.com/google/fonts, Google Fonts'un sunduğu sürümlerle aynı:
+ * Montserrat 9.000, Great Vibes 1.103). next/font/google derleme anında Google'dan indiriyordu ve bir derlemede
+ * Montserrat +54,7 kB büyük geldi (M3); artık bayt belirlenimli. Alt küme: Google'ın latin + latin-ext aralıkları +
+ * src/ içinde geçen ASCII dışı karakterler (← → ↔ hariç: E'de sistem yazısından çiziliyordu, öyle kalsın), ipucusuz (Google da ipucusuz sunuyor), Google'ın latin dosyasındaki OpenType
+ * özellikleri (kern, liga, locl TRK, tnum, pnum …). Üretim komutları: .qa/icinden3/f/wf/ (fonttools pyftsubset).
+ */
+
+/** Değişken yazı (wght). Yüz aralığı 400–900: Google yüzleri 400/500/600/700/900 idi, 400 altı istenmiyor. */
+const montserrat = localFont({
+  src: "./fonts/Montserrat.woff2",
+  weight: "400 900",
+  style: "normal",
   variable: "--font-display",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
-const greatVibes = Great_Vibes({
+const greatVibes = localFont({
+  src: "./fonts/GreatVibes.woff2",
   weight: "400",
-  subsets: ["latin", "latin-ext"],
+  style: "normal",
   variable: "--font-script",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
 
 const SITE_TITLE = "COP31'de AK Gençlik";

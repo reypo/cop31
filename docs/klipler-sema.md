@@ -41,6 +41,29 @@ karesini gösterir (video görünür kalır); poster kipi/yedekte posteri (son-k
 ve posterler mevcut dosyalarla; d8'in `brosurDikdortgen`'i eski t56 fragmanından, `kapakTon` eski ton dosyasından).
 yaylar.json, emanet ve duvar çapaları yoksa ilgili alan boş (uyarı). K2 son kodlamadan sonra **bayraksız** çalıştırır.
 
+### 0.1 F turu (4 Kasım 2026, brief §13.5–§13.6): kare sayıları, kırpım, fontlar
+
+"Fiske" profiliyle yeniden render edilen geçişler kısaldı; şema değişmedi (`kare`/`sure` fragmandan, site sayıları
+manifestten okur, kodda kare sayısına bağlı sabit yok — W-F denetimi). Geri klip = ileri klibin `reverse`'ü, aynı kare.
+
+| Klip (+ geri) | E2 kare (s) | **F kare (s)** | Not |
+|---|---|---|---|
+| t01 / r10 | 54 (1,8) | 54 (1,8) | yeniden render (fiske), süre aynı |
+| t12 / r21 | 60 (2,0) | **54 (1,8)** | |
+| t23 / r32 | 84 (2,8) | **72 (2,4)** | bulut perdesi kalktı; son 6 kare durgun |
+| t34 / r43 | 72 (2,4) | **60 (2,0)** | t34a 0–35 + t34b 36–59 (sabit bağ); kesme 35 ↔ 36 tam `#FFF1DC` (E: 47 ↔ 48) |
+| t45 / r54 | 60 (2,0) | **54 (1,8)** | |
+| t56 / r65 | 60 (2,0) | **54 (1,8)** | p6 = t56[53] (E: t56[59]) |
+| t67 / r76 | 48 (1,6) | 48 (1,6) | p7 = t67[47] |
+| t78 / r87 | 66 (2,2) | **60 (2,0)** | son kare ≡ eski t56[71] (p8 bankosu); kapak tonu `k_0059` |
+| döngüler l1–l5, posterler p1–p5/p8 | | değişmedi | |
+
+- **`kirpimY`** (yatay): t23, t56, t78 rampaları artık fragmanın kare kare `ilerleme` dizisine bağlı ve kodlamada tam
+  sayı dizisine çözülüyor; t34 basamağı 35 → 36. Tablo §4'te (`KIRPIM_Y_TANIM`).
+- **Fontlar** (W-F): Montserrat, Great Vibes ve Lora (`Cop31 Serif` adıyla, OFL §3) `src/app/fonts/` altında alt
+  kümelenmiş woff2, `next/font/local` ile (`src/app/layout.tsx`, `src/app/icinden/page.tsx`); derleme Google'a gitmiyor.
+  `/icinden`'de 4 istek, 242,4 kB (E: 8 istek, 301,7 kB). CSS değişken adları aynı; manifest ve oynatıcıyı etkilemez.
+
 ## 1. Yol (üç adım, hepsi depodan yeniden üretilebilir)
 
 ```
@@ -60,10 +83,10 @@ sonra aynı iki komut `--kaynak/--fragman D:/soft/cop31-varlik/yer-tutucu/render
 `kodla.mjs` PNG dizisi yoksa `<klip>.mkv`'yi okur.
 
 **t34 birleşimi** (§9.1): son render'da `python -X utf8 -P scripts/icinden/t34-birlestir.py` `render-son/t34/`'ü
-siler ve NTFS sabit bağlarla yeniden kurar (t34a k_0000–0047 → 0–47, t34b k_0000–0023 → 48–71; kopya yok), `t34.json`
-yazar ve kare 47 ↔ 48'in 16 bit farkının 0 olduğunu doğrular. t34a ya da t34b yeniden render edilirse yeniden
-çalıştırılır. `render-son/t34/` yoksa betikler yine çalışır: `t34a/` + `t34b/` ffmpeg `concat` ile tek 72 karelik
-t34 olur, fragmanlar `t34a.json` + `t34b.json` → tek t34 (`kare` = 48 + 24, `kadraj_m` art arda, `sure` = kare / 30;
+siler ve NTFS sabit bağlarla yeniden kurar (F-B, §13.5: t34a k_0000–0035 → 0–35, t34b k_0000–0023 → 36–59; kopya yok;
+E'de 0–47 + 48–71), `t34.json` yazar ve kesme kareleri 35 ↔ 36'nın 16 bit farkının 0 olduğunu doğrular (ikisi de tam
+`#FFF1DC`). t34a ya da t34b yeniden render edilirse yeniden çalıştırılır. `render-son/t34/` yoksa betikler yine çalışır:
+`t34a/` + `t34b/` ffmpeg `concat` ile tek 60 karelik t34 olur, fragmanlar `t34a.json` + `t34b.json` → tek t34 (`kare` = 36 + 24, `kadraj_m` art arda, `sure` = kare / 30;
 ortak kod `scripts/icinden/fragman.mjs`). VMAF referansı (`kodlama-dogrula.py`) `render-son/t34/`'ü ister.
 
 ## 2. Blender fragmanı (`render/<klip>.json`, master 1920² px, §9.3)
@@ -116,12 +139,15 @@ karesindeki `kirpimY` ile çevrilir (`manifest-birlestir.mjs` listeden okur); `b
 
 **Son render, tek komut** (depo kökünde; render-son'daki bütün klipler bitince; GPU kullanmaz, kilit gerekmez). E turu +
 F turu teslim seti (brief-icinden-3 §12.5 + §12.10). CRF'ler, poster kaliteleri ve t23 H.264 bölgesi artık
-`kodla.mjs` tablolarında (`CRF_TABLO`, `POSTER_Q_TABAN` p3 68 / p6 80 / p7 80, `BOLGE_TABAN` t23.h264=74-83:-4);
-bayrak gerekmez. Kapak tonu t78'in son karesinden (E: t78 66 kare, son kare **k_0065**; eski t56/k_0071 artık yok):
+`kodla.mjs` tablolarında (`CRF_TABLO`, `POSTER_Q_TABAN` p3 68 / p6 80 / p7 80, `BOLGE` t23.h264=62-71:-4 — F-B'de t23 72
+kare, son 10 kare; E'de 74-83); bayrak gerekmez. Kapak tonu t78'in son karesinden (F-B: t78 60 kare, son kare **k_0059**;
+E'de 66 kare, k_0065; eski t56/k_0071 artık yok):
 
 ```
 python -X utf8 -P scripts/icinden/t34-birlestir.py && node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --temizle && python -X utf8 -P scripts/icinden/kapak-ton.py --kare D:/soft/cop31-varlik/render-son/t78/k_0065.png --fragman D:/soft/cop31-varlik/render-son/t78.json --cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json && node scripts/icinden/manifest-birlestir.mjs
 ```
+
+(F-B'den beri kapak tonu karesi `render-son/t78/k_0059.png`.)
 
 Bu tam zincir §12.5'in "yeniden kodlanmayanlar" listesini (t01, l1, r10, p1, p3, l5, p5) de yeniden kodlar (aynı CRF;
 x264 belirlenimci, SVT-AV1 için bayt eşliği denenmedi) ve `kart.mjs` (ana sayfa kartı, E'de değişmedi) çalıştırmaz.
@@ -139,12 +165,19 @@ node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip t
 node scripts/icinden/manifest-birlestir.mjs
 python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t56.yatay,r65.yatay,p6.yatay,t67.yatay,r76.yatay,p7.yatay,t78.yatay,r87.yatay --temel 0.673 --oturum-temel 0.989 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-E2.json
 node scripts/icinden/kodla.mjs --artik --kuru && node scripts/icinden/kodla.mjs --artik   # 14 eski yatay dosya
+# F-B (K-F, 4 Kasım; "fiske" geçişleri yeniden render, §13.5): 8 ileri + 8 geri + p6/p7, KIRPIM_Y ilerlemeye bağlı,
+# CRF_TABLO t23 AV1 35 / r32 H.264 27 / AV1 35, BOLGE t23.h264 62-71 (tablolarda; bayrak gerekmez):
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip t01,r10,t12,r21,t23,r32,t34,r43,t45,r54,t56,r65,t67,r76,t78,r87,p6,p7
+python -X utf8 -P scripts/icinden/kapak-ton.py --kare D:/soft/cop31-varlik/render-son/t78/k_0059.png --fragman D:/soft/cop31-varlik/render-son/t78.json --cikti D:/soft/cop31-varlik/kodlama/render-son-kapak-ton.json
+node scripts/icinden/manifest-birlestir.mjs
+python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t01,r10,t12,r21,t23,r32,t34,r43,t45,r54,t56,r65,t67,r76,t78,r87,p6,p7 --temel 0.673 --oturum-temel 0.989 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-F.json
+node scripts/icinden/kodla.mjs --artik --kuru && node scripts/icinden/kodla.mjs --artik   # 90 eski dosya (E2 özetleri)
 ```
 
 Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kurulması + 85 VMAF; D turunda 7 dk 57 s: dikişler + t01/l1/t12/l2/t23 için 10 yeni FFV1 referansı + 85 VMAF; referanslar önbellekteyse daha kısa):
 `python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf` → `D:/soft/cop31-varlik/kodlama/dogrula-render-son.json`.
 
-1. `t34-birlestir.py`: §1'deki t34 birleşimi (sabit bağlar + `t34.json` + 47↔48 doğrulaması).
+1. `t34-birlestir.py`: §1'deki t34 birleşimi (sabit bağlar + `t34.json` + kesme 35↔36 doğrulaması; E'de 47↔48).
 2. `kodla.mjs`: 12 kaynak klip (t34 birleşik) → dikey H.264/HEVC/AV1 + yatay H.264/AV1, ileri + geri (`reverse`),
    posterler (WebP q80) ve aynı klibin eski özetli dosyalarının silinmesi. x264/x265 `-preset slow`, SVT-AV1 p4;
    BT.709 matris ve renk etiketi (16 bit → 8 bit dönüşüm kodlayıcıdan önce, `scale` içinde). Süreç önceliği düşük.
@@ -152,35 +185,44 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
      (`ileri|geri|dongu`) ya da dosya adı (`t23`, `r32`, `l3`), isteğe bağlı `.kodek`; değer `+N`/`-N` (tabana ek) ya
      da `N` (mutlak). C turu: yalnız t23 ve t34 ileri H.264 26 / HEVC 27 / AV1 32 (geri r32/r43 tabanda). D turu
      (§11.6-1): t34 ileri AV1 **34**, l3 AV1 **32** (dikey + yatay); t23 AV1 32'de kalır (34'te en kötü kare VMAF 76,8).
+     **F-B (K-F, 4 Kasım):** bulutsuz t23/r32 büyüdü; t23 AV1 **35** (d2 kritik 2,314 → ≤ 2,1; VMAF 96,13 / 95,26),
+     r32 H.264 **27** (d3 penceresi H.264 2,535 → ≤ 2,5; VMAF 92,52) ve AV1 **35** (d3 AV1 2,602 → ≤ 2,6; 96,24 / 95,47).
    - **`--bolge ad.kodek=k0-k1:ΔCRF`**: x264/x265 `zones` (`b=` bit hızı çarpanı = 2^(−ΔCRF/6); CRF kipinde qscale'i
      böler). C turu: `t23.h264=74-83:-4` (t23 → l3 dikişi H.264'te > 3 idi; HEVC 2,97 ve AV1 2,21 ≤ 3, uygulanmadı).
+     F-B: t23 72 kare → `62-71` (yine son 10 kare).
      AV1'de yok sayılır.
    - **`--poster-q ad[.boyut]=q`**: poster WebP kalitesi (varsayılan 80). C turu: hepsi 80. D turu (§11.6-2): `p3=68`
      (dikey + yatay; p3 merdiveni `docs/klip-oynatma.md` §5), öteki posterler 80.
-   - **Yatay kırpım `kirpimY`** (master px, `KIRPIM_Y` tablosu; §11.2-5): sayı ya da `{bas, son, k0, k1}` (kare ≤ k0 →
-     bas, ≥ k1 → son, arası easeInOutCubic). Tablo (geri klipler ileri klibin nesnesini ileri kare numarasıyla
-     kullanır; ters rampa `reverse`'ten gelir):
+   - **Yatay kırpım `kirpimY`** (master px, `KIRPIM_Y_TANIM` tablosu; §11.2-5, §12.12, §13.5): sayı; `{bas, son, k0, k1}`
+     (kare ≤ k0 → bas, ≥ k1 → son, arası easeInOutCubic, kare numarasıyla); ya da F-B'den beri **ilerlemeye bağlı**
+     `{bas, son, s0, s1}`: fragmanın kare kare `ilerleme` dizisi (S2 `<klip>.json` `ilerleme`, S1 `f_turu.ilerleme`)
+     s(n) ile kirpimY(n) = bas + (son − bas)·easeInOutCubic(clamp((s(n) − s0)/(s1 − s0))). Bu biçim kodlamada kare başına
+     **tam sayı dizisine** çözülür ve listeye `{bas, son, s0, s1, kareler: [...]}` olarak yazılır; ffmpeg ifadesi o
+     diziden basamak toplamıdır, `manifest-birlestir.mjs` `kirpimYKare` aynı diziyi okur (ikisi aynı eğri). İlerleme
+     yoksa tablodaki `k0`/`k1` (S2'nin verdiği kare aralığı) kullanılır (uyarı). Geri klipler ileri klibin nesnesini
+     ileri kare numarasıyla kullanır; ters rampa `reverse`'ten gelir. Tablo (F-B, 4 Kasım 2026):
 
-     | Klip (+ geri, poster) | `kirpimY` | Neden |
-     |---|---|---|
-     | t23 (r32) | `{420 → 200, 24 → 72}` | d3'te ufuk (C turu, §11.2-5) |
-     | l3, p3 | 200 | |
-     | t34 (r43) | `{200 → 420, 47 → 48}` | basamak düz #FFF1DC parlama karelerinde; 47↔48 farkı 0 |
-     | **t56 (r65), p6 = t56[59]** | **`{420 → 293, 30 → 59}`** | E2 (§12.12, D1-02): d6 "İklim Eylemleri" 844×390'da görünsün; t56[0] ≡ l5[0] 420'de |
-     | **t67 (r76), p7 = t67[47]** | **`{293 → 233, 0 → 47}`** | E2: d7 "1.000.000+" üstü bütün yatay ekranlarda görünsün |
-     | **t78 (r87)** | **`{233 → 420, 0 → 40}`** | E2: 41–65. kareler 420 → d8 kapak geometrisi (`brosurDikdortgen`, `bankoDonusum`) değişmez |
-     | diğerleri | 420 | t01/l1/t12/l2/t45/l4/l5: lombar hizası, `dunyaC`, `sutunlar` aynı |
+     | Klip (+ geri, poster) | `kirpimY` | Kare karşılığı (F-B) | Neden |
+     |---|---|---|---|
+     | t23 (r32), 72 kare | `{420 → 200, s 0,1822 → 0,985}` | 0–10 = 420, 11–45 rampa, 46–71 = 200 | d3'te ufuk (C turu, §11.2-5). Eşikler E'nin kare 24 / 72'sinin (84 kare) ln-kadraj ilerlemesi (E `t23.json` `kadraj_m`) |
+     | l3, p3 | 200 | | |
+     | t34 (r43), 60 kare | `{200 → 420, 35 → 36}` | 0–35 = 200, 36–59 = 420 | basamak düz `#FFF1DC` parlama karelerinde (t34a 35 ↔ t34b 36, ikisi de tam); 35↔36 farkı 0 (E: 47 → 48) |
+     | **t56 (r65), p6 = t56[53]**, 54 kare | **`{420 → 293, s 0,5133 → 1}`** | 0–18 = 420, 19–40 rampa, 41–53 = 293 | E2 (§12.12, D1-02): d6 "İklim Eylemleri" 844×390'da görünsün; t56[0] ≡ l5[0] 420'de. Eşik E'nin kare 30 → 59'unun ilerlemesi (S2-F2) |
+     | **t67 (r76), p7 = t67[47]**, 48 kare | **`{293 → 233, 0 → 47}`** | kare numarasıyla (değişmedi) | E2: d7 "1.000.000+" üstü bütün yatay ekranlarda görünsün |
+     | **t78 (r87)**, 60 kare | **`{233 → 420, s 0 → 0,6773}`** | 0–3 = 233, 4–21 rampa, 22–59 = 420 | E2: E'nin 0 → 40 rampası (ilerleme 0,6773); son 38 kare 420 → d8 kapak geometrisi (`brosurDikdortgen`, `bankoDonusum`), p8 dikişi değişmez |
+     | diğerleri | 420 | | t01/l1/t12/l2/t45/l4/l5: lombar hizası, `dunyaC`, `sutunlar` aynı |
 
      `duvarCapalari` yatayı p6'nın `kirpimY`'siyle (293) çevrilir; `orman` çapası (master y 1434) bu kırpımda kadraj
      dışında kalır (manifest uyarısı; site duvarda kılavuz çizmez).
-     ffmpeg: `crop=w=iw:h=ih*1080/1920:x=0:y='ih*(<bas>+(<son>-<bas>)*e(n))/1920'`,
-     `e` kare numarası `n` ile easeInOutCubic; crop değeri tam sayıya yuvarlar (lrint), ölçekten önce. Geri klipler
+     ffmpeg: kare numarası biçiminde `crop=w=iw:h=ih*1080/1920:x=0:y='ih*(<bas>+(<son>-<bas>)*e(n))/1920'` (`e`
+     easeInOutCubic); ilerleme biçiminde `y='ih*(y0-d1*gte(n,i1)-…)/1920'` (yalnız değişen kareler terim). Crop değeri
+     tam sayıya yuvarlar (lrint), ölçekten önce. Geri klipler
      `reverse` kırpım + ölçekten SONRA olduğundan kendiliğinden doğru. Dikey kırpım (x 420) değişmez.
    - Tek klip: `--klip t56`. Önizleme seti örneği: `--kaynak D:/soft/cop31-varlik/render --esle
      t34b=D:/soft/cop31-varlik/render/_onizleme/s2-t34b,l4=…` (A/B turu ön entegrasyonu). Liste varsayılanı
      `D:/soft/cop31-varlik/kodlama/<kaynak klasör adı>.json` (render-son → `render-son.json`).
 3. `kapak-ton.py`: d8 kesişmesi için render kapağının tonu (CSS `saturate contrast brightness sepia`, sRGB en küçük
-   kareler; E turunda t78 son karesi **k_0065**'teki `brosur_dikdortgen` ↔ `D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png`;
+   kareler; F-B'de t78 son karesi **k_0059**'daki (E'de k_0065) `brosur_dikdortgen` ↔ `D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png`;
    D turuna dek t56/k_0071).
    Render kapak oranı 0,708 değilse uyarır (doku farklı → sonuç güvenilmez; o zaman `--cift FFFFFF=<kâğıt>,…`).
 4. `manifest-birlestir.mjs`: varsayılanları son render içindir (`--fragman render-son`, `--liste
@@ -194,7 +236,7 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
 5. `kart.mjs`: ana sayfa kartı `public/icinden/kart-icinden.webp` (p1 = `render-son/l1/k_0000.png`, ≤ 60 KB).
 6. `kodlama-dogrula.py`: kodek dizeleri (`avc1.64001f`, `hvc1.1.6.L93.90`, `av01.0.05M.08`), kare sayıları, dikişler
    (ileri son ↔ döngü 0 / poster, kalkış, geri son ↔ önceki döngü 0, t56 son ↔ p6 dikdörtgen dışı), döngü kapanışı,
-   t34 47↔48, bütçe (§11.2-3: ilk yükleme, kritik yol, pencere, set, tam tur oturumu; §11.6-1 istisnaları kritik d2
+   t34 kesmesi (t34a kare − 1 ↔ +1; F-B 35↔36), bütçe (§11.2-3: ilk yükleme, kritik yol, pencere, set, tam tur oturumu; §11.6-1 istisnaları kritik d2
    ≤ 2,1 ve AV1 pencere d3 ≤ 2,6 `*_tamam`'da, katı 1,8 / 2,5 `*_katı_tamam`'da), `--vmaf` (referans listedeki
    `kirpim` filtresiyle kurulur, önbellek adı kırpım + kaynak kare zamanından özetli).
 
@@ -222,7 +264,7 @@ Tipler: `src/components/icinden/klipler.ts`. Sunucu bileşeni (`page.tsx`) okur;
   "fps": 30, "master": 1920,
   "boyutlar": {
     "dikey": { "g": 720,  "y": 1280, "kirpim": [420, 0, 1080, 1920] },   // [x, y, g, y] master px
-    "yatay": { "g": 1280, "y": 720,  "kirpim": [0, 420, 1920, 1080] }   // varsayılan; d3 (t23 sonu, l3, p3, t34 0–47)
+    "yatay": { "g": 1280, "y": 720,  "kirpim": [0, 420, 1920, 1080] }   // varsayılan; d3 (t23 sonu, l3, p3, t34 0–35)
   },                                                                     // y 200 — çapalar zaten buna göre çevrili (§4)
   "kodekler": [                                  // tercih sırası; istemci mediaCapabilities → canPlayType
     { "ad": "av1",  "tip": "video/mp4; codecs=\"av01.0.05M.08\"",   "boyutlar": ["dikey", "yatay"] },
