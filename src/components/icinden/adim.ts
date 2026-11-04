@@ -11,7 +11,8 @@
  *
  * Farklar (brief-icinden-3 §9.5, klip-oynatma §1.2):
  *  - Adım süresi = geçişin süresi: `opts.adim(from, to, dir, jest)` süreyi (ms) ya da `false` (red) döndürür.
- *  - Geçiş sürerken HER jest yok sayılır (kilit; "D − t" ters geçiş YOK, R4 §3.8).
+ *  - Geçiş sürerken HER jest yok sayılır (kilit; "D − t" ters geçiş YOK, R4 §3.8). Bekle kipinde (W-4: klip inmedi,
+ *    oynatma reddedildi) geçiş adımın süresini aşar: `kilitli()` doğruyken kilit adım animasyonundan sonra da sürer.
  *  - Otomatik oynatma engelliyken (`dokunmaBitiste()`: iOS düşük güç modu) dokunma adımı parmak kalkınca
  *    atılır: `play()` yalnız kullanıcı etkinleştirmesinde (touchend) izinli, touchmove değil.
  *  - Uzun bölüm yalnız sonda (kapanış): içinde serbest kaydırma, adım yalnız üst sınırda.
@@ -65,6 +66,8 @@ export function createStepper(opts: {
   wake: () => void;
   adim: (from: number, to: number, dir: 1 | -1, jest: Jest) => number | false;
   dokunmaBitiste: () => boolean;
+  /** Sahne geçişi adımın süresini aştı (W-4 bekle kipi): kilit adım animasyonundan sonra da sürer. */
+  kilitli?: () => boolean;
   yerles: (idx: number) => void;
   /** Kullanıcı girdisi (kiosk duraklatma). */
   girdi?: () => void;
@@ -76,6 +79,7 @@ export function createStepper(opts: {
 }): Stepper {
   let anim: Anim | null = null;
   let animEndAt = -Infinity;
+  const kilit = () => (!!anim && anim.kind === "step") || !!opts.kilitli?.();
   let remeasurePending = false;
 
   const maxY = () => Math.max(0, document.documentElement.scrollHeight - opts.viewport());
@@ -149,7 +153,7 @@ export function createStepper(opts: {
 
   /** dir yönünde bir durak. Oynatıcı reddederse (geçiş sürüyor, uç) false. */
   const step = (dir: 1 | -1, jest: Jest) => {
-    if (anim && anim.kind === "step") return false; // kilit
+    if (kilit()) return false;
     const st = opts.stops();
     if (st.length === 0) return false;
     const y = anim ? anim.to : here();
@@ -213,7 +217,7 @@ export function createStepper(opts: {
     const prevAbs = lastAbs;
     lastAbs = abs;
     const dir: 1 | -1 = dy > 0 ? 1 : -1;
-    if (anim && anim.kind === "step") {
+    if (kilit()) {
       gate = true; // kilit: akış adım atmaz, susunca yeni hareket gerekir
       return;
     }
@@ -253,7 +257,7 @@ export function createStepper(opts: {
     opts.girdi?.();
     touching = true;
     // Geçiş sürerken başlayan dokunma tükenmiş sayılır (kilit; parmak kalkınca yeni jest).
-    tDone = !!(anim && anim.kind === "step");
+    tDone = kilit();
     ty0 = e.touches[0].clientY;
     if (anim && anim.kind === "soft") anim = null;
     tScroll0 = here();
@@ -306,7 +310,7 @@ export function createStepper(opts: {
     else return;
     e.preventDefault();
     opts.girdi?.();
-    if (e.repeat || (anim && anim.kind === "step")) return;
+    if (e.repeat || kilit()) return;
     const base = anim && anim.kind === "soft" ? anim.to : here();
     const w = within(dir * opts.viewport() * 0.5, base, EDGE_SNAP);
     if (w.inside) {

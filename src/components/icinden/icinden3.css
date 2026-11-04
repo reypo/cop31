@@ -216,7 +216,7 @@
     font-size: 13px;
   }
 }
-/* görünürlük: etiketler birlikte 300 ms. Kimlik eşleşmesi (etiket k ↔ durak k), rol tablosundan bağımsız: 1–12. */
+/* görünürlük: etiketler birlikte 300 ms. Kimlik eşleşmesi (etiket k ↔ durak k), rol tablosundan bağımsız: 1–12 (W-3: 13 durak). */
 .v3[data-etiket="1"] .v3-et[data-d="1"],
 .v3[data-etiket="2"] .v3-et[data-d="2"],
 .v3[data-etiket="3"] .v3-et[data-d="3"],
@@ -275,6 +275,48 @@
   opacity: 0 !important;
 }
 
+/* ------------------------------ bekle göstergesi (W-4 §14.7) ------------------------------ */
+/*
+ * Klip henüz inmedi / oynatma reddedildi: geçiş poster sönmesine düşmez, mevcut kare durur (kök data-bekle="1"). 18 px krem
+ * halka, sol üstte (kadraj okumasının karşısı); yalnız 300 ms'den uzun beklemede görünür (geçiş gecikmesi). Animasyon
+ * yalnız transform/opacity, filter yok (WebKit §13.8); beklemede değilken dönüş duraklatılmış.
+ */
+.v3-bekle {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  z-index: 12;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms linear;
+}
+.v3[data-bekle="1"] .v3-bekle {
+  opacity: 1;
+  transition: opacity 200ms linear 300ms;
+}
+.v3-bekle i {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgb(247 230 205 / 0.3);
+  border-top-color: #f7e6cd;
+  border-radius: 50%;
+  /* Koyu yarı saydam disk: krem yay beyaz sayfada (d0 lombar, kâğıt) da okunur. */
+  background: rgb(11 16 24 / 0.38);
+  animation: v3-bekle-don 900ms linear infinite paused;
+}
+.v3[data-bekle="1"] .v3-bekle i {
+  animation-play-state: running;
+}
+@keyframes v3-bekle-don {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ------------------------------ kadraj okuması ------------------------------ */
 
 .v3-kadraj {
@@ -303,11 +345,11 @@
   opacity: 0;
 }
 /*
- * Krem/ahşap duraklar (sutunlar, masa: bankonun ahşabı) ve oraya giden geçişler: koyu metin, krem hale. Duvar durakları
+ * Krem duraklar (sutunlar; W-3'te masa kalktı) ve oraya giden geçişler: koyu metin, krem hale. Duvar durakları
  * ve fidan durakları beyaz kalır: kadraj okumasının köşesi (sağ üst) orada karanlık hol (§12.3 poz A/B; S3 p9–pc).
  */
-.v3:is([data-rol="sutunlar"], [data-rol="masa"])[data-faz="dur"] .v3-kadraj,
-.v3[data-faz="gecis"]:is([data-hedef-rol="sutunlar"], [data-hedef-rol="masa"]) .v3-kadraj {
+.v3[data-rol="sutunlar"][data-faz="dur"] .v3-kadraj,
+.v3[data-faz="gecis"][data-hedef-rol="sutunlar"] .v3-kadraj {
   color: #28332f;
   -webkit-text-stroke-color: rgb(247 230 205 / 0.85);
   text-shadow: 0 0 4px rgb(247 230 205 / 0.8);
@@ -469,14 +511,6 @@
   font-size: 13px;
   font-weight: 500;
 }
-.v3-satir-baslik {
-  margin: 0;
-  text-wrap: balance;
-  font-family: var(--font-serif), "Lora", Georgia, serif;
-  font-size: 22px;
-  line-height: 28px;
-  font-weight: 600;
-}
 .v3-slogan {
   margin: 0;
   font-size: clamp(44px, 12.4vw, 64px);
@@ -504,16 +538,16 @@
  * sönüm alt %40'ı kaplar), metin altta; yatayda sol altta (sağda değil: Türkiye haritasının doğusu ve emanet ışıkları
  * sağ yarıda), aşağıdan ve soldan sönen scrim.
  */
-@media (prefers-reduced-motion: no-preference) and (max-aspect-ratio: 4/3) {
-  .v3-bant[data-rol="emanet"] {
+@media (max-aspect-ratio: 4/3) {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"] {
     display: flex;
     min-height: calc(40svh - var(--sonum));
     flex-direction: column;
     justify-content: flex-end;
   }
 }
-@media (prefers-reduced-motion: no-preference) and (min-aspect-ratio: 4/3) {
-  .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
+@media (min-aspect-ratio: 4/3) {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
     top: auto;
     right: auto;
     left: 0;
@@ -526,7 +560,7 @@
    * α ≈ 0,24 kalıyor, Levant üstünde dikey sert bir ton dikişi çiziyordu (F turu, denetim D1-04). Son durak 83%:
    * sağ ve üst kenarda α 0; plato 60%'a kadar.
    */
-  .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
     top: calc(-1 * var(--sonum) - 40px);
     right: calc(-1 * var(--sonum) - 40px);
     left: 0;
@@ -543,8 +577,8 @@
  * başlığının ve EN satırının içinde, scrim altında kararıyordu. Sağ altta (Suriye çölü) yalnız 12 ve 09 var, ikisi de
  * bandın üstünde. Scrim aşağıdan (doğrusal) ve soldan (maske) söner.
  */
-@media (prefers-reduced-motion: no-preference) and (min-aspect-ratio: 4/3) and (max-height: 480px) {
-  .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
+@media (min-aspect-ratio: 4/3) and (max-height: 480px) {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"]:not(.v3-acilis) {
     --sonum: 32px;
     right: 0;
     left: auto;
@@ -552,11 +586,11 @@
     padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 14px) 24px;
   }
   /* başlık tek satır: bant 12/09 ışıklarının altında kalsın */
-  .v3-bant[data-rol="emanet"] .v3-baslik {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"] .v3-baslik {
     max-width: none;
     font-size: 22px;
   }
-  .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
+  :where(.v3:not([data-azalt="1"])) .v3-bant[data-rol="emanet"]:not(.v3-acilis)::before {
     top: calc(-1 * var(--sonum));
     right: 0;
     left: calc(-1 * var(--sonum));
@@ -636,7 +670,7 @@
 
 /*
  * görünürlük: jestte 200 ms söner; klibin son 250 ms'sinde 350 ms giriş (yalnız opaklık). Kimlik eşleşmesi (bant k ↔
- * durak k), rol tablosundan bağımsız: 0–12 (bandı olmayan durakta eşleşecek öğe yok).
+ * durak k), rol tablosundan bağımsız: 0–12 (W-3: 13 durak, d12 Dünya; bandı olmayan durakta eşleşecek öğe yok).
  */
 .v3[data-metin="0"] .v3-bant[data-d="0"],
 .v3[data-metin="1"] .v3-bant[data-d="1"],
@@ -666,8 +700,7 @@
 .v3-acilis::before {
   content: none;
 }
-.v3[data-metin-rol="lombar"] .v3-acilis a,
-.v3[data-metin-rol="masa"] .v3-bant[data-rol="masa"] a {
+.v3[data-metin-rol="lombar"] .v3-acilis a {
   pointer-events: auto;
 }
 /* Logo: amblem merkezi ve yarıçapı T01'in 0. karesindeki diskle aynı (video uzayı, cover dönüşümü). */
@@ -909,7 +942,7 @@
  *    yazı bloğunun sağında. Başlık ikincil boyda (duvar zaten aynı başlığı büyük gösteriyor; D1-12'nin ikinci
  *    seçeneği, yalnız yatayda).
  *  - anatomi (d4, D1-03): sağ-orta bant yeni ön cephe pankartının üstüne düşüyordu → sol üst (karanlık tavan/hol).
- *  - dunya (d1/d11) yatay telefonda (D1-07): künye ("Antalya / Açılışa N gün") bant gövdesinin hemen solunda, aynı
+ *  - dunya (d1/d12) yatay telefonda (D1-07): künye ("Antalya / Açılışa N gün") bant gövdesinin hemen solunda, aynı
  *    hizadaydı → bant sağ kenarda ≤ 300 px, metin üstte.
  */
 @media (min-aspect-ratio: 4/3) {
@@ -1101,12 +1134,9 @@
   }
 }
 
-/* ============================== d8 masa: "Dijital broşür →" ============================== */
+/* ============================== "Dijital broşür →" ============================== */
 
-/* Bağlantı düğmesi (d0 şeridi ve d8 bandı; kapanıştaki .ic-kapanis-brosur icinden.css'te). */
-.v3-dijital-satir {
-  margin: 10px 0 0;
-}
+/* Bağlantı düğmesi (d0 şeridi; W-3'te d8 masa bandı kalktı; kapanıştaki .ic-kapanis-brosur icinden.css'te). */
 :is(.v3-bant, .v3-serit) .v3-dijital {
   display: inline-flex;
   align-items: center;
@@ -1133,7 +1163,7 @@
   font-size: 12px;
 }
 
-/* ============================== fidan bölümü (d9–d12; G turu §14.3, §14.4.6) ============================== */
+/* ============================== fidan bölümü (d8–d11; G turu §14.3, §14.4.6; W-3) ============================== */
 
 /*
  * Bantlar: altta (dikeyde metin y ≥ %68), krem, /fidan `leaf-tag` çipi (globals.css) + content.ts metni. Başlık ikincil
@@ -1164,7 +1194,7 @@
 .v3-bant-fidan .v3-en {
   margin-top: 2px;
 }
-/* d12: üç İklim Eylemleri satırı (/fidan yaprak madde işareti). */
+/* d11: üç İklim Eylemleri satırı (/fidan yaprak madde işareti). */
 .v3-iklim-satirlari {
   display: grid;
   max-width: 40ch;
@@ -1192,7 +1222,7 @@
   background: var(--color-brand-green);
   content: "";
 }
-/* d10 boğum listesi: hareketli düzende okunur kopya (sr-only; etiketler sahnede), reduced'da görünür. */
+/* d9 boğum listesi: hareketli düzende okunur kopya (sr-only; etiketler sahnede), reduced'da görünür. */
 .v3-bogum-liste {
   position: absolute;
   width: 1px;
@@ -1212,11 +1242,11 @@
   font-weight: 700;
 }
 /*
- * Yatay köşe kutusu (fidan d9–d12 ve masa d8): S3 kadrajında fidan/kasa ve masadaki broşür ortada (master x %31–69); tam
- * boy sağ sütun (≤ 38vw) kasanın, kök uçlarının ve broşürün sağ yarısının üstüne biniyordu (ölçüldü: 1280 × 800, 844 × 390).
+ * Yatay köşe kutusu (fidan d8–d10): S3 kadrajında fidan/kasa ortada (master x %31–69); tam boy sağ sütun (≤ 38vw)
+ * kasanın ve kök uçlarının sağ yarısının üstüne biniyordu (ölçüldü: 1280 × 800, 844 × 390).
  */
 @media (min-aspect-ratio: 4/3) {
-  .v3-bant:is(.v3-bant-fidan, [data-rol="masa"]):not(.v3-acilis) {
+  .v3-bant.v3-bant-fidan:not(.v3-acilis) {
     --sonum: 48px;
     --yan: 56px;
     top: auto;
@@ -1224,10 +1254,7 @@
     justify-content: flex-end;
     padding: 0 32px calc(env(safe-area-inset-bottom, 0px) + 28px) 4px;
   }
-  .v3-bant[data-rol="masa"]:not(.v3-acilis) {
-    width: min(28vw, 380px);
-  }
-  .v3-bant:is(.v3-bant-fidan, [data-rol="masa"]):not(.v3-acilis)::before {
+  .v3-bant.v3-bant-fidan:not(.v3-acilis)::before {
     top: calc(-1 * var(--sonum));
     right: 0;
     bottom: 0;
@@ -1247,12 +1274,12 @@
   }
 }
 /*
- * Yatay telefon (≤ 480 px yükseklik): köşe kutusu ≤ 244 px (d11 sağ alt polaroidi ve d9 sağ kök uçları x ≤ 594'te biter,
- * 844 × 390), d9/d11 gövde paragrafı görsel olarak gizli, ekran okuyucuda var (bant kök uçlarının ve polaroidin altında
+ * Yatay telefon (≤ 480 px yükseklik): köşe kutusu ≤ 244 px (d9 sağ alt polaroidi ve d8 sağ kök uçları x ≤ 594'te biter,
+ * 844 × 390), d8/d9 gövde paragrafı görsel olarak gizli, ekran okuyucuda var (bant kök uçlarının ve polaroidin altında
  * kalsın).
  */
 @media (min-aspect-ratio: 4/3) and (max-height: 480px) {
-  .v3-bant:is(.v3-bant-fidan, [data-rol="masa"]):not(.v3-acilis) {
+  .v3-bant.v3-bant-fidan:not(.v3-acilis) {
     --sonum: 24px;
     --yan: 28px;
     width: min(29vw, 244px);
@@ -1266,14 +1293,6 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
-  }
-  .v3-bant[data-rol="masa"] .v3-satir-baslik {
-    font-size: 18px;
-    line-height: 23px;
-  }
-  .v3-bant[data-rol="masa"] .v3-en {
-    font-size: 13px;
-    line-height: 17px;
   }
   .v3-cip {
     margin-bottom: 6px;
@@ -1298,7 +1317,7 @@
   }
 }
 
-/* ------------------------------ sahne katmanı: d9 halkaları, d10 boğum etiketleri ------------------------------ */
+/* ------------------------------ sahne katmanı: d8 halkaları, d9 boğum etiketleri ------------------------------ */
 
 .v3-fidan {
   position: absolute;
@@ -1306,7 +1325,7 @@
   z-index: 8;
 }
 /*
- * 81 halka (d9): yön başına tek <svg> + tek <path> (81 daire), viewBox = video karesi, xMidYMid slice = object-fit: cover.
+ * 81 halka (d8): yön başına tek <svg> + tek <path> (81 daire), viewBox = video karesi, xMidYMid slice = object-fit: cover.
  * 1,5 px krem çizgi (ölçeklenmez: yolda vector-effect özniteliği; reduced'daki <use> kopyası da taşır). Animasyon YALNIZ <svg> öğesinin opaklığı (dinlenmede 300 ms; çocuklarda yok, WebKit §13.8); dinlenme
  * dışında görünmez (visibility: boyama dışı).
  */
@@ -1345,7 +1364,7 @@
 }
 
 /*
- * Boğum etiketleri (d10): çapada küçük halka + 26 px kılavuz + iki satır (content.ts). taraf −1 sola (alt boğum, 2017),
+ * Boğum etiketleri (d9): çapada küçük halka + 26 px kılavuz + iki satır (content.ts). taraf −1 sola (alt boğum, 2017),
  * +1 sağa (üst boğum, TBMM). Dinlenmede opaklık + 8 px dışa kayma (CSS geçişi; ikincisi 140 ms sonra); her karede JS yok.
  */
 .v3-bogum {
@@ -1469,11 +1488,11 @@
   }
 }
 
-/* ------------------------------ d11 polaroidleri (bölümün içinde, sabit katman) ------------------------------ */
+/* ------------------------------ d10 polaroidleri (bölümün içinde, sabit katman) ------------------------------ */
 
 /*
  * 4 polaroid (§14.4.1 K6), ana dal uçlarına iğneli (turuncu iğne = uç). Katman bir boyut kabı (fixed, inset 0 = sahne):
- * cover dönüşümü sahne etiketleriyle aynı. Görünür yalnız d11 dinlenmesinde ve görsel çözülmüşse (`data-hazir`, d10'da
+ * cover dönüşümü sahne etiketleriyle aynı. Görünür yalnız d10 dinlenmesinde ve görsel çözülmüşse (`data-hazir`, d9'da
  * img.decode()): opaklık + 8 px translateY (easeOutBack yok), sarkaç yalnız transform ±1,2° (5 s; @property yok).
  */
 .v3-polaroidler {
@@ -1617,163 +1636,187 @@
   margin-top: 4px;
 }
 
-/* ============================== reduced-motion: akış + posterler, video yok ============================== */
+/*
+ * ============================== eski reduced düzeni: akış + posterler, video yok ==============================
+ * W-2 (§14.7): yalnız `?azalt=1` (VideoSahne kökte data-azalt="1"); prefers-reduced-motion artık bu düzeni açmaz (dosya
+ * sonundaki blok). Seçiciler `:where(.v3[data-azalt="1"])` ile: özgüllük eski @media bloğundakiyle aynı.
+ */
 
-@media (prefers-reduced-motion: reduce) {
-  .v3-sahne {
-    display: none;
-  }
-  .v3-durak {
-    display: flex;
-    height: auto;
-    min-height: 0;
-    flex-direction: column;
-    gap: 14px;
-    padding: 28px 16px;
-  }
-  .v3-bant,
-  .v3-acilis {
-    position: relative;
-    inset: auto;
-    z-index: auto;
-    width: auto;
-    max-width: 560px;
-    margin-inline: auto;
-    padding: 0;
-    opacity: 1 !important;
-    pointer-events: auto;
-    color: #28332f;
-    container-type: normal;
-  }
-  .v3-bant::before {
-    content: none !important;
-  }
-  .v3-bant {
-    --ikincil: var(--color-brand-ink);
-    order: 2;
-  }
-  .v3-acilis {
-    display: flex;
-    min-height: 90svh;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-  }
-  .v3-serit,
-  .v3-ipucu,
-  .v3-logo,
-  .v3-logo-alti {
-    position: static;
-    width: auto;
-    height: auto;
-  }
-  .v3-serit {
-    align-self: stretch;
-  }
-  .v3-logo {
-    width: min(64vw, 280px);
-  }
-  .v3-spot-satir,
-  .v3-sutun-satir {
-    grid-area: auto;
-    opacity: 1 !important;
-    margin-top: 10px;
-  }
-  .v3-azalt {
-    position: relative;
-    display: block;
-    order: 1;
-    width: 100%;
-    max-width: 560px;
-    margin: 0 auto;
-  }
-  /* Tembel poster gelene dek düz koyu zemin (G turu: satır içi LQIP kalktı, HTML gz bütçesi). */
-  .v3-azalt img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 6px;
-    background: #24211e;
-  }
-  .v3-azalt-etiketler {
-    position: absolute;
-    inset: 0;
-  }
-  .v3-azalt-et {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    color: #fff;
-    text-shadow: 0 0 3px rgb(0 0 0 / 0.7);
-  }
-  .v3-azalt-et.v3-et-doga {
-    font-family: var(--font-serif), "Lora", Georgia, serif;
-    font-size: 14px;
-    font-style: italic;
-  }
-  .v3-slogan {
-    color: var(--color-brand-green);
-  }
-  /* fidan (G turu): halkalar posterin üstünde statik; boğum listesi bantta görünür; polaroidler bandın altında dörtlü sıra. */
-  .v3-halkalar-statik {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 1;
-    visibility: visible;
-    transition: none;
-  }
-  .v3-bogum-liste {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 10px 0 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-  .v3-polaroidler {
-    position: relative;
-    inset: auto;
-    z-index: auto;
-    display: grid;
-    order: 3;
-    width: 100%;
-    max-width: 560px;
-    margin: 0 auto;
-    container-type: normal;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: start;
-    gap: 12px;
-  }
-  .v3-pola,
-  .v3-pola[data-yok] {
-    position: relative;
-    top: auto;
-    left: auto;
-    display: block;
-    width: auto;
-    height: auto;
-    opacity: 1;
-    transform: none;
-  }
-  .v3-pola-sarkac {
-    position: relative;
-    left: auto;
-    width: auto;
-    animation: none;
-  }
+:where(.v3[data-azalt="1"]) .v3-sahne {
+  display: none;
 }
-@media (prefers-reduced-motion: reduce) and (min-aspect-ratio: 4/3) {
-  .v3-azalt img {
+:where(.v3[data-azalt="1"]) .v3-durak {
+  display: flex;
+  height: auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 16px;
+}
+:where(.v3[data-azalt="1"]) .v3-bant,
+:where(.v3[data-azalt="1"]) .v3-acilis {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  width: auto;
+  max-width: 560px;
+  margin-inline: auto;
+  padding: 0;
+  opacity: 1 !important;
+  pointer-events: auto;
+  color: #28332f;
+  container-type: normal;
+}
+:where(.v3[data-azalt="1"]) .v3-bant::before {
+  content: none !important;
+}
+:where(.v3[data-azalt="1"]) .v3-bant {
+  --ikincil: var(--color-brand-ink);
+  order: 2;
+}
+:where(.v3[data-azalt="1"]) .v3-acilis {
+  display: flex;
+  min-height: 90svh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+:where(.v3[data-azalt="1"]) .v3-serit,
+:where(.v3[data-azalt="1"]) .v3-ipucu,
+:where(.v3[data-azalt="1"]) .v3-logo,
+:where(.v3[data-azalt="1"]) .v3-logo-alti {
+  position: static;
+  width: auto;
+  height: auto;
+}
+:where(.v3[data-azalt="1"]) .v3-serit {
+  align-self: stretch;
+}
+:where(.v3[data-azalt="1"]) .v3-logo {
+  width: min(64vw, 280px);
+}
+:where(.v3[data-azalt="1"]) .v3-spot-satir,
+:where(.v3[data-azalt="1"]) .v3-sutun-satir {
+  grid-area: auto;
+  opacity: 1 !important;
+  margin-top: 10px;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt {
+  position: relative;
+  display: block;
+  order: 1;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* Tembel poster gelene dek düz koyu zemin (G turu: satır içi LQIP kalktı, HTML gz bütçesi). */
+:where(.v3[data-azalt="1"]) .v3-azalt img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: #24211e;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-etiketler {
+  position: absolute;
+  inset: 0;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-et {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.7);
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-et.v3-et-doga {
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-size: 14px;
+  font-style: italic;
+}
+:where(.v3[data-azalt="1"]) .v3-slogan {
+  color: var(--color-brand-green);
+}
+/* fidan (G turu): halkalar posterin üstünde statik; boğum listesi bantta görünür; polaroidler bandın altında dörtlü sıra. */
+:where(.v3[data-azalt="1"]) .v3-halkalar-statik {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
+:where(.v3[data-azalt="1"]) .v3-bogum-liste {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 10px 0 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+:where(.v3[data-azalt="1"]) .v3-polaroidler {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  display: grid;
+  order: 3;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  container-type: normal;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+:where(.v3[data-azalt="1"]) .v3-pola,
+:where(.v3[data-azalt="1"]) .v3-pola[data-yok] {
+  position: relative;
+  top: auto;
+  left: auto;
+  display: block;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  transform: none;
+}
+:where(.v3[data-azalt="1"]) .v3-pola-sarkac {
+  position: relative;
+  left: auto;
+  width: auto;
+  animation: none;
+}
+
+@media (min-aspect-ratio: 4/3) {
+  :where(.v3[data-azalt="1"]) .v3-azalt img {
     aspect-ratio: 16 / 9;
   }
-  .v3-azalt-etiketler {
+  :where(.v3[data-azalt="1"]) .v3-azalt-etiketler {
     display: none;
+  }
+}
+
+/*
+ * ============================== prefers-reduced-motion (W-2 §14.7) ==============================
+ * Kullanıcı (4 Kasım): kamera hareketleri (video geçişleri, yakınlaşma/uzaklaşma) her durumda oynar; geçişler zaten
+ * kullanıcı jestine bağlı. Yalnız DOM süsleri anında: bant/etiket/spot opaklık geçişleri, 81 halka, boğum etiketleri,
+ * polaroid girişi ve sarkacı, d1/d12 yayları ve varış halkası, d2 emanet ışıkları. Süre 1 ms + tek tekrar: `both`
+ * dolgulu animasyon son hâlinde kalır. Video katmanları, yedek/köprü sönmesi, lombar kâğıdı ve kiosk perdesi (oynatıcının
+ * satır içi geçişleri) hariç. Eski akış düzeni yalnız `?azalt=1`.
+ * Bekle göstergesi (W-4) 300 ms gecikmesini korur; halkanın dönüşü (çocuk) durur.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .v3:not([data-azalt="1"]) :not(.v3-video, .v3-yedek, .v3-perde, .v3-kagit, .v3-poster, .v3-bekle),
+  .v3:not([data-azalt="1"]) :not(.v3-video, .v3-yedek, .v3-perde, .v3-kagit, .v3-poster, .v3-bekle)::before,
+  .v3:not([data-azalt="1"]) :not(.v3-video, .v3-yedek, .v3-perde, .v3-kagit, .v3-poster, .v3-bekle)::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
   }
 }

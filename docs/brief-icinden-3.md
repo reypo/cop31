@@ -2287,3 +2287,177 @@ d9/d11 bant paragrafı görsel gizli (ekran okuyucuda var); reduced-motion poste
 - **Yeni broşür (G3):** gelince `/brosur` + bankodaki kapak dokusu + t78 kuyruğu ve t89 yeniden render (~8 dk GPU).
 - **Müşteri onayları:** `docs/onay-listesi.md` §14.1-G (fidan konsepti ve kartlar, d6 duvar metni ve "100.000+ genç",
   "Dijital broşür", ilkbahar görüntüsü 17.04.2025, atıf "Stant ve fidan görünümü temsilîdir.", "81 nokta" cümlesi, K1).
+
+### 14.6 G4-dağ: dağlara orman (kullanıcı 4 Kasım ~17.00; tasarım iki tur + jüri + son render + K-son-2 + V-2, 4 Kasım 2026 ~16.45–19.55)
+
+Kullanıcı: "Antalya/Expo'da Antalya çöl gibi görünmüş; dağlar ağaçlandırılmalı ya da gösterilmemeli." **Karar (orkestratör):**
+dağlar ormanla kaplanır, gizlenmez; kadraj, kamera, güneş ve fiske geçişleri (yakınlaşma/uzaklaşma) değişmez; d2 (l2, t12,
+p2) yeniden render edilmez → yeni katman `mevsim_k` ile aynı irtifa anahtarına bağlı, l2 irtifasında tam 0 (t23[0] ≡ l2).
+Yeni varlık yok: katman WorldDEM-30 yüksekliği ve mevcut S2 ilkbahar dokusundan prosedürel; render'da yazı/insan/logo yok.
+
+**Ne yapıldı**
+- `scripts/blender/s1/sahne.py` (ayrıntı `scripts/blender/s1/BENIOKU.md` G4-dağ): `orman_alanlari()` köşe öznitelikleri
+  (`dag_h`; `dag_s` = eğim × bakı × (1 − kaya) × (1 − 0,4 kızıl), kaya S2 25 m `ss(luma, 0,40, 0,60)` → σ 400 m; `dag_fl` σ 1 km);
+  150–330 m giriş, ağaç sınırı 1.600–1.900 m (±200 m), kararlı örtü `ss(f, 0,05, 0,80)` × `mevsim_k` × `orman_k`. Pus inceltme
+  `--dag_pus 0,6` (yalnız kamera ışını; körfez yansıması eski pusu görür). Sıyırma bakışta (l3/t34a) serin gri-yeşil
+  `ORMAN_RENK`, taç dolgusu 0,85, normal düzleme 0,9; yukarıdan (t23) koyu çam yeşili `ORMAN_RENK_UST`, dolgu yok.
+  Varsayılan `--orman_k 1 --dag_pus 0,6`; `--orman_k 0` = G görünümü.
+- Tasarım tur 1 (aday A–F) → jüri **RET** (~17.25): yeşil dikey kırpımın dışında kaldı (dikey 60–200° 0,093; Beydağları 0),
+  sert beyaz "çıkartma" lekeleri (leke 0,065, |∇L*| > 5 0,212). Tur 2 (G1–G6, 17.19–17.47): renge bağlı maske köşe
+  özniteliğine, pus sürücüsü alçak geçirilmiş örtü, sıyırma bakış anahtarı; önizleme 8 + 1 kare.
+- Son render (17.51–18.34): t23 72, l3 150, t34a 36 kare, Cycles OptiX 1920² `calis.py --kilit`; `parlama.py --bas 33`,
+  `t34-birlestir.py` (60/60 bağ), `kontak.py hepsi` + `olc_c` 11/11. Jüri kapılarından 3 (t23 9–17) ve 4 (leke/grad5,
+  yakın/kent ΔE00) harfiyen tutmadı → render ajanı kural 6 ile geri aldı: **`render-son` = G, orman `render-son-dag/`**.
+- K-son-2 (18.50–19.30): orman kareleri `--esle t23=…/render-son-dag/t23,l3=…,t34=…` ile kodlandı (t23, r32, l3, p3, t34, r43;
+  27 dosya, 27 eski silindi), iki H.264 düzeltmesi `kodla.mjs`'e yazıldı (`CRF_TABLO.r32` H.264 27 → 27,05; `BOLGE["r43.h264"]`
+  59-59:-2), manifest 147 dosya (liste = manifest = public). Ayrıntı `docs/klipler-sema.md` §0.2 "G4-dağ yeniden kodlaması".
+- V-2 (19.15–19.55): aşağıdaki kapılar; **V düzeltmesi** `ALT.expo` "… körfez ve Beydağları." → "… körfez ve **yamaçları
+  ormanlı** Beydağları." (`Icinden3.tsx`, yorumla işaretli).
+
+**Sayılar (G → G4-dağ)**
+
+| Ölçüm (l3[0], dağ maskesi h > 150 m; render ajanı, `.qa/icinden3/gb/dag-render/olcum.json`) | G | G4-dağ |
+|---|---|---|
+| Yeşil 60–200° / S > 0,08: tam kare · dikey kırpım (x 210–750 @960) · Beydağları (x < 400) · kuzey (x ≥ 750) | 0,003 · 0 · 0 · 0,012 | **0,355 · 0,341 · 0,218 · 0,535** (1920²: 0,357 · 0,341 · 0,218 · 0,539) |
+| Beydağları G/R · ton medyanı · S ort (tam) | 0,930 · 29° · 0,109 | 0,989 · 54° · 0,119 |
+| Leke (L* − medyan15 > 8) · \|∇L*\| > 5 (master 960 LANCZOS) | 0,0437 · 0,1376 | 0,0646 · 0,1946 |
+| ΔE00 G ↔ G4-dağ: gök · yakın alt 2/3 · kent · deniz | — | 0,083 · 0,151 · 0,213 · 0,218 |
+| t23[0] G4-dağ ↔ G (8 bit tam kare, olc.de00; ≤ 0,05) | — | **0,0354** (özdeş %93,8, maks 1/255) |
+| t23 pozlama: kare 13–25 luma farkı · inişten önce en düşük luma (≥ %20) · 77–1.580 km \|Δ\| (≤ 3) | — · %22,49 · 0,96 | −0,5…−2,3 puan · %20,22 · 1,44 |
+| Master dikişler: t23[71]↔l3[0] · l3[0]↔t34a[0] (≤ 0,3) · l3 döngü oranı · t34[35]↔[36] | | 0,029 · 0,029 · 1,004 · 0 |
+| Kodlanmış set farkı dikey AV1 · HEVC · H.264 · yatay AV1 · H.264 | | +26,9 · +33,2 · +10,5 · +34,5 · +18,9 kB |
+| VMAF (K-son-2, 25 dosya) | | eşik altı 0; l3 ≥ 94,78; en düşük r32 yatay H.264 90,87 (G-B 90,88) |
+
+**V-2 kapıları** (prod `COP_DIST=.next-v-2`, `next start -p 3102`, headless Chrome; gerçek cihaz değil. Araç W-3'ün
+`scratchpad/w-3/icinden3.mjs`'inin kopyası `scratchpad/g4-dag/v-2/icinden3.mjs`; çıktılar `.qa/icinden3/gb/v-2/`; bütün
+koşularda konsol hatası 0.)
+
+| Kapı | Eşik | Ölçülen | |
+|---|---|---|---|
+| tsc (`tsconfig.next-v-2.json`) · eslint `src scripts` · build | 0 · 0 · ✓ | 0 · **0 hata, 0 uyarı** · ✓ (ALT düzeltmesinden sonra yeniden: ✓) | ✓ |
+| Rota JS gz · HTML gz · RSC gz | ≤ 50 · ≤ 56 kB | 24,5 (8,4 + 16,1; W-2/W-3 oynatıcı) · **55,4** (düzeltmeden önce 55,3) · 34,5 | ✓ |
+| **Oturum 4G mobil** (önbelleksiz, 0→13) HEVC / AV1 | ≤ 12,5 MB | **11,790 / 12,240** (K-son-2 hesabı 11,789 / 12,240; W-3 entegre 11,757 / 12,213; G-B 12,098 / 12,454) | ✓ |
+| İlk yükleme (temel + t01 + p1 + l1 + t12) HEVC / AV1 | ≤ 2,5 | 2,165 / 1,987 (d1 hazır 1,523 / 1,430 MB; 3,3 / 3,2 s) | ✓ |
+| Adım penceresi maks (geçiş + 4 s) HEVC / AV1 | ≤ 2,5 | 1,736 / 1,885 (2→3) | ✓ |
+| Hesap (K-son-2 `dogrula-render-son-G1.json`): d2 kritik · d3 pencere AV1 / H.264 | ≤ 2,1 · ≤ 2,6 / ≤ 2,5 | 2,040 · **2,536 / 2,493** | ✓ |
+| Geri klipler yalnız boşta | 8/8 | 8/8 (r10…r97) | ✓ |
+| Geçişler | video | 12/12 ileri geçiş video (`hazır`), yedek 0; 11→12 uzaklaşma zinciri | ✓ |
+| Perf 4× CPU (0→12→0, 24 adım) mobil dokunma / masaüstü fare: fps · > 50 ms · düşen | ≥ 59,5 · ≤ 3 · bilgi | 59,9 / 59,9 · 0 / 0 · 3 / 4 (/1.184); jest → ilk kare p50 32,6 / 32,4 ms (0→1 lombar 650 ms) | ✓ |
+| Tuzak (taban + fidan + zincir) | geçer | [1,0,1,0,1,0] · kapanış 13→12 · tekerlek 1/2 · fidan ileri [8…11], geri [10…7], hızlı [10,9,…] · zincir varış 6,61 s, [11,12,11] | ✓ |
+| Stale (lag 0/1/2): taban (1→5→3, d3 dahil) · fidan · zincir | 3/3 | 3/3 · 3/3 · 3/3 (hepsi hedef px'te) | ✓ |
+| Zincir d11→d12 (4×; m / D / yt) | | 6,47 s, köprü 363–365 ms, devir 33/33/17 ms, düşen 0/174, fps 60, ağ 0 bayt | ✓ |
+| Scrim d2–d4 × m / D / yt (`scrim-olc.mjs`, l3 = `render-son-dag/l3`) | ≥ 4,5:1 | 9/9; d3 en sıkı m 0,546 gereken ↔ CSS 0,66 (G-B ile aynı: bant altı yakın alan, dağ bandın üstünde) | ✓ |
+
+**Kodlanmış dikişler** (V-2 `dikis-v2.py` → `.qa/icinden3/gb/v-2/dikis-v2.json`; ΔE00 ort.; dikey AV1 / HEVC / H.264 · yatay AV1 / H.264)
+
+| Dikiş | Eşik | Ölçülen |
+|---|---|---|
+| l2[0] ↔ t23[0] · l2 son ↔ t23[0] | ≤ 3 | 1,89 / 2,00 / 2,01 · 1,92 / 1,94 — 1,95 / 2,06 / 2,08 · 1,97 / 1,98 |
+| t23 son ↔ l3[0] | ≤ 3 | 2,54 / **2,97** / 2,73 · 2,76 / 2,94 |
+| **l3[0] ↔ t34[0] · l3 son ↔ t34[0] (d3 kalkışı)** | ≤ 3,27 | 2,69 / 3,09 / 3,07 · 2,89 / 3,25 — 2,69 / 3,09 / 3,08 · 2,89 / **3,264** |
+| **r43 son ↔ l3[0] · ↔ p3** | ≤ 4,2 | 3,10 / 3,77 / 3,62 · 3,39 / 3,85 — 3,44 / **4,115** / 3,86 · 3,62 / 4,02 |
+| r32 son ↔ l2[0] · ↔ p2 (d3→d2) | ≤ 3 | ≤ 2,36 · ≤ 2,57 |
+| r43 son ↔ r32[0] · r32 son ↔ r21[0] (uzaklaşma zinciri devri; bilgi) | — | 2,78 / 3,66 / 3,30 · 3,02 / 3,44 (G-B dosyaları `git show HEAD:`: 2,75 / 3,60 / 3,26 · 2,98 / 3,40) · ≤ 2,24 |
+| t34 son ↔ l4[0] | ≤ 3 | ≤ 1,43 |
+| t23 son ↔ p3 (bilinen, p3 q68) | — | 3,21–3,52 (G-B 3,18–3,49) |
+| l3 döngü kapanışı (son ↔ ilk) | ≈ ardışık | AV1 0 · HEVC 0,03 · H.264 0,19 / 0,21 |
+| Yayındaki l3[0] ↔ master (aynı kırpım/ölçek): orman · G | | dikey AV1 2,31 · 2,58; yatay AV1 2,45 · 2,91 (beşinde de ormana yakın → yayında orman) |
+
+K-son-2'nin `kodlama-dogrula` sayılarıyla birebir (aynı dosyalar). **Görsel** (`once-sonra-w1{,D,yt}-d03.jpg`, `w1*-d0{2,3,4}.png`,
+`t23-kontak-{dikey,yatay}-av1.jpg`): d3'te Beydağları bej-kahveden gri-yeşil ormana döndü, rölyef ve zirveler okunuyor, kar
+yok; yakın alan yeşil (G4-yeşil aynı), seralar/Expo/D400/kent/körfez değişmedi; d3 dinlenmesinde bulut yok; t23 inişinde
+Toroslar kare 13–20 boyunca kademeli yeşilleniyor, sıçrama yok. Etiketler (Beydağları, Antalya Körfezi, Antalya, Antalya Expo
+Center, D400) mobil ve masaüstünde yerinde; 844×390'da Beydağları ve D400 kırpım dışında (G-B'de de aynı, regresyon değil).
+d2 ve d4 değişmedi.
+
+**Kabul edilen sapmalar** (orkestratör ormanı K-son-2 ile yayına aldı; burada kayıt; kullanıcı/müşteri onayı ayrı):
+1. Jüri kapı 3: t23 9–17 ardışık ΔE00 fazlası (G4-dağ − G) 14→15 1,07, 15→16 1,40, 16→17 1,46 (> 1,0). Ölçülen neden karışım
+   hızı değil orman içeriği (16→17'de Δ`mevsim_k` 0,011; karışım katkısı tahmini ≤ 0,28/kare; 30 px'te de ~1,07); görselde
+   kademeli yeşillenme.
+2. Jüri kapı 4 leke / |∇L*| > 5: master 0,0646 / 0,1946 (> 0,060 / 0,175). Eşikler 960² önizlemede kuruldu; master'da G'nin
+   kendisi de 0,036/0,114 → 0,044/0,138; oran (1,48/1,41) önizlemeyle aynı; master'a ölçekli eşik 0,072 / 0,212.
+3. Jüri kapı 4 yakın / kent ΔE00 0,151 / 0,213 (> 0,1 / 0,2): örnekleme gürültüsü (medyan 0, ΔL* −0,002, alt 2/3'te %82,8 özdeş).
+4. Tasarım hedefi leke ≤ 0,045 / grad5 ≤ 0,15 (önizleme) tutmadı: 0,0545 / 0,166 (tur 1 0,065 / 0,212); kalan lekeler güneşli
+   çıplak sırt yüzleri (ağaç sınırı üstü, kaya).
+5. Sıyırma bakışta taç dolgusu (0,85) ve normal düzleme (0,9): l3'te orman içinde rölyef biraz yumuşak (siluet, gölge, pus
+   gradyanı duruyor). `--dag_pus 0,6` brief'in "pus aynen"inden gerekçeli sapma (jüri onayı tur 1).
+6. t23 kare 13–25 G'den 0,5–2,3 luma puanı koyu (inişten önce en düşük %20,22, sınır %20).
+7. Kalkış payı 0,006 (yatay H.264 l3 son ↔ t34[0] 3,264 / 3,27; G-B 3,22). t34 H.264 BOLGE −2'ye çekilirse d3 H.264 penceresi
+   yeniden aşılır (G-B: 2,509).
+
+**GPU ve süre:** tasarım tur 1 (A–F önizlemeleri, süre ayrı raporlanmadı) + tur 2 ~2,0 dk (119 s; VRAM tepe 5.402 MiB) + son
+render **41,5 dk** net (t23 11,5 + l3 23,9 + t34a 6,1; G4'te 36,0 → ormanla ~%15 yavaş; VRAM tepe **6.047 MiB**, RAM özel
+8,68 GB) = **≈ 43,5 dk + tur 1**. K-son-2 GPU'suz (kodlama 76 + 9 s, doğrulama 2 × ~10 dk). D: 8,5 GB boş.
+
+**Açık**
+- **`render-son` hâlâ G** (md5 t23/k_0000 9447…; orman `render-son-dag/` 9e44…). Kalıcı yapmak için render ajanının taşıma
+  bloğu (GPU yok, ~1 dk; ardından `kodla.mjs --kaynak render-son --klip l3.av1` yoklaması l3.ec31566a / l3.70aa86da vermeli).
+  Taşınmadan önce her K/V koşusu `--esle t23=…,l3=…,t34=…` (render-son-dag) vermeli; yoksa G'yi kodlar/ölçer.
+- Commit: `scripts/blender/s1/sahne.py` (varsayılan `--orman_k 1`) ve BENIOKU, yayındaki orman kodlamasıyla aynı commit'te.
+- `docs/onay-listesi.md` §14.1-G "Antalya görünümü" satırı güncellendi; kapanış atfına "dağ ormanı temsilîdir" eki **öneri**
+  olarak soruda (eklenmedi).
+- Gerçek iPhone 16 testi (HEVC yolu: d3 kalkışı 3,09 ve r43 son ↔ p3 4,115 bu yoldaki en sıkı dikişler).
+
+### 14.7 Yedek kipler, Dünya'ya uzaklaşma ve masasız fidan (W-2 + W-3, 4 Kasım 2026 akşam/gece; kullanıcı istekleri)
+
+Kullanıcı (~17.10): "telefonda hiç video oynamıyor, yalnız resimler değişiyor" (iPhone 16, büyük olasılıkla Düşük Güç
+Modu → oynatıcının kalıcı `engel` kipi) + "güç tasarrufu kipi varsa ŞİMDİLİK TAMAMEN KAPAT" + "sondaki Dünya'ya uzaklaşma
+geri gelsin". Sonra: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana atlayalım". W-2 A ve B'yi kodladı,
+yarıda durduruldu; W-3 onun çalışma ağacını devraldı, C'yi ekledi ve doğruladı.
+
+**A — Yedek kipler.** (1) Poster kipi yalnız `?poster=1`; Save-Data / 2G / 3G / `prefers-reduced-data` artık video ister.
+(2) `prefers-reduced-motion`: adımlama, video geçişleri ve döngüler sürer; yalnız DOM süsleri (bant/etiket geçişleri,
+halkalar, polaroid, sarkaç, yaylar) anında (icinden3.css sonu). Eski akış düzeni yalnız `?azalt=1` (CSS
+`:where(.v3[data-azalt="1"])`, özgüllük eski `@media` bloğuyla aynı). (3) Otomatik oynatma engeli kalıcı kip değil: video
+katmanı gizlenmez; her jestte (`touchend`/`pointerup`/`keydown`/`click`/`mousedown`, tekerlek ≥ 250 ms arayla) açılmamış
+öğelere SENKRON `play()`→`pause()` (`kilitAc`), bekleyen döngü aynı olayda oynar, hazır geçişin `play()`'i jestin içinde;
+ret yalnız o geçişe yedek. HUD 1. satır: `kodek hevc · dikey · ENGEL n[ açıldı] · son ret: <yer>`.
+
+**B — Dünya'ya uzaklaşma.** Son durak ikinci `dunya` ("Gezegenimiz Ortak Evimizdir" el yazısı + "Our planet is our common
+home", p1/l1, d1 yayları tersten, varış halkası yok, okuma "ortak evimiz"). İleri geçiş **zincir** `uzaklasma`:
+p4'e 350 ms köprü sönmesi + r43 → r32 → r21 (186 kare), parça devirleri kare sınırında (ön sarma); yeni dosya yok
+(d2–d4'ün geri klipleri). Geri adım 350 ms poster sönmesi. Manifest `ileri.parcalar` + `kopruDurak` (klipler-sema §0.2).
+
+**C — Masa kalktı (N = 13).** d0 lombar · d1 dunya · d2 emanet · d3 expo · d4 anatomi · d5 sutunlar · d6 duvar ·
+d7 duvar (ileri **t79** / geri **r97**) · d8 fidan-kok (p9) · d9 fidan-govde · d10 fidan-dal · d11 fidan-yaprak (lc; ileri
+zincir) · d12 dunya · kapanış 13. `masa` rolü, bölüm, ALT metni, CSS seçicileri, t78/r87/p8 manifestten çıktı; "Dijital
+broşür →" yalnız d0 şeridinde ve kapanışta; `/icinden` meta açıklaması "…bizi anlatan bir fidana ve yeniden Dünya'ya"
+(ONAY). **t79/r97 paralel üretimde:** kodlama listesinde yokken `manifest-birlestir.mjs` `GECICI` tablosu d7.ileri'yi
+t89 yapar (geri null → d8→d7 p7'ye poster sönmesi; t89'un ilk karesi masa: d7'den bir kesme) ve uyarı yazar. Kiosk:
+anatomi spot aralığı yeniden 3,5 s (duvar 2,5, sutunlar 2 × 4 s kaldı).
+
+**Ölçümler (W-3, `.next-w-3`, port 3103, geçici t89 ile; araç `scratchpad/w-3/icinden3.mjs`, QA `.qa/icinden3/gb/w-3/`):**
+tsc 0 · eslint 0 · build ✓. tuzak ✓ (zincirde 5 jest yok sayıldı, varış 6,61 s; varışta ters/ileri/ters [11,12,11]; fidan
+[8,9,10,11] / [10,9,8,7]). stale ✓ (lag 0/1/2: taban, d7→11→7 fidan, 10→12→10 zincir). kioskTur **120,7 s** (d12 5,1 s;
+anatomi değişmeden önce 116,8). perf 4×: mobil 60 fps / > 50 ms 0 / maks 41,8 ms, masaüstü 59,9 / 0; 1×: düşen 1/1128 ve
+0/1128; poster sönmeleri 401–419 ms. Boyut 4G mobil oturum **HEVC 11,49 / AV1 11,93 MB** (G-B 12,10 / 12,45; t78/r87/p8
+çıktı); zincir adımı **+0 bayt** (r43/r32/r21 d2–d4'te inmiş). engel ✓ (açılışta `ENGEL 1 · son ret: yoklama`, ilk
+dokunuşta 3 öğe açıldı, 5 geçiş + zincir video, devir 33/33 ms, yedek 0). `?poster=1` video 0; `?azalt=1` akış, video 0,
+taşma 0; Save-Data/2g/3g → video. reduced-motion: 5 geçiş video, süsler 0 s. lombar amblem ↔ delik farkı < 0,02 px.
+Yatay 1280×800 ve 844×390: 13 durakta taşma 0; d12 slogan/En ekranda.
+
+**Entegrasyon ölçümü (t79/r97 içeride, 4 Kasım 2026 gece; `.qa/icinden3/gb/entegre/`):** manifest d7 `t79/r97`,
+d8 gelen t79, GEÇİCİ uyarısı yok (kalan uyarılar: t01 dunyaC, d6 "motto" çapası dikeyde dışarıda — ikisi de önceden
+vardı). t78/r87/p8/t89 listeden düşürüldü (`kodla.mjs --dus`), 17 dosya / 4,541 MB silindi (`--artik`).
+
+| Ölçüm | Eşik | Sonuç |
+|---|---|---|
+| Oturum 4G mobil (HEVC / AV1) | ≤ 12,5 MB | 11,757 / 12,213 MB (G-B 12,099 / 12,455) ✓ |
+| Kiosk turu | 115–125 s | 120,6 s ✓ |
+| perf 4× mobil | ≥ 59,5 fps, > 50 ms ≤ 3 | 59,8 fps, 2 (en uzun 63 ms, düşen 12/1184; G4 render + doğrulama aynı anda koşuyordu) ✓ |
+| tuzak · engel | geçer | geçti · geçti (ENGEL 1 → ilk pointerup'ta açıldı, yedek 0; zincir devirleri 34/17 ms) ✓ |
+| d2 kritik · d3 pencere (AV1) | ≤ 2,1 · ≤ 2,5 MB | 2,026 ✓ · 2,523 ✗ (t34/r32 kaynaklı, G4-dağ'dan önceki durum; t79 etkilemiyor) |
+| Dikiş t67 son↔t79[0] · t79 son↔p9 (kodlanmış) | duvar dikişleri düzeyi | ΔE00 0,87–1,25 · 1,49–1,65 (t67↔p7: 1,39–1,49); master'da 0,009 / 0,0014 ✓ |
+| VMAF t79 / r97 (5 dosya) | ort ≥ 90 | 99,0–99,6 / 98,0–99,5 (en kötü kare r97 h264 86,7) ✓ |
+| d7→d8 görüntü (300/900/1500/2000 ms + dinlenme) | broşür yok | duvardan dönüş → totem/bitki → kök kasası; broşür görünmüyor ✓ |
+
+**Açık:** G4-dağ t34 gelince manifest yeniden üretilmeli (bu turda t34 alanları `render-son-g1/t34.json`'dan okundu). → **Yapıldı** (K-son-2, §14.6: orman d3 yayında, manifest 147 dosya; d3 AV1 penceresi 2,536 ≤ 2,6).
+Gerçek iPhone 16: Düşük Güç Modu açık/kapalı (klip-oynatma §6.1 madde 4c, 5).
+
+**D — Bekle kipi (W-4, 4 Kasım 2026 gece; kullanıcı ~20.00: "telefon ya da internet kötüyse animasyonları yok ediyor,
+böyle bir şey olmasın").** Geçiş videosu hiçbir koşulda poster sönmesiyle değiştirilmez: klip inmediyse / `play()`
+reddedildiyse mevcut kare durur, sol üstte (300 ms'den sonra) 18 px krem halka, klip en önce iner, hazır olunca aynı
+geçiş videoyla oynar; engelde sıradaki jest geçişi jestin içinde başlatır; beklerken jest yok sayılır, metin ertelenir.
+Tek poster yedeği `?poster=1`; fidan içi geri ve köprü sönmeleri tasarım. Ayrıntı ve ölçüm: klip-oynatma §1.5, §3.5.
+Ölçüm (`.next-w4`): 3G `bekle` 7/7 video · yedek 0; 3G stale 9/9 ve tuzak ✓; 4G kioskTur 120,7 s · bekleme 0; perf 4×
+59,9 fps · > 50 ms 0; engel ✓, engel `--sert` (ret → bekle → 2. dokunuşta video) ✓; 4G oturum 11,79 / 12,24 MB.

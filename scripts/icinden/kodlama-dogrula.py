@@ -76,7 +76,7 @@ VIDEO = {"dikey": (720, 1280), "yatay": (1280, 720)}
 
 # ---------- durak zinciri (§12.1; G turu §14.4.2) ----------
 # t89: r98 K-son'da kaldırıldı (§14.4.1 merdiven 4. adım; kodla.mjs GERI ile aynı) → d9→d8 poster çapraz sönmesi.
-GERI = {"t01": "r10", "t12": "r21", "t23": "r32", "t34": "r43", "t45": "r54", "t56": "r65", "t67": "r76", "t78": "r87", "t89": None, "t9a": None, "tab": None, "tbc": None}
+GERI = {"t01": "r10", "t12": "r21", "t23": "r32", "t34": "r43", "t45": "r54", "t56": "r65", "t67": "r76", "t79": "r97", "t9a": None, "tab": None, "tbc": None}
 GERI = {k: (None if v in GERI_YOK else v) for k, v in GERI.items()}
 # (gelen geçiş, varış döngüsü, varış posteri, çıkan geçiş)
 HEDEF = [
@@ -86,20 +86,19 @@ HEDEF = [
     ("t34", "l4", "p4", "t45"),
     ("t45", "l5", "p5", "t56"),
     ("t56", None, "p6", "t67"),  # d6 İklim Eylemleri: döngü yok, son kare durur (p6 = t56 son karesi)
-    ("t67", None, "p7", "t78"),  # d7 Sen de söz ver: döngü yok (p7 = t67 son karesi)
-    ("t78", None, "p8", "t89"),  # d8 masa: p8 = t78 son karesi (G-B; eski plaka kalktı)
-    ("t89", None, "p9", "t9a"),  # d9 fidan-kök: p9 = t89 son
+    ("t67", None, "p7", "t79"),  # d7 Sen de söz ver: döngü yok (p7 = t67 son karesi)
+    ("t79", None, "p9", "t9a"),  # d8 fidan-kök: p9 = t79 son (≡ t89[59]; §14.7 masa durağı kalktı, t78/t89 emekli)
     ("t9a", None, "pa", "tab"),  # d10 fidan-gövde: pa = t9a son
     ("tab", None, "pb", "tbc"),  # d11 fidan-dal: pb = tab son
     ("tbc", "lc", "pc", None),  # d12 fidan-yaprak: lc döngüsü, pc = lc[0]
 ]
-ROLLER = ["dunya", "emanet", "expo", "anatomi", "sutunlar", "duvar", "duvar", "masa", "fidan-kok", "fidan-govde", "fidan-dal", "fidan-yaprak"]
+ROLLER = ["dunya", "emanet", "expo", "anatomi", "sutunlar", "duvar", "duvar", "fidan-kok", "fidan-govde", "fidan-dal", "fidan-yaprak"]
 DURAKLAR = [
     {"id": "d0", "rol": "lombar", "gelen": None, "dongu": None, "poster": None},
     *[{"id": f"d{i + 1}", "rol": r, "gelen": h[0], "dongu": h[1], "poster": h[2]} for i, (h, r) in enumerate(zip(HEDEF, ROLLER))],
 ]
-DUVAR = {"t56", "t67", "t78", "r65", "r76", "r87"}
-SON_KARE = {"p6": "t56", "p7": "t67", "p8": "t78", "p9": "t89", "pa": "t9a", "pb": "tab"}
+DUVAR = {"t56", "t67", "t79", "r65", "r76", "r97"}
+SON_KARE = {"p6": "t56", "p7": "t67", "p9": "t79", "pa": "t9a", "pb": "tab"}
 
 
 def _sec_oku(s):

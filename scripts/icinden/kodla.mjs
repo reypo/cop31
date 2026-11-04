@@ -85,7 +85,8 @@ try {
  * sönmesi: r98 (t89 tersi) K-son'da bütçe merdiveninin 4. adımıyla kaldırıldı (§14.4.1; son render oturumu lc + fidan
  * CRF +2 sonrası AV1 12,615 > 12,25). Geri almak için `t89: "r98"` + kodla `--klip r98`.
  */
-const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87", t89: null, t9a: null, tab: null, tbc: null };
+// t79 (G-B sonrası; kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana atlayalım"): d7 → d9, geri r97.
+const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87", t79: "r97", t89: null, t9a: null, tab: null, tbc: null };
 const DONGU = ["l1", "l2", "l3", "l4", "l5", "lc"];
 /** Posterler: tip + kare kaynağı. pN.json `tip` / `kaynak_klip` / `kaynak_kare` alanı ezer (posterTablosu). */
 const POSTER_TABAN = {
@@ -103,7 +104,7 @@ const POSTER_TABAN = {
   pc: { tip: "dongu", kaynak: "lc" }, // lc[0] (pc.json tip "dongu-ilk")
 };
 /** Kaynak (kare dizisi) sırası: liste sırası ve kodlama sırası bu. */
-const KAYNAK_SIRA = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "t89", "t9a", "tab", "tbc", "lc"];
+const KAYNAK_SIRA = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "t79", "t89", "t9a", "tab", "tbc", "lc"];
 const KODEK_SIRA = ["h264", "hevc", "av1", "webp"];
 const TUR_SIRA = ["poster", "ileri", "dongu", "geri"];
 /** pN.json `tip` eşanlamlıları (S3: pc "dongu-ilk" = döngünün 0. karesi). */
@@ -203,6 +204,7 @@ const KIRPIM_Y_TANIM = {
   t56: { bas: 420, son: 293, s0: 0.5133, s1: 1, k0: 17, k1: 53 },
   t67: { bas: 293, son: 233, k0: 0, k1: 47 },
   t78: { bas: 233, son: 420, s0: 0, s1: 0.6773, k0: 0, k1: 24 },
+  t79: { bas: 233, son: 420, s0: 0, s1: 0.6773, k0: 0, k1: 24 }, // d7 → d9 (p7 233 → p9 420): t78 ile aynı ilerleme rampası (hızlı bölüm)
   t89: 420,
   t9a: { bas: 420, son: 222, s0: 0.04, s1: 0.9, k0: 4, k1: 34 },
   tab: { bas: 222, son: 194, s0: 0.04, s1: 0.9, k0: 4, k1: 34 },
@@ -273,6 +275,7 @@ const CRF_TABLO = {
   // K-son (§14.4.1 bütçe merdiveni, son render 1920² TAA 64; set+0,664 = AV1 12,733 / HEVC 12,513 MB > 12,0):
   // (1) lc AV1 30 → 32, HEVC 25 → 27; (2) fidan geçişleri t89/t9a/tab/tbc +2 (H.264 25, HEVC 27, AV1 34).
   t89: [25, 27, 34],
+  t79: [23, 27, 34], // d7 → d9 (G-B sonrası): AV1/HEVC t89 ailesi, H.264 t78 ailesi
   t9a: [25, 27, 34],
   tab: [25, 27, 34],
   tbc: [23, 27, 34], // H.264 25'te yatay VMAF 90,91 < 93 (§14.4.1 koşulu; 23'te 92,56) → 23 (H.264 oturum kapısında değil)
@@ -282,10 +285,13 @@ const CRF_TABLO = {
   l3: [23, 25, 34], // yalnız yeniden kodlama (32'de VMAF 97,1)
   geri: [26, 28, 34], // r10, r43, r54
   r21: [27, 28, 34], // F turu (denetim M-1): yatay H.264 d2 penceresi 2,504 → ≤ 2,5; VMAF 92,30 / 92,17
-  r32: [27, 28, 35], // F-B (K-F): bulutsuz r32 H.264 26,5'te d3 penceresi 2,535 > 2,5 → 27 (VMAF 92,52); AV1 34'te d3 2,602 > 2,6 → 35 (96,24 / 95,47). E (M-2) 26,5 idi
+  // r32 H.264 27,05 (G4-dağ, K-son-2): orman katmanıyla dikey d3 H.264 penceresi 2,503 > 2,5 (+3,4 kB) → 27,05'te 2,493
+  // (r32 −10,1 kB dikey / −6,5 yatay; VMAF 92,82 / 90,87, 27'de 92,84 / 90,95; dikişler ±0,01).
+  r32: [27.05, 28, 35], // F-B (K-F): bulutsuz r32 H.264 26,5'te d3 penceresi 2,535 > 2,5 → 27 (VMAF 92,52); AV1 34'te d3 2,602 > 2,6 → 35 (96,24 / 95,47). E (M-2) 26,5 idi
   r65: [26, 28, 36], // duvar geri: AV1 +2
   r76: [26, 28, 36],
   r87: [26, 28, 36],
+  r97: [26, 28, 36], // t79 tersi (d9 → d7): r87 ailesi
   r98: [26, 28, 36], // t89 tersi (d9→d8). K-son'da KALDIRILDI (§14.4.1 merdiven 4. adım; GERI.t89 null). Geri gelirse bu CRF
 };
 const KODEK_I = { h264: 0, hevc: 1, av1: 2 };
@@ -330,7 +336,10 @@ const POSTER_HEDEF_DIKEY = 60_000;
 // `--bolge t23.h264=yok` kaldırır.
 // t34.h264 0-0:-1 (K-son, G4 ilkbahar l3/t34): d3 kalkış dikişi yatay H.264 3,36 > 3,27 (§13.7 kapısı) → 3,21; dikey 3,22 →
 // 3,05. Bedel dikey +13,4 kB (d3 H.264 penceresi 2,484 → 2,497 ≤ 2,5); −2'de 3,04 ama pencere 2,509 ✗.
-const BOLGE = { "t23.h264": { k0: 62, k1: 71, d: -4 }, "t34.h264": { k0: 0, k1: 0, d: -1 } }; // F-B: t23 72 kare → son 10 kare 62–71 (E: 84 kare, 74–83)
+// r43.h264 59-59:-2 (G4-dağ, K-son-2; çıktı kare numarası, `reverse`'ten sonra: r43'ün SON karesi ≡ t34[0]): orman katmanıyla
+// yatay r43 son ↔ p3 4,28 > 4,2 (son ↔ l3[0] 4,14) → 4,02 / 3,85; dikey 3,87 / 3,64 → 3,86 / 3,62. Bedel dikey +1,8 kB,
+// yatay +18,3 kB (d4 penceresi H.264 ≤ 1,84). Denenen: 59:-4 3,75 (+43,8 kB y), 55-59:-2 3,96, 50-59:-4 3,67 (+199 kB y).
+const BOLGE = { "t23.h264": { k0: 62, k1: 71, d: -4 }, "t34.h264": { k0: 0, k1: 0, d: -1 }, "r43.h264": { k0: 59, k1: 59, d: -2 } }; // F-B: t23 72 kare → son 10 kare 62–71 (E: 84 kare, 74–83)
 for (const s of arg("--bolge", "").split(",").filter(Boolean)) {
   const [k, v] = s.split("=");
   if (v === "yok" || v === "0") {

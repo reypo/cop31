@@ -16,24 +16,46 @@
  * oynatılana dek readyState 1): blob atanıp 250 ms'de hâlâ HAVE_FUTURE_DATA yoksa öğe görünmezken bir kez
  * oynatılıp durdurulur (ısıtma; sessiz satır içi oynatma Düşük Güç dışında izinli, reddi = engel). Kod çözme
  * hatasında (MEDIA_ERR_DECODE / SRC_NOT_SUPPORTED) AV1/HEVC'den H.264'e bir kez dönülür (`kodekYedekIste`).
- * Poster kipi (Veri Tasarrufu, 2G/3G; VideoSahne karar verir): video inmez, her geçiş poster çapraz sönmesi.
+ * Poster kipi (W-2 §14.7: YALNIZ `?poster=1`; Veri Tasarrufu / 2G / 3G artık video ister): video inmez, her geçiş poster
+ * çapraz sönmesi.
  *
  * Devirler kare sınırında (akıcılık turu): döngü → geçiş sönmesi geçişin ilk karesiyle başlar; geçiş → döngü devri
  * geçişin son karesi sunulunca olur ve döngü ölçülen başlama gecikmesi kadar önceden görünmezken başlatılır (ön sarma).
  * iOS ısıtmaları sırayla ve varış devri pencerelerinin dışında. Apple WebKit'te kodek sırası HEVC → AV1 → H.264.
  *
  * Havuz (en çok 3 <video>): k. durakta döngü_k + aynı yöndeki geçiş + ters geçiş (uçta komşu döngü).
- * Geri klibi olmayan geçiş (`Gecis.geri === null`; G turu §14.4.1 K4: fidan içi d10→d9, d11→d10, d12→d11): geri adım
+ * Geri klibi olmayan geçiş (`Gecis.geri === null`; G turu §14.4.1 K4: fidan içi d9→d8, d10→d9, d11→d10; W-3 geçici t89'la d8→d7): geri adım
  * hedef durağın posterinin 350 ms çapraz sönmesidir (`posterGeri`; video yok, yedek katmanı, kayıtta `sonme: "poster"`).
- * Yedekler: geçiş hazır değilse 300 ms bekle → hedef posterine çapraz sönme (süre = klip süresi);
- * `play()` reddi (NotAllowedError, iOS Düşük Güç) → aynı yedek + ilk touchend/click/keydown'da (yakalama
- * aşaması, adımdan önce) havuzun kilidi açılır; döngü reddedilirse poster dural kalır.
+ * Zincir geçiş (W-2 §14.7; `Gecis.parcalar`, d11 → d12 "uzaklasma"): kalkış görüntüsünden köprü posterine (`kopruDurak`, p4 ≡
+ * r43[0]) 350 ms çapraz sönme, sonra r43 → r32 → r21 art arda; her devir parçanın son karesi sunulunca (rVFC), sıradaki parça
+ * başlama gecikmesi kadar önceden görünmezken başlatılır (geçiş → döngü devriyle aynı ön sarma); son parçadan l1'e mevcut
+ * varış devri. Parçalar d2–d4'ün geri klipleri (aynı dosyalar, blob önbelleğinden; ağ +0). Geri adım poster sönmesi.
+ * Bekle kipi (W-4 §14.7; kullanıcı: "telefon ya da internet kötüyse animasyonları yok etmesin"): geçiş videosu HİÇBİR
+ * koşulda poster sönmesiyle değiştirilmez. Klip henüz inmediyse ya da `play()` reddedildiyse mevcut kare durur (`bekle`;
+ * kayıtta `bekle: neden`, VideoSahne kökte `data-bekle="1"` → 300 ms'den uzunsa köşede halka), beklenen klip kuyruğun en
+ * önüne geçer (süren başka indirme kesilir), hazır olunca aynı geçiş videoyla oynar. İndirme deneme sınırına takılırsa
+ * yeniden istenir; kod çözme hatasında beklerken H.264'e dönülür. 20 s'yi aşan bekleme HUD'da uyarı (yine bekler).
+ * Poster sönmesi yalnız `?poster=1` (ölçüm) ve tasarım gereği (geri klibi olmayan geri adım, zincir köprüsü).
+ * Otomatik oynatma engeli (W-2 §14.7; iOS Düşük Güç Modu, `play()` NotAllowedError): video katmanı gizlenmez, geçişler
+ * poster sönmesine düşmez. Her kullanıcı jestinde (touchend / pointerup / keydown / click / mousedown / wheel; yakalama aşaması,
+ * adımdan önce) henüz açılmamış öğelere SENKRON `play()` (→ sonra `pause()`) çağrılır (`kilitAc`; WebKit kısıtı öğe başına,
+ * kullanıcı etkinleştirmesinin içinde kalkar); bekleyen döngü aynı olayda oynar. Geçiş `play()`'i de jestin içinde senkron
+ * (hazır klip, ön evresiz geçiş). Ret: geçiş bekler (W-4), sıradaki jestte `kilitAc` onu jestin içinde başlatır; engel kalıcı değil, her jestte yeniden denenir (`engelSay`,
+ * `sonRet`: HUD 1. satır).
  * `visibilitychange`: gizlide döngü durur, dönünce sürer. `durdur()`: kapanışta her şey bırakılır.
  */
 import type { Boyut, IstemciManifest, Klip, KodekAd } from "./klipler";
 
-const BEKLE_MS = 300;
+/** Bekle kipi (W-4): yoklama aralığı (hazır olunca `canplay` zaten hemen uyandırır), uyarı eşiği, başarısız indirmenin yeniden denenmesi. */
+const BEKLE_TIK_MS = 250;
+export const BEKLE_UYARI_MS = 20000;
+const BEKLE_YENIDEN_MS = 1500;
 const SOLMA_MS = 180;
+/**
+ * Kilit denemesinin dinlendiği olaylar (W-2): HTML'de kullanıcı etkinleştiren olaylar (touchend, pointerup, keydown, click,
+ * mousedown) ve adımlayıcının tekerleği (etkinleştirme değil; WebKit'te denenir, seyreltilir). adim.ts'in dinlediği olaylar.
+ */
+const KILIT_OLAYLARI = ["touchend", "pointerup", "keydown", "click", "mousedown", "wheel"] as const;
 const YEDEK_MS = 900;
 /** Ters (geri) klip ancak bu kadar dinlenmeden sonra iner (§11.2-3). */
 const BOSTA_MS = 1000;
@@ -63,6 +85,12 @@ export const POSTER_GERI_MS = 350;
 const POSTER_GERI_VARIS_MS = 40;
 /** Çapraz sönme sonunda alttaki poster <img> yeni kaynağını en geç bu sürede çözmüş olmalı (yoksa yine kaldırılır). */
 const POSTER_COZ_MS = 300;
+/** Zincir köprüsü (W-2): kalkış görüntüsünden ilk parçanın 0. karesine (köprü posteri) çapraz sönme. */
+export const KOPRU_MS = 350;
+/** Tekerlek jesti kullanıcı etkinleştirmesi değil; kilit denemesi en çok bu aralıkla (ret sayacı şişmesin). */
+const KILIT_TEKERLEK_MS = 250;
+/** Aynı anda gelen retler (havuzun 3 öğesi, pointerup + touchend) tek ret sayılır. */
+const RET_BIRLESTIR_MS = 50;
 
 type Yuva = {
   el: HTMLVideoElement;
@@ -72,9 +100,15 @@ type Yuva = {
   surum: number;
   cozum: ((ok: boolean) => void)[];
   oynat: boolean;
+  /** Öğenin bir `play()`'i çözüldü (WebKit kısıtı öğe başına; `src` değişince de açık kalır, R4 §3.6-b). */
+  acik: boolean;
 };
 
 export type KlipBilgi = { url: string; sure: number; hiz: number; kare: number; ad: string };
+/** Zincir geçiş (W-2 §14.7): parçalar sırayla, her parçanın 0. karesinin posteri (durak dizini), köprü durağı. */
+export type Zincir = { ad: string; sure: number; kare: number; parcalar: KlipBilgi[]; ilkPoster: number[]; kopru: number };
+/** Zincir parçasının kaydı (HUD/ölçüm): ilk kare (jestten), devir (önceki parçanın son karesi → bunun ilk yeni karesi). */
+export type ParcaKayit = { ad: string; ilkKareMs?: number; devirMs?: number; onSarMs?: number; dusen?: number; cozulen?: number; devredildi?: boolean };
 
 export type Kayit = {
   no: number;
@@ -105,16 +139,41 @@ export type Kayit = {
   devirMs?: number;
   /** "poster": geri klibi olmayan geri adım (hedef posterine 350 ms çapraz sönme; yedek DEĞİL, tasarım). */
   sonme?: "poster";
+  /** Zincir geçişin parçaları (W-2). */
+  zincir?: ParcaKayit[];
+  /** Zincir köprüsünün bittiği an (jestten, ms). */
+  kopruMs?: number;
+  /** Bekle kipi (W-4): ilk bekleme nedeni ("hazir-degil", "engel", "play …"; zincirde parça adıyla), bekleme sayısı, 20 s aşıldı. */
+  bekle?: string;
+  bekleSay?: number;
+  bekleUzun?: boolean;
   bitti?: boolean;
 };
 
 export type GecisSecenek = {
-  /** Video bu kadar ms sonra başlar (DOM ön evresi: logo sönmesi, broşür dalışı). */
+  /** Video bu kadar ms sonra başlar (DOM ön evresi: logo sönmesi). */
   oncesiMs?: number;
   /** Kare geri çağrısı (rVFC; klibin kendi kare numarası). */
   kare?: (f: number, n: number) => void;
   /** Varış (klip bitti ya da yedek tamamlandı). */
   varis?: (kayit: Kayit) => void;
+  /** Bekle kipi (W-4): bekleme başladı (true) / bitti, geçiş şimdi başlıyor (false; kalan = videonun süresi, ms). */
+  bekle?: (basladi: boolean, kalanMs: number) => void;
+};
+
+/** Bekle kipi (W-4) durumu. Beklenen klibin URL'si her bakışta yeniden (kodek değişebilir); `devam` aynı geçişi başlatır. */
+export type Bekleme = {
+  kayit: Kayit;
+  neden: string;
+  kalanMs: number;
+  sec: GecisSecenek;
+  url: () => string | null;
+  yerlestir: () => void;
+  devam: (T: Yuva) => void;
+  tb: number;
+  id: number;
+  sonDeneme: number;
+  uyan?: Yuva;
 };
 
 class Veri {
@@ -132,7 +191,9 @@ class Veri {
   getirmeler: { dosya: string; bayt: number; ms: number; t: number }[] = [];
   hatalar = new Map<string, number>();
   kapali = false;
-  private ac = new AbortController();
+  /** İndirme başına iptal (W-4: bekle kipi süren başka indirmeyi keser); kesilen dosyanın sözü açık kalır, yeniden sıraya. */
+  private kesiciler = new Map<string, AbortController>();
+  private kesilen = new Set<string>();
   private nesil = 0;
   constructor(public butce: number) {}
 
@@ -148,6 +209,21 @@ class Veri {
     if (i < 0) return;
     this.bosta.splice(i, 1);
     if (!this.acil.includes(d)) this.acil.push(d);
+    this.pompa();
+  }
+  /** Bekle kipi (W-4): beklenen klip kuyruğun en önüne; süren başka indirme kesilir (sözü açık, sonra baştan iner). */
+  oncelikli(d: string) {
+    if (this.bloblar.has(d) || this.tukendi(d)) return;
+    for (const l of [this.acil, this.kuyruk, this.bosta]) {
+      const i = l.indexOf(d);
+      if (i >= 0) l.splice(i, 1);
+    }
+    if (!this.bekleyen.has(d)) this.acil.unshift(d);
+    for (const [x, a] of this.kesiciler)
+      if (x !== d && !this.kesilen.has(x)) {
+        this.kesilen.add(x);
+        a.abort();
+      }
     this.pompa();
   }
   bostaAc(acik: boolean) {
@@ -184,8 +260,10 @@ class Veri {
     this.calisan++;
     const n = this.nesil;
     const t0 = performance.now();
+    const ac = new AbortController();
+    this.kesiciler.set(d, ac);
     try {
-      const r = await fetch(d, { signal: this.ac.signal });
+      const r = await fetch(d, { signal: ac.signal });
       if (!r.ok) throw new Error(`${r.status} ${d}`);
       const b = await r.blob();
       if (this.kapali || n !== this.nesil) throw new Error("kapali");
@@ -199,7 +277,10 @@ class Veri {
       return url;
     } catch (e) {
       // İptal edilen nesil (durdur/boyut değişimi): sözler birak()'ta reddedildi; yeni nesle dokunma.
-      if (n === this.nesil) {
+      if (n === this.nesil && this.kesilen.delete(d)) {
+        // Bekle kipi öne geçti (`oncelikli`): söz açık kalır, dosya acil kuyruğun sonuna döner.
+        if (!this.acil.includes(d)) this.acil.push(d);
+      } else if (n === this.nesil) {
         const ad = (e as Error)?.name;
         if (ad !== "AbortError" && (e as Error)?.message !== "kapali") this.hatalar.set(d, (this.hatalar.get(d) ?? 0) + 1);
         const s = this.sozler.get(d);
@@ -209,6 +290,7 @@ class Veri {
       throw e;
     } finally {
       this.calisan--;
+      if (this.kesiciler.get(d) === ac) this.kesiciler.delete(d);
       if (n === this.nesil) this.bekleyen.delete(d);
       this.pompa();
     }
@@ -247,8 +329,9 @@ class Veri {
   }
   birak() {
     // Süren indirme iptal (döndürmeden sonra yeni set eski dosyayı beklemesin, eski yönün blob'u bütçeye girmesin).
-    this.ac.abort();
-    this.ac = new AbortController();
+    for (const a of this.kesiciler.values()) a.abort();
+    this.kesiciler.clear();
+    this.kesilen.clear();
     this.nesil++;
     for (const b of this.bloblar.values()) URL.revokeObjectURL(b.url);
     this.bloblar.clear();
@@ -270,12 +353,24 @@ export class Oynatici {
   veri: Veri;
   k = 0;
   durum: "dur" | "gecis" | "kapali" = "dur";
+  /**
+   * Otomatik oynatma engeli şu an var mı (son `play()` NotAllowedError ile reddedildi, sonraki kilit denemesi henüz
+   * başarmadı). Kalıcı kip DEĞİL (W-2): dokunma adımı parmak kalkınca atılır, her jestte kilit yeniden denenir.
+   */
   engel = false;
-  kilitAcildi = false;
-  /** Veri Tasarrufu / yavaş bağlantı: video inmez, geçişler poster çapraz sönmesi (§6). */
+  /** NotAllowedError ret sayısı (aynı ana düşenler birleşik) ve son retin yeri (HUD 1. satır). */
+  engelSay = 0;
+  sonRet = "";
+  private sonRetT = -Infinity;
+  private kilitT = -Infinity;
+  /** Yalnız `?poster=1` (W-2 §14.7): video inmez, geçişler poster çapraz sönmesi (§6). */
   posterKipi: boolean;
-  /** Kod çözme hatası: bir sonraki dinlenmede H.264'e dönülecek. */
+  /** Kod çözme hatası: bir sonraki dinlenmede H.264'e dönülecek (beklerken hemen, `kodekBeklerken`). */
   kodekBekliyor = false;
+  /** Bekle kipi (W-4): süren bekleme, bekleyen geçiş sayısı, toplam bekleme (ms; biten beklemeler). HUD 5. satır. */
+  bekleme: Bekleme | null = null;
+  bekleSay = 0;
+  bekleToplamMs = 0;
   private kodekYasak = new Set<KodekAd>();
   olaylar: Kayit[] = [];
   private kayitNo = 0;
@@ -288,7 +383,7 @@ export class Oynatici {
   sonYon: 1 | -1 = 1;
   private olay: (tur: string, veri?: unknown) => void;
   private zamanlar = new Set<number>();
-  private kilitDinle: () => void;
+  private kilitDinle: (e: Event) => void;
   private gorunurlukDinle: () => void;
   private onYukleme = new Map<string, HTMLImageElement>();
   /** play() → oynatma saatinin başlaması (ms), son geçişlerden üstel ortalama; ön sarmanın öncülüğü. */
@@ -323,15 +418,29 @@ export class Oynatici {
       el.setAttribute("playsinline", "");
       el.preload = "auto";
       el.disablePictureInPicture = true;
-      return { el, i, url: null, hazir: false, surum: 0, cozum: [], oynat: false };
+      return { el, i, url: null, hazir: false, surum: 0, cozum: [], oynat: false, acik: false };
     });
-    this.kilitDinle = () => this.kilitAc();
-    for (const t of ["touchend", "click", "keydown"]) addEventListener(t, this.kilitDinle, { capture: true, passive: true });
+    this.kilitDinle = (e: Event) => {
+      if (!e.isTrusted) return;
+      if (e.type === "wheel") {
+        const t = performance.now();
+        if (t - this.kilitT < KILIT_TEKERLEK_MS) return;
+        this.kilitT = t;
+      }
+      this.kilitAc(e.type);
+    };
+    for (const t of KILIT_OLAYLARI) addEventListener(t, this.kilitDinle, { capture: true, passive: true });
     this.gorunurlukDinle = () => {
       const L = this.yuva(this.dongu(this.k)?.url ?? "");
       if (!L || this.durum !== "dur") return;
       if (document.hidden) L.el.pause();
-      else if (L.oynat && !this.engel) L.el.play().catch(() => {});
+      else if (L.oynat)
+        L.el.play().then(
+          () => (L.acik = true),
+          (e: Error) => {
+            if (e?.name === "NotAllowedError") this.engelVar(`görünürlük ${this.dongu(this.k)?.ad ?? ""}`, L);
+          },
+        );
     };
     document.addEventListener("visibilitychange", this.gorunurlukDinle);
   }
@@ -356,6 +465,42 @@ export class Oynatici {
     const u = this.url(g?.geri);
     return g?.geri && u ? { url: u, sure: g.geri.sure, hiz: g.hizGeri, kare: g.geri.kare, ad: g.geri.ad } : null;
   }
+  /**
+   * k'dan ileri zincir geçiş (W-2 §14.7; `Gecis.parcalar`): parçalar (bu yönün kodeği, yoksa H.264), her parçanın 0.
+   * karesinin posteri (parça, bir geçişin geri klibi: r43 = t34 tersi → 0. karesi d4'ün posteri) ve köprü durağı. Önbellekli.
+   */
+  private zincirOnbellek = new Map<string, Zincir | null>();
+  zincir(k: number): Zincir | null {
+    const anahtar = `${k}|${this.boyut}|${this.kodek}`;
+    if (this.zincirOnbellek.has(anahtar)) return this.zincirOnbellek.get(anahtar)!;
+    const D = this.m.duraklar;
+    const g = D[k]?.ileri;
+    let z: Zincir | null = null;
+    if (g?.parcalar?.length) {
+      const parcalar: KlipBilgi[] = [];
+      const ilkPoster: number[] = [];
+      for (const c of g.parcalar) {
+        const u = this.url(c);
+        if (!u) break;
+        parcalar.push({ url: u, sure: c.sure, hiz: 1, kare: c.kare, ad: c.ad });
+        const i = D.findIndex((d) => d.ileri?.geri?.ad === c.ad);
+        ilkPoster.push(i >= 0 ? i + 1 : -1);
+      }
+      if (parcalar.length === g.parcalar.length) {
+        const kd = g.kopruDurak ? D.findIndex((d) => d.id === g.kopruDurak) : -1;
+        z = { ad: g.ad, sure: g.sure, kare: g.kare, parcalar, ilkPoster, kopru: kd >= 0 ? kd : ilkPoster[0] };
+      }
+    }
+    this.zincirOnbellek.set(anahtar, z);
+    return z;
+  }
+  /** Geçiş dosyaları (j, yy): klip ya da (ileri) zincirin parçaları. */
+  private gecisUrlleri(j: number, yy: number): string[] {
+    const u = this.gecis(j, yy)?.url;
+    if (u) return [u];
+    const z = yy > 0 ? this.zincir(j) : null;
+    return z ? z.parcalar.map((p) => p.url) : [];
+  }
   /** k → k−1 geri adımı poster çapraz sönmesi mi: geri klip tanımsız (`geri === null`; G turu K4) ve hedefin posteri var. */
   posterGeriMi(k: number): boolean {
     const g = this.m.duraklar[k - 1]?.ileri;
@@ -370,7 +515,7 @@ export class Oynatici {
   /**
    * Geçiş öğesinin `poster` özniteliği için durak: klibin 0. karesi o durağın posteri olmalı (klip zinciri). DOM
    * durağından (lombar, d0) ileri giden klibin posteri yok (-1): d0'ın posteri yok, t01'in 0. karesi lombar deliğinde
-   * görünür. Döngüsüz klip durakları (duvar d6/d7, masa d8, fidan d9–d11) "klip" türündedir: posteri gelen klibin son
+   * görünür. Döngüsüz klip durakları (duvar d6/d7, fidan d8–d10) "klip" türündedir: posteri gelen klibin son
    * karesi = giden klibin 0. karesi (son-kare posteri, §12.4-9, §14.4.2).
    */
   private ilkKarePosteri(k: number, dir: number) {
@@ -383,13 +528,18 @@ export class Oynatici {
     if (d) l.push({ url: d.url, dongu: true, k });
     const ayni = this.gecis(k, yon);
     const ters = this.gecis(k, -yon);
+    // Zincir (W-2, d11'den ileri): ileri yöndeyse ilk iki parça (sıradaki jest), geri yöndeyse ilk parça ters geçiş
+    // gibi (boşta). Parçalar d2–d4'ün geri klipleri: çoğunlukla zaten blob, atama ağsız.
+    const z = !(yon > 0 ? ayni : ters) ? this.zincir(k) : null;
     if (ayni) l.push({ url: ayni.url, dongu: false, k: this.ilkKarePosteri(k, yon) });
+    else if (z && yon > 0) z.parcalar.slice(0, 2).forEach((p, i) => l.push({ url: p.url, dongu: false, k: z.ilkPoster[i] }));
     if (ters) l.push({ url: ters.url, dongu: false, k: this.ilkKarePosteri(k, -yon), bosta: true });
-    // Uç ya da DOM durağı, ya da bir yönü klipsiz durak (fidan d9–d11: geri poster sönmesi): boş kalan yuvaya varılacak
-    // döngü (aynı yönde en çok 2 durak ötedeki ilk döngü; fidanda d10'dan d12'nin lc'si). Döngüsüz klip durağında (duvar,
-    // masa) iki yönün geçişi zaten yuvada; üçüncü yuva boş kalır, sıradaki geçiş pencereden iner (uzaktaki l1'i buradan
+    else if (z && yon < 0) l.push({ url: z.parcalar[0].url, dongu: false, k: z.ilkPoster[0], bosta: true });
+    // Uç ya da DOM durağı, ya da bir yönü klipsiz durak (fidan d8–d10: geri poster sönmesi): boş kalan yuvaya varılacak
+    // döngü (aynı yönde en çok 2 durak ötedeki ilk döngü; fidanda d9'dan d11'in lc'si). Döngüsüz klip durağında
+    // (duvar) iki yönün geçişi zaten yuvada; üçüncü yuva boş kalır, sıradaki geçiş pencereden iner (uzaktaki l1'i buradan
     // indirmek d6'da ~1 MB boşa bayt olurdu; G turunda d11'den geri bakınca 6 durak ötedeki l5 de öyle).
-    const uc = this.m.duraklar[k]?.tur === "dom" || !ayni || !ters;
+    const uc = this.m.duraklar[k]?.tur === "dom" || !(ayni || (z && yon > 0)) || !(ters || (z && yon < 0));
     for (let j = k + yon; uc && l.length < 3 && j >= 0 && j < this.N && Math.abs(j - k) <= 2; j += yon) {
       const dj = this.dongu(j);
       if (dj) {
@@ -405,11 +555,12 @@ export class Oynatici {
    */
   private pencereListesi(k: number, y: 1 | -1) {
     const d = (j: number) => this.dongu(j)?.url;
-    const g = (j: number, yy: number) => this.gecis(j, yy)?.url;
-    const l = [d(k), g(k, y), d(k + y), g(k + y, y), d(k + 2 * y), g(k + 2 * y, y), d(k - y)];
-    // Bu yönde klip yoksa (fidan içinde geri: poster sönmeleri) ilk klipli geçişe kadar bak (d11'de geri → r98).
-    if (!l.some(Boolean)) for (let j = k; j >= 0 && j < this.N; j += y) if (g(j, y)) {
-      l.push(g(j, y), d(j + y));
+    // Zincirde (W-2) bütün parçalar sırayla: d10/d11'de r43 r32 r21 + l1 (normal oturumda d2–d4'te zaten inmiş: ağsız).
+    const g = (j: number, yy: number) => this.gecisUrlleri(j, yy);
+    const l = [d(k), ...g(k, y), d(k + y), ...g(k + y, y), d(k + 2 * y), ...g(k + 2 * y, y), d(k - y)];
+    // Bu yönde klip yoksa (fidan içinde geri: poster sönmeleri) ilk klipli geçişe kadar bak (d10'da geri → r97; geçici t89'da d7'nin geri klibi).
+    if (!l.some(Boolean)) for (let j = k; j >= 0 && j < this.N; j += y) if (g(j, y).length) {
+      l.push(...g(j, y), d(j + y));
       break;
     }
     return [...new Set(l.filter((x): x is string => !!x))];
@@ -419,7 +570,9 @@ export class Oynatici {
    * çözülür (`decode()`): sönmenin ilk karesinde yedek katmanının arka planı kod çözmeyi beklemesin.
    */
   private posterOnyukle(k: number, y: 1 | -1) {
-    for (const j of [k + y, k + 2 * y, k - y]) {
+    // Zincirin köprü posteri (W-2: d11'den ileri p4) de çözülür: köprü sönmesi kod çözmeyi beklemesin.
+    const kopru = y > 0 ? (this.zincir(k)?.kopru ?? -1) : -1;
+    for (const j of [k + y, k + 2 * y, k - y, kopru]) {
       const u = this.posterUrl(j);
       if (!u) continue;
       let im = this.onYukleme.get(u);
@@ -429,7 +582,7 @@ export class Oynatici {
         im.src = u;
         this.onYukleme.set(u, im);
       }
-      if (j === k - 1 && this.posterGeriMi(k)) im.decode().catch(() => {});
+      if ((j === k - 1 && this.posterGeriMi(k)) || j === kopru) im.decode().catch(() => {});
     }
   }
 
@@ -507,7 +660,8 @@ export class Oynatici {
   private isitan: Yuva | null = null;
   private isit(y: Yuva, s: number) {
     const el = y.el;
-    if (y.surum !== s || y.hazir || y.oynat || el === this.aktif || this.engel || this.durum === "kapali") return;
+    // Engelde yalnız kilidi açılmamış öğe beklemez (reddedilecek; jestte kilitAc oynatıp durdurur = ısıtma).
+    if (y.surum !== s || y.hazir || y.oynat || el === this.aktif || (this.engel && !y.acik) || this.durum === "kapali") return;
     if (el.readyState >= 3 || !el.paused) return;
     const acil = y.cozum.length > 0;
     if (!acil && ((this.isitan && this.isitan !== y) || this.devirYakin())) {
@@ -523,6 +677,7 @@ export class Oynatici {
     el.play().then(
       () => {
         birak();
+        y.acik = true;
         if (y.surum === s && !y.oynat && el !== this.aktif) {
           el.pause();
           el.currentTime = 0;
@@ -530,10 +685,7 @@ export class Oynatici {
       },
       (e: Error) => {
         birak();
-        if (e?.name === "NotAllowedError") {
-          this.engelVar();
-          this.olay("engel", { yer: "isitma" });
-        }
+        if (e?.name === "NotAllowedError") this.engelVar("ısıtma", y);
       },
     );
   }
@@ -547,16 +699,14 @@ export class Oynatici {
     this.yoklandi = true;
     y.el.play().then(
       () => {
+        y.acik = true;
         if (!y.oynat) {
           y.el.pause();
           y.el.currentTime = 0;
         }
       },
       (e: Error) => {
-        if (e?.name === "NotAllowedError") {
-          this.engelVar();
-          this.olay("engel", { yer: "yoklama" });
-        }
+        if (e?.name === "NotAllowedError") this.engelVar("yoklama", y);
       },
     );
   }
@@ -573,7 +723,7 @@ export class Oynatici {
     const ger = this.gerekli(k, yon);
     // Yolculukta önce aynı yöndeki geçiş (sonraki jest), sonra döngü; açılışta önce döngü (ilk izlenim).
     if (!donguOnce && ger.length > 1 && ger[0].dongu && ger[0].k === k) ger.splice(1, 0, ger.shift()!);
-    ger.splice(this.yuvalar.length - mesgul.length);
+    ger.splice(this.yuvalar.length - mesgul.length - this.disarida(ger, mesgul, zorla));
     const tutulan = new Set(mesgul);
     for (const g of ger) {
       const y = this.yuva(g.url);
@@ -593,6 +743,16 @@ export class Oynatici {
     }
     this.veri.pencere(this.pencereListesi(k, yon));
     this.posterOnyukle(k, yon);
+  }
+  /**
+   * Görünen öğe (ve zorla değilse 80 ms'lik eski) listede değilse tuttuğu yuva sayısı: liste o kadar kısalır, sondakiler
+   * (ters geçiş) düşer. W-4: varış döngüsü hazır olmadan gelen jestte görünen öğe gelen geçişin son karesiydi; döngü ve ters
+   * klip iki yuvayı tutunca beklenen geçiş yer bulamıyor, bekleme kilitleniyordu (eskiden 300 ms sonra poster sönmesi).
+   */
+  private disarida(l: { url: string }[], mesgul: Yuva[], zorla: boolean) {
+    return this.yuvalar.filter(
+      (y) => !mesgul.includes(y) && (y.el === this.aktif || (!zorla && y.el === this.eski)) && !l.some((g) => g.url === y.url),
+    ).length;
   }
   /** Dinlenme ≥ 1 s sürünce ters geçişlerin indirmesi açılır; geçiş başlayınca kapanır. */
   private bostaPlanla() {
@@ -694,55 +854,100 @@ export class Oynatici {
       // Zaten 0'daysa arama yok: gereksiz arama play()'i bir çözme turu geciktirir.
       if (L.el.currentTime > 0.001) L.el.currentTime = 0;
       await L.el.play();
+      L.acik = true;
       if (this.k !== j || this.durum !== "dur") return;
       this.goster(L.el, 0);
       this.yedekKaldir();
-      this.engel = false;
     } catch (e) {
       L.oynat = false;
-      if ((e as Error)?.name === "NotAllowedError") {
-        this.engelVar();
-        this.olay("engel", { yer: "dongu", j });
-      }
-      // Engelli: poster dural kalır.
+      if ((e as Error)?.name === "NotAllowedError") this.engelVar(`döngü ${d.ad}`, L);
+      // Engelli: poster dural kalır; sıradaki jestte kilitAc döngüyü aynı olayda başlatır.
       this.gizle(0);
       this.yedekKaldir();
     }
   }
 
-  /* ---------------- otomatik oynatma kilidi ---------------- */
-  /** play() reddedildi: engel kipine geç; sonraki kullanıcı etkinleştirmesinde kilit yeniden açılır. */
-  private engelVar() {
+  /* ---------------- otomatik oynatma kilidi (W-2 §14.7) ---------------- */
+  /**
+   * play() NotAllowedError ile reddedildi: engel (kalıcı değil; sıradaki jestte kilitAc yeniden dener). Reddeden öğe açık
+   * sayılmaz (src değişince WebKit'in kısıtı geri gelirse de kilitAc onu yeniden dener).
+   */
+  private engelVar(neden: string, y?: Yuva) {
+    if (y) y.acik = false;
     this.engel = true;
-    this.kilitAcildi = false;
+    const t = performance.now();
+    if (t - this.sonRetT > RET_BIRLESTIR_MS) this.engelSay++;
+    this.sonRetT = t;
+    this.sonRet = neden;
+    this.olay("engel", { neden, n: this.engelSay });
   }
-  kilitAc() {
-    if (!this.engel || this.kilitAcildi || this.durum === "kapali") return;
-    this.kilitAcildi = true;
-    this.engel = false; // iyimser: reddedilirse yeniden true
-    // Üç öğenin HEPSİ (kaynağı henüz atanmamış olan da) bu etkinleştirmede oynatılır: WebKit kısıtı öğe
-    // başınadır; boş öğe sonradan src alınca da açık kalsın (R4 §3.6-b). Boş öğenin NotSupportedError'ı yok sayılır.
+  /**
+   * Kullanıcı jesti (yakalama aşaması, adımlayıcıdan önce; `tur` olay adı). Engel varken kilidi açılmamış her öğeye
+   * (kaynağı henüz atanmamış olan da: WebKit kısıtı öğe başına, sonradan src alınca açık kalır, R4 §3.6-b) SENKRON
+   * `play()`: kullanıcı etkinleştirmesi yalnız olay işleyicisinin içinde geçerli (await/rAF/setTimeout'tan sonra değil).
+   * Çözülen öğe açık sayılır ve (oynaması gerekmiyorsa) durdurulur. Bulunulan durağın döngüsü bekliyorsa aynı olayda
+   * oynar. Bir ret engeli sürdürür; hiç ret yoksa engel kalkar. Geçişin kendi `play()`'i de bu olayın içinde (gec()).
+   */
+  kilitAc(tur = "jest") {
+    if (!this.engel || this.durum === "kapali") return;
+    // Bekleyen geçiş (W-4): klibi hazırsa jestin içinde, senkron başlar (WebKit: play() yalnız kullanıcı etkinleştirmesinde).
+    const b = this.bekleme;
+    const bu = b?.url();
+    const bT = bu ? this.yuva(bu) : null;
+    if (b && bT?.hazir) this.bekleDevam(b, bT);
+    const k = this.k;
+    const d = this.durum === "dur" ? this.dongu(k) : null;
+    const L = d ? this.yuva(d.url) : null;
+    let ret = false;
+    let deneme = 0;
     for (const y of this.yuvalar) {
-      const gorunur = y.el === this.aktif;
-      y.el.play().then(
+      const el = y.el;
+      // Bekleyen döngü: hazır ve duruyor (açılışta reddedilmişti) → şimdi oynat.
+      const dongum = y === L && y.hazir && el.paused;
+      if (y.acik && !dongum) continue;
+      // Oynayan öğe zaten açık; görünen (son-kare durağında bitmiş) geçiş yeniden başlamasın.
+      if (!dongum && (!el.paused || el === this.aktif)) continue;
+      if (dongum) {
+        y.oynat = true;
+        el.loop = true;
+      }
+      deneme++;
+      let p: Promise<void>;
+      try {
+        p = el.play();
+      } catch (e) {
+        p = Promise.reject(e);
+      }
+      p.then(
         () => {
-          if (!y.oynat && !gorunur) {
-            y.el.pause();
-            y.el.currentTime = 0;
+          y.acik = true;
+          if (!ret) this.engel = false;
+          if (dongum) {
+            if (y.oynat && this.k === k && this.durum === "dur" && y.url === d?.url) {
+              this.goster(el, 0);
+              this.yedekKaldir();
+            } else if (el !== this.aktif) {
+              // Aynı jest geçiş başlattı: bekleyen döngü görünmeden durur.
+              y.oynat = false;
+              el.pause();
+            }
+          } else if (!y.oynat && el !== this.aktif) {
+            el.pause();
+            if (el.currentTime > 0.001) el.currentTime = 0;
           }
         },
         (e: Error) => {
+          if (dongum) y.oynat = false;
           if (e?.name === "NotAllowedError") {
-            this.engel = true;
-            this.kilitAcildi = false;
+            ret = true;
+            this.engelVar(`kilit ${tur}`, y);
           }
         },
       );
     }
-    this.olay("kilit-ac");
-    queueMicrotask(() => {
-      if (this.durum === "dur" && !this.engel) void this.donguBaslat(this.k);
-    });
+    // Açılacak öğe kalmadı (hepsi açık): engel bayağı.
+    if (!deneme) this.engel = false;
+    this.olay("kilit-ac", { tur, deneme });
   }
 
   /* ---------------- geçiş ---------------- */
@@ -754,7 +959,8 @@ export class Oynatici {
     if (this.durum !== "dur") return -1;
     const k = this.k;
     const g = this.gecis(k, dir);
-    const kayit: Kayit = { no: ++this.kayitNo, yon: dir, from: k, to: j, tur, tJest, klip: g?.ad, engel: this.engel };
+    const z = !g && dir > 0 ? this.zincir(k) : null;
+    const kayit: Kayit = { no: ++this.kayitNo, yon: dir, from: k, to: j, tur, tJest, klip: g?.ad ?? z?.ad, engel: this.engel };
     this.olaylar.push(kayit);
     if (this.olaylar.length > KAYIT_SINIRI) this.olaylar.splice(0, this.olaylar.length - KAYIT_SINIRI);
     this.durum = "gecis";
@@ -762,8 +968,9 @@ export class Oynatici {
     this.varisBek = 0;
     this.bostaPlanla();
     this.olay("adim", kayit);
+    if (z) return this.zincirGec(j, kayit, z, sec);
     if (!g) {
-      // Geri klibi yok (fidan içi geri adım): hedef posterine 350 ms çapraz sönme.
+      // Geri klibi yok (fidan içi geri adım, d12→d11): hedef posterine 350 ms çapraz sönme.
       if (dir < 0 && j === k - 1 && this.posterGeriMi(k)) return this.posterGeri(j, kayit, sec);
       return 0;
     }
@@ -777,23 +984,38 @@ export class Oynatici {
       kayit.yuvadaYoktu = true;
       this.dagit(k, dir, [], false, true);
     } else if (!T0.hazir) this.veri.oncele(g.url); // boşta bekleyen ters klip: jest geldi, öne al
-    this.sonra(sec.oncesiMs ?? 0, () => {
+    // Bekle kipi (W-4): klip hazır değil / play() reddedildi → mevcut kare durur, klip hazır olunca aynı geçiş (video).
+    const bekleGecis = (neden: string, gecikme = 0): void =>
+      this.bekle(
+        {
+          kayit,
+          neden,
+          sec,
+          kalanMs: sureMs,
+          url: () => this.gecis(k, dir)?.url ?? null,
+          yerlestir: () => this.dagit(k, dir, [], false, true),
+          devam: (T) => this.oynat(T, j, dir, kayit, this.gecis(k, dir) ?? g, sec, bekleGecis),
+        },
+        gecikme,
+      );
+    const basla = () => {
       if (kayit.bitti) return;
       if (this.posterKipi) return this.yedek(j, dir, kayit, "poster-kipi", g, sec);
-      if (this.engel) return this.yedek(j, dir, kayit, "otomatik-oynatma-engeli", g, sec);
       const T = this.yuva(g.url);
-      const tb = performance.now();
-      void this.hazirBekle(T, BEKLE_MS).then((ok) => {
-        kayit.beklemeMs = Math.round(performance.now() - tb);
-        if (kayit.bitti) return;
-        if (ok && T && this.durum === "gecis") this.oynat(T, j, dir, kayit, g, sec);
-        else this.yedek(j, dir, kayit, "hazir-degil", g, sec);
-      });
-    });
+      // Hazır klip: play() hemen (W-2: ön evresiz geçişte jestin olay işleyicisinin içinde, senkron — iOS Düşük Güç
+      // Modu'nda yalnız kullanıcı etkinleştirmesindeki play() izinli).
+      if (T?.hazir && this.durum === "gecis") {
+        kayit.beklemeMs = 0;
+        return this.oynat(T, j, dir, kayit, g, sec, bekleGecis);
+      }
+      bekleGecis("hazir-degil");
+    };
+    if (sec.oncesiMs) this.sonra(sec.oncesiMs, basla);
+    else basla();
     return sureMs;
   }
 
-  private oynat(T: Yuva, j: number, dir: 1 | -1, kayit: Kayit, g: KlipBilgi, sec: GecisSecenek) {
+  private oynat(T: Yuva, j: number, dir: 1 | -1, kayit: Kayit, g: KlipBilgi, sec: GecisSecenek, bekle: (neden: string, gecikme?: number) => void) {
     const L = this.aktif;
     const s = T.surum;
     T.oynat = true;
@@ -803,12 +1025,21 @@ export class Oynatici {
     const tPlay = (kayit.tPlay = performance.now());
     this.varisBek = tPlay + (g.sure * 1000) / g.hiz;
     if (T.el.currentTime > 0.001) T.el.currentTime = 0;
-    T.el.play().catch((e: Error) => {
-      kayit.playHata = e?.name;
-      T.oynat = false;
-      if (e?.name === "NotAllowedError") this.engelVar();
-      if (this.durum === "gecis" && !kayit.bitti) this.yedek(j, dir, kayit, "play-red", g, sec);
-    });
+    T.el.play().then(
+      () => (T.acik = true),
+      (e: Error) => {
+        kayit.playHata = e?.name;
+        T.oynat = false;
+        const engel = e?.name === "NotAllowedError";
+        if (engel) this.engelVar(`geçiş ${g.ad}`, T);
+        // W-4: poster sönmesi yok, aynı geçiş bekler (engelde sıradaki jestte kilitAc başlatır; başka ret kısa aralıkla
+        // yeniden). Bu denemenin kare/varış geri çağrıları yuva sürümüyle düşer.
+        if (this.durum === "gecis" && !kayit.bitti && T.surum === s) {
+          T.surum++;
+          bekle(engel ? "engel" : `play ${e?.name ?? "?"}`, BEKLE_TIK_MS);
+        }
+      },
+    );
     /*
      * Döngüden geçişe devir (akıcılık turu): akan döngü varsa çapraz sönme geçişin saati başlayınca (ilk rVFC karesi ya
      * da `playing`) başlar; o ana dek döngü akar. Eskiden sönme play() anında başlıyor, geçiş başlama gecikmesi boyunca
@@ -823,7 +1054,7 @@ export class Oynatici {
       sonme = true;
       if (L !== T.el) this.goster(T.el, L ? SOLMA_MS : 0);
       this.sonra(SOLMA_MS + 100, () => {
-        if (kayit.bitti) return;
+        if (kayit.bitti || T.surum !== s) return;
         if (L && L !== T.el) L.pause();
         this.dagit(j, dir, [T]);
       });
@@ -899,8 +1130,9 @@ export class Oynatici {
   private devir(j: number, kayit: Kayit, tSon: number) {
     const d = this.dongu(j);
     const L = d ? this.yuva(d.url) : null;
-    // `paused`a bakılmaz: saat henüz başlamadıysa döngü 0. karesini (≡ son kare) gösterir, fark görünmez.
-    if (!L || !L.hazir || !L.oynat || this.engel || L.el === this.aktif) return;
+    // `paused`a bakılmaz: saat henüz başlamadıysa döngü 0. karesini (≡ son kare) gösterir, fark görünmez. Ön sarmanın
+    // play()'i reddedildiyse `oynat` false (engel): devir yok, varış eski yolla.
+    if (!L || !L.hazir || !L.oynat || L.el === this.aktif) return;
     this.goster(L.el, 0);
     this.devirOlc(L, kayit, tSon);
   }
@@ -933,16 +1165,22 @@ export class Oynatici {
    */
   private onSar(j: number, kayit: Kayit, kalan: number): boolean {
     const d = this.dongu(j);
-    if (!d || this.engel) return true;
+    if (!d) return true;
     const L = this.yuva(d.url);
     if (!L || L.el === this.aktif) return true;
     if (!L.hazir) return false;
+    // Engelde kilidi açılmamış öğe reddedilir: ön sarma yok, varış donguBaslat ile (poster kalır, sıradaki jestte açılır).
+    if (this.engel && !L.acik) return true;
     L.oynat = true;
     L.el.loop = true;
     if (L.el.currentTime > 0.001) L.el.currentTime = 0;
-    L.el.play().catch(() => {
-      L.oynat = false;
-    });
+    L.el.play().then(
+      () => (L.acik = true),
+      (e: Error) => {
+        L.oynat = false;
+        if (e?.name === "NotAllowedError") this.engelVar(`ön sarma ${d.ad}`, L);
+      },
+    );
     kayit.onSarMs = Math.round(kalan);
     return true;
   }
@@ -962,12 +1200,19 @@ export class Oynatici {
         this.dagit(j, dir);
         this.bostaPlanla();
       });
-    if (L && L.hazir && !this.engel) {
+    if (L && L.hazir && !(this.engel && !L.acik)) {
       // Döngünün 0. karesi = geçişin son karesi (üretim kuralı): kesme, sönme yok. Ön sarıldıysa zaten oynuyor.
       L.oynat = true;
       if (L.el.paused) {
         L.el.currentTime = 0;
-        L.el.play().catch(() => {});
+        L.el.play().then(
+          () => (L.acik = true),
+          (e: Error) => {
+            // Reddedildi (engel): döngünün 0. karesi (≡ son kare) durur; sıradaki jestte kilitAc oynatır.
+            L.oynat = false;
+            if (e?.name === "NotAllowedError") this.engelVar(`döngü ${d?.ad ?? ""}`, L);
+          },
+        );
       }
       // Ön sarılıp son karede öne alındıysa (devir) yeniden gösterme yok.
       if (this.aktif !== L.el) {
@@ -982,7 +1227,7 @@ export class Oynatici {
   }
 
   /**
-   * Geri klibi olmayan geri adım (G turu §14.4.1 K4; d10→d9, d11→d10, d12→d11): hedef durağın posteri (= hedefin son karesi)
+   * Geri klibi olmayan geri adım (G turu §14.4.1 K4; d9→d8, d10→d9, d11→d10): hedef durağın posteri (= hedefin son karesi)
    * yedek katmanında POSTER_GERI_MS'de üste çapraz söner, sonra video katmanları kalkar ve durum varışı olur (`varis`; ters
    * jest tuzağı için adımın bitişinden POSTER_GERI_VARIS_MS sonra). Kadraj okuması `sec.kare` ile zamana bağlı akar (giden
    * durağın okuması tersten). Engel/poster kipi fark etmez (video oynatılmaz). Yedek katmanı kaldırılmadan önce alttaki
@@ -1043,6 +1288,258 @@ export class Oynatici {
     return POSTER_GERI_MS;
   }
 
+  /* ---------------- zincir geçiş (W-2 §14.7; d11 → d12 Dünya'ya uzaklaşma) ---------------- */
+  /**
+   * Kalkış görüntüsünden (lc döngüsü akarken) köprü posterine (p4 ≡ r43[0]; önceden çözüldü) KOPRU_MS çapraz sönme, sonra
+   * parçalar art arda (`parcaOynat`). Dönen: adımın toplam süresi (köprü + parçalar; adımlayıcının kilidi bu süre). Poster
+   * kipinde bütün süre hedef posterine yedek.
+   */
+  private zincirGec(j: number, kayit: Kayit, z: Zincir, sec: GecisSecenek): number {
+    // Görsel süre: parça devirleri son karede (sıradaki parçanın 0. karesi ≡ o kare) → her devir bir kare kısaltır
+    // (186 kare → 183 görünür kare, 6,1 s + köprü = 6,45 s). Varış (son parçanın `ended`'ı) adımlayıcının kilitli adımı
+    // bittikten sonra gelsin: varışa hemen gelen ters jest kilide takılmasın (tuzak; geçiş → döngü devriyle aynı kural).
+    const toplamMs = KOPRU_MS + ((z.kare - (z.parcalar.length - 1)) * 1000) / this.m.fps;
+    kayit.zincir = z.parcalar.map((p) => ({ ad: p.ad }));
+    if (this.posterKipi) {
+      this.yedek(j, 1, kayit, "poster-kipi", { url: "", sure: toplamMs / 1000, hiz: 1, kare: z.kare, ad: z.ad }, sec);
+      return toplamMs;
+    }
+    const T0 = this.yuva(z.parcalar[0].url);
+    kayit.hazirdi = !!T0?.hazir;
+    if (!T0 || (z.parcalar[1] && !this.yuva(z.parcalar[1].url))) {
+      kayit.yuvadaYoktu = !T0;
+      this.zincirDagit(j, z, 0, true);
+    } else if (!T0.hazir) this.veri.oncele(z.parcalar[0].url);
+    const el = this.yedekEl;
+    const u = this.posterUrl(z.kopru);
+    const lq = this.lqip(z.kopru);
+    el.style.backgroundImage = u ? `url("${u}")${lq ? `, url("${lq}")` : ""}` : "none";
+    el.style.transition = "none";
+    el.style.opacity = "0";
+    el.style.transform = "none";
+    void el.offsetWidth;
+    el.style.transition = `opacity ${KOPRU_MS}ms linear`;
+    el.style.opacity = "1";
+    sec.kare?.(0, z.kare);
+    // Devir penceresi (ısıtma beklesin): köprünün sonunda ilk parça başlar.
+    this.varisBek = performance.now() + KOPRU_MS + 60;
+    this.sonra(KOPRU_MS, () => {
+      if (kayit.bitti || this.durum !== "gecis") return;
+      kayit.kopruMs = Math.round(performance.now() - kayit.tJest);
+      this.parcaBasla(j, kayit, z, 0, sec);
+    });
+    return toplamMs;
+  }
+
+  /** Parça i: hazırsa hemen (ön sarılmışsa yalnız öne alınır), değilse bekle kipi (W-4; son kare / köprü posteri durur). */
+  private parcaBasla(j: number, kayit: Kayit, z: Zincir, i: number, sec: GecisSecenek, tOnceSon?: number) {
+    const T = this.yuva(z.parcalar[i].url);
+    if (T?.hazir) return this.parcaOynat(T, j, kayit, z, i, sec, tOnceSon);
+    this.parcaBekle(j, kayit, z, i, sec, tOnceSon, "hazir-degil");
+  }
+  /** Zincirin i. parçası için bekle kipi (W-4): parça hazır olunca zincir aynı yerden sürer (kodek değişirse yeni URL'ler). */
+  private parcaBekle(j: number, kayit: Kayit, z: Zincir, i: number, sec: GecisSecenek, tOnceSon: number | undefined, neden: string, gecikme = 0) {
+    const zz = () => this.zincir(kayit.from) ?? z;
+    this.bekle(
+      {
+        kayit,
+        neden: `${neden} ${z.parcalar[i].ad}`,
+        sec,
+        kalanMs: z.parcalar.slice(i).reduce((a, x) => a + x.sure, 0) * 1000,
+        url: () => zz().parcalar[i]?.url ?? null,
+        yerlestir: () => this.zincirDagit(j, zz(), i, true),
+        devam: (T) => this.parcaOynat(T, j, kayit, zz(), i, sec, tOnceSon),
+      },
+      gecikme,
+    );
+  }
+
+  /**
+   * Parça i'yi oynat. İlk parça ilk karesi sunulunca öne alınır ve köprü katmanı kalkar (p4 ≡ r43[0]); sonrakiler önceki
+   * parçanın son karesinde, ön sarılmış olarak (`parcaOnSar`; 0. karesi ≡ önceki son kare). Kadraj okuması zincirin
+   * toplam karesiyle (`sec.kare(ofset + f, z.kare)`). Son parça → varış döngüsü: mevcut ön sarma/devir/varış yolu.
+   */
+  private parcaOynat(T: Yuva, j: number, kayit: Kayit, z: Zincir, i: number, sec: GecisSecenek, tOnceSon?: number) {
+    const p = z.parcalar[i];
+    const pk = kayit.zincir![i];
+    const s = T.surum;
+    const fps = this.m.fps;
+    const son = i === z.parcalar.length - 1;
+    const ofset = z.parcalar.slice(0, i).reduce((a, x) => a + x.kare, 0);
+    const q0 = T.el.getVideoPlaybackQuality?.();
+    const onSarili = T.oynat && !T.el.paused;
+    let tPlay = performance.now();
+    if (!onSarili) {
+      T.oynat = true;
+      T.el.loop = false;
+      T.el.playbackRate = 1;
+      if (T.el.currentTime > 0.001) T.el.currentTime = 0;
+      T.el.play().then(
+        () => (T.acik = true),
+        (e: Error) => {
+          T.oynat = false;
+          kayit.playHata = e?.name;
+          const engel = e?.name === "NotAllowedError";
+          if (engel) this.engelVar(`zincir ${p.ad}`, T);
+          // W-4: zincir bekler (poster sönmesi yok); bu denemenin geri çağrıları yuva sürümüyle düşer.
+          if (this.durum === "gecis" && !kayit.bitti && T.surum === s) {
+            T.surum++;
+            this.parcaBekle(j, kayit, z, i, sec, tOnceSon, engel ? "engel" : `play ${e?.name ?? "?"}`, BEKLE_TIK_MS);
+          }
+        },
+      );
+    } else tPlay -= T.el.currentTime * 1000;
+    if (i === 0) kayit.tPlay = tPlay;
+    this.varisBek = tPlay + p.sure * 1000;
+    let gorundu = false;
+    const one = () => {
+      if (gorundu || T.surum !== s || kayit.bitti) return;
+      gorundu = true;
+      this.goster(T.el, 0);
+      if (i === 0) this.yedekKaldir(0);
+      // Eski parça / kalkış döngüsü durur, boşalan yuvaya sıradaki parça ya da varış döngüsü (blob: ağsız).
+      this.sonra(SOLMA_MS - 60, () => {
+        if (!kayit.bitti && this.durum === "gecis") this.zincirDagit(j, z, i);
+      });
+    };
+    if (onSarili) one();
+    else {
+      // Görünmez öğe ilk kareyi sunmazsa (rVFC gelmez): saat başlayınca ya da en geç SONME_EN_GEC_MS'de öne al.
+      T.el.addEventListener("playing", one, { once: true });
+      this.sonra(SONME_EN_GEC_MS, one);
+    }
+    let sunulan = 0;
+    let onSarildi = false;
+    let tSon: number | undefined;
+    const kare = (now: number, meta: VideoFrameCallbackMetadata) => {
+      if (T.surum !== s || kayit.bitti || pk.devredildi) return;
+      sunulan++;
+      if (!gorundu) one();
+      if (sunulan === 1) {
+        pk.ilkKareMs = Math.round((now - kayit.tJest) * 10) / 10;
+        if (i === 0) {
+          kayit.ilkKareMs = pk.ilkKareMs;
+          const b = (meta.expectedDisplayTime || now) - tPlay - meta.mediaTime * 1000;
+          if (b < 1000) {
+            const bb = Math.max(0, b);
+            kayit.baslamaMs = Math.round(bb);
+            this.baslamaMs = Math.min(BASLAMA_EN_COK_MS, Math.max(16, (this.baslamaMs + bb) / 2));
+          }
+        }
+      }
+      if (tOnceSon !== undefined && pk.devirMs === undefined && (onSarili || meta.mediaTime > 0.001)) pk.devirMs = Math.round(now - tOnceSon);
+      kayit.sunulan = (kayit.sunulan ?? 0) + 1;
+      const f = Math.min(p.kare - 1, Math.round(meta.mediaTime * fps));
+      sec.kare?.(ofset + f, z.kare);
+      const kalan = ((p.kare - 1 - f) * 1000) / fps;
+      if (!onSarildi && kalan <= this.baslamaMs) {
+        if (son) onSarildi = this.onSar(j, kayit, kalan);
+        else if ((onSarildi = this.parcaOnSar(z, i + 1))) kayit.zincir![i + 1].onSarMs = Math.round(kalan);
+      }
+      if (f >= p.kare - 1) {
+        tSon = now;
+        if (son) return this.devir(j, kayit, now);
+        return this.parcaDevir(T, q0, j, kayit, z, i, sec, now);
+      }
+      T.el.requestVideoFrameCallback(kare);
+    };
+    if (typeof T.el.requestVideoFrameCallback === "function") T.el.requestVideoFrameCallback(kare);
+    else {
+      // rVFC yok (Safari < 15.4): devir `ended`'da, okuma rAF'te currentTime.
+      one();
+      const raf = () => {
+        if (T.surum !== s || kayit.bitti || pk.devredildi) return;
+        sec.kare?.(ofset + Math.min(p.kare - 1, Math.round(T.el.currentTime * fps)), z.kare);
+        requestAnimationFrame(raf);
+      };
+      requestAnimationFrame(raf);
+    }
+    const bitir = () => {
+      if (T.surum !== s || kayit.bitti) return;
+      if (!son) return this.parcaDevir(T, q0, j, kayit, z, i, sec, tSon ?? performance.now());
+      kayit.bitti = true;
+      this.parcaKalite(T, q0, pk);
+      kayit.cozulen = kayit.zincir!.reduce((a, x) => a + (x.cozulen ?? 0), 0);
+      kayit.dusen = kayit.zincir!.reduce((a, x) => a + (x.dusen ?? 0), 0);
+      this.varis(j, 1, kayit, sec, tSon);
+    };
+    T.el.onended = bitir;
+    this.sonra((p.sure + 1.5) * 1000, bitir);
+  }
+
+  private parcaKalite(T: Yuva, q0: VideoPlaybackQuality | undefined, pk: ParcaKayit) {
+    const q1 = T.el.getVideoPlaybackQuality?.();
+    if (q0 && q1) {
+      pk.cozulen = q1.totalVideoFrames - q0.totalVideoFrames;
+      pk.dusen = q1.droppedVideoFrames - q0.droppedVideoFrames;
+    }
+  }
+
+  /** Parça i'nin son karesi sunuldu (ya da `ended`): sıradaki parça ön sarılmışsa hemen öne, değilse başlatılır. */
+  private parcaDevir(T: Yuva, q0: VideoPlaybackQuality | undefined, j: number, kayit: Kayit, z: Zincir, i: number, sec: GecisSecenek, tSon: number) {
+    const pk = kayit.zincir![i];
+    if (pk.devredildi || kayit.bitti) return;
+    pk.devredildi = true;
+    this.parcaKalite(T, q0, pk);
+    const n = this.yuva(z.parcalar[i + 1].url);
+    if (n?.hazir && n.oynat && !n.el.paused) this.parcaOynat(n, j, kayit, z, i + 1, sec, tSon);
+    else this.parcaBasla(j, kayit, z, i + 1, sec, tSon);
+  }
+
+  /** Sıradaki parçayı görünmezken 0. kareden başlat (ön sarma; geçiş → döngü devriyle aynı). Hazır değilse false. */
+  private parcaOnSar(z: Zincir, i: number): boolean {
+    const p = z.parcalar[i];
+    const L = this.yuva(p.url);
+    if (!L || L.el === this.aktif) return true;
+    if (!L.hazir) return false;
+    if (this.engel && !L.acik) return true;
+    L.oynat = true;
+    L.el.loop = false;
+    L.el.playbackRate = 1;
+    if (L.el.currentTime > 0.001) L.el.currentTime = 0;
+    L.el.play().then(
+      () => (L.acik = true),
+      (e: Error) => {
+        L.oynat = false;
+        if (e?.name === "NotAllowedError") this.engelVar(`zincir ${p.ad}`, L);
+      },
+    );
+    return true;
+  }
+
+  /**
+   * Zincir havuzu: [parça i, i+1, i+2, varış döngüsü] ilk 3'ü (en çok 3 öğe). Görünen ve (zorla değilse) 80 ms'lik eski öğe
+   * dışındaki boş yuvalar durdurulur, eksikler atanır. Parçalar blob önbelleğinde: atama ağsız; iOS ısıtması devir
+   * pencereleri dışında (varisBek = parçanın bitişi).
+   */
+  private zincirDagit(j: number, z: Zincir, i: number, zorla = false) {
+    if (this.durum === "kapali") return;
+    const d = this.dongu(j);
+    const ist: { url: string; dongu: boolean; k: number }[] = [];
+    for (let x = i; x < z.parcalar.length; x++) ist.push({ url: z.parcalar[x].url, dongu: false, k: z.ilkPoster[x] });
+    if (d) ist.push({ url: d.url, dongu: true, k: j });
+    ist.splice(this.yuvalar.length - this.disarida(ist, [], zorla));
+    const tutulan = new Set<Yuva>();
+    for (const g of ist) {
+      const y = this.yuva(g.url);
+      if (y) tutulan.add(y);
+    }
+    const bos = this.yuvalar.filter((y) => !tutulan.has(y) && y.el !== this.aktif && (zorla || y.el !== this.eski));
+    for (const y of bos) {
+      y.el.pause();
+      y.oynat = false;
+    }
+    for (const g of ist) {
+      if (this.yuva(g.url)) {
+        this.veri.oncele(g.url);
+        continue;
+      }
+      const y = bos.shift();
+      if (!y) break;
+      this.ata(y, g.url, g.dongu, g.k);
+    }
+  }
+
   /** DOM geçişi bitti (klipsiz beklenmeyen geçişin yedeği; kapanış dönüşü). */
   domVaris(j: number) {
     const kayit = this.olaylar.at(-1);
@@ -1062,7 +1559,7 @@ export class Oynatici {
     this.olay("varis", kayit);
   }
 
-  /** Yedek: j durağının posterine çapraz sönme (klip yok / hazır değil / engel); süre = klip süresi. */
+  /** Poster kipi (YALNIZ `?poster=1`, ölçüm): j durağının posterine çapraz sönme; süre = klip süresi. W-4'ten beri başka yedek yok. */
   private yedek(j: number, dir: 1 | -1, kayit: Kayit, neden: string, g: KlipBilgi, sec: GecisSecenek) {
     if (kayit.bitti) return;
     kayit.bitti = true;
@@ -1104,15 +1601,99 @@ export class Oynatici {
       }
       this.olay("varis", kayit);
       sec.varis?.(kayit);
-      if (!this.engel && !this.posterKipi && this.dongu(j)) void this.donguBaslat(j).then(() => this.yedekKaldir(200));
+      // Engelde de denenir (W-2): reddedilirse donguBaslat posteri bırakır, sıradaki jestte kilitAc döngüyü başlatır.
+      if (!this.posterKipi && this.dongu(j)) void this.donguBaslat(j).then(() => this.yedekKaldir(200));
       else this.sonra(60, () => this.yedekKaldir(0)); // poster katmanı aynı kare
     });
+  }
+
+  /* ---------------- bekle kipi (W-4 §14.7) ---------------- */
+  /**
+   * Geçiş bekler: mevcut kare durur (döngü akar ya da geçişin 0. karesi / köprü posteri), VideoSahne göstergeyi açar ve
+   * metni erteler (`sec.bekle`). `gecikme`: play() reddinden sonra ilk yoklama (ret döngüsü sıkışmasın).
+   */
+  private bekle(b: Pick<Bekleme, "kayit" | "neden" | "kalanMs" | "sec" | "url" | "yerlestir" | "devam">, gecikme = 0) {
+    const { kayit } = b;
+    if (kayit.bitti || this.durum !== "gecis") return;
+    if (this.bekleme) this.bekleBitir(this.bekleme, false);
+    const yb: Bekleme = { ...b, tb: performance.now(), id: 0, sonDeneme: -Infinity };
+    this.bekleme = yb;
+    if (!kayit.bekleSay) this.bekleSay++;
+    kayit.bekle ??= b.neden;
+    kayit.bekleSay = (kayit.bekleSay ?? 0) + 1;
+    this.olay("bekle", { no: kayit.no, neden: b.neden });
+    b.sec.bekle?.(true, 0);
+    if (gecikme > 0) yb.id = this.sonra(gecikme, () => this.bekleTik(yb));
+    else this.bekleTik(yb);
+  }
+  private bekleTik(b: Bekleme) {
+    if (this.bekleme !== b) return;
+    window.clearTimeout(b.id);
+    this.zamanlar.delete(b.id);
+    const { kayit } = b;
+    if (kayit.bitti || this.durum !== "gecis") return this.bekleBitir(b, false);
+    const t = performance.now();
+    if (!kayit.bekleUzun && t - b.tb > BEKLE_UYARI_MS) {
+      kayit.bekleUzun = true;
+      this.olay("bekle-uzun", { no: kayit.no, neden: b.neden });
+    }
+    // Kod çözme hatası (seçilen kodek bu cihazda çözülemiyor): dinlenmeyi bekleyemez, H.264'e şimdi dönülür.
+    if (this.kodekBekliyor) this.kodekBeklerken();
+    const u = b.url();
+    let T = u ? this.yuva(u) : null;
+    if (u && T && !T.hazir && !this.veri.hazirMi(u) && !this.veri.sozler.has(u) && t - b.sonDeneme > BEKLE_YENIDEN_MS) {
+      // İndirme başarısız (deneme sınırı): yuva boşaltılıp dosya yeniden istenir.
+      b.sonDeneme = t;
+      this.veri.hatalar.delete(u);
+      this.veri.kullanimda.delete(u);
+      T.url = null;
+      T = null;
+    }
+    if (u && !T) {
+      b.yerlestir();
+      T = this.yuva(u);
+    }
+    // Engelde kilidi açılmamış öğe: sıradaki jestte kilitAc başlatır (burada denenirse yine reddedilir).
+    if (T?.hazir && !(this.engel && !T.acik)) return this.bekleDevam(b, T);
+    if (u) this.veri.oncelikli(u);
+    if (T && !T.hazir && b.uyan !== T) {
+      // Hazır olunca hemen (canplay); dolu `cozum` ısıtmayı da sıradan çıkarır (acil).
+      b.uyan = T;
+      T.cozum.push(() => this.bekleTik(b));
+    }
+    b.id = this.sonra(BEKLE_TIK_MS, () => this.bekleTik(b));
+  }
+  private bekleDevam(b: Bekleme, T: Yuva) {
+    if (this.bekleme !== b) return;
+    this.bekleBitir(b, true);
+    b.devam(T);
+  }
+  private bekleBitir(b: Bekleme, devam: boolean) {
+    if (this.bekleme !== b) return;
+    this.bekleme = null;
+    window.clearTimeout(b.id);
+    this.zamanlar.delete(b.id);
+    const ms = Math.round(performance.now() - b.tb);
+    b.kayit.beklemeMs = (b.kayit.beklemeMs ?? 0) + ms;
+    this.bekleToplamMs += ms;
+    this.olay("bekle-bitti", { no: b.kayit.no, ms, devam });
+    b.sec.bekle?.(false, b.kalanMs);
+  }
+  /** Beklerken kod çözme hatası (W-4): H.264'e yerinde dönülür; görünen öğe kalır, beklenen klip yeni kodekle istenir. */
+  private kodekBeklerken() {
+    this.kodekBekliyor = false;
+    if (this.kodek === "h264") return;
+    const eski = this.kodek;
+    this.kodekYasak.add(eski);
+    this.kodek = "h264";
+    this.olay("kodek-yedek", { eski, yeni: "h264", bekle: true });
   }
 
   /* ---------------- kapanış / temizlik ---------------- */
   /** Kapanış görünür: her video durur, kaynaklar ve bloblar bırakılır. */
   durdur() {
     this.durum = "kapali";
+    this.bekleme = null;
     this.veri.kapali = true;
     for (const z of this.zamanlar) window.clearTimeout(z);
     this.zamanlar.clear();
@@ -1195,7 +1776,7 @@ export class Oynatici {
   }
   yokEt() {
     this.durdur();
-    for (const t of ["touchend", "click", "keydown"]) removeEventListener(t, this.kilitDinle, { capture: true });
+    for (const t of KILIT_OLAYLARI) removeEventListener(t, this.kilitDinle, { capture: true });
     document.removeEventListener("visibilitychange", this.gorunurlukDinle);
   }
 }

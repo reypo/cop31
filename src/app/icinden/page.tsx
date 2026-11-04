@@ -25,7 +25,7 @@ const seri = localFont({
 
 const BASLIK = "COP31'in İçinden — AK Gençlik";
 const OG_GORSEL = { url: ogGorsel.src, width: ogGorsel.width, height: ogGorsel.height, alt: "Yeşil yapraklar arasında dünya küresi" };
-const ACIKLAMA = `Uzaydan Antalya Expo'daki standımıza, masadaki broşürden bizi anlatan bir fidana: bölüm bölüm bir dalış. ${stant.tema} · ${stant.hashtag}`;
+const ACIKLAMA = `Uzaydan Antalya Expo'daki standımıza, oradan bizi anlatan bir fidana ve yeniden Dünya'ya: bölüm bölüm bir dalış. ${stant.tema} · ${stant.hashtag}`;
 
 export const metadata: Metadata = {
   title: BASLIK,
@@ -57,8 +57,9 @@ const stantRenkleri = {
 } satisfies Record<`--ic-${string}`, string>;
 
 /**
- * "COP31'in İçinden" v3 (docs/brief-icinden-3.md §9, G turu §14.4): resmî logodan Dünya'ya, Akdeniz'e, Antalya Expo'ya,
- * standa, rotundaya, masadaki broşüre ve oradan köklenip büyüyen fidana; önceden render edilmiş kliplerle kilitli bölüm
+ * "COP31'in İçinden" v3 (docs/brief-icinden-3.md §9, G turu §14.4, §14.7): resmî logodan Dünya'ya, Akdeniz'e, Antalya Expo'ya,
+ * standa, rotundaya, duvarlara, oradan köklenip büyüyen fidana ve yeniden Dünya'ya (W-3: masa durağı kalktı); önceden
+ * render edilmiş kliplerle kilitli bölüm
  * bölüm adımlama. Tek etkileşim dikey kaydırma. Kiosk: /icinden?auto=1. v2 motoru B turunda, DOM broşürü (Brosur.tsx)
  * G turunda silindi ("Dijital broşür" bağlantısı /brosur'a gider); v2'den yalnız kapanış kaldı.
  */

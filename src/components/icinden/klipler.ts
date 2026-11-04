@@ -22,9 +22,18 @@ export type Klip = {
 };
 /**
  * Bu duraktan k+1'e ileri geçiş; `geri` k+1 → k ters klibi. `geri: null` (G turu §14.4.1 K4): geri klip yok — oynatıcı
- * geri adımda hedef durağın (k) posterini 350 ms çapraz söndürür (d10→d9, d11→d10, d12→d11; bütçe merdiveninde d9→d8).
+ * geri adımda hedef durağın (k) posterini 350 ms çapraz söndürür (d9→d8, d10→d9, d11→d10, d12→d11; W-3 geçici t89'la d8→d7).
+ *
+ * Zincir (W-2 §14.7; d11 → d12 "uzaklasma"): `parcalar` mevcut klipler art arda (r43 → r32 → r21; yeni dosya yok), üst
+ * düzey `sure`/`kare` toplam, `dosya`/`bayt` boş. `kopruDurak`: posteri ilk parçanın 0. karesi olan durağın id'si ("d4");
+ * oynatıcı kalkış görüntüsünden ona 350 ms poster çapraz sönmesiyle geçer, parçaları kare sınırında devreder.
  */
-export type Gecis = Klip & { readonly geri: Klip | null; readonly hizGeri: number };
+export type Gecis = Klip & {
+  readonly geri: Klip | null;
+  readonly hizGeri: number;
+  readonly parcalar?: readonly Klip[];
+  readonly kopruDurak?: string;
+};
 export type Poster = { readonly dosya: string; readonly bayt: number; readonly lqip: string };
 /**
  * doga/yapi/bolge: haritacılık etiketleri (§5). kunye (d1, §12.4-2): Antalya künyesi; `metin` SSR satırı
@@ -52,13 +61,13 @@ export type DuvarCapaAd = "bulusma" | "solen" | "motto";
 export type DuvarCapasi = { readonly ad: DuvarCapaAd; readonly dikey: Nokta; readonly yatay: Nokta };
 /** Yön başına video px nokta listesi (kırpım dışı ya da kenara 24 px'ten yakın nokta o yönde yok). */
 export type YonluListe<T> = Readonly<Record<Boyut, readonly T[]>>;
-/** fidan-kok (d9): kök ucu (81; p9 = t89 son karesi). `grup` 0 kazık kök, 1–6 ana kökler (dalga sırası); `ana` ana kökün ucu. */
+/** fidan-kok (d8): kök ucu (81; p9 = t79 son karesi). `grup` 0 kazık kök, 1–6 ana kökler (dalga sırası); `ana` ana kökün ucu. */
 export type KokUcu = { readonly x: number; readonly y: number; readonly grup: number; readonly ana: boolean };
-/** fidan-govde (d10): boğum (2; tree.ts KNOTS). `taraf` −1 sol, +1 sağ (etiketin yönü). Metin content.ts'ten (manifestte yok). */
+/** fidan-govde (d9): boğum (2; tree.ts KNOTS). `taraf` −1 sol, +1 sağ (etiketin yönü). Metin content.ts'ten (manifestte yok). */
 export type Bogum = { readonly x: number; readonly y: number; readonly taraf: -1 | 1 };
 /** Ana dal ucu adları, alttan üste (S3 `dal_uclari` sırası). */
 export type DalUcuAd = "solAlt" | "sağAlt" | "solOrta" | "sağOrta" | "solÜst" | "sağÜst";
-/** fidan-dal (d11) ve fidan-yaprak (d12): ana dal ucu (6; d11'de polaroid çapaları). */
+/** fidan-dal (d10) ve fidan-yaprak (d11): ana dal ucu (6; d10'da polaroid çapaları). */
 export type DalUcu = { readonly ad: DalUcuAd; readonly x: number; readonly y: number };
 export type Ozel = {
   readonly dunyaR?: readonly number[];
@@ -68,13 +77,13 @@ export type Ozel = {
   readonly yaylar?: Readonly<Record<Boyut, readonly (readonly Nokta[])[]>>;
   /** duvar (d6): p6 çapaları (bant satırı ↔ duvardaki rakam). */
   readonly duvarCapalari?: readonly DuvarCapasi[];
-  /** fidan-kok (d9): 81 kök ucu (DOM 81 halka; tek SVG katmanı). */
+  /** fidan-kok (d8): 81 kök ucu (DOM 81 halka; tek SVG katmanı). */
   readonly kokUclari?: YonluListe<KokUcu>;
-  /** fidan-govde (d10): 2 boğum (2017 / TBMM etiketleri). */
+  /** fidan-govde (d9): 2 boğum (2017 / TBMM etiketleri). */
   readonly bogumlar?: YonluListe<Bogum>;
-  /** fidan-dal (d11, polaroidler) ve fidan-yaprak (d12): 6 ana dal ucu. */
+  /** fidan-dal (d10, polaroidler) ve fidan-yaprak (d11): 6 ana dal ucu. */
   readonly dalUclari?: YonluListe<DalUcu>;
-  /** fidan-yaprak (d12): gövde ucu (önder). Kırpım dışına düşen yön yok. */
+  /** fidan-yaprak (d11): gövde ucu (önder). Kırpım dışına düşen yön yok. */
   readonly govdeUcu?: Partial<Record<Boyut, Nokta>>;
 };
 export type Durak = {
@@ -82,9 +91,12 @@ export type Durak = {
   readonly id: string;
   /** Durağın rolü: oynatıcı ve CSS dizinleri yalnız bundan ve tablo sırasından türetilir (rol.ts). */
   readonly rol: Rol;
-  /** "klip": video taşır (döngü yoksa gelen klibin son karesinde durur, d6–d11) | "dom": dinlenme DOM (d0). */
+  /** "klip": video taşır (döngü yoksa gelen klibin son karesinde durur, d6–d10) | "dom": dinlenme DOM (d0). */
   readonly tur: "klip" | "dom";
-  /** Gelen geçişin kare kare kadrajı (m; son öğe = dinlenme; fidan duraklarında ~0,23–0,64 m → site cm yazar) ya da sabit metin. */
+  /**
+   * Gelen geçişin kare kare kadrajı (m; son öğe = dinlenme; fidan duraklarında ~0,23–0,64 m → site cm yazar; d12'de zincirin
+   * 186 karesi, 23,8 m → 12.120 km) ya da sabit metin.
+   */
   readonly okuma: readonly number[] | string;
   readonly okumaDurak?: string;
   readonly poster: Partial<Record<Boyut, Poster>> | null;
@@ -95,7 +107,7 @@ export type Durak = {
 };
 export type KodekTanim = { readonly ad: KodekAd; readonly tip: string; readonly boyutlar: readonly Boyut[] };
 export type Manifest = {
-  /** 3: G turu (13 durak, masa + fidan-*; kapakTon/brosurDikdortgen kalktı). */
+  /** 3: G turu (13 durak, masa + fidan-*; kapakTon/brosurDikdortgen kalktı); W-2'de 14 durak (dunya-2, zincir geçiş); W-3'te 13 (masa kalktı). */
   readonly surum: number;
   readonly olusturma: string;
   readonly kaynak: "render" | "onizleme" | "yer-tutucu";

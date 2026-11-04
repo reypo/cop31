@@ -42,6 +42,7 @@ metni `# ===… MASKE` işaretinden kesilerek çalıştırılır (S2 dosyaların
 | klip | kare | durak | büyüme penceresi (u) | ışık | poster |
 |---|---|---|---|---|---|
 | t78f | 60 | d8 | — (S2 t78 + kasa, palamut) | S2 aynen | p8 = t78f[59] (son-kare) |
+| t79 | 60 | d7 → fidan-kök (broşürsüz; G-B sonrası; W-3 numarasıyla d8) | g_kok 0,30–0,94 (t89 ile aynı) | t89 ile aynı; S2 duvar ışığı t78 karesiyle | — (son ≡ t89[59] = p9) |
 | t89 | 60 | d8 → d9 | g_kok 0,30–0,94 | fidan_spot 0 → 1 (2.400 → 3.200 K) | p9 = t89[59] |
 | t9a | 54 | d9 → d10 | g_govde 0,12–0,92, kanca | güneş 0 → 0,15 | pa = t9a[53] |
 | tab | 54 | d10 → d11 | g_dal 0,10–0,92, tomurcuk 0,55–0,92 | güneş → 0,40, spot → 0,9 | pb = tab[53] |
@@ -52,6 +53,14 @@ Geri: G-A tasarımında yalnız **r98** (= t89 tersi, kodla.mjs `reverse`); **G-
 kalktı** (`GERI.t89 = null`), bütün fidan içi geri adımlar ve d9 → d8 350 ms poster çapraz sönmesi (jüri; §13.1 istisnası →
 ONAY). `kodla.mjs` ad tablosu: t89 t9a tab tbc lc; posterler p9 pa pb (son-kare) ve pc (lc[0]). CRF (G-A önerisi AV1
 t89/t9a/tab/tbc 32, lc 30, r98 36) K-son'da [H.264, HEVC, AV1] t89/t9a/tab 25/27/34, tbc 23/27/34, lc 23/27/32 oldu.
+
+**t79** (kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana atlayalım"): t78[0] (B pozu ≡ t67[47];
+18 mm, f/16, duvar odağı) → C9. Yol Catmull-Rom (yay uzunluğu, fiske): B → T78_WA → T78_W1 (t78 koridoru) → X → C9; X, C9'un
+bakışından `--t79_yan` (30°) açılı doğruda 1,15 m geride + 0,16 m yukarıda (30° → C9'un tam kuzeyi; 15/20° broşürü p9'dan
+büyük gösteriyordu, 45° son3 büyür). ψ −80 → −150 (s 0–0,90), φ +4 → `--t79_phi` (−12, s 0,5) → C9, lens 18 → 50 (ln, s
+0,40–0,95), odak duvar → kasa camı (s 0,35–0,85), f/16 → f/2,8 (s 0,45–0,95). S2'nin t78 animasyonu dondurulmaz (duvar ışığı
+devri kare kare; ilerleme dizileri eşit), yalnız kamera anahtarları silinir. Yoklama: `--olc79 DOSYA` (render yok; yol ↔ sahne
+yakınlığı + ışın isabeti, broşür kutusunun kare kare boyu, t79[0] kasa, t79[59] − t89[59] durum farkı, son3).
 
 ## JSON (`<kok>/<klip>.json`; S2 biçimi + S3 alanları)
 

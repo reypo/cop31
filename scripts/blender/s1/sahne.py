@@ -98,6 +98,8 @@ ap.add_argument("--mevsim", default="oto", choices=["oto", "kasim", "ilkbahar"])
 ap.add_argument("--mevsim_aralik", default="500e3,100e3")    # ÜST,ALT (m; ss doğrusal irtifada): t23 kare 9–17 (hız tepesinde: ln d 0,20–0,17/kare, tam kare 297–330 px/kare); 350→120 bölgede ΔE00 1,04/kare (> 1), 500→100 0,97 (BENIOKU G4)
 ap.add_argument("--mevsim_sabit", type=float, default=-1.0)  # teşhis/ölçüm: ≥ 0 ise mevsim_k her karede bu değer
 ap.add_argument("--yesil_k", type=float, default=1.0)       # G4-yeşil (brief §14.4.5): yakın alan yeşili; 0 = eski görünüm (BENIOKU G4)
+ap.add_argument("--orman_k", type=float, default=1.0)       # G4-dağ: dağlarda (150 m – 1.600/1.900 m ağaç sınırı) orman katmanı gücü; 0 = eski ağaç (BENIOKU G4-dağ)
+ap.add_argument("--dag_pus", type=float, default=0.6)       # G4-dağ: dağ örtüsünde pus inceltme (σ 1 km alçak geçirilmiş örtü, ≤ 0,7); 0 = pus aynen (BENIOKU G4-dağ)
 a = ap.parse_args(argv)
 KM.profil_sec(a.profil)
 KM.T34A_KIP = a.t34a_kip
@@ -251,9 +253,12 @@ def periyodik_gurultu(d, vec_xy, saat_ad, olcek, detay=4.0, yaricap=1.0):
 
 
 # ------------------------------------------------------------------ hava perspektifi (pus) düğüm grubu
-def pus_grubu():
-    ng = bpy.data.node_groups.new("Pus", "ShaderNodeTree")
+def pus_grubu(ad="Pus", azalt=False):
+    """azalt (G4-dağ, yalnız Arazi'nin "PusDag" kopyası): ek "Azalt" girişi, optik derinlik × (1 − Azalt). "Pus" aynen."""
+    ng = bpy.data.node_groups.new(ad, "ShaderNodeTree")
     ng.interface.new_socket(name="Shader", in_out="INPUT", socket_type="NodeSocketShader")
+    if azalt:
+        ng.interface.new_socket(name="Azalt", in_out="INPUT", socket_type="NodeSocketFloat")
     ng.interface.new_socket(name="Shader", in_out="OUTPUT", socket_type="NodeSocketShader")
     d = D(ng)
     gi = d("NodeGroupInput"); go = d("NodeGroupOutput")
@@ -264,6 +269,8 @@ def pus_grubu():
     dz = d.math("MAXIMUM", d.math("MULTIPLY", iz.outputs["Z"], s), 1.0)
     fak = d.math("MINIMUM", d.math("DIVIDE", d.math("MULTIPLY", d.math("SUBTRACT", 1.0, d.math("EXPONENT", d.math("DIVIDE", dz, -HS))), HS), dz), 1.0)
     tau = d.math("MULTIPLY", d.math("DIVIDE", d.math("MULTIPLY", s, fak), S0), attr(d, "pus_k"))
+    if azalt:
+        tau = d.math("MULTIPLY", tau, d.math("SUBTRACT", 1.0, gi.outputs["Azalt"]))
     h = d.math("SUBTRACT", 1.0, d.math("EXPONENT", d.math("MULTIPLY", tau, -1.0)))
     # renk: Rayleigh mavisi + güneş yönünde Mie ileri saçılması (karşı ışıkta altın pus)
     vd = d.vmath("SCALE", geo_.outputs["Incoming"]) if False else None
@@ -284,9 +291,11 @@ def pus_grubu():
 PUS = pus_grubu()
 
 
-def pusla(d, shader_out):
-    g = d("ShaderNodeGroup"); g.node_tree = PUS
+def pusla(d, shader_out, grup=None, azalt=None):
+    g = d("ShaderNodeGroup"); g.node_tree = grup or PUS
     d.b(shader_out, g.inputs[0])
+    if azalt is not None:
+        d.b(azalt, g.inputs["Azalt"])
     return g.outputs[0]
 
 
@@ -327,6 +336,165 @@ def mevsim_doku(d, ad, vec, renk_out):
         return renk_out
     yeni = resim(d, ad.replace(".jpg", "_ilkbahar.jpg"), True, vec)
     return d.karistir(attr(d, "mevsim_k"), renk_out, yeni.outputs["Color"])
+
+
+# G4-dağ (kullanıcı 4 Kasım ~17.00: "dağlar çöl gibi; ağaçlandırılmalı"): Arazi'de kızılçam/karaçam örtüsü. 2. tur (jüri
+# RET: sert kenarlı beyaz lekeler + pus basamağı): maskenin renge bağlı kısmı köşe özniteliğine taşındı ve dünya uzayında
+# alçak geçirildi (piksel başına S2 kenarı yok). dag_s (köşe) = eğim (3–9° giriş, 46–58° çıkış) × bakı (kuzey yoğun;
+# güneye bakan yüz de kızılçamlı) × (1 − kaya) × (1 − 0,4 kızıl bozkır); kaya = S2 ilkbahar 25 m'de ss(luma, 0,40, 0,60) → σ 400 m
+# alçak geçiren × (0,3 + 0,3·ss(h, 1.000, 1.200)) (≤ 0,6; 1.000 m altında ≤ 0,3: kaya = seyrek çamlı taşlık, boş delik değil).
+# Gölgelendirici: f = ss(h±160, 150, 330) × ağaç sınırı ss(h±200, 1.900, 1.600) × dag_s × kaplama (~900 m, ~%92) × kara;
+# kararlı örtü ss(f, 0,05, 0,80) × mevsim_k (l2 irtifasında 0 → t23[0] eski ağaçla aynı) × orman_k. Renk: S2 pikselinin
+# parlaklığı korunarak (kök, 0,7–1,15) serin çam yeşili; örtü parlamaz (ORMAN_SPEK). Pus inceltmesi (--dag_pus, ≤ 0,7)
+# piksel f'sine değil dag_fl'ye bağlı: statik örtünün σ 1 km alçak geçirilmişi × ss(h, 150, 330) (ova, kent, deniz 0) →
+# leke kenarında hava perspektifi basamağı yok, yamaç boyunca yavaş değişir.
+ORMAN = MEVSIM and a.orman_k > 0
+ORMAN_RENK = (0.030, 0.135, 0.100)      # doğrusal, sıyırma bakış (l3/t34a): serin çam yeşili (sRGB ≈ #30665A; 30–50 km sıcak pus altında gri-yeşil)
+ORMAN_RENK_UST = (0.038, 0.105, 0.060)  # doğrusal, yukarıdan bakış (t23; pus ince): koyu çam yeşili (sRGB ≈ #365A44); ara bakışta karışım
+ORMAN_DUZ = 0.9                         # sıyırma bakışta (görüş yüksekliği < 6–20°) örtünün gölgelendirme normali → yerel düşey
+                                        # (taç örtüsü: güneşli yüz / gölge farkı azalır; yukarıdan bakışta rölyef aynen)
+ORMAN_DOLGU = 0.85                      # sıyırma bakışta örtü ışımasının bu payı yöne bağlı değil (taç içi saçılma dolgusu):
+ORMAN_EF = (1.2, 1.1, 1.2)              # BSDF × (1 − 0,85) + emisyon renk·EF·0,85; EF = l3[0] örtü ortalama ışıma/albedo (G3 EXR)
+ORMAN_SPEK = 0.06                       # orman örtüsünde Principled "Specular IOR Level" (kara 0,35)
+DAG_PUS = min(a.dag_pus, 0.7)
+
+
+def _ss(v, a0, b0):
+    q = np.clip((v - a0) / (b0 - a0), 0.0, 1.0)
+    return q * q * (3.0 - 2.0 * q)
+
+
+def _kutu(A, r, ax):
+    A = np.moveaxis(A, ax, 0)
+    c = np.concatenate([np.zeros((1,) + A.shape[1:], A.dtype), np.cumsum(A, 0, dtype=A.dtype)], 0)
+    i = np.arange(A.shape[0])
+    return np.moveaxis(c[np.minimum(i + r + 1, A.shape[0])] - c[np.maximum(i - r, 0)], 0, ax)
+
+
+def _bulanik(A, s):
+    """Yaklaşık Gauss (σ = s px; 3 kutu geçişi), kenarda normalize."""
+    r = max(1, int(round((math.sqrt(4 * s * s + 1) - 1) / 2)))
+    A = A.astype(np.float64); W = np.ones_like(A)
+    for _ in range(3):
+        for ax in (0, 1):
+            A = _kutu(A, r, ax); W = _kutu(W, r, ax)
+    return A / np.maximum(W, 1e-9)
+
+
+def _ornek(A, ri, cj):
+    """Ayrık çift doğrusal örnek: satır kesirli indisleri ri × sütun cj → (len(ri), len(cj))."""
+    ri = np.clip(ri, 0, A.shape[0] - 1.001); cj = np.clip(cj, 0, A.shape[1] - 1.001)
+    c0 = cj.astype(np.int64); fc = cj - c0
+    B = A[:, c0] * (1 - fc) + A[:, c0 + 1] * fc
+    r0 = ri.astype(np.int64); fr = (ri - r0)[:, None]
+    return B[r0] * (1 - fr) + B[r0 + 1] * fr
+
+
+def _resim_oku(yol):
+    try:
+        import OpenImageIO as oiio
+        i = oiio.ImageInput.open(yol); x = i.read_image(format="uint8"); i.close()
+        return np.asarray(x)[..., :3]
+    except ImportError:
+        from PIL import Image
+        Image.MAX_IMAGE_PIXELS = None
+        return np.asarray(Image.open(yol).convert("RGB"))
+
+
+def orman_alanlari(hh, xs, tex):
+    """Köşe ızgarası (hh: N×N m, satır 0 = kuzey; xs: sinh koordinatları) → dag_s, dag_fl (bkz. G4-dağ notu)."""
+    hh = hh.astype(np.float64)
+    gx = np.gradient(hh, xs, axis=1)
+    gy = np.gradient(hh, xs[::-1], axis=0)                # d/dY (kuzey +); satır 0 = kuzey
+    gm = np.hypot(gx, gy)
+    e = np.degrees(np.arctan(gm)); k = -gy / np.maximum(gm, 1e-6)
+    del gx, gy, gm
+    # S2 ilkbahar bölge (±76,8 km, 25 m; satır 0 = kuzey) → 100 m blok ortalaması (kaya / kızıl oranı) → σ 400 m
+    im = _resim_oku(os.path.join(tex, "s2_bolge_ilkbahar.jpg"))
+    v8 = np.arange(256) / 255.0
+    lut = np.where(v8 <= 0.04045, v8 / 12.92, ((v8 + 0.055) / 1.055) ** 2.4).astype(np.float32)
+    B = 4; m_ = im.shape[0] // B
+    kaya = np.empty((m_, m_), np.float32); kiz = np.empty((m_, m_), np.float32)
+    for r0 in range(0, m_, 128):
+        r1 = min(r0 + 128, m_)
+        p = im[r0 * B:r1 * B, :m_ * B]
+        R_, G_, B_ = lut[p[..., 0]], lut[p[..., 1]], lut[p[..., 2]]
+        lum = 0.2126 * R_ + 0.7152 * G_ + 0.0722 * B_
+        kaya[r0:r1] = _ss(lum, 0.40, 0.60).reshape(r1 - r0, B, m_, B).mean((1, 3))
+        kiz[r0:r1] = _ss(R_ - G_, 0.04, 0.09).reshape(r1 - r0, B, m_, B).mean((1, 3))
+    del im
+    px = 153600.0 / m_
+    kaya = _bulanik(kaya, 400.0 / px); kiz = _bulanik(kiz, 400.0 / px)
+    cj = (xs + 76800.0) / px - 0.5                        # sütun j: X = xs[j]
+    ri = (xs + 76800.0) / px - 0.5                        # satır i: Y = −xs[i] → (76.800 − Y)/px
+    ic = (np.abs(xs) < 76800.0)[:, None] & (np.abs(xs) < 76800.0)[None, :]
+    kaya = np.where(ic, _ornek(kaya, ri, cj), 0.0); kiz = np.where(ic, _ornek(kiz, ri, cj), 0.0)
+    kaya_w = kaya * (0.3 + 0.3 * _ss(hh, 1000.0, 1200.0))
+    s = _ss(e, 3.0, 9.0) * _ss(e, 58.0, 46.0) * (0.82 + 0.18 * k)          # güneye bakan yamaç da kızılçamlı (2. tur)
+    s *= (1 - kaya_w) * (1 - 0.4 * kiz)
+    del e, k, kaya, kiz, kaya_w
+    # pus sürücüsü: statik örtü (yükseklik bandı dahil, gürültüsüz) → 250 m düzgün ızgara → σ 1 km → köşeler
+    F = s * _ss(hh, 150.0, 330.0) * _ss(hh, 1900.0, 1600.0)
+    L_ = float(xs[-1]); pu = 250.0; nu = int(2 * L_ / pu) + 1
+    iu = np.interp(-L_ + pu * np.arange(nu), xs, np.arange(len(xs), dtype=np.float64))   # düzgün → köşe indisi (simetrik)
+    Fu = _bulanik(_ornek(F, iu, iu), 1000.0 / pu)
+    ju = (xs + L_) / pu
+    fl = np.minimum(1.25 * _ss(_ornek(Fu, ju, ju), 0.05, 0.40), 1.0) * _ss(hh, 150.0, 330.0)
+    return s.astype(np.float32), fl.astype(np.float32)
+
+
+def orman_oznitelik(me):
+    """Arazi köşelerine dag_h (m), dag_s (statik örtü), dag_fl (pus sürücüsü): arazi_h.npy, sinh ızgara (AR_XS), S2 ilkbahar."""
+    t0 = time.time()
+    s_, fl = orman_alanlari(AR_H, AR_XS, TEX)
+    for ad, v in (("dag_h", AR_H), ("dag_s", s_), ("dag_fl", fl)):
+        at_ = me.attributes.new(ad, "FLOAT", "POINT")
+        at_.data.foreach_set("value", np.ascontiguousarray(v, np.float32).ravel())
+    log("orman öznitelikleri", f"{time.time() - t0:.1f} sn")
+
+
+def attr_g(d, ad):
+    return d("ShaderNodeAttribute", attribute_type="GEOMETRY", attribute_name=ad).outputs["Fac"]
+
+
+def orman_katmani(d, col, eq, su):
+    h, s_ = attr_g(d, "dag_h"), attr_g(d, "dag_s")
+    n1 = d("ShaderNodeTexNoise", i_Scale=1 / 550.0, i_Detail=3.0, i_Roughness=0.55); d.b(eq, n1.inputs["Vector"])
+    n2 = d("ShaderNodeTexNoise", i_Scale=1 / 900.0, i_Detail=2.0, i_Roughness=0.5)
+    d.b(d.vmath("ADD", eq, (13100.0, -7700.0, 0.0)), n2.inputs["Vector"])
+    n3 = d("ShaderNodeTexNoise", i_Scale=1 / 130.0, i_Detail=2.0, i_Roughness=0.6); d.b(eq, n3.inputs["Vector"])
+    nz = d.math("SUBTRACT", n1.outputs["Fac"], 0.5)
+    f = d.math("MULTIPLY", d.aralik(d.math("ADD", h, d.math("MULTIPLY", nz, 320.0)), 150.0, 330.0),
+               d.aralik(d.math("ADD", h, d.math("MULTIPLY", nz, 400.0)), 1900.0, 1600.0))
+    f = d.math("MULTIPLY", f, s_)
+    f = d.math("MULTIPLY", f, d.aralik(n2.outputs["Fac"], 0.22, 0.42))
+    f = d.math("MULTIPLY", f, d.math("SUBTRACT", 1.0, su))
+    # kararlı örtü: ham maske 0,05 → 0,80 smoothstep (geniş: leke kenarı yumuşak)
+    f = d.math("MULTIPLY", d.aralik(f, 0.05, 0.80), attr(d, "mevsim_k"))
+    f = d.math("MINIMUM", d.math("MULTIPLY", f, a.orman_k), 1.0)
+    lum = d.vmath("DOT_PRODUCT", col, (0.2126, 0.7152, 0.0722))
+    doku = d.math("MULTIPLY", d.math("MINIMUM", d.math("MAXIMUM", d.math("SQRT", d.math("DIVIDE", lum, 0.10)), 0.85), 1.10),
+                  d.math("ADD", 0.92, d.math("MULTIPLY", n3.outputs["Fac"], 0.16)))
+    # sıyırma bakış (l3; görüş yüksekliği < ~6° → 1, > ~20° → 0): serin renk + örtü gölgelendirmesinin ORMAN_DOLGU payı ışık
+    # yönünden bağımsız dolgu (emisyon); yukarıdan (t23) koyu çam yeşili, dolgu ve normal düzleme yok
+    gn_ = d("ShaderNodeNewGeometry")
+    yuk_ = d.vmath("NORMALIZE", d.vmath("ADD", gn_.outputs["Position"], (0.0, 0.0, R)))
+    siy_ = d.aralik(d.vmath("DOT_PRODUCT", gn_.outputs["Incoming"], yuk_), 0.35, 0.10)
+    orm = d("ShaderNodeVectorMath", operation="SCALE"); d.b(d.karistir(siy_, ORMAN_RENK_UST, ORMAN_RENK), orm.inputs[0])
+    d.b(doku, orm.inputs["Scale"])
+    q_ = d.math("MULTIPLY", siy_, ORMAN_DOLGU)
+    ormb = d("ShaderNodeVectorMath", operation="SCALE"); d.b(orm.outputs["Vector"], ormb.inputs[0])
+    d.b(d.math("SUBTRACT", 1.0, q_), ormb.inputs["Scale"])
+    em = dict(renk=d.vmath("MULTIPLY", orm.outputs["Vector"], ORMAN_EF), guc=d.math("MULTIPLY", f, q_), gn=gn_, yuk=yuk_, siy=siy_)
+    return d.karistir(f, col, ormb.outputs["Vector"]), f, em
+
+
+def orman_pus(d):
+    """Pus inceltme: DAG_PUS · dag_fl · mevsim_k · min(orman_k, 1) · kamera ışını (alçak geçirilmiş örtü; l2 irtifasında 0;
+    körfez yansıması ve dolaylı ışık eski pusu görür → deniz/ova değişmez)."""
+    k_ = d.math("MULTIPLY", d.math("MULTIPLY", attr_g(d, "dag_fl"), attr(d, "mevsim_k")), DAG_PUS * min(a.orman_k, 1.0))
+    return d.math("MULTIPLY", k_, d("ShaderNodeLightPath").outputs["Is Camera Ray"])
+
 
 # ------------------------------------------------------------------ Dünya küresi
 OB = {}
@@ -467,6 +635,8 @@ if not a.sadece_json:
     eq2 = EQ.copy(); eq2[:, 1] *= -1.0                 # (x doğu, Y kuzey)
     at.data.foreach_set("vector", eq2.ravel())
     del P, EQ, eq2
+    if ORMAN:
+        orman_oznitelik(me)
     arazi = bpy.data.objects.new("Arazi", me); sc.collection.objects.link(arazi)
     m, d = malzeme("Arazi"); me.materials.append(m)
     out = d("ShaderNodeOutputMaterial")
@@ -519,6 +689,8 @@ if not a.sadece_json:
             hsg = d("ShaderNodeHueSaturation", i_Hue=0.5 + 0.042 * YK, i_Saturation=1 + 0.65 * YK, i_Value=1 + 0.12 * YK)
             d.b(col, hsg.inputs["Color"])
             col = d.karistir(d.math("MULTIPLY", yesil, yakin9), col, hsg.outputs["Color"])
+    if ORMAN:       # G4-dağ: dağlarda orman (yakın ova < 150 m ve deniz dışında; deniz rengi dkol da bu col'dan, su'da f = 0)
+        col, orman_f, orman_em = orman_katmani(d, col, eq, su)
     if B_YAKIN:     # kara rengi biraz daha doygun (müşteri: renkli); deniz rengi ayrı (dkol) etkilenmez
         hsb = d("ShaderNodeHueSaturation", i_Saturation=1.18, i_Value=1.0); d.b(col, hsb.inputs["Color"]); col_kara = hsb.outputs["Color"]
     else:
@@ -526,6 +698,13 @@ if not a.sadece_json:
     col_k = d("ShaderNodeVectorMath", operation="SCALE"); d.b(col_kara, col_k.inputs[0]); d.b(detay, col_k.inputs["Scale"])
     kara = d("ShaderNodeBsdfPrincipled", i_Roughness=0.9)
     kara.inputs["Specular IOR Level"].default_value = 0.35
+    if ORMAN:       # G4-dağ: çam örtüsü parlamaz (karşı ışıkta sıyırma açısındaki bej parıltı kayadan/çıplak yamaçtan gelir)
+        d.b(d.karistir(orman_f, 0.35, ORMAN_SPEK, "FLOAT"), kara.inputs["Specular IOR Level"])
+        d.b(d.karistir(orman_f, 0.9, 1.0, "FLOAT"), kara.inputs["Roughness"])
+        # taç örtüsü: normal yerel düşeye ORMAN_DUZ·f·sıyırma kadar (f = 0'da normal aynen) + dolgu emisyonu (f·0,6·sıyırma)
+        d.b(d.vmath("NORMALIZE", d.karistir(d.math("MULTIPLY", d.math("MULTIPLY", orman_f, orman_em["siy"]), ORMAN_DUZ),
+                                            orman_em["gn"].outputs["Normal"], orman_em["yuk"], "VECTOR")), kara.inputs["Normal"])
+        d.b(orman_em["renk"], kara.inputs["Emission Color"]); d.b(orman_em["guc"], kara.inputs["Emission Strength"])
     d.b(col_k.outputs[0], kara.inputs["Base Color"])
     # su: S2 rengi, Fresnel (Principled IOR 1,33), dalga normali (L3'te periyodik), güneş parıltısı
     deniz = d("ShaderNodeBsdfPrincipled", i_Roughness=0.2, i_IOR=1.333)
@@ -574,10 +753,17 @@ if not a.sadece_json:
     a_kam = d.aralik(kenar, 0.0, 3000.0)
     a_gol = d.aralik(kenar, 2990.0, 3000.0, tip="LINEAR")
     ma = d("ShaderNodeMixShader"); d.b(d.karistir(lp_.outputs["Is Shadow Ray"], a_kam, a_gol, "FLOAT"), ma.inputs[0])
-    d.b(tr_.outputs[0], ma.inputs[1]); d.b(pusla(d, mk.outputs[0]), ma.inputs[2])
+    if ORMAN and a.dag_pus > 0:
+        # G4-dağ: dağ örtüsünde pus optik derinliği × (1 − dag_pus · dag_fl) (dag_fl: σ 1 km alçak geçirilmiş statik örtü ×
+        # ss(h, 150, 330); mevsim_k dahil). Karşı ışıkta 30–50 km'de pus pikselin %60–80'i: yalnız albedo değişince orman
+        # görünmüyordu (ölçüldü, BENIOKU G4-dağ). Ova, kent, deniz, gök aynen (dag_fl = 0).
+        pz = pusla(d, mk.outputs[0], pus_grubu("PusDag", azalt=True), orman_pus(d))
+    else:
+        pz = pusla(d, mk.outputs[0])
+    d.b(tr_.outputs[0], ma.inputs[1]); d.b(pz, ma.inputs[2])
     d.b(ma.outputs[0], out.inputs["Surface"])
     OB["arazi"] = arazi
-    log("arazi", len(me.vertices), "köşe")
+    log("arazi", len(me.vertices), "köşe", f"orman_k {a.orman_k} dag_pus {a.dag_pus}" if ORMAN else "orman yok")
 
 # ------------------------------------------------------------------ OSM yakın alan
 def npz_obje(ad, malzemeler):
@@ -1434,6 +1620,8 @@ def disari_aktar():
                             "dokular": {"kasim": ["s2_bolge.jpg", "s2_genis.jpg"],
                                         "ilkbahar": ["s2_bolge_ilkbahar.jpg", "s2_genis_ilkbahar.jpg"]},
                             "not": "mevsim_k = ss(irtifa, UST, ALT): UST ve ustu 0 (l2 = t23[0] eski agacla ayni), ALT ve alti 1"}
+            if ORMAN:       # G4-dağ: orman katmanı aynı anahtarla (mevsim_k × orman_k)
+                js["g_turu"]["orman_k"] = a.orman_k; js["g_turu"]["dag_pus"] = a.dag_pus
         # poster çapaları (döngünün 0. karesi, master px)
         poster = {"l1": "p1", "l2": "p2", "l3": "p3"}.get(klip)
         if poster:

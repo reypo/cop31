@@ -6,33 +6,39 @@ import KadrajOkumasi, { okumaYaz } from "./KadrajOkumasi";
 import type { Boyut, IstemciManifest, KodekAd, Nokta } from "./klipler";
 import Lombar, { delikYaz } from "./Lombar";
 import { kodekSec, Oynatici, type Kayit } from "./oynatici";
-import { dizinler, rolu, type Rol } from "./rol";
+import { dizinler, fidanRolu, rolu, sirasi, type Rol } from "./rol";
 
 /**
  * /icinden v3 sahnesi (brief-icinden-3 §2.4, §9.5, §12.4, G turu §14.4.6; oynatıcı docs/klip-oynatma.md). Sabit sahne
  * (poster, 3 video, yedek, lombar kâğıdı, etiketler + fidan katmanı, kadraj okuması) + belgede N durak bölümü (100svh,
- * görünmez çapa; metin bantları ve d11 polaroidleri onların içinde `position: fixed`) + kapanış (dizin N).
+ * görünmez çapa; metin bantları ve d10 polaroidleri onların içinde `position: fixed`) + kapanış (dizin N).
  *
  * Durak numaraları sabit DEĞİL: hepsi manifestin rol tablosundan (rol.ts `dizinler`; E turu, §12.4-1). Bugünkü
- * tablo (G turu, §14.4.2) d0 lombar · d1 dunya · d2 emanet · d3 expo · d4 anatomi · d5 sutunlar · d6–d7 duvar · d8 masa ·
- * d9 fidan-kok · d10 fidan-govde · d11 fidan-dal · d12 fidan-yaprak · 13 kapanış.
+ * tablo (G turu §14.4.2 + W-2/W-3 §14.7) d0 lombar · d1 dunya · d2 emanet · d3 expo · d4 anatomi · d5 sutunlar · d6–d7 duvar ·
+ * d8 fidan-kok · d9 fidan-govde · d10 fidan-dal · d11 fidan-yaprak · d12 dunya ("Gezegenimiz Ortak Evimizdir") · 13 kapanış
+ * (W-3: d8 masa kalktı, duvardan doğrudan fidana).
  *
  * Durum makinesi: DUR(k) → jest → GECIS(k→j) → DUR(j). Bir jest = bir geçiş; adım süresi = geçişin süresi
  * (klip + DOM ön/son evresi); geçiş sürerken jestler yok sayılır (ters geçiş yok, §9.5). Video geçişleri
- * Oynatici'de (döngüsüz duraklar dahil: duvar, masa, fidan d9–d11 gelen klibin son karesinde durur; fidan içi geri adım
- * geri klibi olmadığından hedef posterinin 350 ms çapraz sönmesi, `Gecis.geri === null`). DOM evresi yalnız lombar↔dunya:
- * logo sönmesi 0,3 s + amblem dairesinde ilk kare 0,3 s + lombar deliği (t01 kare kare).
+ * Oynatici'de (döngüsüz duraklar dahil: duvar, fidan d8–d10 gelen klibin son karesinde durur; fidan içi geri adım
+ * geri klibi olmadığından hedef posterinin 350 ms çapraz sönmesi, `Gecis.geri === null`; d11 → d12 zincir: köprü 350 ms +
+ * r43 → r32 → r21, 6,55 s, geri adım poster sönmesi). DOM evresi yalnız lombar↔dunya (d0 ↔ d1): logo sönmesi 0,3 s +
+ * amblem dairesinde ilk kare 0,3 s + lombar deliği (t01 kare kare).
  *
  * React state YOK: her şey kök öznitelikleri (data-durak, data-faz, data-hedef, data-metin, data-etiket,
- * data-dinlenme, data-spot, data-kagit, data-kiosk, data-engel; rol eşleri data-rol, data-hedef-rol,
+ * data-dinlenme, data-spot, data-kagit, data-kiosk, data-engel, data-bekle, data-sira; rol eşleri data-rol, data-hedef-rol,
  * data-metin-rol, data-dinlenme-rol — CSS yalnız bunlarla), polaroid figürlerinde `data-hazir` (görsel çözüldü) ve
  * doğrudan stil yazımıyla (lombar maskesi, kılavuz çizgisi). Fidan katmanının (81 halka, boğum etiketleri, polaroidler)
  * bütün animasyonu CSS geçişi (opaklık/transform), kök özniteliklerinden; her karede JS stil yazımı yok (§13.8).
- * Reduced-motion'da adımlama kurulmaz (CSS akış düzeni, video yok); oturum ortasında açılırsa sayfa yenilenir.
  * Activity (Next 16): gizlenince etkiler temizlenir (videolar durur, bloblar bırakılır, touch-action geri).
  *
- * Veri Tasarrufu / 2G–3G / prefers-reduced-data (brief §6): poster kipi — video inmez, geçişler poster çapraz
- * sönmesi (lombar ve okuma aynı zamanlamayla). `?poster=1` ile zorlanır (ölçüm).
+ * Yedek kipler (W-2 §14.7; kullanıcı: kamera hareketleri her zaman): prefers-reduced-motion'da da adımlama, video
+ * geçişleri ve döngüler sürer (geçişler kullanıcı jestine bağlı); yalnız DOM süsleri (halka, polaroid, etiket ve bant
+ * geçişleri, sarkaç, yaylar) CSS'te anında. Eski akış düzeni (video yok, posterler) yalnız `?azalt=1`. Poster kipi
+ * (video inmez, geçişler poster çapraz sönmesi) yalnız `?poster=1`: Veri Tasarrufu / 2G / 3G / prefers-reduced-data artık
+ * video ister. Otomatik oynatma engeli: oynatıcı her jestte kilidi yeniden dener (oynatici.ts `kilitAc`).
+ * Bekle kipi (W-4 §14.7): klip inmediyse / oynatma reddedildiyse geçiş poster sönmesine düşmez; mevcut kare durur, kökte
+ * `data-bekle="1"` (300 ms'den uzunsa sol üstte halka), metin ertelenir, adımlayıcı kilidi varışa dek sürer.
  */
 
 const KIOSK_KAPANIS_MS = 9000;
@@ -41,16 +47,22 @@ const KIOSK_KAPANIS_MS = 9000;
  * (600 + n × aralık), yoksa 5 s. Varıştan (varildi) sayılır.
  */
 const KIOSK_MS: Partial<Record<Rol, number>> = {
-  masa: 3000,
   "fidan-kok": 5000,
   "fidan-govde": 4500,
   "fidan-dal": 5000,
   "fidan-yaprak": 6000,
 };
+/**
+ * Kiosk'ta spot aralığı (W-2 §14.7: d12 Dünya'ya uzaklaşma turu ~11,5 s uzattı, W-3'te masa kalktı; tur 115–125 s kalsın). Hareketli düzende
+ * aralık değişmez (anatomi/duvar 3,5 s, sutunlar 4,5 s). Sutunlarda kiosk 12 satırın KIOSK_SUTUN_SAY'ını gösterir.
+ */
+// W-3: masa kalkınca tur 116,8 s'ye indi (ölçüldü); anatomi yeniden 4 × 3,5 s (bölge satırları okunsun) → ~121 s.
+const KIOSK_SPOT_MS: Partial<Record<Rol, number>> = { duvar: 2500, sutunlar: 4000 };
+const KIOSK_SUTUN_SAY = 2;
 
 const LOGO_MS = 300;
 const METIN_ONCE_MS = 250;
-/** d10 (gövde) dinlenmesinde polaroid görsellerinin indirilip çözülmesi varıştan bu kadar sonra (devir penceresinin dışında). */
+/** d9 (gövde) dinlenmesinde polaroid görsellerinin indirilip çözülmesi varıştan bu kadar sonra (devir penceresinin dışında). */
 const POLAROID_HAZIRLA_MS = 700;
 /** Duvar kılavuzunun çapa ucunda bıraktığı boşluk (px): çizgi duvardaki rakamın içine girmesin (F turu D1-11 dersi). */
 const DUVAR_KILAVUZ_BOSLUK = 22;
@@ -71,18 +83,15 @@ export default function VideoSahne({
   useEffect(() => {
     const kok = kokRef.current;
     if (!kok) return;
-    const azalt = window.matchMedia("(prefers-reduced-motion: reduce)");
-    // Ayar oturum ortasında değişirse (iki yönde de) düzen baştan kurulur: CSS akış düzenine geçip JS adımlama,
-    // video ve touch-action'ı açık bırakmasın (denetim A2-13).
-    const yenile = () => location.reload();
-    azalt.addEventListener("change", yenile);
-    if (azalt.matches) {
+    const q = new URLSearchParams(location.search);
+    // Eski reduced düzeni (akış + posterler, video yok, adımlama yok) yalnız el ile (W-2 §14.7; ölçüm aracı "reduced").
+    // prefers-reduced-motion artık bu düzeni AÇMAZ: kamera hareketleri sürer, DOM süsleri CSS'te anında.
+    if (q.get("azalt") === "1") {
       kok.dataset.azalt = "1";
       // Akış düzeninde polaroidler bölümün içinde statik: tarayıcının tembel yüklemesiyle.
       polaroidYukle(kok, true);
-      return () => azalt.removeEventListener("change", yenile);
+      return;
     }
-    const q = new URLSearchParams(location.search);
     let iptal = false;
     let temizle: (() => void) | null = null;
     const boyutHesapla = (): Boyut => {
@@ -96,7 +105,6 @@ export default function VideoSahne({
     });
     return () => {
       iptal = true;
-      azalt.removeEventListener("change", yenile);
       temizle?.();
     };
   }, [manifest]);
@@ -129,6 +137,10 @@ export default function VideoSahne({
       </div>
       {/* Sahne kabının dışında: metin bandının scrim'i (z 10) okumayı karartmasın. */}
       <KadrajOkumasi />
+      {/* Bekle kipi (W-4): klip inene dek mevcut kare durur; halka yalnız 300 ms'den uzun beklemede (CSS). */}
+      <div className="v3-bekle" aria-hidden="true">
+        <i />
+      </div>
       {/* Ekran okuyucu: klavyeyle adım atılınca yeni durağın başlığı (odak yerinde kalır). */}
       <p data-v3-canli className="sr-only" aria-live="polite" />
       {children}
@@ -139,8 +151,8 @@ export default function VideoSahne({
 /* ================================================================================================ */
 
 /**
- * d11 polaroidleri (Icinden3 `Polaroidler`): görseller sunucuda `data-v3-src`/`data-v3-srcset` olarak gelir (HTML'de 1 px
- * yer tutucu; ilk yüklemede inmez). Hareketli düzende d10 dinlenmesinde (ya da doğrudan d11/d12'ye varışta) kaynak atanır ve
+ * d10 polaroidleri (Icinden3 `Polaroidler`): görseller sunucuda `data-v3-src`/`data-v3-srcset` olarak gelir (HTML'de 1 px
+ * yer tutucu; ilk yüklemede inmez). Hareketli düzende d9 dinlenmesinde (ya da doğrudan d10/d11'e varışta) kaynak atanır ve
  * `img.decode()` beklenir; çözülen figür `data-hazir` alır (CSS ancak o zaman gösterir). Reduced'da tembel yükleme.
  */
 function polaroidYukle(kok: HTMLElement, tembel: boolean): Promise<void>[] {
@@ -162,17 +174,12 @@ function polaroidYukle(kok: HTMLElement, tembel: boolean): Promise<void>[] {
   });
 }
 
-/** Veri tasarrufu: Save-Data, 2G/3G tahmini ya da prefers-reduced-data (brief §6). */
+/**
+ * Poster kipi yalnız el ile (`?poster=1`; W-2 §14.7). Save-Data, 2G/3G tahmini ve prefers-reduced-data eskiden kendiliğinden
+ * poster kipine geçiriyordu (brief §6): kullanıcının telefonunda "yalnız resimler değişiyor"du. Şimdilik tamamen kapalı.
+ */
 function azVeri(q: URLSearchParams): boolean {
-  if (q.get("poster") === "1") return true;
-  try {
-    const c = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    if (c?.saveData) return true;
-    if (/(^|-)(2g|3g)$/.test(c?.effectiveType ?? "")) return true;
-    return window.matchMedia("(prefers-reduced-data: reduce)").matches;
-  } catch {
-    return false;
-  }
+  return q.get("poster") === "1";
 }
 
 function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekAd, q: URLSearchParams): () => void {
@@ -194,7 +201,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   const N = I.N;
   const [, govde] = I.fidanlar;
   /**
-   * Bantlardaki bağlantılar (d0 şeridi: "← Konseptler", "Dijital broşür →"; d8 masa: "Dijital broşür →"): yalnız bandı
+   * Bantlardaki bağlantılar (d0 şeridi: "← Konseptler", "Dijital broşür →"): yalnız bandı
    * görünürken Tab sırasında (denetim A2-06; bant opaklık 0'da odaklanmasın).
    */
   const baglantilar = D.map((_, j) => [...kok.querySelectorAll<HTMLAnchorElement>(`.v3-bant[data-d="${j}"] a`)]);
@@ -317,6 +324,8 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   const durakYaz = (j: number) => {
     kok.dataset.durak = String(j);
     kok.dataset.rol = kokRol(j);
+    // Aynı rolün kaçıncısı (W-2: d12 ikinci dunya → ters yaylar, varış halkası yok; icinden3-isik.css).
+    kok.dataset.sira = String(j < N ? sirasi(R, j) : 0);
   };
   const hedefYaz = (j: number | null) => {
     if (j === null) {
@@ -348,7 +357,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
    * durakta yok). Sayılar DOM'dan bir kez okunur: tablo değişince Icinden3'ün bandı belirler.
    */
   const spotSay = D.map((_, j) => kok.querySelectorAll(`.v3-bant[data-d="${j}"] :is(.v3-spot-satir, .v3-sutun-satir)`).length);
-  const spotAralik = (j: number) => (R[j] === "sutunlar" ? 4500 : 3500);
+  const spotAralik = (j: number) => (kiosk ? KIOSK_SPOT_MS[R[j]] : undefined) ?? (R[j] === "sutunlar" ? 4500 : 3500);
   let spotId = 0;
   let spotN = 0;
   const spotDurdur = () => {
@@ -459,10 +468,10 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     dinlenmeId = sonra(400, () => dinlenmeYaz(j));
     okumaYaz(kadrajEl, okuma(j));
     spotBaslat(j);
-    // d11 polaroidleri: d10 (gövde) dinlenmesinde, varış devrinin dışında indirilip çözülür (§14.4.6); d11/d12'ye doğrudan
-    // varışta (yerleşme, kiosk başa dönüşü değil) hemen.
+    // d10 polaroidleri: d9 (gövde) dinlenmesinde, varış devrinin dışında indirilip çözülür (§14.4.6); d10/d11'e doğrudan
+    // varışta (yerleşme, kiosk başa dönüşü değil) hemen. d12'ye (Dünya) doğrudan varışta değil.
     iptalEt(polaroidId);
-    if (!polaroidIstendi && govde >= 0 && j >= govde && j < N) polaroidId = sonra(j === govde ? POLAROID_HAZIRLA_MS : 0, polaroidHazirla);
+    if (!polaroidIstendi && govde >= 0 && j >= govde && fidanRolu(R[j])) polaroidId = sonra(j === govde ? POLAROID_HAZIRLA_MS : 0, polaroidHazirla);
   };
   /** Ekran okuyucuya yeni durağın başlığı (sr-only h1/h2; yalnız jestle varışta). */
   const duyur = (j: number) => {
@@ -472,6 +481,8 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   const gecisBasi = (hedef: number) => {
     faz = "gecis";
     kok.dataset.faz = "gecis";
+    bekledi = false;
+    kok.dataset.bekle = "0";
     hedefYaz(hedef);
     metinYaz("-");
     dinlenmeYaz("-");
@@ -481,7 +492,20 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     spotDurdur();
     kioskDurdurZaman();
   };
-  const metinGelsin = (j: number, ms: number) => sonra(ms, () => metinYaz(j));
+  let metinId = 0;
+  const metinGelsin = (j: number, ms: number) => (metinId = sonra(ms, () => metinYaz(j)));
+  /**
+   * Bekle kipi (W-4): bu geçiş bekledi mi (adımlayıcı kilidi varışa dek; `kilitli`). Bekleme başlayınca gösterge açılır ve
+   * metin ertelenir; bitince (geçiş videoyla başlıyor) metin kalan video süresine göre yeniden kurulur (j null: metin yok).
+   */
+  let bekledi = false;
+  const bekleGeri = (j: number | null) => (basladi: boolean, kalanMs: number) => {
+    if (basladi) bekledi = true;
+    kok.dataset.bekle = basladi ? "1" : "0";
+    if (j === null) return;
+    if (basladi) iptalEt(metinId);
+    else metinGelsin(j, kalanMs - METIN_ONCE_MS);
+  };
   /** Geçişin klibine göre kadraj okuması: gelen dizinin karesi (geri yönde tersten). */
   const okumaKare = (hedefDizi: number, f: number, n: number, ters: boolean) => {
     const o = D[hedefDizi]?.okuma;
@@ -504,6 +528,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   /* ---------------- adım ---------------- */
   const varildi = (j: number) => {
     if (oy.kodekBekliyor && j < N) kodekUygula();
+    kodek = oy.kodek; // beklerken kod çözme hatası (W-4) yerinde H.264'e dönmüş olabilir
     durakKur(j);
     duyur(j);
     if (olcBekliyor) yenidenOlc();
@@ -552,6 +577,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       kagitDelik(0.97 * L.r0, 1);
       const v = oy.gec(to, 1, jest.tur, jest.t, {
         oncesiMs: 2 * LOGO_MS,
+        bekle: bekleGeri(to),
         kare: (f, n) => {
           kagitDelik(delikR(f));
           okumaKare(to, f, n, false);
@@ -575,6 +601,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       kagitGoster(1);
       kagitDelik(L.kose);
       const v = oy.gec(to, -1, jest.tur, jest.t, {
+        bekle: bekleGeri(null),
         kare: (f, n) => {
           kagitDelik(delikR(n - 1 - f));
           okumaKare(from, f, n, true);
@@ -592,10 +619,12 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       okumaYaz(kadrajEl, "");
       return v + 2 * LOGO_MS;
     }
-    // Klipli geçişler (ileri ve geri; d1 … d12). Döngüsüz duraklar (duvar, masa, fidan d9–d11) gelen klibin son karesinde
-    // durur. Fidan içi geri adımda (geri klip yok) oynatıcı hedef posterini 350 ms çapraz söndürür; okuma aynı geri çağrıyla.
+    // Klipli geçişler (ileri ve geri; d1 … d12). Döngüsüz duraklar (duvar, fidan d8–d10) gelen klibin son karesinde
+    // durur. Fidan içi geri adımda ve d12→d11'de (geri klip yok) oynatıcı hedef posterini 350 ms çapraz söndürür; d11→d12
+    // zincir (köprü + r43 → r32 → r21, 6,55 s; kadraj okuması zincirin 186 karesiyle). Okuma aynı geri çağrıyla.
     const ters = dir < 0;
     const v = oy.gec(to, dir, jest.tur, jest.t, {
+      bekle: bekleGeri(to),
       kare: (f, n) => okumaKare(ters ? from : to, f, n, ters),
       varis: () => varildi(to),
     });
@@ -607,7 +636,8 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       });
       return 400;
     }
-    metinGelsin(to, v - METIN_ONCE_MS);
+    // Bekleme gec() içinde başladıysa (klip hazır değil) metin bekleme bitince kurulur (bekleGeri).
+    if (!oy.bekleme) metinGelsin(to, v - METIN_ONCE_MS);
     return v;
   };
 
@@ -625,10 +655,10 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   olc();
 
   /* ---------------- kiosk (?auto=1) ---------------- */
-  // Tur: d0 → … → d12 → kapanış (atıflar görünür; OSM/Copernicus atfı kamusal ekranda zorunlu, denetim A3-01) →
-  // beyaza sönüp başa. Ziyaretçi kapanışa inse de 30 s sonra buradan başa döner (A2-03). Spot satırlı durak her satırı
-  // bir kez gösterir (anatomi 4 × 3,5 s, A1-07; ilk duvar 3 × 3,5 s = 11,1 s, §12.1); sutunlar 12 satırın 3'ünü
-  // (3 × 4,5 s); masa ve fidan durakları KIOSK_MS'ten; öteki satırsız durak 5 s.
+  // Tur: d0 → … → d11 → d12 (Dünya) → kapanış (atıflar görünür; OSM/Copernicus atfı kamusal ekranda zorunlu, denetim
+  // A3-01) → beyaza sönüp başa. Ziyaretçi kapanışa inse de 30 s sonra buradan başa döner (A2-03). Spot satırlı durak her
+  // satırı bir kez gösterir (kiosk aralığı KIOSK_SPOT_MS: anatomi 4 × 3,5 s, ilk duvar 3 × 2,5 s; sutunlar 12 satırın
+  // 2'si × 4 s; W-2); fidan durakları KIOSK_MS'ten; öteki satırsız durak (d12 dahil) 5 s.
   let kioskId = 0;
   let kioskDuraklat = false;
   let kioskDevamId = 0;
@@ -636,7 +666,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     if (j >= N) return KIOSK_KAPANIS_MS;
     const sabit = KIOSK_MS[R[j]];
     if (sabit) return sabit;
-    const say = Math.min(spotSay[j] ?? 0, R[j] === "sutunlar" ? 3 : Infinity);
+    const say = Math.min(spotSay[j] ?? 0, R[j] === "sutunlar" ? KIOSK_SUTUN_SAY : Infinity);
     return say ? 600 + say * spotAralik(j) : 5000;
   };
   const kioskDurdurZaman = () => iptalEt(kioskId);
@@ -689,6 +719,8 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     wake: uyandir,
     adim,
     dokunmaBitiste: () => oy.engel,
+    // Bekle kipi (W-4): adımın kaydırma animasyonu bitse de geçiş varışa dek kilitli (ters jest yok sayılır, tükenir).
+    kilitli: () => bekledi && faz === "gecis",
     yerles: (i) => {
       // Tarayıcının kendi kaydırması (kaydırma çubuğu, bul, Home/End, odak): klipsiz o durağa.
       if (faz !== "dur" || i === k) return;

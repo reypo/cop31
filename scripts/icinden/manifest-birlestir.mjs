@@ -1,5 +1,5 @@
 // /icinden v3 — Blender fragmanları + kodlama listesi → src/components/icinden/klipler.json (şema `surum: 3`)
-// Şema: docs/klipler-sema.md (§0.2 G turu). Durak tablosu (13 durak + rol, brief-icinden-3 §14.4.2) BURADA; site,
+// Şema: docs/klipler-sema.md (§0.2 G turu). Durak tablosu (13 durak + rol, brief-icinden-3 §14.4.2, §14.7) BURADA; site,
 // oynatıcı ve CSS onu manifestteki `rol` ve sıradan türetir (src/components/icinden/rol.ts).
 //
 //   node scripts/icinden/manifest-birlestir.mjs [--fragman D:/soft/cop31-varlik/render-son]
@@ -7,10 +7,11 @@
 //        [--cikti src/components/icinden/klipler.json] [--kaynak render|onizleme|yer-tutucu] [--public public]
 //        [--yaylar <fragman>/yaylar.json] [--geri-yok r98]
 //
-// G-B (§14.4.3): `--gecici`, kapak tonu (`--ton`, `kapakTon`) ve broşür dikdörtgeni (`brosurDikdortgen`) KALKTI; d8
-// masa son-kare durağı (p8 = t78[59]), d9–d12 fidan (t89 t9a tab tbc + lc). `--geri-yok r98`: bütçe merdiveninin
-// ikinci adımı (§14.4.1; önce `kodla.mjs --crf lc.av1=32`, sonra `kodla.mjs --dus r98` + bu bayrak): d8'in
-// `ileri.geri` null yazılır (site d9→d8'de de poster çapraz sönmesi yapar), uyarı verilmez.
+// G-B (§14.4.3): `--gecici`, kapak tonu (`--ton`, `kapakTon`) ve broşür dikdörtgeni (`brosurDikdortgen`) KALKTI.
+// W-3 (§14.7 C): d8 masa KALKTI — d7 (sol duvar) → t79 → d8 fidan-kok (p9 = t79 son karesi), d8–d11 fidan (t79 t9a tab
+// tbc + lc), d12 Dünya. t79/r97 kodlama listesinde yoksa d7'nin ileri geçişi GEÇİCİ olarak t89 (geri yok; uyarı).
+// `--geri-yok <ad>`: bütçe merdiveni (§14.4.1; `kodla.mjs --dus <ad>` ile birlikte): o geri klip null yazılır (site o
+// geri adımda poster çapraz sönmesi yapar), uyarı verilmez.
 //
 // Fragman (`<dizin>/<klip>.json`, master px, §9.3): {ad, fps, kare, sure, kadraj_m[kare], dunyaR[kare] (t01),
 // dunyaC [cx, cy] (t01; tek nokta ya da kare başına), capalar {ad: [x, y]} (poster karesi), kamera{}}; S3 (fidan)
@@ -22,7 +23,13 @@
 // etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son karesi), dunyaC → t01 0. kare, duvarCapalari →
 // p6 (yatayda p6 posterinin kirpimY'si, E2'den beri 293), fidan çapaları → durağın posteri (yatayda posterin kirpimY'si:
 // p9 420, pa 222, pb 194, pc 165). Kırpım dışına ya da kenara 24 px'ten yakın düşen fidan noktası o yönde atlanır.
-// yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; yalnız d1 (G'de Dünya dönüşü yok).
+// yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; yalnız d1 (d12 Dünya'ya uzaklaşmada site
+// d1'in yaylarını tersten çizer; veri bir kez).
+//
+// W-2 (§14.7; W-3'te d12): son durak ikinci `dunya` ("Gezegenimiz Ortak Evimizdir"), fidan-yaprağın (d11) ileri geçişi ZİNCİR (`ZINCIR`): yeni dosya yok,
+// parçalar d2–d4'ün geri klipleri (r43 → r32 → r21; aynı dosyalar, istemcide blob önbelleğinden). Manifestte
+// `ileri: {ad, sure, kare (toplam), dosya: {}, bayt: {}, geri: null, hizGeri, parcalar: Klip[], kopruDurak}`; `kopruDurak`
+// ilk parçanın 0. karesine eşit posterin durağı (r43[0] ≡ t34 son ≡ l4[0] ≡ p4 → "d4"; site d11 → p4 350 ms çapraz sönme).
 // LQIP: posterden 24 px genişlikte WebP (sharp).
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -58,9 +65,10 @@ const KODEKLER = [
 ];
 
 /**
- * Durak tablosu (G turu §14.4.2; sıra = durak numarası, id "d0"…"d12", kapanış = 13 manifest dışı). rol: §14.4.2.
- * gelen: bu durağa ileri yönde varan klip (kadraj okuması ondan; fidan duraklarında metre, cm düzeyinde — site cm
- * yazar). Döngüsüz klip durakları (d6–d11) gelen klibin son karesinde durur; posterleri o kare (son-kare).
+ * Durak tablosu (G turu §14.4.2 + W-2/W-3 §14.7; sıra = durak numarası, id "d0"…"d12", kapanış = 13 manifest dışı). rol:
+ * §14.4.2. gelen: bu durağa ileri yönde varan klip ya da zincir (kadraj okuması ondan; fidan duraklarında metre, cm
+ * düzeyinde — site cm yazar; zincirde parçaların ileri klip kadrajları tersten, art arda). Döngüsüz klip durakları
+ * (d6–d10) gelen klibin son karesinde durur; posterleri o kare (son-kare).
  */
 const DURAKLAR = [
   { id: "d0", rol: "lombar", tur: "dom", poster: null, dongu: null, ileri: "t01", gelen: null, okuma: "" },
@@ -70,19 +78,38 @@ const DURAKLAR = [
   { id: "d4", rol: "anatomi", tur: "klip", poster: "p4", dongu: "l4", ileri: "t45", gelen: "t34" },
   { id: "d5", rol: "sutunlar", tur: "klip", poster: "p5", dongu: "l5", ileri: "t56", gelen: "t45" },
   { id: "d6", rol: "duvar", tur: "klip", poster: "p6", dongu: null, ileri: "t67", gelen: "t56", okumaDurak: "arka duvar · ~3 m" },
-  { id: "d7", rol: "duvar", tur: "klip", poster: "p7", dongu: null, ileri: "t78", gelen: "t67", okumaDurak: "sol duvar · ~3 m" },
-  { id: "d8", rol: "masa", tur: "klip", poster: "p8", dongu: null, ileri: "t89", gelen: "t78", okumaDurak: "banko · broşür" },
-  { id: "d9", rol: "fidan-kok", tur: "klip", poster: "p9", dongu: null, ileri: "t9a", gelen: "t89" },
-  { id: "d10", rol: "fidan-govde", tur: "klip", poster: "pa", dongu: null, ileri: "tab", gelen: "t9a" },
-  { id: "d11", rol: "fidan-dal", tur: "klip", poster: "pb", dongu: null, ileri: "tbc", gelen: "tab" },
-  { id: "d12", rol: "fidan-yaprak", tur: "klip", poster: "pc", dongu: "lc", ileri: null, gelen: "tbc" },
+  // W-3 (§14.7 C, kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana"): d8 masa kalktı; t79 sol
+  // duvardan kök kasasına (t79/r97 yoksa GECICI tablosuyla t89).
+  { id: "d7", rol: "duvar", tur: "klip", poster: "p7", dongu: null, ileri: "t79", gelen: "t67", okumaDurak: "sol duvar · ~3 m" },
+  { id: "d8", rol: "fidan-kok", tur: "klip", poster: "p9", dongu: null, ileri: "t9a", gelen: "t79" },
+  { id: "d9", rol: "fidan-govde", tur: "klip", poster: "pa", dongu: null, ileri: "tab", gelen: "t9a" },
+  { id: "d10", rol: "fidan-dal", tur: "klip", poster: "pb", dongu: null, ileri: "tbc", gelen: "tab" },
+  { id: "d11", rol: "fidan-yaprak", tur: "klip", poster: "pc", dongu: "lc", ileri: "uzaklasma", gelen: "tbc" },
+  // W-2 (§14.7): Dünya'ya uzaklaşma — d11'den zincirle (stant tepeden → Antalya → Türkiye → Dünya); E turundaki d11 gibi.
+  { id: "d12", rol: "dunya", tur: "klip", poster: "p1", dongu: "l1", ileri: null, gelen: "uzaklasma", okumaDurak: "ortak evimiz" },
 ];
 /**
- * Açık geri klip adları (§12.1, §14.4.1 K4; kodla.mjs'in açık ad tablosuyla aynı). `null`: geri klip yok → manifestte
- * `ileri.geri: null`, site geri adımda hedef durağın posterini 350 ms çapraz söndürür (d10→d9, d11→d10, d12→d11).
+ * Zincir geçişler (W-2 §14.7): ileri geçiş birden çok mevcut klibin art arda oynanması; yeni dosya yok. parcalar: klip
+ * adları (geri klipler: tur "geri", fragmanı GERI tablosundaki ileri klibin tersi). kopruDurak: posteri ilk parçanın 0.
+ * karesi olan durak (site kalkış durağının görüntüsünden ona 350 ms poster çapraz sönmesi yapar). Geri klip yok (`geri:
+ * null` → hedef durağın posterine 350 ms sönme, fidan içi geri adımlarla aynı).
  */
-// t89: r98 K-son'da kaldırıldı (§14.4.1 merdiven 4. adım; kodla.mjs GERI ile aynı): d9→d8 de poster çapraz sönmesi.
-const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87", t89: null, t9a: null, tab: null, tbc: null };
+const ZINCIR = {
+  // stant tepeden (r43[0] ≡ t34[59] ≡ l4[0] ≡ p4) → Antalya → Türkiye → Dünya (r21 son ≡ t12[0] ≡ l1[0] ≡ p1); 60+72+54 kare.
+  uzaklasma: { parcalar: ["r43", "r32", "r21"], kopruDurak: "d4" },
+};
+/**
+ * Açık geri klip adları (§12.1, §14.4.1 K4; kodla.mjs'in açık ad tablosuyla aynı). `null`: geri klip yok → manifestte
+ * `ileri.geri: null`, site geri adımda hedef durağın posterini 350 ms çapraz söndürür (d9→d8, d10→d9, d11→d10).
+ * t78/r87 (masa) W-3'te kalktı; t89 yalnız GECICI yedeği (r98 K-son'da kaldırılmıştı → geri yok).
+ */
+const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t79: "r97", t89: null, t9a: null, tab: null, tbc: null };
+/** Geri klibin ileri klibi (r43 → t34): zincir parçasının fragmanı/kadrajı onun tersidir. */
+const ileriOf = (geriAd) => Object.keys(GERI).find((k) => GERI[k] === geriAd);
+for (const [ad, z] of Object.entries(ZINCIR)) {
+  for (const p of z.parcalar) if (!ileriOf(p)) throw new Error(`zincir ${ad}: ${p} GERI tablosunda geri klip değil`);
+  if (!DURAKLAR.some((D) => D.id === z.kopruDurak)) throw new Error(`zincir ${ad}: kopruDurak ${z.kopruDurak} yok`);
+}
 
 /** Depodaki metinler (birebir; content.ts / emanet.ts düzenlenince yeniden üretilir). */
 const CONTENT = readFileSync(resolve("src/lib/content.ts"), "utf8");
@@ -156,7 +183,7 @@ const video = (boyut, [x, y], yY = KIRPIM_Y_VARSAYILAN) =>
 const KENAR = 24;
 const icinde = (boyut, [x, y]) => x >= KENAR && y >= KENAR && x <= BOYUTLAR[boyut].g - KENAR && y <= BOYUTLAR[boyut].y - KENAR;
 
-const FRAGMAN_ADLARI = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "t89", "t9a", "tab", "tbc", "lc", "p6", "p7", "p9", "pa", "pb", "pc"];
+const FRAGMAN_ADLARI = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t79", "t89", "t9a", "tab", "tbc", "lc", "p6", "p7", "p9", "pa", "pb", "pc"];
 const fragmanlar = {};
 for (const ad of FRAGMAN_ADLARI) {
   // t34: t34.json yoksa S1 t34a + S2 t34b birleşimi (fragman.mjs).
@@ -170,6 +197,19 @@ const ONIZLEME_FRAGMAN = Object.entries(fragmanlar)
 if (KAYNAK === "render" && ONIZLEME_FRAGMAN.length) uyarilar.push(`--kaynak render ama önizleme fragmanları var (kaynak_set "onizleme"): ${ONIZLEME_FRAGMAN.join(" ")} — A5 son render'ı bekleniyor`);
 const liste = JSON.parse(readFileSync(LISTE, "utf8"));
 const bul = (klip, tur) => liste.filter((x) => x.klip === klip && x.tur === tur);
+/**
+ * Geçici yedek geçişler (W-3 §14.7 C): t79 (sol duvar → kök kasası) ve r97 paralel üretiliyor. Kodlama listesinde t79
+ * yoksa DURAKLAR'daki t79 (d7.ileri, d8.gelen) t89'la değişir: ilk karesi masadaki broşür (d7'den kesme), geri klip yok
+ * (d8→d7 p7'ye 350 ms poster sönmesi). t79 kodlanınca bu betik yeniden koşulur, uyarı kalkar.
+ */
+const GECICI = { t79: "t89" };
+for (const D of DURAKLAR)
+  for (const alan of ["ileri", "gelen"]) {
+    const ad = D[alan];
+    if (!GECICI[ad] || bul(ad, "ileri").length) continue;
+    uyarilar.push(`GEÇİCİ: ${ad} kodlama listesinde yok → ${D.id}.${alan} = ${GECICI[ad]} (geri ${GERI[GECICI[ad]] ?? "yok"}); ${ad}/${GERI[ad]} gelince yeniden üret`);
+    D[alan] = GECICI[ad];
+  }
 if (KAYNAK === "render") {
   const onizlemeGiris = [...new Set(liste.filter((s) => /^960²/.test(s.giris ?? "")).map((s) => s.klip))];
   if (onizlemeGiris.length) uyarilar.push(`--kaynak render ama listede 960² (önizleme) girişli kodlamalar var: ${onizlemeGiris.join(" ")}`);
@@ -217,7 +257,7 @@ function klipNesnesi(ad, tur) {
   const d = dosyalar(ad, tur);
   if (!d) return null;
   // Geri klip ileri klibin tersidir: fragmanı ileri klibinki.
-  const ileriAd = tur === "geri" ? Object.keys(GERI).find((k) => GERI[k] === ad) : ad;
+  const ileriAd = tur === "geri" ? ileriOf(ad) : ad;
   const fr = fragmanlar[ileriAd];
   if (fr && fr.kare !== d.kare) uyarilar.push(`${ad}: fragman ${fr.kare} kare, kodlanmış ${d.kare} kare`);
   return { ad, sure: d.sure, kare: d.kare, dosya: d.dosya, bayt: d.bayt };
@@ -340,14 +380,42 @@ const duraklar = [];
 let emanetSay = 0;
 for (const D of DURAKLAR) {
   const o = { id: D.id, rol: D.rol, tur: D.tur };
-  // okuma: gelen klibin kare kare kadrajı (metre; son öğe dinlenme değeri) ya da sabit metin.
-  const gk = D.gelen ? fragmanlar[D.gelen]?.kadraj_m : null;
+  // okuma: gelen klibin kare kare kadrajı (metre; son öğe dinlenme değeri) ya da sabit metin. Zincirde parçaların ileri
+  // klip kadrajları tersten, art arda (r43 = t34 tersi …; son öğe Dünya, t12[0]).
+  const zg = ZINCIR[D.gelen];
+  const gk = zg
+    ? zg.parcalar.every((p) => fragmanlar[ileriOf(p)]?.kadraj_m)
+      ? zg.parcalar.flatMap((p) => [...fragmanlar[ileriOf(p)].kadraj_m].reverse())
+      : null
+    : D.gelen
+      ? fragmanlar[D.gelen]?.kadraj_m
+      : null;
   o.okuma = gk ? gk.map(sig) : (D.okuma ?? "");
   if (D.gelen && !gk) uyarilar.push(`${D.id}: ${D.gelen} fragmanında kadraj_m yok (okuma boş)`);
   if (D.okumaDurak) o.okumaDurak = D.okumaDurak;
   o.poster = await poster(D.poster);
   o.dongu = D.dongu ? klipNesnesi(D.dongu, "dongu") : null;
-  if (D.ileri) {
+  if (ZINCIR[D.ileri]) {
+    // Zincir (W-2 §14.7): parçalar mevcut geri klip kayıtları; üst düzey süre/kare toplam, dosya/bayt boş (yeni dosya yok).
+    const z = ZINCIR[D.ileri];
+    const parcalar = z.parcalar.map((p) => klipNesnesi(p, "geri"));
+    if (parcalar.some((p) => !p)) uyarilar.push(`${D.id}: zincir ${D.ileri} parçası eksik (${z.parcalar.join(" ")})`);
+    const tam = parcalar.filter(Boolean);
+    o.ileri =
+      tam.length === z.parcalar.length
+        ? {
+            ad: D.ileri,
+            sure: Math.round(tam.reduce((s, p) => s + p.sure, 0) * 1000) / 1000,
+            kare: tam.reduce((s, p) => s + p.kare, 0),
+            dosya: {},
+            bayt: {},
+            geri: null,
+            hizGeri: HIZ_GERI,
+            parcalar: tam,
+            kopruDurak: z.kopruDurak,
+          }
+        : null;
+  } else if (D.ileri) {
     const ileri = klipNesnesi(D.ileri, "ileri");
     if (!(D.ileri in GERI)) throw new Error(`GERI tablosunda yok: ${D.ileri}`);
     const gAd = GERI[D.ileri];
@@ -430,7 +498,7 @@ for (const D of DURAKLAR) {
     }
   }
   if (D.rol === "fidan-kok") {
-    // d9: 81 kök ucu (p9 = t89 son karesi; DOM 81 halka). grup 0 kazık, 1–6 ana kökler; ana: ana kökün ucu mu.
+    // d8: 81 kök ucu (p9 = t79 son karesi, geçicide t89; DOM 81 halka). grup 0 kazık, 1–6 ana kökler; ana: ana kökün ucu mu.
     const k = s3Capa("kok_uclari", D.poster, D.gelen);
     if (k) {
       const yP = posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1);
@@ -439,7 +507,7 @@ for (const D of DURAKLAR) {
     } else uyarilar.push(`${D.id}: kok_uclari yok (${D.poster}.json / ${D.gelen}.json capalar)`);
   }
   if (D.rol === "fidan-govde") {
-    // d10: 2 boğum (2017 / TBMM; metin DOM'da content.ts'ten — JSON'daki baslik/satirlar KULLANILMAZ). taraf −1 sol, +1 sağ.
+    // d9: 2 boğum (2017 / TBMM; metin DOM'da content.ts'ten — JSON'daki baslik/satirlar KULLANILMAZ). taraf −1 sol, +1 sağ.
     const k = s3Capa("bogumlar", D.poster, D.gelen);
     if (k) {
       const yP = posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1);
@@ -448,13 +516,13 @@ for (const D of DURAKLAR) {
     } else uyarilar.push(`${D.id}: bogumlar yok (${D.poster}.json / ${D.gelen}.json capalar)`);
   }
   if (D.rol === "fidan-dal") {
-    // d11: 6 ana dal ucu (polaroid çapaları; K6: sol p12 + p17, sağ p19 + p22).
+    // d10: 6 ana dal ucu (polaroid çapaları; K6: sol p12 + p17, sağ p19 + p22).
     const k = s3Capa("dal_uclari", D.poster, D.gelen);
     if (k) ozel.dalUclari = dalUclari(D.id, k, posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1));
     else uyarilar.push(`${D.id}: dal_uclari yok (${D.poster}.json / ${D.gelen}.json capalar)`);
   }
   if (D.rol === "fidan-yaprak") {
-    // d12: dal uçları + gövde ucu (pc = lc[0] ≡ tbc son karesi).
+    // d11: dal uçları + gövde ucu (pc = lc[0] ≡ tbc son karesi).
     const yP = posterKirpimY(D.poster, D.dongu ?? D.gelen, 0);
     const k = s3Capa("dal_uclari", D.poster, D.dongu, D.gelen);
     if (k) ozel.dalUclari = dalUclari(D.id, k, yP);
@@ -491,7 +559,7 @@ const MB = 1e6;
 const medya = {};
 const ekle = (anahtar, dosya, bayt) => ((medya[anahtar] ??= new Map()).set(dosya, bayt));
 for (const d of duraklar) {
-  for (const k of [d.dongu, d.ileri, d.ileri?.geri].filter(Boolean))
+  for (const k of [d.dongu, d.ileri, d.ileri?.geri, ...(d.ileri?.parcalar ?? [])].filter(Boolean))
     for (const [b, kd] of Object.entries(k.dosya)) for (const [kodek, dosya] of Object.entries(kd)) ekle(`${b}-${kodek}`, dosya, k.bayt[b][kodek]);
   for (const [b, p] of Object.entries(d.poster ?? {})) for (const kodek of ["h264", "hevc", "av1"]) if (KODEKLER.find((x) => x.ad === kodek).boyutlar.includes(b)) ekle(`${b}-${kodek}`, p.dosya, p.bayt);
 }
@@ -507,7 +575,7 @@ for (const [i, o] of duraklar.entries()) {
   const D = DURAKLAR[i];
   const okuma = typeof o.okuma === "string" ? o.okuma || "—" : `${o.okuma.length} kare (${o.okuma[0]} → ${o.okuma.at(-1)} m)`;
   console.log(
-    [o.id, o.rol, o.tur, D.gelen ?? "—", o.ileri ? `${o.ileri.ad}/${o.ileri.geri?.ad ?? "—"}` : "—", o.dongu?.ad ?? "—", D.poster ?? "—", `${okuma}${o.okumaDurak ? ` · "${o.okumaDurak}"` : ""}`].join(" | "),
+    [o.id, o.rol, o.tur, D.gelen ?? "—", o.ileri ? `${o.ileri.ad}${o.ileri.parcalar ? `(${o.ileri.parcalar.map((p) => p.ad).join("→")}; köprü ${o.ileri.kopruDurak})` : ""}/${o.ileri.geri?.ad ?? "—"}` : "—", o.dongu?.ad ?? "—", D.poster ?? "—", `${okuma}${o.okumaDurak ? ` · "${o.okumaDurak}"` : ""}`].join(" | "),
   );
 }
 const say = (v) => (Array.isArray(v) ? v.length : v && typeof v === "object" ? Object.entries(v).map(([b, l]) => `${b} ${Array.isArray(l) ? (typeof l[0] === "number" ? "[x,y]" : l.length) : "?"}`).join(", ") : String(v));

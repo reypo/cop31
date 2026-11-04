@@ -192,8 +192,7 @@
 
 /* ============================== reduced-motion düzeni ============================== */
 
-@media (prefers-reduced-motion: reduce) {
-  .ic-yalniz-hareket {
-    display: none;
-  }
+:where(.v3[data-azalt="1"]) .ic-yalniz-hareket {
+  display: none;
 }
+

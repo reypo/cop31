@@ -20,7 +20,7 @@ import "./icinden3.css";
 import "./icinden3-isik.css";
 
 /**
- * /icinden v3 "sinematik" (docs/brief-icinden-3.md §9, §12, G turu §14.4): 13 durak (d0–d12) + kapanış. Sunucu bileşeni:
+ * /icinden v3 "sinematik" (docs/brief-icinden-3.md §9, §12, G turu §14.4, W-2/W-3 §14.7): 13 durak (d0–d12) + kapanış. Sunucu bileşeni:
  * bütün metin, etiket ve logo HTML'de; istemci yalnız VideoSahne (oynatıcı + adımlama).
  *
  * Bölümler manifestin rol tablosundan (`klipler.json` `duraklar[].rol`, sıra = durak no; E turu §12.4-1): her durak
@@ -31,11 +31,14 @@ import "./icinden3-isik.css";
  * düzeninin posteri (`.v3-azalt`; hareketli düzende `display: none`, lazy: inmez). Duvara basılan her yazının
  * akışta sr-only eşi vardır (§12.4-4).
  *
- * G turu (§14.4.6): dalış d8'de masadaki broşürde biter (son-kare durak; "Dijital broşür →" /brosur), sonra render edilmiş
- * fidan: d9 kökler, d10 gövde, d11 dallar, d12 yapraklar; kapanış fidanla biter (Dünya dönüşü yok). Fidan bantları altta
- * (y ≥ %68), krem, /fidan `leaf-tag` çipiyle; metinler yalnız content.ts'ten. DOM katmanı FidanKatmani.tsx'te.
+ * G turu (§14.4.6) + W-3 (§14.7 C; kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana"): duvarlardan
+ * (d6–d7) sonra doğrudan render edilmiş fidan: d8 kökler, d9 gövde, d10 dallar, d11 yapraklar (masa durağı kalktı; "Dijital
+ * broşür →" yalnız d0 şeridinde ve kapanışta). W-2 (§14.7): tur Dünya'da biter — d11'den stant tepeden →
+ * Antalya → Türkiye → Dünya'ya uzaklaşma (r43 → r32 → r21 zinciri), d12 "Gezegenimiz Ortak Evimizdir" (E turundaki d11 gibi:
+ * üst bant el yazısı, d1 yayları tersten). Fidan bantları altta (y ≥ %68), krem, /fidan `leaf-tag` çipiyle; metinler yalnız
+ * content.ts'ten. DOM katmanı FidanKatmani.tsx'te.
  *
- * Parti içeriği d1–d3'te yok; stant içi ve fidan (d4–d12) serbest (§12, §14.0). Logo kuralı: resmî logo yalnız beyaz
+ * Parti içeriği d1–d3'te yok; stant içi ve fidan (d4–d11) serbest (§12, §14.0). Logo kuralı: resmî logo yalnız beyaz
  * zeminde, bütün hâlinde söner (d0 bandı); lombar deliği ancak logo söndükten sonra açılır (VideoSahne).
  */
 
@@ -72,7 +75,7 @@ const ATIFLAR = [
 const Tarih = ({ children }: { children: ReactNode }) => <span className="v3-nowrap">{children}</span>;
 
 /**
- * Dijital broşür bağlantısı (§14.4.6: d0 üst şeridi, d8 bandı, kapanış). Kiosk'ta gizli (stant ekranı döngüden çıkmasın).
+ * Dijital broşür bağlantısı (§14.4.6: d0 üst şeridi ve kapanış; W-3'te masa bandı kalktı). Kiosk'ta gizli (stant ekranı döngüden çıkmasın).
  * Ön getirme yok (`prefetch={false}`): d0 şeridindeki bağlantı açılışta görünür, /brosur'un RSC yükü ve stil dosyası her
  * oturumda inip mobil bütçeye (§14.4.1, ≤ 12,0 MB) giriyordu ve Chrome "preload edilip kullanılmadı" uyarısı veriyordu.
  */
@@ -93,25 +96,27 @@ const ilkCumle = (p: string) => {
 /**
  * Sahnelerin alt metinleri (R3 kartları (e)), rol anahtarıyla (aynı rolün ikincisi "-2"). C turunda son render
  * posterlerine göre düzeltildi; E turu (emanet, duvar-2) planlanan render'a göre yazıldı (§12.0, §12.3). G turu: duvar
- * (d6) G7 dokusuna göre (§14.4.4; A6 render'ı gelince V doğrular), masa ve fidan-* S3 önizleme posterlerine göre
- * (960², `public/icinden/p/d/p8…pc`; son render aynı kadraj). Tür adı yok (K3), "81" yok (K8).
+ * (d6) G7 dokusuna göre (§14.4.4; A6 render'ı gelince V doğrular), fidan-* S3 önizleme posterlerine göre
+ * (960², `public/icinden/p/d/p9…pc`; son render aynı kadraj). Tür adı yok (K3), "81" yok (K8).
  */
 const ALT: Partial<Record<string, string>> = {
   lombar: "Beyaz zemin üzerinde resmî COP31 Türkiye Antalya logosu: lale ve ebru desenli, mavi-yeşil bir dünya diski.",
   dunya: "Uzaydan Dünya. Avrupa, Akdeniz ve Kuzey Afrika gündüz ışığında; gece sınırı Hazar Denizi ve İran üzerinden geçiyor, doğuda şehir ışıkları yanıyor. Antalya diskin ortasının hemen üstünde.",
   emanet: "Yüksekten bütün Türkiye: Anadolu'nun dağları ve kıyıları, çevresinde denizler. Antalya güney kıyısında işaretli; 12 emanet alanı numaralı ışıklarla gösteriliyor.",
-  expo: "Öğleden sonra güneşine karşı Antalya: önde seraların ve yeşil tarlaların arasından geçen D400 ile Aksu ovası, ortada Antalya Expo Center'ın holleri, geride kent, güneşte parlayan körfez ve Beydağları.",
+  // V düzeltmesi (G4-dağ, v-2): Beydağları yamaçları artık ormanlı (S1 orman katmanı, brief §14.6; p3/l3 yeni render).
+  expo: "Öğleden sonra güneşine karşı Antalya: önde seraların ve yeşil tarlaların arasından geçen D400 ile Aksu ovası, ortada Antalya Expo Center'ın holleri, geride kent, güneşte parlayan körfez ve yamaçları ormanlı Beydağları.",
   // E turu p4 (denetim D3-10): arka duvar ve ön cephe pankartı da görünüyor; metinler content.ts / stant.ts'ten. d4
   // G turunda yeniden render edilmedi (§14.4.4): arka duvarda E/F dokusu.
   anatomi: `Karanlık fuar holünde, ışığın altında standımız yukarıdan: ortada 12 sütunlu Emanet Rotundası ve '12.000 Yıllık Emanet' bandı, solda 'Oyna – Sen olsan ne yapardın?' alanı ve turuncu 'Gel, oyna!' pankartı, sağda amfi; arkada '${iklim.title}' duvarı, girişte '${stant.pankartlar[1]}' pankartı.`,
   sutunlar: "Rotundanın içinden yere bakış: renkli dönem halkasının ortasında 'Buradasın, Bugün' yazıyor; çevrede 12 miras sütununun alt uçları.",
   duvar: `Standın arka duvarı, çapraz açıdan: krem zemin, altta koyu dağ silueti. Solda '${bulusmalar.title}' başlığı, büyük '${facts.meetings}+' ve 'gençlik buluşması, son ${facts.meetingsYears} yılda'; altında 'Bir Gençlik Şöleni', '${facts.solenDate} · ${facts.solenPlace}' ve büyük '${tr(facts.solenAttendees)}+ genç'.`,
   "duvar-2": "Standın sol duvarı: '1.000.000+ Genç Üye' ve '81 İl · 922 İlçe' yazıları, altında iki ekranda 'Sen de söz ver.'; sağ altta bir bank.",
-  masa: `Karşılama bankosunun açık renk ahşap yüzeyinde, yukarıdan bakışla standın broşürü: '${cover.title}' kapağı, yaprakların arasında Dünya fotoğrafı ve lacivert dairede el yazısıyla '${cover.slogan}'.`,
   "fidan-kok": "Karanlık fuar holünde, bankonun üstünde ahşap çerçeveli, ön yüzü camlı bir kök kasası. Koyu toprağın içinde ortadaki tohumdan inen kazık kök ve iki yana açılan ince kökler; köklerin krem renkli uçları spot ışığında seçiliyor.",
   "fidan-govde": "Kök kasasının toprağından ince bir fidan gövdesi yükseliyor, hafif S biçiminde kıvrılarak; gövdede iki küçük boğum. Camın ardında kökler, arkada karanlık hol ve stant duvarları.",
   "fidan-dal": "Fidan dallanmış: gövdeden iki yana açılan ince dalların uçlarında küçük, açık renkli tomurcuk kümeleri. Altta kasanın camının ardında kökler; arkada karanlık hol.",
   "fidan-yaprak": "Yapraklanmış genç ağaç: dalları kenarları dilimli, zeytin yeşili yapraklarla dolu; ikindi güneşi yaprakların arkasından vuruyor. Gövde kök kasasından yükseliyor, çevrede karanlık hol.",
+  // W-2 (§14.7): E turundaki metin (d12 = p1/l1, açılıştaki Dünya).
+  "dunya-2": "Uzaydan Dünya, açılıştaki gibi. Üstünde el yazısıyla: Gezegenimiz Ortak Evimizdir.",
 };
 
 /**
@@ -137,7 +142,7 @@ function AzaltPoster({ D, alt, etiketli = false, ust }: { D: Durak; alt: string;
           decoding="async"
         />
       </picture>
-      {/* d1/d2 statik ışık katmanı (W2a, §12.4-8): yaylar, emanet ışıkları, bağlar, künye; d9 81 halka (G turu). */}
+      {/* d1/d2 statik ışık katmanı (W2a, §12.4-8): yaylar, emanet ışıkları, bağlar, künye; d8 81 halka (G turu). */}
       {ust}
       {e?.length ? (
         <div aria-hidden="true" className="v3-azalt-etiketler">
@@ -432,24 +437,8 @@ export default function Icinden3() {
             <AzaltPoster D={d} alt={alt} />
           </Bolum>
         );
-      case "masa":
-        // d8 — Masadaki broşür (son-kare durak; render'daki kapak). İnce krem bant + "Dijital broşür →" (/brosur).
-        return (
-          <Bolum key={k} k={k} rol={d.rol} baslik={`Standdan alabileceğin broşür: ${cover.title}`} alt={alt}>
-            <MetinBandi d={k} rol={d.rol} konum="alt" tema="krem" className="v3-bant-ince">
-              <p className="v3-satir-baslik" aria-hidden="true">
-                Standdan alabileceğin broşür
-              </p>
-              <En>The brochure you can pick up at our stand</En>
-              <p className="v3-dijital-satir">
-                <DijitalBrosur />
-              </p>
-            </MetinBandi>
-            <AzaltPoster D={d} alt={alt} />
-          </Bolum>
-        );
       case "fidan-kok":
-        // d9 — Kökler: Biz Kimiz? + 81 İl · 922 İlçe (§14.4.1 K8) + bizKimiz.paragraphs[0]. 81 halka sahnede (FidanKatmani).
+        // d8 — Kökler: Biz Kimiz? + 81 İl · 922 İlçe (§14.4.1 K8) + bizKimiz.paragraphs[0]. 81 halka sahnede (FidanKatmani).
         return (
           <Bolum key={k} k={k} rol={d.rol} baslik={`Kökler: ${bizKimiz.title}`} alt={alt}>
             <MetinBandi d={k} rol={d.rol} konum="alt" tema="krem" className="v3-bant-fidan">
@@ -464,7 +453,7 @@ export default function Icinden3() {
           </Bolum>
         );
       case "fidan-govde":
-        // d10 — Gövde: vizyon başlığı; boğum etiketleri sahnede (2017 / TBMM), okunur kopyası burada (reduced'da görünür).
+        // d9 — Gövde: vizyon başlığı; boğum etiketleri sahnede (2017 / TBMM), okunur kopyası burada (reduced'da görünür).
         return (
           <Bolum key={k} k={k} rol={d.rol} baslik={`Gövde: ${vizyon.title}`} alt={alt}>
             <MetinBandi d={k} rol={d.rol} konum="alt" tema="krem" className="v3-bant-fidan">
@@ -484,7 +473,7 @@ export default function Icinden3() {
           </Bolum>
         );
       case "fidan-dal":
-        // d11 — Dallar: Gençlik Buluşmaları + paragraphs[3]'ün ilk cümlesi (birebir) + 4 polaroid (dal uçlarında).
+        // d10 — Dallar: Gençlik Buluşmaları + paragraphs[3]'ün ilk cümlesi (birebir) + 4 polaroid (dal uçlarında).
         return (
           <Bolum key={k} k={k} rol={d.rol} baslik={`Dallar: ${bulusmalar.title}`} alt={alt}>
             <MetinBandi d={k} rol={d.rol} konum="alt" tema="krem" className="v3-bant-fidan">
@@ -499,7 +488,7 @@ export default function Icinden3() {
           </Bolum>
         );
       case "fidan-yaprak":
-        // d12 — Yapraklar: İklim Eylemleri (d6'dan taşındı, §14.4.1 K7) + 3 satır; lc döngüsü (yaprak titremesi).
+        // d11 — Yapraklar: İklim Eylemleri (d6'dan taşındı, §14.4.1 K7) + 3 satır; lc döngüsü (yaprak titremesi).
         return (
           <Bolum key={k} k={k} rol={d.rol} baslik={`Yapraklar: ${iklim.title}`} alt={alt}>
             <MetinBandi d={k} rol={d.rol} konum="alt" tema="krem" className="v3-bant-fidan">
@@ -517,6 +506,21 @@ export default function Icinden3() {
             <AzaltPoster D={d} alt={alt} />
           </Bolum>
         );
+      case "dunya-2":
+        // d12 — Ortak evimiz (W-2 §14.7; E turundaki d11): fidandan Dünya'ya uzaklaşmanın vardığı durak. Üst bant el yazısı
+        // slogan (broşür kapağı `cover.slogan`) + En; d1'in ışık yayları tersten (Antalya'dan dünyaya; DunyaYaylari, CSS
+        // `data-sira="2"`), varış halkası yok. Reduced düzende (`?azalt=1`) p1 + statik yaylar.
+        return (
+          <Bolum key={k} k={k} rol={d.rol} baslik={cover.slogan} alt={alt}>
+            <MetinBandi d={k} rol={d.rol} konum="ust" tema="uzay">
+              <p className="v3-slogan font-script" aria-hidden="true">
+                {cover.slogan}
+              </p>
+              <En>Our planet is our common home</En>
+            </MetinBandi>
+            <AzaltPoster D={d} alt={alt} ust={<YaylarStatik D={dunya} />} />
+          </Bolum>
+        );
       default:
         // Tabloda bu bileşenin bilmediği bir rol/sıra: boş durak (adımlama sayısı tutsun).
         return <Bolum key={k} k={k} rol={d.rol} baslik={d.id} alt={alt} />;
@@ -529,7 +533,7 @@ export default function Icinden3() {
       etiketler={
         <>
           <SahneEtiketleri duraklar={D} />
-          {/* Fidan sahne katmanı (aria-hidden sahnede): d9 81 halka, d10 boğum etiketleri. */}
+          {/* Fidan sahne katmanı (aria-hidden sahnede): d8 81 halka, d9 boğum etiketleri. */}
           <div className="v3-fidan">
             <KokHalkalari D={D[fKok]} />
             <BogumEtiketleri D={D[fGovde]} k={fGovde} />

@@ -10,6 +10,9 @@ akkor ısınması) ve 16.00 güneşi (s1/gunes.py: 9 Kasım 2026 13.00 UTC, Expo
 Klipler (§12.1 tek hane kuralı: a = 10, b = 11, c = 12 onaltılık; `r${klip[2]}${klip[1]}` türetmesi bozulmaz):
   t78f  60 kare: S2 t78 aynen + kasa (palamut yarı gömülü, fidan yok). G3 (yeni broşür) t78 kuyruğuyla tek seferde.
   t89   60 kare (2,0 s): broşürden kasaya kesmesiz iniş; g_kok u 0,30–0,94; fidan_spot akkor ısınması → d9 (son-kare p9)
+  t79   60 kare (2,0 s; G-B sonrası): d7 (sol duvar, t78[0] ≡ t67[47]) → d9 (≡ t89[59]); broşür durağı yok. Yol t78
+        koridorundan (totem ile batı duvarı arası) bankonun kuzeyine iner, kasaya bakış eksenine 15° açıyla yanaşır.
+        Büyüme / ışık t89 zaman çizgisi; S2 duvar ışığı devri t78 karesiyle aynı (S2 animasyonu dondurulmaz). Geri r97.
   t9a   54 kare (1,8 s): kökten gövdeye; kanca → S gövde, boğumlar; güneş 0 → 0,15 → d10 (son-kare pa)
   tab   54 kare (1,8 s): gövdeden dallara; önder + 6 ana + 16 alt dal, sonda tomurcuk; güneş 0,15 → 0,4 → d11 (pb)
   tbc   66 kare (2,2 s): dallardan yaprağa; yapraklar açılır, güneş 0,4 → 1, spot → 0,3; titreme rampası → d12
@@ -48,6 +51,7 @@ T_BASLA = time.perf_counter()
 # ================================================================== klipler ve argümanlar
 KLIPLER3 = {
     "t78f": (0, 59, "gecis"),
+    "t79": (0, 59, "gecis"),      # G-B sonrası: d7 → d9 (broşürsüz); t79[59] ≡ t89[59] (p9 değişmez)
     "t89": (0, 59, "gecis"),
     "p9": (0, 0, "son-kare"),
     "t9a": (0, 53, "gecis"),
@@ -58,7 +62,7 @@ KLIPLER3 = {
     "lc": (0, 119, "dongu"),
     "pc": (0, 0, "son-kare"),
 }
-SIRA = ["t78f", "t89", "t9a", "tab", "tbc", "lc"]
+SIRA = ["t78f", "t79", "t89", "t9a", "tab", "tbc", "lc"]   # t79 → t9a (d8 broşür durağı yok); t78f/t89 r87 / eski akış
 POSTER = {"p9": ("t89", 59), "pa": ("t9a", 53), "pb": ("tab", 53), "pc": ("lc", 0)}
 
 argv3 = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
@@ -75,6 +79,7 @@ ap.add_argument("--yalniz_json", action="store_true")
 ap.add_argument("--kilit", action="store_true")
 ap.add_argument("--log", default="")
 ap.add_argument("--olc", default="")
+ap.add_argument("--olc79", default="")   # render yok: yalnız t79 yoklaması (yol ↔ sahne, broşür boyu, dikiş durumları) → JSON
 ap.add_argument("--gorunurluk", default="")
 ap.add_argument("--maske", action="store_true")
 ap.add_argument("--agac", default="D:/soft/cop31-varlik/s3/agac.json")
@@ -103,6 +108,10 @@ ap.add_argument("--yaprak_ton", type=float, default=0.49)  # yaprak HSV ton merk
 ap.add_argument("--g_yaprak_son", type=float, default=0.97)  # tbc g_yaprak penceresi sonu (G-A 0,93); sondaki durgun kare 6–8
 ap.add_argument("--g_yaprak_bas", type=float, default=0.05)  # tbc g_yaprak penceresi başı (G-A 0,05)
 ap.add_argument("--g_yaprak_egri", default="smooth", choices=["smoother", "smooth"])  # pencere eğrisi (G-A smoother/quintic: 0,97 ile bile 11 durgun kare; smooth/kübik 0,97 → 8)
+ap.add_argument("--t79_yan", type=float, default=30.0)   # t79 son yaklaşımın C9 bakışından sapması (°; 30 → X C9'un tam kuzeyinde: broşür kadraja kare 33'te kenardan girer, p9 boyuna tekdüze büyür)
+ap.add_argument("--t79_x", default="")                  # t79 ara noktası X "x,y,z" (boş → C9 − yön(ψ − yan)·1,15 + 0,16 z)
+ap.add_argument("--t79_x2", type=float, default=0.0)   # > 0: X ile C9 arasına bakış ekseni üstünde k m gerideki X2 (son teğet eksende)
+ap.add_argument("--t79_phi", type=float, default=-12.0) # t79 yol ortası eğim (°; s 0,5)
 ap.add_argument("--blend", default="")
 A = ap.parse_args(argv3)
 KLIP = A.klip
@@ -1398,6 +1407,35 @@ _k8 = G2["kamera_durum"]("t78", N_T78)
 C8 = {"pos": Vector(_k8["pos"]), "psi": _k8["psi"], "phi": _k8["phi"], "lens": _k8["lens"], "odak": _k8["odak"],
       "fstop": _k8["fstop"]}
 
+# t79 (G-B sonrası; kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana atlayalım"): d7 → d9.
+# Baş: t78[0] = B pozu (t67[47]; 18 mm, f/16, duvar odağı). Son: C9 (t89[59]). Yol (Catmull-Rom, yay uzunluğu, fiske):
+# B → T78_WA → T78_W1 (t78 koridoru: totem ile batı duvarı arası, iki yanda ≥ 0,95 m) → X → C9. X = C9'un bakış
+# doğrultusundan --t79_yan (15°) kuzeye açılı bir doğru üzerinde 1,15 m geride, 0,16 m yukarıda: son parça kasaya bakış
+# ekseni boyunca iner (son karelerde ekranda yalnız yakınlaşma); broşür yığınının (banko ortası) tepesine yaklaşılmaz.
+_k7 = G2["kamera_durum"]("t78", 0)
+C7 = {"pos": Vector(_k7["pos"]), "psi": _k7["psi"], "phi": _k7["phi"], "lens": _k7["lens"], "odak": _k7["odak"],
+      "fstop": _k7["fstop"]}
+FW9 = ileri(C9["psi"], C9["phi"])
+HEDEF9 = C9["pos"] + FW9 * C9["odak"]       # d9 odak noktası (kasa camı düzlemi)
+
+
+def _yon_yatay(psi):
+    return Vector((math.sin(math.radians(psi)), math.cos(math.radians(psi)), 0.0))
+
+
+if A.t79_x:
+    T79_X = Vector(tuple(float(v) for v in A.t79_x.split(",")))
+else:
+    T79_X = C9["pos"] - _yon_yatay(C9["psi"] - A.t79_yan) * 1.15 + Vector((0, 0, 0.16))
+_p79 = [C7["pos"], G2["T78_WA"].copy(), G2["T78_W1"].copy(), T79_X]
+if A.t79_x2 > 0:   # son teğet bakış ekseninde (son karelerde ekranda yalnız yakınlaşma)
+    _p79.append(C9["pos"] - _yon_yatay(C9["psi"]) * A.t79_x2 + Vector((0, 0, 0.16 * A.t79_x2 / 1.15)))
+_p79.append(C9["pos"].copy())
+T79_NOKTA = [_p79[0] + (_p79[0] - _p79[1]) * 0.4] + _p79 + [C9["pos"] + (C9["pos"] - _p79[-2])]
+T79_ORNEK, T79_L = G2["cr_ornek"](T79_NOKTA)
+print(f"[KAMERA] t79: B {tuple(round(v, 3) for v in C7['pos'])} → Wa → W1 → X {tuple(round(v, 3) for v in T79_X)} → C9; "
+      f"yol {T79_L[-1]:.2f} m; odak B {C7['odak']:.3f} m f/{C7['fstop']:.1f}", flush=True)
+
 # ================================================================== 11) zaman çizelgesi
 FISKE_K = 2.4
 
@@ -1489,6 +1527,26 @@ def durum(klip, f):
         D["fidan"] = fk
         D["fidan_k"] = O.lerp(2400.0, 3200.0, O.smoother(pen(u, 0.20, 0.80)))
         return D
+    if klip == "t79":
+        D["pos"] = G2["cr_konum"](T79_ORNEK, T79_L, s) if s < 1.0 else C9["pos"].copy()
+        D["psi"] = O.lerp(C7["psi"], C9["psi"], O.ease_in_out_sine(pen(s, 0.0, 0.90)))
+        if s < 0.5:
+            D["phi"] = O.lerp(C7["phi"], A.t79_phi, O.ease_in_out_sine(pen(s, 0.0, 0.5)))
+        else:
+            D["phi"] = O.lerp(A.t79_phi, C9["phi"], O.ease_in_out_sine(pen(s, 0.5, 0.92)))
+        D["lens"] = ln_lerp(C7["lens"], C9["lens"], O.ease_in_out_sine(pen(s, 0.40, 0.95)))
+        fw = ileri(D["psi"], D["phi"])
+        od_d = G2["duvar_mesafe"](D["pos"], fw, 8.0)          # B pozunda duvar odağı (t78 başıyla sürekli)
+        od_k = max(0.3, (HEDEF9 - D["pos"]).dot(fw))          # d9 kasa camı düzlemi
+        D["odak"] = O.lerp(od_d, od_k, O.smoother(pen(s, 0.35, 0.85)))
+        D["fstop"] = ln_lerp(C7["fstop"], 2.8, O.ease_in_out_sine(pen(s, 0.45, 0.95)))
+        if s >= 1.0:
+            D.update(psi=C9["psi"], phi=C9["phi"], lens=C9["lens"], odak=C9["odak"], fstop=2.8)
+        D["g_kok"] = O.smoother(pen(u, 0.30, 0.94))           # büyüme ve ışık: t89 zaman çizgisi bire bir (u)
+        D["kalin"] = 0.0
+        D["fidan"] = O.ease_out_cubic(pen(u, 0.20, 0.70))
+        D["fidan_k"] = O.lerp(2400.0, 3200.0, O.smoother(pen(u, 0.20, 0.80)))
+        return D
     D["g_kok"] = 1.0
     if klip == "t9a":
         D["pos"] = YOL9A(s)
@@ -1573,6 +1631,9 @@ def dondur_s2(f_):
 
 
 S2_ANIM = KAYNAK_KLIP == "t78f"
+# t79: S2'nin t78 ışık/malzeme anahtarları (kuzey/batı duvar yıkama 0,3/1 → 0/0) korunur — t79 ilerlemesi t78'inkiyle bire
+# bir aynı (fiske k 2,4, 60 kare) → t79[0] ışığı ≡ t67[47], t79[59] ≡ t78[59] = t89'un dondurulmuş durumu. Kamera S3'ün.
+S2_ISIK79 = KAYNAK_KLIP == "t79"
 # pankart_gel (turuncu, dikey YAZILI) d9–d12'de kasanın 2,5–3 m arkasında: f/2,8–4'te harfler okunur (jüri: arka planda
 # yazı/logo okunmasın) → S3 kliplerinde gizli. t89[0] tepeden bakar, pankart kadrajda değil: dikiş bozulmaz.
 PANKART_GIZLI = []
@@ -1581,7 +1642,11 @@ if not S2_ANIM and not A.pankart:
         if o.name.startswith("pankart_gel"):
             o.hide_render = True
             PANKART_GIZLI.append(o.name)
-if not S2_ANIM:
+if S2_ISIK79:
+    cam.animation_data_clear()
+    cam.data.animation_data_clear()
+    print("[S3] t79: S2 t78 animasyonu (ışık devri) kare kare korunur; kamera S3'ün", flush=True)
+elif not S2_ANIM:
     nf = dondur_s2(float(N_T78))
     cam.animation_data_clear()
     cam.data.animation_data_clear()
@@ -2010,6 +2075,135 @@ def olc(yol_):
               ", ".join(f"{k} üst {e['ust_tasma_px']} alt {e['alt_tasma_px']}" for k, e in v["yatay"].items()), flush=True)
 
 
+# ================================================================== 15b) t79 yoklaması (GPU'suz)
+T79_GRUP = (("kasa_fidan", ("S3_",)), ("banko", ("banko_", "brosur_", "logo")), ("totem", ("totem_",)),
+            ("sutun", ("sutun_",)), ("kanopi", ("kanopi", "krom_")), ("bitki", ("bitki_", "saksi_")), ("kiosk", ("kiosk_",)),
+            ("sol_bank", ("sol_bank",)),
+            ("duvar", ("on_", "sag_", "arka_", "sol_kapali", "sol_fasya", "baski_", "ekran_soz", "yikama_", "bant_", "cita_", "oda_")))
+
+
+def _grup79(ad):
+    for g, on in T79_GRUP:
+        if ad.startswith(on):
+            return g
+    return "diger"
+
+
+def olc79():
+    """t79: (1) kamera yolu ↔ sahne: kare başına 8 alt örnek; yakınlık (AABB ön süzgeç 0,8 m → closest_point_on_mesh) grup
+    başına en küçük uzaklık + ışın yoklaması (ardışık örnekler arası ray_cast: yol bir yüzeyi delerse isabet); (2) broşür
+    yığını kutusunun kadrajdaki boyu kare kare (master px); (3) t79[0]'da kasa kadraj dışı; (4) t79[59] ≡ t89[59] ve
+    t79[0] ≡ t78[0] durum farkı; (5) son 3 kare ekran hareketi (olc_klip / nokta_kumesi ile aynı)."""
+    t0 = time.perf_counter()
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    n = KLIPLER3["t79"][1]
+    ALT = 8
+    Q = [(i / ALT, durum("t79", i / ALT)["pos"].copy()) for i in range(n * ALT + 1)]
+    lo = Vector((min(q.x for _, q in Q), min(q.y for _, q in Q), min(q.z for _, q in Q)))
+    hi = Vector((max(q.x for _, q in Q), max(q.y for _, q in Q), max(q.z for _, q in Q)))
+    ESIK = 0.8
+    grup = {}
+    aday = 0
+    for ob in sc.objects:
+        if ob.type != "MESH" or ob.hide_render or not ob.visible_get():
+            continue
+        ev = ob.evaluated_get(dg)
+        mw = ev.matrix_world
+        vs = [mw @ Vector(c) for c in ev.bound_box]
+        blo = Vector((min(v.x for v in vs), min(v.y for v in vs), min(v.z for v in vs)))
+        bhi = Vector((max(v.x for v in vs), max(v.y for v in vs), max(v.z for v in vs)))
+        if any(blo[i] > hi[i] + ESIK or bhi[i] < lo[i] - ESIK for i in range(3)):
+            continue
+        inv = mw.inverted()
+        en = (1e9, None, None)
+        for ff, q in Q:
+            c_ = Vector((min(max(q.x, blo.x), bhi.x), min(max(q.y, blo.y), bhi.y), min(max(q.z, blo.z), bhi.z)))
+            if (q - c_).length > ESIK:
+                continue
+            aday += 1
+            try:
+                ok, loc, _n, _i = ev.closest_point_on_mesh(inv @ q)
+            except Exception:
+                continue
+            if ok:
+                d = (mw @ loc - q).length
+                if d < en[0]:
+                    en = (d, ff, [round(v, 3) for v in q])
+        if en[1] is None:
+            continue
+        g = _grup79(ob.name)
+        if en[0] < grup.get(g, {"m": 1e9})["m"]:
+            grup[g] = {"m": round(en[0], 3), "nesne": ob.name, "kare": en[1], "konum": en[2]}
+    isabet = []
+    for (f0, q0), (f1, q1) in zip(Q[:-1], Q[1:]):
+        d_ = q1 - q0
+        if d_.length < 1e-6:
+            continue
+        hit, loc, _n, _i, ob, _m = sc.ray_cast(dg, q0, d_.normalized(), distance=d_.length)
+        if hit:
+            isabet.append({"kare": f0, "nesne": ob.name})
+    # (2) broşür yığını (bütün brosur_* nesnelerinin AABB'si) kare kare izdüşüm
+    br = [o for o in sc.objects if o.name.startswith("brosur_") and o.type == "MESH" and not o.hide_render]
+    bv = [o.matrix_world @ Vector(c) for o in br for c in o.bound_box]
+    bk = []
+    if bv:
+        bk = [Vector((x, y, z)) for x in (min(v.x for v in bv), max(v.x for v in bv))
+              for y in (min(v.y for v in bv), max(v.y for v in bv)) for z in (min(v.z for v in bv), max(v.z for v in bv))]
+    brosur = []
+    for f in range(n + 1):
+        D = durum("t79", f)
+        ps = [proj_kam(D["pos"], D["psi"], D["phi"], D["lens"], w) for w in bk]
+        if not ps or any(p is None for p in ps):
+            brosur.append({"f": f, "kadrajda": False, "gen_px": 0, "yuk_px": 0})
+            continue
+        x0, x1 = max(0.0, min(p[0] for p in ps)), min(1920.0, max(p[0] for p in ps))
+        y0, y1 = max(0.0, min(p[1] for p in ps)), min(1920.0, max(p[1] for p in ps))
+        ic = x1 > x0 and y1 > y0
+        brosur.append({"f": f, "kadrajda": ic, "gen_px": round(x1 - x0, 1) if ic else 0, "yuk_px": round(y1 - y0, 1) if ic else 0,
+                       "uzaklik_m": round(min(p[2] for p in ps), 3)})
+    en_b = max(brosur, key=lambda b: b["gen_px"] * b["yuk_px"])
+    # (3) kasa t79[0]'da: köşeler kadrajda mı
+    D0 = durum("t79", 0)
+    kk = [proj_kam(D0["pos"], D0["psi"], D0["phi"], D0["lens"], yerel(x, y, z)) for x in (-0.24, 0.24) for y in (-0.02, 0.14)
+          for z in (ZT, KASA_H + ZT)]
+    kasa0 = sum(1 for p in kk if p and 0 <= p[0] <= 1920 and 0 <= p[1] <= 1920)
+    # (4) t79[59] ≡ t89[59]; t79[0] ≡ t78[0] (B pozu)
+    A_, B_ = durum("t79", n), durum("t89", KLIPLER3["t89"][1])
+    fark = {}
+    for k_ in ("pos", "psi", "phi", "lens", "odak", "fstop", "g_kok", "g_govde", "fidan", "fidan_k", "gunes", "kalin", "perde"):
+        a_, b_ = A_[k_], B_[k_]
+        fark[k_] = round((a_ - b_).length if isinstance(a_, Vector) else abs(a_ - b_), 9)
+    fark0 = {"pos": round((D0["pos"] - C7["pos"]).length, 9), "psi": abs(D0["psi"] - C7["psi"]), "phi": abs(D0["phi"] - C7["phi"]),
+             "lens": abs(D0["lens"] - C7["lens"]), "odak": round(abs(D0["odak"] - C7["odak"]), 9),
+             "fstop": abs(D0["fstop"] - C7["fstop"])}
+    # (5) son 3 kare ekran hareketi + kare başına kamera hızı
+    kar = olc_klip("t79")
+    son3 = [round(hareket(nokta_kumesi(kar[n - i - 1]), nokta_kumesi(kar[n - i])), 3) for i in (2, 1, 0)]
+    hiz = [round((durum("t79", f)["pos"] - durum("t79", f - 1)["pos"]).length * FPS, 3) for f in range(1, n + 1)]
+    R = {"uretim": time.strftime("%Y-%m-%dT%H:%M:%S"), "yol_m": round(T79_L[-1], 3),
+         "noktalar": [[round(v, 3) for v in p] for p in T79_NOKTA[1:-1]], "yan_deg": A.t79_yan, "phi_orta": A.t79_phi,
+         "yakinlik_m": dict(sorted(grup.items(), key=lambda kv: kv[1]["m"])), "yakinlik_olcut": "≥ 0,25 m",
+         "aday_ornek": aday, "isin_isabet": isabet, "brosur_en_buyuk": en_b, "brosur_59": brosur[-1],
+         "brosur_kareler": [[b["f"], b["gen_px"], b["yuk_px"]] for b in brosur], "kasa_t79_0_kadrajda_kose": kasa0,
+         "fark_59_t89": fark, "fark_0_t78": fark0, "son3_px": son3, "hiz_m_sn": hiz,
+         "kamera": [k["kamera"] for k in kar], "odak": [round(durum("t79", f)["odak"], 4) for f in range(n + 1)],
+         "fstop": [round(durum("t79", f)["fstop"], 3) for f in range(n + 1)], "sure_sn": round(time.perf_counter() - t0, 1)}
+    print(f"[OLC79] yol {R['yol_m']} m; yakınlık " + ", ".join(f"{g} {v['m']} ({v['nesne']} @{v['kare']})" for g, v in
+          list(R["yakinlik_m"].items())[:7]) + f"; ışın isabeti {len(isabet)}", flush=True)
+    print(f"[OLC79] broşür en büyük kare {en_b['f']}: {en_b['gen_px']}×{en_b['yuk_px']} px; t79[59] {brosur[-1]['gen_px']}×"
+          f"{brosur[-1]['yuk_px']}; kasa t79[0] kadrajda köşe {kasa0}/8; son3 {son3} px; tepe hız {max(hiz):.2f} m/s", flush=True)
+    print(f"[OLC79] fark t79[59]−t89[59] {fark}; t79[0]−t78[0] {fark0}", flush=True)
+    return R
+
+
+if A.olc79:
+    _r79 = olc79()
+    os.makedirs(os.path.dirname(os.path.abspath(A.olc79)), exist_ok=True)
+    json.dump(_r79, open(A.olc79, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"[OLC79] {A.olc79}", flush=True)
+    raise SystemExit(0)
+
 if A.olc:
     olc(A.olc)
     raise SystemExit(0)
@@ -2052,6 +2246,13 @@ def json_yaz():
     D = KAYIT[son]
     ku, du, gu = uclar(D)
     yatay_ky = None
+    if klip == "t79":
+        # yatay kırpım: d7 233 (p7) → d9 420 (p9), t78'in rampasıyla aynı (ilerleme s 0 → 0,6773 ≡ kare 0 → 24, easeInOutCubic;
+        # kodla.mjs KIRPIM_Y_TANIM.t79 bu diziyi JSON 'ilerleme'sinden yeniden çözer)
+        ky = [round(233 + (420 - 233) * O.ease_in_out_cubic(O.clamp01(D["s"] / 0.6773))) for D in D_]
+        js["kirpimY_oneri"] = {"bas": 233, "son": 420, "s0": 0.0, "s1": 0.6773, "kareler": ky}
+        js["dikis"] = {"bas": "t67[47] ≡ t78[0] (B pozu, d7; S2 ışık devri t78 karesiyle)", "son": "t89[59] ≡ p9 (d9)"}
+        js["sahne"] = "S3 (S2 t78 + kök kasası; S2 t78 ışık devri kare kare, kamera S3)"
     if klip in ("t89", "p9"):
         cap = []
         for s, w in zip(KOK_SERIT, ku):

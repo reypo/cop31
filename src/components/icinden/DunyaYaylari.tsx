@@ -4,7 +4,8 @@ import KunyeSatiri from "./KunyeSatiri";
 import type { Durak, Nokta } from "./klipler";
 
 /**
- * d1 ışık yayları (brief-icinden-3 §12.0-1, §12.4-2; G turunda d11 ters yayları Dünya dönüşüyle kalktı, §14.4.2). Sunucu bileşeni: 27 COP ev sahibi kentten
+ * d1 ışık yayları ve d12 ters yayları (brief-icinden-3 §12.0-1, §12.4-2; W-2 §14.7: Dünya'ya uzaklaşmayla geri geldi, E turundaki
+ * d11 gibi; veri d1'in, bir kez). Sunucu bileşeni: 27 COP ev sahibi kentten
  * Antalya'ya yaylar (manifest `ozel.yaylar`, S1a yaylar.py; video px, son nokta Antalya) yalnız HTML'de SVG olarak
  * çizilir; veri istemci manifestine girmez (istemciManifesti `ozel.yaylar`'ı siler).
  *
@@ -15,8 +16,8 @@ import type { Durak, Nokta } from "./klipler";
  * Bézier'e çevrilir), gradyanlar `YayTanimlari`'nda (reduced-motion'da da görünen d1 bölümünde); reduced posteri
  * yolları `<use href="#v3yh">` ile kullanır.
  *
- * Çizim (CSS, icinden3-isik.css): varıştan 400 ms sonra uzaktan yakına 40 ms kademe; dinlenmede 0,55; jestte 200 ms'de
- * söner.
+ * Çizim (CSS, icinden3-isik.css): varıştan 400 ms sonra uzaktan yakına 40 ms kademe (d1), d12'de Antalya'dan uzva (yakından
+ * uzağa; `--n`, kök `data-sira="2"`); dinlenmede 0,55; jestte 200 ms'de söner.
  */
 
 /** Master karesinin video px kenarı (1920 / 1,5). */
@@ -153,16 +154,18 @@ export function YayTanimlari({ D }: { D: Durak | undefined }) {
 export const noktaStil = (a: Nokta, o: Nokta) => ({ "--xd": a[0], "--yd": a[1], "--xy": a[0] + o[0], "--yy": a[1] + o[1] }) as CSSProperties;
 
 /**
- * Sahne katmanı (VideoSahne `etiketler` yuvasında, `.v3-etiketler` içinde; yalnız `dunya` rolünde görünür). Antalya merkezi HTML'de (ekran px'i: 7 px çekirdek + hale, d1'de tek
- * varış halkası, 2,1 s; yalnız transform/opacity).
+ * Sahne katmanı (VideoSahne `etiketler` yuvasında, `.v3-etiketler` içinde; yalnız `dunya` rolünde görünür): d1 ve d12 aynı
+ * öğeyi kullanır (ikisi aynı anda görünmez; sıra kökün `data-sira`sından). Antalya merkezi HTML'de (ekran px'i: 7 px çekirdek
+ * + hale, d1'de tek varış halkası, 2,1 s; yalnız transform/opacity).
  */
 export default function DunyaYaylari({ D }: { D: Durak | undefined }) {
   const v = yayVerisi(D);
   if (!v) return null;
+  const n = v.yaylar.length;
   return (
     <>
       <div className="v3-yaylar">
-        <svg className="v3-vsvg" style={vsvgStil(v.o)} viewBox={`0 0 ${KARE} ${KARE}`} preserveAspectRatio="none">
+        <svg className="v3-vsvg" style={{ ...vsvgStil(v.o), "--n": n } as CSSProperties} viewBox={`0 0 ${KARE} ${KARE}`} preserveAspectRatio="none">
           <g id="v3yh" fill="none" strokeWidth="1.25" strokeLinecap="round">
             {v.yaylar.map((a, i) => (
               <path key={i} d={yol(a, v.o[0])} stroke={`url(#v3yg${i})`} vectorEffect="non-scaling-stroke" style={{ "--i": i } as CSSProperties} />

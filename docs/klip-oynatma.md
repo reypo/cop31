@@ -31,12 +31,14 @@ Prototip: `C:\Users\user\AppData\Local\Temp\claude\D--soft-cop31\4935df5b-f395-4
 **Üretimde (`src/components/icinden/`, G turu, 4 Kasım 2026; brief-icinden-3 §14.4):** sahne kabı (`.v3-sahne`, fixed,
 `container-type: size`, aria-hidden) içinde z0 poster `<img>` (altında satır içi LQIP) → z1–3 üç `<video>` → z4 yedek
 `<div>` (poster çapraz sönmesi: hem yedek hem fidan içi geri adım) → z5 lombar kâğıdı (yalnız d0 ↔ d1) → z8 etiket katmanı
-(d1 yaylar, d2 emanet ışıkları, sahne etiketleri) ve **fidan katmanı** (`FidanKatmani.tsx`: d9 81 kök ucu halkası — yön
-başına tek `<svg>`, `xMidYMid slice` = cover; d10 iki boğum etiketi) → z8 kılavuz çizgisi (d5 sütun, d6 duvar) → z20 kiosk
-perdesi. Sahnenin dışında: z10 metin bantları ve **z9 d11 polaroid katmanı** (ikisi de durak bölümünün içinde `position:
+(d1/d12 yaylar, d2 emanet ışıkları, sahne etiketleri) ve **fidan katmanı** (`FidanKatmani.tsx`: d8 81 kök ucu halkası — yön
+başına tek `<svg>`, `xMidYMid slice` = cover; d9 iki boğum etiketi) → z8 kılavuz çizgisi (d5 sütun, d6 duvar) → z20 kiosk
+perdesi. Sahnenin dışında: z10 metin bantları ve **z9 d10 polaroid katmanı** (ikisi de durak bölümünün içinde `position:
 fixed`; polaroidler ekran okuyucu akışında), z12 kadraj okuması, z30 kapanış. DOM broşürü (kapak FLIP'i, sayfa çevirme,
-dalış) ve Dünya dönüşü (d11) G turunda kalktı; masadaki broşür artık render'ın son karesi (d8, son-kare durak), "Dijital
-broşür →" bağlantısı `/brosur`'a (d0 şeridi, d8 bandı, kapanış).
+dalış) G turunda kalktı. **W-3 (brief §14.7):** masa durağı da kalktı — d7 (sol duvar) → t79 → d8 kök kasası; "Dijital
+broşür →" bağlantısı `/brosur`'a yalnız d0 şeridinde ve kapanışta. Tur yine Dünya'da biter (W-2): d11 (yapraklar) → d12
+"Gezegenimiz Ortak Evimizdir" **zincir** geçişle (p4'e 350 ms köprü sönmesi + r43 → r32 → r21, kare sınırında devir;
+dosyalar d2–d4'ün geri klipleri, ağ +0; d12 → d11 geri adım poster sönmesi).
 
 ### 1.2 Durum makinesi ve adımlama
 
@@ -101,8 +103,10 @@ anlık 3); öğe sayısı durak sayısından bağımsız.
 
 | Durum | Davranış | Ölçüm |
 |---|---|---|
-| Geçiş klibi hazır değil | En çok 300 ms bekle; sonra hedef posterine çapraz sönme (opaklık 900 ms, ölçek 1,08→1 1,8 sn), toplam süre = klip süresi (metin kaydırmasıyla tutarlı); hedef durağın klipleri yedek sürerken yüklenir | §3.5 |
-| `play()` reddi (NotAllowedError) | Aynı yedek; açılışta döngü reddedilirse poster dural kalır; dokunma adımı `touchend`'e kayar; ilk `touchend`/`click`/`keydown`'da (yakalama aşaması, adımdan önce) havuzdaki 3 öğe `play()`→`pause()` ile açılır | §3.6 |
+| Geçiş klibi hazır değil — **W-4 bekle kipi (brief §14.7)** | Poster sönmesi YOK (kullanıcı: "internet kötüyse animasyonları yok etmesin"). Mevcut kare durur (döngü akar / geçişin 0. karesi / zincirde köprü posteri ya da önceki parçanın son karesi), kökte `data-bekle="1"` → 300 ms'den uzunsa sol üstte 18 px krem halka; metin ertelenir; adımlayıcı kilidi varışa dek sürer (ters jest yok sayılır, tükenir), kiosk zamanlayıcısı zaten durur. Beklenen klip kuyruğun en önüne geçer (süren başka indirme kesilir, sonra baştan iner), hazır olunca (`canplay`) aynı geçiş videoyla oynar. İndirme deneme sınırına takılırsa 1,5 s arayla yeniden; kod çözme hatasında beklerken H.264'e dönülür. 20 s'yi aşan bekleme HUD'da `UYARI > 20 s` (yine bekler). Kayıt `bekle: neden`, `beklemeMs`; HUD 5. satır `bekle n · toplam ms` | §3.5; W-4 `bekle` |
+| `play()` reddi (NotAllowedError; iOS Düşük Güç Modu) — **W-2/W-3 (brief §14.7)** | Engel KALICI KİP DEĞİL: video katmanı gizlenmez, geçişler poster sönmesine düşmez. Her kullanıcı jestinde (`touchend`/`pointerup`/`keydown`/`click`/`mousedown`, tekerlek ≥ 250 ms arayla; yakalama aşaması, adımdan önce) kilidi açılmamış öğelere **senkron** `play()` → `pause()` (`kilitAc`; await/rAF/zamanlayıcı yok); bekleyen döngü aynı olayda oynar; hazır geçişin `play()`'i de jestin içinde. Ret: geçiş BEKLER (W-4; poster sönmesi yok), sıradaki jestte `kilitAc` onu jestin içinde senkron başlatır. HUD 1. satır `ENGEL n` (ret sayısı, 50 ms içindekiler bir) · `açıldı` · `son ret: <yer>` | §3.6; W-3 `engel` senaryosu |
+| Poster kipi | **Yalnız `?poster=1`** (W-2; ölçüm için el ile, W-4'ten beri tek poster yedeği). Tasarım gereği poster sönmeleri (geri klibi olmayan fidan içi geri adım, zincir köprüsü) yedek değildir: Veri Tasarrufu, 2G/3G, `prefers-reduced-data` artık video ister. Kipte video inmez, her geçiş poster çapraz sönmesi | W-3 `yedekKip` |
+| Hareket azaltma | `prefers-reduced-motion`: adımlama, video geçişleri ve döngüler SÜRER (jestle); yalnız DOM süsleri (bant/etiket geçişleri, halkalar, polaroid, sarkaç, yaylar) anında. Eski akış düzeni (posterler, video yok) yalnız `?azalt=1` | W-3 `hareketAzalt`, `reduced` |
 | Döngü hazır değil | Geçişin son karesi durur (`ended`), döngü hazır olunca kesme | §3.1 "döngü hazırdı" |
 | Hiç video karesi yok | Poster `<img>` (z0); o da yoksa sahne zemini → **üretimde satır içi LQIP gerekir** (negatif kontrol, §3.3) | §3.3 |
 
@@ -266,7 +270,11 @@ Yedek = §1.5 poster çapraz sönmesi.
 "Açılışta hazır" = d0 döngüsü + ilk ileri geçiş hazır (poster_0 baştan görünür). "İlk kare" yalnız klip
 oynatılan adımlar. Okumalar:
 
-- **"Hazır değilken jest" çözümü** (uygulandı ve ölçüldü): 300 ms bekleme + poster çapraz sönmesi. Kullanıcı hiçbir
+- **W-4 (4 Kasım 2026 gece, brief §14.7): poster yedeği kalktı → bekle kipi (§1.5).** 3G benzetimi (1,6 Mbps / 300 ms,
+  önbelleksiz, `scratchpad/w-4/icinden3.mjs bekle --ag 3g`): açılışta ve her varışta hemen jest → 7/7 geçiş bekledi
+  (2,0–7,3 s), hepsi video (sunulan > 0), yedek 0, yedek katmanı opaklığı 0, gösterge 317 ms'de göründü, beklemede metin
+  yok, beklerken 3 jest yok sayıldı, yol 1-2-3-4-5-4-5 ✓. Aşağıdaki "yedek" sütunları W-4 öncesi tarihçedir.
+- *(Tarihçe, W-4 öncesi)* **"Hazır değilken jest" çözümü** (uygulandı ve ölçüldü): 300 ms bekleme + poster çapraz sönmesi. Kullanıcı hiçbir
   zaman boş ekran ya da donmuş yarım klip görmez; yalnız o adım "hareketsiz" geçer. Hedef durağın klipleri yedek
   sürerken yüklenir. İlk sürümde (yönle hemen bırakma, yedekte yükleme yok) acele tempoda yedek zinciri oluştu:
   AV1 4G 9/12 → şimdi 3/12 (o koşuda spike sunucusu ağır seti önbellek başlığısız sunuyordu; kıyas yaklaşık).
@@ -598,19 +606,27 @@ Eski tahmin (R4, ağır vekil set): H.264 ~16 MB, HEVC ~12, AV1 ~10. Gerçek dik
 3. Aynı turu `?hud=1&kodek=av1` ve `?hud=1&kodek=hevc` ile (sayfayı yeniden yükleyerek) yap; `p50 devir`, `düşen`, `>50ms`, `başla`
    ve gözle akıcılığı karşılaştır. AV1 belirgin iyi değilse HEVC kalır. İkisi de takılıyorsa `?hud=1&kodek=h264`.
 4. Gözle: (a) varışta görüntü duruyor mu; (b) jestte yeni klip ilk karesinde donuk mu sönüyor; (c) d0→d1'de kâğıttaki delik
-   kesik kesik mi büyüyor (lombar maskesi, değişmedi); (d) d1 yaylar; (e) d7→d8 masadaki broşüre iniş (render; DOM kapak yok);
-   (f) d7'de varıştan ~1 s sonra hemen kaydırınca geçişin geç başlaması.
-4b. **Fidan (G turu):** d7 → d12 ileri, sonra d12 → d7 geri; her durakta 2–3 s bekle.
-   - İleri: t78 (masa), t89 (kökler), t9a (gövde), tab (dallar), tbc (yapraklar). d9–d11 döngüsüz: HUD `devir` "-" normal
-     (döngü yok); d12'de `lc` döngüsü: `devir` 17–60 ms. Düşen 0.
-   - d9 dinlenmesinde 81 krem halka tek seferde (300 ms) belirmeli, kök uçlarının üstünde; d10'da iki boğum etiketi (2017 /
-     TBMM) yana kayarak; d11'de 4 polaroid dal uçlarında, belirirken boş/beyaz çerçeve görünmemeli (görsel d10'da çözülür),
+   kesik kesik mi büyüyor (lombar maskesi, değişmedi); (d) d1 yaylar; (e) d7→d8 sol duvardan doğrudan kök kasasına (t79;
+   W-3, masa yok — t79 gelene dek geçici t89: duvardan masaya bir kesme, sonra kasaya dalış); (f) d7'de varıştan ~1 s sonra
+   hemen kaydırınca geçişin geç başlaması.
+4b. **Fidan (G turu, W-3 numaralarıyla):** d7 → d11 ileri, sonra d11 → d7 geri; her durakta 2–3 s bekle.
+   - İleri: t79 (kökler), t9a (gövde), tab (dallar), tbc (yapraklar). d8–d10 döngüsüz: HUD `devir` "-" normal
+     (döngü yok); d11'de `lc` döngüsü: `devir` 17–60 ms. Düşen 0.
+   - d8 dinlenmesinde 81 krem halka tek seferde (300 ms) belirmeli, kök uçlarının üstünde; d9'da iki boğum etiketi (2017 /
+     TBMM) yana kayarak; d10'da 4 polaroid dal uçlarında, belirirken boş/beyaz çerçeve görünmemeli (görsel d9'da çözülür),
      hafif sarkaç. Geçişe başlayınca hepsi 200 ms'de sönmeli.
-   - Geri: d12→d11, d11→d10, d10→d9 klip değil, **350 ms poster çapraz sönmesi**: beyaz/siyah flaş, eski karenin bir an geri
-     gelmesi ya da ekranın kayması (sahne yerinde kalmalı) olmamalı. HUD'da bu adımlar sayılmaz (klipsiz). d9→d8 de sönme (`r98` bütçe için kalktı); d8→d7 `r87` klibi.
-   - Ters jest: d10'a varınca hemen geri, sonra hemen ileri (3 kez): her jest tek adım.
-   - "Dijital broşür →": d0 şeridinde (sağda) ve d8 bandında dokununca `/brosur` açılmalı; kapanışta slogan altında düğme.
-5. Düşük Güç Modu açıkken HUD 1. satırda `ENGEL`; adım parmak kalkınca atılır; ilk dokunuştan sonra geçişler video olmalı.
+   - Geri: d11→d10, d10→d9, d9→d8 klip değil, **350 ms poster çapraz sönmesi**: beyaz/siyah flaş, eski karenin bir an geri
+     gelmesi ya da ekranın kayması (sahne yerinde kalmalı) olmamalı. HUD'da bu adımlar sayılmaz (klipsiz). d8→d7 `r97` klibi
+     (geçici t89 döneminde poster sönmesi).
+   - Ters jest: d9'a varınca hemen geri, sonra hemen ileri (3 kez): her jest tek adım.
+   - "Dijital broşür →": d0 şeridinde (sağda) dokununca `/brosur` açılmalı; kapanışta slogan altında düğme (W-3: masa bandı yok).
+4c. **Dünya'ya uzaklaşma (W-2/W-3):** d11'de 2–3 s bekle, sonra ileri: 350 ms'de stant tepeden görünüme (p4) sönme, sonra
+   kesintisiz stant → Antalya → Türkiye → Dünya (~6,5 s; arada jestler yok sayılır). HUD 2. satırın altında
+   `zincir r43 <ilk> · r32 <devir> · r21 <devir>`: devirler 17–60 ms olmalı. d12'de "Gezegenimiz Ortak Evimizdir" el yazısı +
+   yaylar Antalya'dan dışa. Geri (d12→d11) 350 ms poster sönmesi.
+5. **Düşük Güç Modu AÇIK** (W-2/W-3): açılışta HUD 1. satır `ENGEL 1 · son ret: …`; ilk dokunuştan sonra `ENGEL n açıldı`
+   olmalı ve geçişler **video** (poster sönmesi değil), döngüler oynamalı; 4c zinciri de video. `YEDEK play-red` görülürse
+   not al (o geçiş poster; sıradaki jestte yeniden denenir).
 6. Mac varsa: Safari ▸ Geliştir ▸ iPhone ▸ Zaman Çizelgeleri ("Görüntü Kareleri") ile d1→d3 ve d7→d12→d7 kaydı (fidan
    geçişlerinde > 50 ms kare 0 hedefi, brief §14.3 / S3 raporu §5-11).
 7. Sonuç: her koşu için HUD 2.–4. satırlar + gözlem. Başla büyükse bu yama asıl düzeltmedir; küçükse sıradaki iş brief §13.8'deki

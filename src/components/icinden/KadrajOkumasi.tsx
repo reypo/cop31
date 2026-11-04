@@ -1,7 +1,7 @@
 /**
  * Kadraj okuması (brief-icinden-3 §5): sağ üst, 16 px içeride, Montserrat 500 tabular, düz metin. Tek
  * gösterge: ölçek ("kadraj ~12.100 km" → "~2,3 km" → "~19 m" → fidanda "~54 cm"), ya da durağın sabit adı (manifest
- * `okumaDurak`: "arka duvar · ~3 m", "banko · broşür"). Klip boyunca Blender'ın `kadraj_m[kare]` değeri rVFC ile akar
+ * `okumaDurak`: "arka duvar · ~3 m", "sol duvar · ~3 m"). Klip boyunca Blender'ın `kadraj_m[kare]` değeri rVFC ile akar
  * (fidan içi geri adımın poster sönmesinde zamana bağlı). React state YOK: VideoSahne `okumaYaz()` ile yalnız değişince
  * `textContent` yazar.
  */

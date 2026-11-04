@@ -71,6 +71,12 @@ Müşteri revizyonu: dalış d0–d8 (masadaki broşür) kalır; broşür sayfal
 edilmiş fidan bölümü (S3, `scripts/blender/s3/`). Durak tablosu `manifest-birlestir.mjs` `DURAKLAR`'da (§0'daki 12 duraklı
 tablonun yerine); site numarayı `rol.ts` `dizinler()`'den türetir, kapanış dizini **N = 13**.
 
+**W-3 (brief §14.7, 4 Kasım gece): masa (d8) KALKTI, tur Dünya'da biter.** Tablo aşağıda güncel hâliyle (N yine 13). d7 →
+d8 kök kasası yeni t79 / r97 ile (paralel üretimde; kodlama listesinde yoksa `manifest-birlestir.mjs` `GECICI` tablosuyla
+t89 / null + uyarı). d11 → d12 **zincir** geçiş `uzaklasma`: `ileri = {ad, sure, kare (toplam 186), dosya: {}, bayt: {},
+geri: null, hizGeri, parcalar: [r43, r32, r21] (geri klip kayıtları), kopruDurak: "d4"}` — yeni dosya yok, site d11'den
+p4'e 350 ms köprü sönmesi + parçaları kare sınırında devreder (klip-oynatma §1.5). t78 / r87 / p8 manifestten çıktı.
+
 | id | rol | tur | gelen (ileri) | ileri / geri | döngü | poster | okuma (dinlenme) |
 |---|---|---|---|---|---|---|---|
 | d0 | lombar | dom | — | t01 / r10 | — | — | — |
@@ -80,12 +86,12 @@ tablonun yerine); site numarayı `rol.ts` `dizinler()`'den türetir, kapanış d
 | d4 | anatomi | klip | t34 | t45 / r54 | l4 | p4 | kadraj (t34) |
 | d5 | sutunlar | klip | t45 | t56 / r65 | l5 | p5 | kadraj (t45) |
 | d6 | duvar | klip | t56 | t67 / r76 | — | p6 = t56[53] | "arka duvar · ~3 m" |
-| d7 | duvar | klip | t67 | t78 / r87 | — | p7 = t67[47] | "sol duvar · ~3 m" |
-| d8 | **masa** | klip | t78 (= S3 t78f kareleri; S2'nin `t78.json`'u) | **t89 / null** (r98 K-son'da kalktı) | — | **p8 = t78[59]** (son-kare; plaka kalktı) | "banko · broşür" |
-| d9 | **fidan-kok** | klip | t89 | t9a / **null** | — | p9 = t89[59] | kadraj (t89; m, ~0,23 → 0,54) |
-| d10 | **fidan-govde** | klip | t9a | tab / null | — | pa = t9a[53] | kadraj (t9a; ~0,54 → 0,51) |
-| d11 | **fidan-dal** | klip | tab | tbc / null | — | pb = tab[53] | kadraj (tab; ~0,51 → 0,57) |
-| d12 | **fidan-yaprak** | klip | tbc | — | **lc** (4 s, 120 kare) | pc = lc[0] | kadraj (tbc; ~0,57 → 0,64) |
+| d7 | duvar | klip | t67 | **t79 / r97** (W-3; yoksa geçici t89 / null) | — | p7 = t67[47] | "sol duvar · ~3 m" |
+| d8 | **fidan-kok** | klip | t79 (geçici t89) | t9a / **null** | — | p9 = t79 son karesi | kadraj (t79; m) |
+| d9 | **fidan-govde** | klip | t9a | tab / null | — | pa = t9a[53] | kadraj (t9a; ~0,54 → 0,51) |
+| d10 | **fidan-dal** | klip | tab | tbc / null | — | pb = tab[53] | kadraj (tab; ~0,51 → 0,57) |
+| d11 | **fidan-yaprak** | klip | tbc | **uzaklasma** (r43 → r32 → r21; köprü d4) / null | **lc** (4 s, 120 kare) | pc = lc[0] | kadraj (tbc; ~0,57 → 0,64) |
+| d12 | **dunya** (ikinci, W-2/W-3) | klip | uzaklasma (186 kare) | — | l1 | p1 | kadraj (zincir; 23,8 m → 12.120 km) · "ortak evimiz" |
 | (13) | kapanış | — | DOM | — | — | — | — |
 
 - **Geri**: `duraklar[k].ileri.geri` k+1 → k. `geri: null` (d8, d9, d10, d11'in ileri geçişlerinde) = geri klip YOK: oynatıcı
@@ -108,11 +114,19 @@ tablonun yerine); site numarayı `rol.ts` `dizinler()`'den türetir, kapanış d
 | Kaynak (kare dizisi) | Çıktılar | Kare (önizleme) | CRF H.264 / HEVC / AV1 | `kirpimY` (yatay, master px) |
 |---|---|---|---|---|
 | t78 (t78f) | t78 ileri, r87 geri, **p8** son-kare | 60 | 23/25/32 · r87 26/28/36 | {233 → 420, s 0 → 0,6773} (aynı) |
+| **t79** (G-B sonrası) | t79 ileri (d7 → fidan-kök [W-3: d8], broşür durağı yok), **r97** geri (t79 `reverse`) | 60 | **23/27/34** (AV1/HEVC t89 ailesi, H.264 t78) · r97 26/28/36 | {233 → 420, s 0 → 0,6773} (t78 ile aynı) |
 | **t89** | t89 ileri (geri yok; r98 K-son'da kalktı), **p9** son-kare | 60 | **25/27/34** (K-son merdiveni; A4'te 23/25/32) | **420** sabit |
 | **t9a** | t9a ileri (geri yok), **pa** son-kare | 54 | **25/27/34** | **{420 → 222, s 0,04 → 0,90}** (değişen kareler 5–29) |
 | **tab** | tab ileri, **pb** son-kare | 54 | **25/27/34** | **{222 → 194, s 0,04 → 0,90}** (7–25) |
 | **tbc** | tbc ileri | 66 | **23/27/34** (H.264 +2'de yatay VMAF 90,91 < 93) | **{194 → 165, s 0,04 → 0,90}** (8–31) |
 | **lc** | lc döngü, **pc** (döngü 0. karesi; `pc.json` tip `dongu-ilk`) | 120 | **23/27/32** (K-son; A4'te 23/25/30) | **165** sabit |
+
+**t79 / r97 (G-B sonrası düzeltme; kullanıcı: "duvarlardan sonra broşürü hiç göstermeyelim, direkt fidana atlayalım"):**
+S3 `--klip t79` (60 kare, fiske k 2,4): t78[0] (B pozu ≡ t67[47]) → C9 (≡ t89[59], fidan-kök durağı); yol t78 koridorundan bankonun kuzeyine
+iner, kasaya C9'un tam kuzeyinden yanaşır (broşür yığını kadraja kare 33'te kenardan girer, en çok p9'daki boyu); büyüme ve
+fidan_spot t89 zaman çizgisi, S2 duvar ışığı devri t78 karesiyle → t79[59] ≡ t89[59] (p9 değişmez). `GERI.t79 = "r97"`,
+`KAYNAK_SIRA` … t78 **t79** t89 …; durak tablosu yukarıda (W-3: masa kalktı, d7 → d8 fidan-kök = t79 / r97); t78/r87/p8
+dosyaları yerinde (kodlama listesinde duruyor).
 
 `GERI` artık bütün ileri geçişleri anahtar olarak taşır (`t9a/tab/tbc: null`); `DONGU` + lc; `POSTER_TABAN` p8 ← t78,
 p9 ← t89, pa ← t9a, pb ← tab (son-kare), pc ← lc (dongu); `KAYNAK_SIRA` … t78 t89 t9a tab tbc lc. Rampalar S3
@@ -203,6 +217,47 @@ kB (oturum ≈ 12,185), VMAF ortalaması ≥ 96,97, kalkış 2,81/3,04, r43 son 
 **V doğrulaması (A9, 4 Kasım ~16.00; prod, headless Chrome, 4G, önbelleksiz):** oturum HEVC **12,098** / AV1 **12,454** MB
 (K-son tahmini ile ±1 kB), ilk yükleme 2,163 / 1,985, adım penceresi maks 1,737 / 1,877; geri klipler yalnız boşta. Kodlanmış
 dikişler ve kapılar `docs/brief-icinden-3.md` §14.5.
+
+**G4-dağ yeniden kodlaması (K-son-2, 4 Kasım ~18.50–19.30; Beydağları ormanla, brief §14.4.5).** Kaynak S1 t23/l3/t34a orman
+render'ı `D:\soft\cop31-varlik\render-son-dag\` (`render-son` bu koşuda hâlâ G'yi tutuyordu → `--esle`; fragmanlar `render-son`'dan,
+iki set yalnız `g_turu.orman_k`/`dag_pus` alanında ayrışıyor; `render-son-dag/t34` sabit bağları 60/60). Kodlayıcı belirlenimci:
+render-son-dag → render-son taşınınca `--esle`'siz aynı komut aynı özetleri verir (render ajanının dikey deneme kodlamasıyla 16/16 özdeş).
+
+```
+N=D:/soft/cop31-varlik/render-son-dag
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --esle t23=$N/t23,l3=$N/l3,t34=$N/t34 --klip t23,r32,l3,p3,t34,r43 --temizle
+#   27 dosya, 76 s; --temizle 27 eski özetli dosya. İki kapı düzeltmesi tablolara yazıldı, sonra:
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --esle t23=$N/t23,l3=$N/l3,t34=$N/t34 --klip r32.h264,r43.h264 --temizle
+node scripts/icinden/manifest-birlestir.mjs
+node scripts/icinden/kodla.mjs --artik --kuru && node scripts/icinden/kodla.mjs --artik          # 0 dosya
+python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t23,r32,l3,p3,t34,r43 --esle t23=$N/t23,l3=$N/l3,t34=$N/t34 --temel 0.697 --oturum-temel 0.664 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-G1.json
+```
+
+- **Düzeltmeler** (yalnız H.264): `CRF_TABLO` r32 H.264 27 → **27,05** (dikey d3 H.264 penceresi 2,503 → 2,493 ≤ 2,5; VMAF
+  92,82 / 90,87); `BOLGE` + **`r43.h264` 59-59:-2** (r43'ün son karesi ≡ t34[0]; yatay r43 son ↔ p3 4,28 → 4,02 ≤ 4,2,
+  son ↔ l3[0] 4,14 → 3,85; bedel dikey +1,8 kB, yatay +18,3 kB).
+- **Bayt** (kB = 10³, son hâl; parantezde G-B'ye fark):
+
+  | | dikey AV1 | dikey HEVC | dikey H.264 | yatay AV1 | yatay H.264 |
+  |---|---|---|---|---|---|
+  | t23 | 1.382,1 (+6,0) | 1.515,2 (+23,5) | 1.552,2 (+7,2) | 1.326,4 (+12,5) | 1.503,0 (+10,2) |
+  | r32 | 1.368,3 (+8,3) | 1.220,8 (−1,0) | 1.352,2 (−6,5) | 1.309,4 (+11,8) | 1.156,2 (+5,3) |
+  | l3 | 484,7 (+4,5) | 266,5 (+1,6) | 333,4 (+1,2) | 514,7 (+3,6) | 355,9 (+3,7) |
+  | t34 | 885,2 (+4,3) | 798,8 (−0,9) | 884,7 (+2,4) | 891,1 (+2,3) | 918,7 (+1,7) |
+  | r43 | 860,3 (+0,6) | 724,4 (+6,8) | 907,8 (+3,1) | 856,9 (+2,3) | 859,1 (−4,3) |
+  | p3 (q68) | 173,2 (+3,1) | ← | ← | 179,5 (+2,2) | ← |
+  | **set farkı** | **+26,9** | **+33,2** | +10,5 | +34,5 | +18,9 |
+
+- **Bütçe:** oturum AV1 **12,240** / HEVC **11,789** MB (W-3 entegre 12,213 / 11,756 → +0,027 / +0,033; G-B 12,455 / 12,099);
+  d2 kritik AV1 2,040 (≤ 2,1); d3 penceresi AV1 2,536 (≤ 2,6), H.264 2,493 (≤ 2,5); bütün kritik/pencere kapıları ✓.
+- **Dikişler** (kodlanmış ΔE00): d3 kalkış en çok **3,26** (yatay H.264 l3 son ↔ t34[0]; ≤ 3,27), AV1 2,69 / 2,89; r43 son ↔
+  l3[0] / p3 en çok 3,85 / **4,11** (dikey HEVC; ≤ 4,2); t23 son ↔ l3[0] ≤ 2,97; t23 son ↔ p3 3,21–3,52 (p3 q68, bilinen);
+  l3 kapanışı AV1 0; t34 35 ↔ 36 ≤ 0,041.
+- **VMAF** (25 dosya): eşik altı 0; l3 ≥ 94,78; en düşük ortalama r32 yatay H.264 90,87.
+- Manifest: 147 dosya (liste = manifest = public), uyarılar yalnız t01 `dunyaC` ve d6 `motto`.
+- **V-2 doğrulaması** (prod 3102, 4G benzetimi; brief §14.6): oturum HEVC **11,790** / AV1 **12,240** MB (hesapla birebir), ilk yükleme
+  2,165 / 1,987, adım penceresi 1,736 / 1,885; kodlanmış dikişler bağımsız betikle aynı (kalkış en çok 3,264, r43 ↔ p3 4,115);
+  uzaklaşma zinciri r43 son ↔ r32[0] 2,78–3,66 (G-B 2,75–3,60, bilgi), zincir ağ 0 bayt; yayındaki l3[0] ormanlı master'a yakın.
 
 ## 1. Yol (üç adım, hepsi depodan yeniden üretilebilir)
 

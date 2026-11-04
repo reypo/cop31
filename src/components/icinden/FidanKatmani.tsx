@@ -6,17 +6,17 @@ import type { Boyut, DalUcuAd, Durak, KokUcu, Nokta } from "./klipler";
 
 /**
  * /icinden v3 fidan bölümünün DOM katmanı (G turu, brief-icinden-3 §14.3, §14.4.6). Sunucu bileşenleri: konumlar manifestin
- * `ozel` alanlarından (video px, yön başına), cover dönüşümü CSS'te; istemci JS'i yalnız polaroid görsellerini d10'da
+ * `ozel` alanlarından (video px, yön başına), cover dönüşümü CSS'te; istemci JS'i yalnız polaroid görsellerini d9'da
  * indirip çözer (VideoSahne). Görünürlük kökün `data-dinlenme-rol` özniteliğiyle, yalnız opaklık/transform geçişi (§13.8
  * WebKit kuralları: SVG çocuğunda animasyon yok, `@property` yok, her karede `filter` yok, her karede JS stil yazımı yok).
  *
- *  - KokHalkalari (d9 fidan-kok, `ozel.kokUclari`): 81 kök ucu çevresinde 1,5 px krem halka. Yön başına TEK `<svg>` ve
+ *  - KokHalkalari (d8 fidan-kok, `ozel.kokUclari`): 81 kök ucu çevresinde 1,5 px krem halka. Yön başına TEK `<svg>` ve
  *    TEK `<path>` (81 daire yayı; HTML ve RSC yükünde 162 `<circle>`'dan ~%60 küçük); viewBox = video karesi,
  *    `preserveAspectRatio="xMidYMid slice"` = `object-fit: cover` (aynı dönüşüm, hesap yok). Animasyon yalnız `<svg>`
  *    öğesinin opaklığı (300 ms, dinlenmede). Reduced-motion'da posterin üstünde statik: aynı yol `<use href>` ile.
- *  - BogumEtiketleri (d10 fidan-govde, `ozel.bogumlar`): iki boğuma kılavuzlu etiket; metin content.ts'ten (`vizyon.items`
+ *  - BogumEtiketleri (d9 fidan-govde, `ozel.bogumlar`): iki boğuma kılavuzlu etiket; metin content.ts'ten (`vizyon.items`
  *    + `facts`), `taraf` −1 sol (alt boğum, 2017) / +1 sağ (üst boğum, TBMM).
- *  - Polaroidler (d11 fidan-dal, `ozel.dalUclari`): 6 ana dal ucunun 4'üne asılı fotoğraflar (§14.4.1 K6: sol p12 + p17,
+ *  - Polaroidler (d10 fidan-dal, `ozel.dalUclari`): 6 ana dal ucunun 4'üne asılı fotoğraflar (§14.4.1 K6: sol p12 + p17,
  *    sağ p19 + p22), alt metinler photos.ts'ten. Bölümün içinde (ekran okuyucu akışında), sabit katman.
  */
 
@@ -28,7 +28,7 @@ const halkaYolu = (u: readonly KokUcu[]) => {
   return u.map((p) => `M${y(p.x - HALKA_R)} ${y(p.y)}a${HALKA_R} ${HALKA_R} 0 1 0 ${2 * HALKA_R} 0 ${HALKA_R} ${HALKA_R} 0 1 0-${2 * HALKA_R} 0`).join("");
 };
 
-/** d9: 81 kök ucu halkası. `statik`: reduced-motion posterinin üstü (figür içinde, sahnedeki yolu `<use>` ile kullanır). */
+/** d8: 81 kök ucu halkası. `statik`: reduced-motion posterinin üstü (figür içinde, sahnedeki yolu `<use>` ile kullanır). */
 export function KokHalkalari({ D, statik = false }: { D: Durak | undefined; statik?: boolean }) {
   const u = D?.ozel?.kokUclari;
   if (!u) return null;
@@ -76,7 +76,7 @@ function noktaDegisken(d: Nokta | undefined, y: Nokta | undefined) {
   };
 }
 
-/** d10: iki boğum etiketi (sahne katmanında, aria-hidden; okunur kopyası d10 bandında). */
+/** d9: iki boğum etiketi (sahne katmanında, aria-hidden; okunur kopyası d9 bandında). */
 export function BogumEtiketleri({ D, k }: { D: Durak | undefined; k: number }) {
   const b = D?.ozel?.bogumlar;
   if (!b) return null;
@@ -104,7 +104,7 @@ export function BogumEtiketleri({ D, k }: { D: Durak | undefined; k: number }) {
 }
 
 /**
- * d11 polaroidleri (§14.4.1 K6). `uc`: asıldığı ana dal ucu (S3 `dal_uclari`); dikey fotoğraf (p22) alt uçta (altında yer
+ * d10 polaroidleri (§14.4.1 K6). `uc`: asıldığı ana dal ucu (S3 `dal_uclari`); dikey fotoğraf (p22) alt uçta (altında yer
  * var). `konum`: yüzlere göre kırpım (object-position; /dunya DunyaIcerik'teki değerler). `en`: çerçeve genişliği, video px.
  */
 const POLAROIDLER: readonly { uc: DalUcuAd; foto: PhotoAsset; konum: string; oran: string; en: number }[] = [
@@ -118,10 +118,10 @@ const POLAROIDLER: readonly { uc: DalUcuAd; foto: PhotoAsset; konum: string; ora
  * yalnız 1x/2x (128 / 256 px; `getImageProps` genişlikle). `sizes`'lı 16 genişlikli srcset HTML'de ve RSC yükünde 4 × ~1,3 kB'tı.
  */
 const POLAROID_W = 128;
-/** HTML'deki yer tutucu (1 px saydam GIF): gerçek kaynak JS'le d10 dinlenmesinde atanır (ilk yüklemeye girmez). */
+/** HTML'deki yer tutucu (1 px saydam GIF): gerçek kaynak JS'le d9 dinlenmesinde atanır (ilk yüklemeye girmez). */
 const BOS = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-/** d11: dört polaroid (bölümün içinde; hareketli düzende sabit katman, reduced'da akışta dörtlü sıra). */
+/** d10: dört polaroid (bölümün içinde; hareketli düzende sabit katman, reduced'da akışta dörtlü sıra). */
 export function Polaroidler({ D, k }: { D: Durak | undefined; k: number }) {
   const u = D?.ozel?.dalUclari;
   if (!u) return null;
@@ -138,7 +138,7 @@ export function Polaroidler({ D, k }: { D: Durak | undefined; k: number }) {
             <span className="v3-pola-sarkac">
               <span aria-hidden="true" className="v3-pola-pin" />
               <span className="v3-pola-foto" style={{ aspectRatio: p.oran }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- kaynak JS'le d10 dinlenmesinde atanır, decode() beklenir */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- kaynak JS'le d9 dinlenmesinde atanır, decode() beklenir */}
                 <img
                   src={BOS}
                   alt={p.foto.alt}

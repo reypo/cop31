@@ -547,3 +547,22 @@ HueSaturation ton +15° / doygunluk ×1,65 / parlaklık ×1,12 (9 km'de söner),
 Ölçüm (l3[0] 960² Cycles 16, alt 2/3, HSV ton 60–170° doygunluk > 0,18): yeşil oranı 0,21 → 0,297 (ilkbahar mozaiğinin ±4 km penceresi 0,295),
 doygunluk ort. 0,238 → 0,268; üst 1/3 ve sera çatıları değişmedi (fark ≤ 0,26/255). Önizleme `render/_onizleme/s1g-yesil-karsilastir.jpg`.
 
+### G4-dağ (kullanıcı 4 Kasım ~17.00: "dağlar çöl gibi"; `--orman_k 1`, `--dag_pus 0,6` varsayılan (≤ 0,7), 0 = eski)
+
+Arazi köşe öznitelikleri (`orman_alanlari()`, numpy, +2,3 sn kurulum): `dag_h`; `dag_s` = eğim × bakı × (1 − kaya) × (1 − 0,4 kızıl), kaya = S2 ilkbahar 25 m `ss(luma, 0,40, 0,60)` → σ 400 m alçak geçiren × (0,3 + 0,3·ss(h, 1.000, 1.200)) (≤ 0,6); `dag_fl` = statik örtü σ 1 km alçak geçirilmiş × ss(h, 150, 330) (pus sürücüsü). Gölgelendirici: 150–330 m giriş, ağaç sınırı 1.600–1.900 m (±200 m gürültü), ~900 m kaplama, kararlı örtü `ss(f, 0,05, 0,80)` × `mevsim_k` × `orman_k`.
+Pus: optik derinlik × (1 − dag_pus·dag_fl·mevsim_k), yalnız kamera ışını (körfez yansıması/dolaylı ışık eski pusu görür). Sıyırma bakışta (görüş yüksekliği < ~6°; l3/t34a) renk `ORMAN_RENK` (0,030/0,135/0,100, serin gri-yeşil), normal yerel düşeye 0,9·f, ışımanın 0,85'i yönden bağımsız dolgu (taç örtüsü; güneşli yüz lekeleri); yukarıdan (t23) `ORMAN_RENK_UST` (0,038/0,105/0,060), dolgu/düzleme yok.
+2. tur ölçüm (l3[0] 960² Cycles 16, dağ maskesi h > 150 m; önce → F → son): yeşil 60–200°/S > 0,08 tam 0,003 → 0,19 → 0,35, dikey kırpım (x 210–750) 0 → 0,09 → 0,33, Beydağları (x < 400) G/R 0,930 → 0,934 → 0,989, ton 29° → 33° → 54°; leke (L* − medyan15 > 8) 0,036 → 0,065 → 0,055, |∇L*| > 5 0,114 → 0,212 → 0,166 (hedef 0,045/0,15 tutmadı); ΔE00 gök 0,065, alt 2/3 0,078, kent 0,161, deniz 0,207; t23[0] 1920² ↔ render-son 0,0355 (olc.de00 tam kare; F ile aynı); AV1 tek kare +%0,5. Ölçüm `s1/_dag-orman.json`, önizleme `render/_onizleme/s1h-dag2-*.jpg`.
+Sıyırma bakış anahtarı `siy = ss(dot(Incoming, yerel düşey), 0,35, 0,10)` (l3 orman piksellerinin tümünde 1, t23[30]'da 0). Gerekçe: jürinin leke/gradyan ölçütü güneşli yüz–gölge farkından geliyordu (leke piksellerinin %61'i tam örtülü); normal düzleme tek başına etkisizdi (G3), dolgu 0,6 (G4) → 0,85 (G5). Sıyırma rengi yukarıdan turkuaz okunduğu için (G5) yukarıdan ayrı renk `ORMAN_RENK_UST`, ara bakışta karışım; t23 29–35'te geçiş yayılı (Lab ton 102° → 155°, ardışık fazla ≤ 0,206).
+
+**Son render (dag-render, 4 Kasım 17.51–18.34; A7 komutları, etiket `g1_son_*`, ölçüm `s1/g1_son_olcum.jsonl`):** t23 72 · l3 150 · t34a 36 kare (Cycles OptiX 1920², ek bayrak yok), `parlama.py --bas 33`, `t34-birlestir.py` (60/60 bağ, 35 ↔ 36 fark 0), `kontak.py hepsi` + `olc_c` 11/11. Süre **41,5 dk** net (t23 691,7 s · l3 1.435,8 s · t34a 363,4 s; G4 36,0 → ormanla ~%15 yavaş), VRAM tepe **6.047 MiB**, RAM özel 8,68 GB (t23). Master ölçüm (l3[0] 960 LANCZOS, dağ maskesi): yeşil 60–200° tam 0,355 · dikey 0,341 · Beydağları 0,218 (G/R 0,989, ton 54°) · kuzey 0,535; t23[0] ↔ G 0,0354; t23[71]↔l3[0] ve l3[0]↔t34a[0] 0,029; l3 döngü oranı 1,004. Jüri eşiklerinden üçü harfiyen tutmadı (t23 9–17 ardışık fazla 1,07–1,46 > 1,0; leke/grad5 0,0646/0,1946 > 0,060/0,175; yakın/kent ΔE00 0,151/0,213 > 0,1/0,2) → kural 6 ile geri alındı. **Master eşikleri:** leke/grad5 eşikleri 960² Cycles-16 önizlemesinde kurulmuştu; master daha keskin (G'nin kendisi 0,036/0,114 → 0,044/0,138), oran korunuyor → master'a ölçekli eşik **0,072 / 0,212**. Orkestratör ormanı K-son-2 ile yayına aldı (`--esle`, `docs/klipler-sema.md` §0.2 "G4-dağ yeniden kodlaması"); kabul edilen sapmalar ve V-2 doğrulaması `docs/brief-icinden-3.md` §14.6.
+
+**Durum (V-2, 4 Kasım ~19.55):** `render-son/{t23,l3,t34a,t34}` hâlâ **G** (orman yok); orman kareleri `D:/soft/cop31-varlik/render-son-dag/`, yayındaki d3 dosyaları ormandan. Kalıcı yapmak için (GPU yok, ~1 dk):
+
+```
+R=D:/soft/cop31-varlik/render-son; G=D:/soft/cop31-varlik/render-son-g1; N=D:/soft/cop31-varlik/render-son-dag
+for k in t23 l3 t34a t34; do mv $R/$k $G/$k; mv $R/$k.json $G/$k.json; mv $N/$k $R/$k; mv $N/$k.json $R/$k.json; done
+cp $N/_onizleme/s1-* $R/_onizleme/
+cd D:/soft/cop31 && python -X utf8 -P scripts/icinden/t34-birlestir.py
+```
+
+Taşınmadan önce K/V koşuları `--esle t23=$N/t23,l3=$N/l3,t34=$N/t34` vermeli. G görünümüyle yeniden render gerekirse `--orman_k 0`.

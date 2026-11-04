@@ -1,11 +1,12 @@
 /*
  * /icinden v3 — E turu ışık katmanı (W2a; brief-icinden-3 §12.0-1/2a, §12.4-2/3/8): d1 ışık yayları + Antalya künyesi,
- * d2 emanet ışıkları + bağlar, reduced-motion statik katmanı (G turu: d11 ters yayları Dünya dönüşüyle kalktı). Icinden3'te icinden3.css'ten SONRA
+ * d2 emanet ışıkları + bağlar, d12 ters yaylar (W-2 §14.7; E turundaki d11 gibi), reduced statik katmanı (`?azalt=1`). Icinden3'te icinden3.css'ten SONRA
  * yüklenir. Animasyon yalnız opacity/transform (SVG'de yay/bağ başına opaklık kademesi; ölçüm: W2a raporu).
  *
  * Zamanlama kök özniteliklerinden (VideoSahne): varış = `data-faz="dur"` ile `data-rol` aynı anda yazılır, jest anında
  * `data-faz="gecis"` olur. Animasyon varışta baştan başlar; jestte animasyon kalkar, öğe dinlenme hâline döner ve
- * kap 200 ms'de söner.
+ * kap 200 ms'de söner. d1/d12 ayrımı `data-sira` (aynı rolün kaçıncısı). prefers-reduced-motion: animasyonlar anında
+ * (icinden3.css sonu, W-2); eski statik düzen yalnız `?azalt=1` (`.v3[data-azalt="1"]`).
  */
 
 /* ------------------------------ video uzayı SVG'si ------------------------------ */
@@ -40,7 +41,7 @@
   pointer-events: none;
 }
 
-/* ------------------------------ d1 ışık yayları ------------------------------ */
+/* ------------------------------ d1 / d12 ışık yayları ------------------------------ */
 .v3-yaylar,
 .v3-yay-merkez,
 .v3-baglar {
@@ -78,6 +79,10 @@
  */
 .v3[data-rol="dunya"][data-faz="dur"] .v3-yaylar path {
   animation: v3-yay-belir 560ms cubic-bezier(0.33, 0, 0.2, 1) calc(400ms + var(--i) * 40ms) both;
+}
+/* d12 (W-2): Antalya'dan uzva, yakından uzağa (aynı süre) */
+.v3[data-rol="dunya"][data-sira="2"][data-faz="dur"] .v3-yaylar path {
+  animation-delay: calc(400ms + (var(--n) - 1 - var(--i)) * 40ms);
 }
 @keyframes v3-yay-belir {
   from {
@@ -147,7 +152,7 @@
   opacity: 0;
   transform: scale(0.125);
 }
-.v3[data-rol="dunya"][data-faz="dur"] .v3-yay-halka {
+.v3[data-rol="dunya"][data-sira="1"][data-faz="dur"] .v3-yay-halka {
   animation: v3-halka 1200ms cubic-bezier(0.2, 0.6, 0.3, 1) 2100ms both;
 }
 @keyframes v3-halka {
@@ -283,70 +288,69 @@
 .v3-azalt-isik {
   display: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  .v3-azalt-isik {
-    --s: 0.6px;
-    position: absolute;
-    inset: 0;
-    display: block;
-    overflow: hidden;
-    border-radius: 6px;
-    pointer-events: none;
-  }
-  .v3-azalt-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.55;
-  }
-  .v3-azalt-bag {
-    opacity: 0.35;
-    stroke-width: 1;
-  }
-  .v3-azalt-svg-y {
-    display: none;
-  }
-  /* video px → posterin yüzdesi (dikey 720×1280, yatay 1280×720; SahneEtiketleri ile aynı değişkenler) */
-  .v3-azalt-nokta {
-    --px: calc(var(--xd) / 720 * 100%);
-    --py: calc(var(--yd) / 1280 * 100%);
-    position: absolute;
-    top: var(--py);
-    left: var(--px);
-    width: 0;
-    height: 0;
-  }
-  .v3-azalt-isik .v3-em-isik {
-    opacity: 1;
-  }
-  .v3-azalt-yapi {
-    position: absolute;
-    top: 0;
-    left: 10px;
-    color: #fff;
-    font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    transform: translateY(-50%);
-    paint-order: stroke fill;
-    -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
-    text-shadow: 0 0 3px rgb(0 0 0 / 0.55);
-  }
-  .v3-azalt-kunye .v3-kunye-metin {
-    transform: translate(15px, calc(-100% - 18px));
-  }
+:where(.v3[data-azalt="1"]) .v3-azalt-isik {
+  --s: 0.6px;
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: 6px;
+  pointer-events: none;
 }
-@media (prefers-reduced-motion: reduce) and (min-aspect-ratio: 4/3) {
-  .v3-azalt-svg-d {
+:where(.v3[data-azalt="1"]) .v3-azalt-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-bag {
+  opacity: 0.35;
+  stroke-width: 1;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-svg-y {
+  display: none;
+}
+/* video px → posterin yüzdesi (dikey 720×1280, yatay 1280×720; SahneEtiketleri ile aynı değişkenler) */
+:where(.v3[data-azalt="1"]) .v3-azalt-nokta {
+  --px: calc(var(--xd) / 720 * 100%);
+  --py: calc(var(--yd) / 1280 * 100%);
+  position: absolute;
+  top: var(--py);
+  left: var(--px);
+  width: 0;
+  height: 0;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-isik .v3-em-isik {
+  opacity: 1;
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-yapi {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  color: #fff;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.55);
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.55);
+}
+:where(.v3[data-azalt="1"]) .v3-azalt-kunye .v3-kunye-metin {
+  transform: translate(15px, calc(-100% - 18px));
+}
+
+@media (min-aspect-ratio: 4/3) {
+  :where(.v3[data-azalt="1"]) .v3-azalt-svg-d {
     display: none;
   }
-  .v3-azalt-svg-y {
+  :where(.v3[data-azalt="1"]) .v3-azalt-svg-y {
     display: block;
   }
-  .v3-azalt-nokta {
+  :where(.v3[data-azalt="1"]) .v3-azalt-nokta {
     --px: calc(var(--xy) / 1280 * 100%);
     --py: calc(var(--yy) / 720 * 100%);
   }

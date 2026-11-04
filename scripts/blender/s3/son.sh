@@ -11,7 +11,8 @@
 # GPU tahmini (önizleme probundan; rapor.md): bkz. s3-probe-*. Ortam: S3_EK (sahne.py ek argümanları; K5 sonrası "--gok altin"
 # kullanılmaz). Görünüş: G-B K10 varsayılanları sahne.py'de (gövde ×1,3, kök +1 mm, nem 0,7, spot +5°, yaprak doy 0,70,
 # tbc g_yaprak 0,05–0,97 kübik) → ek ortam değişkeni gerekmez; ölçümler BENIOKU "K10" ve _onizleme/s3b-*.
-# Kullanım: bash scripts/blender/s3/son.sh [klip ...]   (varsayılan: t78f t89 t9a tab tbc lc)
+# Kullanım: bash scripts/blender/s3/son.sh [klip ...]   (varsayılan: t78f t89 t9a tab tbc lc; G-B sonrası t79 = genel dal:
+#   bash scripts/blender/s3/son.sh t79 → render-son/t79/ + t79.json; t79[59] ≡ t89[59], p9 değişmez)
 set -uo pipefail
 KOK="$(cd "$(dirname "$0")/../../.." && pwd)"
 B=/d/soft/cop31-varlik/blender/blender-5.2.3-windows-x64/blender.exe

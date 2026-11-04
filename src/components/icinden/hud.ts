@@ -1,14 +1,19 @@
-import type { Oynatici } from "./oynatici";
+import { BEKLE_UYARI_MS, type Oynatici } from "./oynatici";
 
 /**
  * Cihazda akıcılık göstergesi (`/icinden?hud=1`; akıcılık turu): gerçek iPhone'da Web Denetçisi olmadan okunur sayılar.
  * Yalnız sorguyla, ayrı parça olarak yüklenir (rota JS'ine girmez). Satırlar:
- *  1. seçilen kodek · yön (· poster kipi · otomatik oynatma ENGELİ)
+ *  1. seçilen kodek · yön (· poster kipi) · otomatik oynatma engeli (W-2 §14.7): `ENGEL n` = NotAllowedError ret sayısı
+ *     (aynı ana düşen retler bir), "açıldı" = son kilit denemesi başardı, `son ret: <yer>` (döngü l1, geçiş t12, zincir r43,
+ *     kilit touchend, yoklama, ısıtma …)
  *  2. son geçiş: klip, jest → ilk yeni kare (ms), devir = geçişin son karesi → döngünün ilk yeni karesi (ms; 30 fps'de
- *     ideal ≈ 33), düşen/çözülen kare (getVideoPlaybackQuality), yedek nedeni
+ *     ideal ≈ 33), düşen/çözülen kare (getVideoPlaybackQuality), yedek nedeni; zincirde (d11 → d12) parça devirleri
+ *     ("zincir r43 412 · r32 17 · r21 33": ilk parçanın jestten ilk karesi, sonrakilerin devri)
  *  3. bütün geçişlerin ortancaları ve toplamları
  *  4. ana iş parçacığı: > 25 ms / > 50 ms rAF aralığı (sayfa açıldığından beri; 60 Hz'de > 25 ms = en az bir kare kaçtı),
  *     play() başlama gecikmesi tahmini (ön sarmanın öncülüğü)
+ *  5. bekle kipi (W-4): `bekle n · toplam ms` = bekleyen geçiş sayısı ve toplam bekleme (süren dahil); bekleme sürüyorsa
+ *     nedeni ve süresi, 20 s'yi aşınca `UYARI > 20 s` (geçiş yine bekler, poster sönmesi yok)
  */
 export function hudKur(oy: Oynatici): () => void {
   const el = document.createElement("pre");
@@ -49,11 +54,18 @@ export function hudKur(oy: Oynatici): () => void {
     const s = k.at(-1);
     const dusen = sayi(k.map((x) => x.dusen)).reduce((a, b) => a + b, 0);
     const cozulen = sayi(k.map((x) => x.cozulen)).reduce((a, b) => a + b, 0);
+    const engel = oy.engelSay ? ` · ENGEL ${oy.engelSay}${oy.engel ? "" : " açıldı"} · son ret: ${oy.sonRet}` : "";
+    const z = s?.zincir;
+    const b = oy.bekleme;
+    const bMs = b ? Math.round(performance.now() - b.tb) : 0;
     el.textContent = [
-      `kodek ${oy.kodek} · ${oy.boyut}${oy.posterKipi ? " · poster" : ""}${oy.engel ? " · ENGEL" : ""}`,
-      `son ${s?.klip ?? "-"} ilk ${s?.ilkKareMs ?? "-"} devir ${s?.devirMs ?? "-"} düşen ${s?.dusen ?? "-"}/${s?.cozulen ?? "-"}${s?.yedek ? ` YEDEK ${s.yedek}` : ""}`,
+      `kodek ${oy.kodek} · ${oy.boyut}${oy.posterKipi ? " · poster" : ""}${engel}`,
+      `son ${s?.klip ?? "-"} ilk ${s?.ilkKareMs ?? "-"} devir ${s?.devirMs ?? "-"} düşen ${s?.dusen ?? "-"}/${s?.cozulen ?? "-"}${s?.yedek ? ` YEDEK ${s.yedek}` : ""}${s?.bekle ? ` bekledi ${s.beklemeMs ?? "-"}` : ""}` +
+        (z ? `\nzincir ${z.map((p, i) => `${p.ad} ${(i ? p.devirMs : p.ilkKareMs) ?? "-"}`).join(" · ")}` : ""),
       `p50 ilk ${p50(sayi(k.map((x) => x.ilkKareMs)))} devir ${p50(sayi(k.map((x) => x.devirMs)))} · düşen ${dusen}/${cozulen} · yedek ${k.filter((x) => x.yedek).length}`,
       `kare >25ms ${n25} · >50ms ${n50} · başla ${Math.round(oy.baslamaMs)}`,
+      `bekle ${oy.bekleSay} · ${oy.bekleToplamMs + bMs} ms` +
+        (b ? ` · şimdi ${b.neden} ${bMs} ms${bMs > BEKLE_UYARI_MS ? " · UYARI > 20 s" : ""}` : ""),
     ].join("\n");
   };
   yaz();
