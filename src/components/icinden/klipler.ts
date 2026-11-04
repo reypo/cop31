@@ -20,6 +20,10 @@ export type Klip = {
   readonly dosya: BoyutKodek<string>;
   readonly bayt: BoyutKodek<number>;
 };
+/**
+ * Bu duraktan k+1'e ileri geçiş; `geri` k+1 → k ters klibi. `geri: null` (G turu §14.4.1 K4): geri klip yok — oynatıcı
+ * geri adımda hedef durağın (k) posterini 350 ms çapraz söndürür (d10→d9, d11→d10, d12→d11; bütçe merdiveninde d9→d8).
+ */
 export type Gecis = Klip & { readonly geri: Klip | null; readonly hizGeri: number };
 export type Poster = { readonly dosya: string; readonly bayt: number; readonly lqip: string };
 /**
@@ -40,29 +44,47 @@ export type Etiket = {
   readonly dx?: number;
   readonly dy?: number;
 };
-/** d6 kılavuz çizgilerinin p6 çapaları (`fidan`, `genc_iklim`, `orman`; sıra = iklim.items sırası). */
-export type DuvarCapasi = { readonly ad: string; readonly dikey: Nokta; readonly yatay: Nokta };
+/**
+ * d6 arka duvar çapaları (p6; G7 §14.4.4): `bulusma` ("50+"), `solen` ("100.000+"), `motto` (backCover.quote); sıra =
+ * d6 bandının 3 spot satırı. p6.json G7 render'ıyla gelene dek manifestte yok (uyarı).
+ */
+export type DuvarCapaAd = "bulusma" | "solen" | "motto";
+export type DuvarCapasi = { readonly ad: DuvarCapaAd; readonly dikey: Nokta; readonly yatay: Nokta };
+/** Yön başına video px nokta listesi (kırpım dışı ya da kenara 24 px'ten yakın nokta o yönde yok). */
+export type YonluListe<T> = Readonly<Record<Boyut, readonly T[]>>;
+/** fidan-kok (d9): kök ucu (81; p9 = t89 son karesi). `grup` 0 kazık kök, 1–6 ana kökler (dalga sırası); `ana` ana kökün ucu. */
+export type KokUcu = { readonly x: number; readonly y: number; readonly grup: number; readonly ana: boolean };
+/** fidan-govde (d10): boğum (2; tree.ts KNOTS). `taraf` −1 sol, +1 sağ (etiketin yönü). Metin content.ts'ten (manifestte yok). */
+export type Bogum = { readonly x: number; readonly y: number; readonly taraf: -1 | 1 };
+/** Ana dal ucu adları, alttan üste (S3 `dal_uclari` sırası). */
+export type DalUcuAd = "solAlt" | "sağAlt" | "solOrta" | "sağOrta" | "solÜst" | "sağÜst";
+/** fidan-dal (d11) ve fidan-yaprak (d12): ana dal ucu (6; d11'de polaroid çapaları). */
+export type DalUcu = { readonly ad: DalUcuAd; readonly x: number; readonly y: number };
 export type Ozel = {
   readonly dunyaR?: readonly number[];
   readonly dunyaC?: Readonly<Record<Boyut, Nokta>>;
   readonly sutunlar?: Readonly<Record<Boyut, readonly Nokta[]>>;
-  readonly brosurDikdortgen?: Readonly<Record<Boyut, readonly Nokta[]>>;
-  /** brosur-kapak (d8): render kapağının tonu (CSS filtresi, sRGB; scripts/icinden/kapak-ton.py). Kesişmede tam, FLIP'te kimliğe iner. */
-  readonly kapakTon?: KapakTon;
-  /** dunya (d1, d11): Antalya'ya ışık yayları, video px, yay başına ≤ 24 nokta, son nokta Antalya (§12.4-9). İstemciye gitmez. */
+  /** dunya (d1): Antalya'ya ışık yayları, video px, yay başına ≤ 24 nokta, son nokta Antalya (§12.4-9). İstemciye gitmez. */
   readonly yaylar?: Readonly<Record<Boyut, readonly (readonly Nokta[])[]>>;
-  /** duvar (d6): p6 çapaları (kılavuz çizgi). */
+  /** duvar (d6): p6 çapaları (bant satırı ↔ duvardaki rakam). */
   readonly duvarCapalari?: readonly DuvarCapasi[];
+  /** fidan-kok (d9): 81 kök ucu (DOM 81 halka; tek SVG katmanı). */
+  readonly kokUclari?: YonluListe<KokUcu>;
+  /** fidan-govde (d10): 2 boğum (2017 / TBMM etiketleri). */
+  readonly bogumlar?: YonluListe<Bogum>;
+  /** fidan-dal (d11, polaroidler) ve fidan-yaprak (d12): 6 ana dal ucu. */
+  readonly dalUclari?: YonluListe<DalUcu>;
+  /** fidan-yaprak (d12): gövde ucu (önder). Kırpım dışına düşen yön yok. */
+  readonly govdeUcu?: Partial<Record<Boyut, Nokta>>;
 };
-export type KapakTon = { readonly saturate: number; readonly contrast: number; readonly brightness: number; readonly sepia: number };
 export type Durak = {
-  /** "d0" … "d11" (tablo sırası). */
+  /** "d0" … "d12" (tablo sırası; kapanış = N = 13, manifest dışı). */
   readonly id: string;
-  /** Durağın rolü: oynatıcı, CSS ve Brosur dizinleri yalnız bundan ve tablo sırasından türetilir (rol.ts). */
+  /** Durağın rolü: oynatıcı ve CSS dizinleri yalnız bundan ve tablo sırasından türetilir (rol.ts). */
   readonly rol: Rol;
-  /** "klip": video taşır (döngü yoksa gelen klibin son karesinde durur, d6/d7) | "dom": dinlenme DOM. */
+  /** "klip": video taşır (döngü yoksa gelen klibin son karesinde durur, d6–d11) | "dom": dinlenme DOM (d0). */
   readonly tur: "klip" | "dom";
-  /** Gelen geçişin kare kare kadrajı (m; son öğe = dinlenme) ya da sabit metin. */
+  /** Gelen geçişin kare kare kadrajı (m; son öğe = dinlenme; fidan duraklarında ~0,23–0,64 m → site cm yazar) ya da sabit metin. */
   readonly okuma: readonly number[] | string;
   readonly okumaDurak?: string;
   readonly poster: Partial<Record<Boyut, Poster>> | null;
@@ -73,6 +95,7 @@ export type Durak = {
 };
 export type KodekTanim = { readonly ad: KodekAd; readonly tip: string; readonly boyutlar: readonly Boyut[] };
 export type Manifest = {
+  /** 3: G turu (13 durak, masa + fidan-*; kapakTon/brosurDikdortgen kalktı). */
   readonly surum: number;
   readonly olusturma: string;
   readonly kaynak: "render" | "onizleme" | "yer-tutucu";
@@ -86,11 +109,15 @@ export type Manifest = {
 export const klipler = ham as unknown as Manifest;
 
 /**
- * İstemciye giden kopya: sahne etiketleri ve d1/d11 yayları sunucuda HTML/SVG olarak çizilir, istemci yükünde
- * taşınmaz.
+ * İstemciye giden kopya: sahne etiketleri, d1 yayları ve fidan katmanı (81 kök ucu, boğumlar, dal uçları, gövde ucu;
+ * FidanKatmani.tsx) sunucuda HTML/SVG olarak çizilir, istemci yükünde taşınmaz. İstemci `ozel`den yalnız lombar
+ * (dunyaR/dunyaC) ve kılavuz çapalarını (sutunlar, duvarCapalari) okur.
  */
 export type IstemciDurak = Omit<Durak, "etiketler">;
 export type IstemciManifest = Omit<Manifest, "duraklar"> & { readonly duraklar: readonly IstemciDurak[] };
+
+/** Yalnız sunucuda çizilen `ozel` alanları (istemci manifestinden çıkarılır). */
+const SUNUCU_OZEL = ["yaylar", "kokUclari", "bogumlar", "dalUclari", "govdeUcu"] as const satisfies readonly (keyof Ozel)[];
 
 export function istemciManifesti(m: Manifest): IstemciManifest {
   return {
@@ -98,10 +125,11 @@ export function istemciManifesti(m: Manifest): IstemciManifest {
     duraklar: m.duraklar.map((d) => {
       const kopya: { -readonly [K in keyof Durak]?: Durak[K] } = { ...d };
       delete kopya.etiketler;
-      if (d.ozel?.yaylar) {
+      if (d.ozel) {
         const ozel: { -readonly [K in keyof Ozel]?: Ozel[K] } = { ...d.ozel };
-        delete ozel.yaylar;
-        kopya.ozel = ozel;
+        for (const a of SUNUCU_OZEL) delete ozel[a];
+        if (Object.keys(ozel).length) kopya.ozel = ozel;
+        else delete kopya.ozel;
       }
       return kopya as IstemciDurak;
     }),

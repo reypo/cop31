@@ -3,8 +3,8 @@
  * (docs/klip-oynatma.md §1, §8).
  *
  * Katmanlar (alttan üste): poster <img> (bulunulan durağın karesi; altında satır içi LQIP) → 3 <video>
- * havuzu (görünen z3, bir önceki 80 ms z2'de) → yedek <div> (poster çapraz sönmesi). Lombar, broşür,
- * etiketler ve metin bunların üstünde (VideoSahne).
+ * havuzu (görünen z3, bir önceki 80 ms z2'de) → yedek <div> (poster çapraz sönmesi). Lombar, etiketler, fidan
+ * katmanı (81 halka, boğum etiketleri) ve metin bunların üstünde (VideoSahne).
  *
  * Veri: blob kipi — fetch → Blob → object URL; klip yuvaya ancak tamamen inince atanır (klip ortasında
  * takılma yapısal olarak yok). Eşzamanlılık 1. Kuyruk: önce yuvaların istediği (acil, FIFO), sonra pencere
@@ -23,6 +23,8 @@
  * iOS ısıtmaları sırayla ve varış devri pencerelerinin dışında. Apple WebKit'te kodek sırası HEVC → AV1 → H.264.
  *
  * Havuz (en çok 3 <video>): k. durakta döngü_k + aynı yöndeki geçiş + ters geçiş (uçta komşu döngü).
+ * Geri klibi olmayan geçiş (`Gecis.geri === null`; G turu §14.4.1 K4: fidan içi d10→d9, d11→d10, d12→d11): geri adım
+ * hedef durağın posterinin 350 ms çapraz sönmesidir (`posterGeri`; video yok, yedek katmanı, kayıtta `sonme: "poster"`).
  * Yedekler: geçiş hazır değilse 300 ms bekle → hedef posterine çapraz sönme (süre = klip süresi);
  * `play()` reddi (NotAllowedError, iOS Düşük Güç) → aynı yedek + ilk touchend/click/keydown'da (yakalama
  * aşaması, adımdan önce) havuzun kilidi açılır; döngü reddedilirse poster dural kalır.
@@ -52,6 +54,15 @@ const BASLAMA_ILK_MS = 50;
 const BASLAMA_EN_COK_MS = 200;
 /** Döngü → geçiş sönmesi geçişin saati başlayınca başlar; bu süreden sonra her durumda (öğe hiç kare sunmazsa). */
 const SONME_EN_GEC_MS = 250;
+/** Geri klibi olmayan geri adım (G turu K4): hedef posteri bu sürede çapraz söner (adım süresi). */
+export const POSTER_GERI_MS = 350;
+/**
+ * Çapraz sönme bittikten sonra durum varışı bu kadar sonra: adımlayıcının kilitli adımı (aynı 350 ms, rAF'te biter) bitmeden
+ * `dur`a geçilirse varışa hemen gelen ters jest kilide takılıp tükeniyordu (video varışı da `ended`'da, son kareden bir kare sonra).
+ */
+const POSTER_GERI_VARIS_MS = 40;
+/** Çapraz sönme sonunda alttaki poster <img> yeni kaynağını en geç bu sürede çözmüş olmalı (yoksa yine kaldırılır). */
+const POSTER_COZ_MS = 300;
 
 type Yuva = {
   el: HTMLVideoElement;
@@ -92,6 +103,8 @@ export type Kayit = {
   onSarMs?: number;
   /** Geçişin son karesi → görünen döngünün ilk YENİ karesi (ms; 30 fps'de ideal ≈ 33). */
   devirMs?: number;
+  /** "poster": geri klibi olmayan geri adım (hedef posterine 350 ms çapraz sönme; yedek DEĞİL, tasarım). */
+  sonme?: "poster";
   bitti?: boolean;
 };
 
@@ -343,6 +356,11 @@ export class Oynatici {
     const u = this.url(g?.geri);
     return g?.geri && u ? { url: u, sure: g.geri.sure, hiz: g.hizGeri, kare: g.geri.kare, ad: g.geri.ad } : null;
   }
+  /** k → k−1 geri adımı poster çapraz sönmesi mi: geri klip tanımsız (`geri === null`; G turu K4) ve hedefin posteri var. */
+  posterGeriMi(k: number): boolean {
+    const g = this.m.duraklar[k - 1]?.ileri;
+    return !!g && g.geri === null && !!this.posterUrl(k - 1);
+  }
   posterUrl(k: number): string | null {
     return this.m.duraklar[k]?.poster?.[this.boyut]?.dosya ?? null;
   }
@@ -351,10 +369,9 @@ export class Oynatici {
   }
   /**
    * Geçiş öğesinin `poster` özniteliği için durak: klibin 0. karesi o durağın posteri olmalı (klip zinciri). DOM
-   * durağından ileri giden klip (brosur-arka → t01: 0. kare amblem boyunda Dünya) durağın posterine (p8 plakası)
-   * eşit DEĞİL → poster yok (-1). Hiç oynamamış öğe poster bayrağı nedeniyle 0. kare yerine posteri gösterir; B
-   * turunda dalış kesişmesinde lombar deliğinde plakanın broşürü görünüyordu. Döngüsüz klip durağı (duvar, d6/d7)
-   * "klip" türündedir: posteri gelen klibin son karesi = giden klibin 0. karesi (son-kare posteri, §12.4-9).
+   * durağından (lombar, d0) ileri giden klibin posteri yok (-1): d0'ın posteri yok, t01'in 0. karesi lombar deliğinde
+   * görünür. Döngüsüz klip durakları (duvar d6/d7, masa d8, fidan d9–d11) "klip" türündedir: posteri gelen klibin son
+   * karesi = giden klibin 0. karesi (son-kare posteri, §12.4-9, §14.4.2).
    */
   private ilkKarePosteri(k: number, dir: number) {
     return dir > 0 && this.m.duraklar[k]?.tur === "dom" ? -1 : k;
@@ -368,11 +385,12 @@ export class Oynatici {
     const ters = this.gecis(k, -yon);
     if (ayni) l.push({ url: ayni.url, dongu: false, k: this.ilkKarePosteri(k, yon) });
     if (ters) l.push({ url: ters.url, dongu: false, k: this.ilkKarePosteri(k, -yon), bosta: true });
-    // Uç ya da DOM durağı: boş kalan yuvaya varılacak döngü (aynı yönde ilk klipli durak). Döngüsüz klip durağında
-    // (duvar) iki yönün geçişi zaten yuvada; üçüncü yuva boş kalır, sıradaki geçiş pencereden iner (uzaktaki l1'i
-    // buradan indirmek d6'da ~1 MB boşa bayt olurdu).
+    // Uç ya da DOM durağı, ya da bir yönü klipsiz durak (fidan d9–d11: geri poster sönmesi): boş kalan yuvaya varılacak
+    // döngü (aynı yönde en çok 2 durak ötedeki ilk döngü; fidanda d10'dan d12'nin lc'si). Döngüsüz klip durağında (duvar,
+    // masa) iki yönün geçişi zaten yuvada; üçüncü yuva boş kalır, sıradaki geçiş pencereden iner (uzaktaki l1'i buradan
+    // indirmek d6'da ~1 MB boşa bayt olurdu; G turunda d11'den geri bakınca 6 durak ötedeki l5 de öyle).
     const uc = this.m.duraklar[k]?.tur === "dom" || !ayni || !ters;
-    for (let j = k + yon; uc && l.length < 3 && j >= 0 && j < this.N; j += yon) {
+    for (let j = k + yon; uc && l.length < 3 && j >= 0 && j < this.N && Math.abs(j - k) <= 2; j += yon) {
       const dj = this.dongu(j);
       if (dj) {
         l.push({ url: dj.url, dongu: true, k: j });
@@ -389,22 +407,29 @@ export class Oynatici {
     const d = (j: number) => this.dongu(j)?.url;
     const g = (j: number, yy: number) => this.gecis(j, yy)?.url;
     const l = [d(k), g(k, y), d(k + y), g(k + y, y), d(k + 2 * y), g(k + 2 * y, y), d(k - y)];
-    // Broşür (DOM) durakları arasında sıradaki klip uzaktadır: ilk klipli geçişe kadar ileri bak.
+    // Bu yönde klip yoksa (fidan içinde geri: poster sönmeleri) ilk klipli geçişe kadar bak (d11'de geri → r98).
     if (!l.some(Boolean)) for (let j = k; j >= 0 && j < this.N; j += y) if (g(j, y)) {
       l.push(g(j, y), d(j + y));
       break;
     }
     return [...new Set(l.filter((x): x is string => !!x))];
   }
-  /** Posterleri pencere sırasıyla önyükle (k±2). */
+  /**
+   * Posterleri pencere sırasıyla önyükle (k±2). Geri adımı poster sönmesi olan durakta (fidan) hedef posteri ayrıca
+   * çözülür (`decode()`): sönmenin ilk karesinde yedek katmanının arka planı kod çözmeyi beklemesin.
+   */
   private posterOnyukle(k: number, y: 1 | -1) {
     for (const j of [k + y, k + 2 * y, k - y]) {
       const u = this.posterUrl(j);
-      if (!u || this.onYukleme.has(u)) continue;
-      const im = new Image();
-      im.decoding = "async";
-      im.src = u;
-      this.onYukleme.set(u, im);
+      if (!u) continue;
+      let im = this.onYukleme.get(u);
+      if (!im) {
+        im = new Image();
+        im.decoding = "async";
+        im.src = u;
+        this.onYukleme.set(u, im);
+      }
+      if (j === k - 1 && this.posterGeriMi(k)) im.decode().catch(() => {});
     }
   }
 
@@ -737,7 +762,11 @@ export class Oynatici {
     this.varisBek = 0;
     this.bostaPlanla();
     this.olay("adim", kayit);
-    if (!g) return 0;
+    if (!g) {
+      // Geri klibi yok (fidan içi geri adım): hedef posterine 350 ms çapraz sönme.
+      if (dir < 0 && j === k - 1 && this.posterGeriMi(k)) return this.posterGeri(j, kayit, sec);
+      return 0;
+    }
     const sureMs = (g.sure * 1000) / g.hiz;
     const T0 = this.posterKipi ? null : this.yuva(g.url);
     kayit.hazirdi = !!T0?.hazir;
@@ -952,7 +981,69 @@ export class Oynatici {
     sec.varis?.(kayit);
   }
 
-  /** DOM geçişi bitti (broşür durakları arası, kapanış dönüşü). */
+  /**
+   * Geri klibi olmayan geri adım (G turu §14.4.1 K4; d10→d9, d11→d10, d12→d11): hedef durağın posteri (= hedefin son karesi)
+   * yedek katmanında POSTER_GERI_MS'de üste çapraz söner, sonra video katmanları kalkar ve durum varışı olur (`varis`; ters
+   * jest tuzağı için adımın bitişinden POSTER_GERI_VARIS_MS sonra). Kadraj okuması `sec.kare` ile zamana bağlı akar (giden
+   * durağın okuması tersten). Engel/poster kipi fark etmez (video oynatılmaz). Yedek katmanı kaldırılmadan önce alttaki
+   * poster <img>'in yeni kaynağı çözülür (en çok POSTER_COZ_MS): eski poster bir kare görünmesin.
+   */
+  private posterGeri(j: number, kayit: Kayit, sec: GecisSecenek): number {
+    kayit.sonme = "poster";
+    const el = this.yedekEl;
+    const u = this.posterUrl(j);
+    const lq = this.lqip(j);
+    el.style.backgroundImage = u ? `url("${u}")${lq ? `, url("${lq}")` : ""}` : "none";
+    el.style.transition = "none";
+    el.style.opacity = "0";
+    el.style.transform = "none";
+    void el.offsetWidth;
+    el.style.transition = `opacity ${POSTER_GERI_MS}ms linear`;
+    el.style.opacity = "1";
+    // Okuma: hedefin ileri klibinin kare sayısıyla (giden durağın okuma dizisi o uzunlukta), zamana bağlı.
+    const n = this.m.duraklar[j]?.ileri?.kare ?? 2;
+    const t0 = performance.now();
+    const raf = () => {
+      if (kayit.bitti) return;
+      const f = Math.min(n - 1, Math.round(((performance.now() - t0) / POSTER_GERI_MS) * (n - 1)));
+      sec.kare?.(f, n);
+      if (f < n - 1) requestAnimationFrame(raf);
+    };
+    if (sec.kare) requestAnimationFrame(raf);
+    this.sonra(POSTER_GERI_MS + POSTER_GERI_VARIS_MS, () => {
+      if (kayit.bitti) return;
+      kayit.bitti = true;
+      for (const y of this.yuvalar) {
+        y.el.pause();
+        y.oynat = false;
+      }
+      this.gizle(0);
+      this.k = j;
+      this.posterAyarla(j);
+      this.durum = "dur";
+      this.varisT = performance.now();
+      kayit.gecisMs = Math.round(performance.now() - kayit.tJest);
+      if (this.posterKipi) this.posterOnyukle(j, -1);
+      else {
+        this.dagit(j, -1);
+        this.bostaPlanla();
+        void this.donguBaslat(j);
+      }
+      this.olay("varis", kayit);
+      sec.varis?.(kayit);
+      let kalkti = false;
+      const kaldir = () => {
+        if (kalkti) return;
+        kalkti = true;
+        if (this.k === j && this.durum !== "gecis") this.yedekKaldir(0);
+      };
+      this.sonra(POSTER_COZ_MS, kaldir);
+      (this.poster.hidden ? Promise.resolve() : this.poster.decode()).then(kaldir, kaldir);
+    });
+    return POSTER_GERI_MS;
+  }
+
+  /** DOM geçişi bitti (klipsiz beklenmeyen geçişin yedeği; kapanış dönüşü). */
   domVaris(j: number) {
     const kayit = this.olaylar.at(-1);
     this.k = j;

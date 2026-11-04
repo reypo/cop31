@@ -1,4 +1,4 @@
-// /icinden v3 — master klipleri teslim kodlamasına çevirir (docs/brief-icinden-3.md §9.4, §11.2, §12.5).
+// /icinden v3 — master klipleri teslim kodlamasına çevirir (docs/brief-icinden-3.md §9.4, §11.2, §12.5; G turu §14.4.3).
 //
 //   node scripts/icinden/kodla.mjs --kaynak <render dizini> [--cikti public/icinden] [--liste <kodlama.json>]
 //        [--fragman <dizin>] [--klip t12,r21,l3.av1,p2] [--preset slow] [--esle t34b=<klasör>,l4=<klasör>]
@@ -7,6 +7,13 @@
 //        [--bolge t23.h264=62-71:-4]      (x264/x265 zones; BOLGE üstüne; `=yok` kaldırır)
 //        [--temizle]                      (kodlanan çıktının eski özetli dosyalarını iş sonunda sil)
 //   node scripts/icinden/kodla.mjs --artik [--kuru]   (listede olmayan özetli dosyaları sil / yalnız listele)
+//   node scripts/icinden/kodla.mjs --dus r98           (çıktı adının kayıtlarını listeden çıkar; bütçe merdiveni)
+//
+// G-B önizleme (S3 EEVEE 960², brief §14.4.3; t78 = t78f kareleri):
+//   node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --esle t78=<_onizleme>/s3-t78f,t89=…/s3-t89,
+//        t9a=…/s3-t9a,tab=…/s3-tab,tbc=…/s3-tbc,lc=…/s3-lc --klip t78,r87,p8,t89,r98,t9a,tab,tbc,lc,p9,pa,pb,pc
+//   Son-kare/döngü posterleri `--esle`'deki klasörün karesinden (p8 ← t78[59], p9 ← t89[59], pa ← t9a[53], pb ← tab[53],
+//   pc ← lc[0]); fragmanlar ve pN.json'lar `--fragman` (varsayılan --kaynak) dizininden.
 //
 // Kaynak: her klip için `<kaynak>/<klip>/k_%04d.png` (Blender çıktısı). Giriş boyutu serbest: 1920² PNG 16 bit
 // (son render) ya da 960² PNG 8 bit (EEVEE önizleme); kırpım master'a göre oransal (dikey x %21,875, yatay y
@@ -16,13 +23,13 @@
 // t34 (§9.1; F-B §13.5: 60 kare): `<kaynak>/t34/` (t34-birlestir.py sabit bağları) yoksa `t34a/` (S1, 0–35) +
 // `t34b/` (S2, 36–59; dosyalar 0'dan) art arda birleşir (ffmpeg concat); fragman da birleşir (fragman.mjs).
 //
-// Ad tablosu (§12.1, açık; "r" + klip[2] + klip[1] türetmesi yok): ileri → geri GERI'de (t01→r10 … t78→r87),
-// döngüler l1–l5, posterler POSTER'de: `dongu` (döngünün 0. karesi; p1–p5), `son-kare` (ileri geçişin master SON
-// karesi; p6 ← t56, p7 ← t67), `plaka` (kendi tek kareli klasörü; p8 = eski p6 banko plakası, `render-son/p8/`).
-// `<kaynak>/pN.json`'daki `tip` alanı ("dongu" | "son-kare" | "plaka") ve isteğe bağlı `kaynak_klip` tabloyu ezer.
-// p8: master PNG özeti (`kaynakOzet`) listedeki p8 kaydıyla aynıysa ve dosya duruyorsa yeniden kodlanmaz; ilk
-// kodlamada çıktı eski p6 plakasıyla bayt bayt karşılaştırılır (libwebp belirlenimci: aynı master → aynı özet).
-// render-son/p8 yoksa eski p6 plaka dosyası p8 adıyla kopyalanır (yeniden kodlama yok).
+// Ad tablosu (§12.1, G turu §14.4.2-3; açık, "r" + klip[2] + klip[1] türetmesi yok; tek hane: a = 10, b = 11,
+// c = 12): ileri geçişler ve geri klipleri GERI'de (t01→r10 … t78→r87; t89/t9a/tab/tbc geri klipsiz [r98 K-son'da kalktı]: fidan içi
+// geri adım sitede 350 ms poster çapraz sönmesi), döngüler l1–l5 + lc, posterler POSTER'de: `dongu` (döngünün 0.
+// karesi; p1–p5, pc ← lc), `son-kare` (ileri geçişin master SON karesi; p6 ← t56, p7 ← t67, p8 ← t78, p9 ← t89,
+// pa ← t9a, pb ← tab). `<kaynak>/pN.json`'daki `tip` ("dongu" | "dongu-ilk" | "son-kare"), `kaynak_klip` ve
+// `kaynak_kare` tabloyu ezer. G-B'den beri `plaka` tipi YOK (p8 eski banko plakası render-son-f/p8/'e taşındı);
+// json'da `tip: "plaka"` görülürse uyarı verilir ve tablo (son-kare ← t78) geçerli olur.
 //
 // `--klip`: yalnız seçilen ÇIKTILAR kodlanır; öğe `ad[.kodek][.boyut]` (ad: t12, r21, l3, p6…; kodek h264 | hevc |
 // av1 | webp; boyut dikey | yatay | d | y). Ör. `--klip l3.av1` yalnız l3 AV1 (dikey + yatay), p3 ve öteki kodekler
@@ -43,7 +50,7 @@
 // düşük.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { setPriority, constants } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import sharp from "sharp";
@@ -71,11 +78,16 @@ try {
   /* öncelik değiştirilemezse normal sürer */
 }
 
-// ---------- ad tablosu (§12.1) ----------
-/** İleri geçiş → geri klip (açık tablo). d11→d10 da r10'u kullanır (site). */
-const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87" };
-const DONGU = ["l1", "l2", "l3", "l4", "l5"];
-/** Posterler: tip + kare kaynağı. pN.json `tip` / `kaynak_klip` alanı ezer (posterTablosu). */
+// ---------- ad tablosu (§12.1; G turu §14.4.2-3) ----------
+/**
+ * İleri geçiş → geri klip (açık tablo; anahtarlar = bütün ileri geçişler). `null`: geri klip YOK — fidan içi geri
+ * adımlar (d10→d9, d11→d10, d12→d11) sitede 350 ms poster çapraz sönmesi (§14.4.1 K4). d9→d8 de poster çapraz
+ * sönmesi: r98 (t89 tersi) K-son'da bütçe merdiveninin 4. adımıyla kaldırıldı (§14.4.1; son render oturumu lc + fidan
+ * CRF +2 sonrası AV1 12,615 > 12,25). Geri almak için `t89: "r98"` + kodla `--klip r98`.
+ */
+const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87", t89: null, t9a: null, tab: null, tbc: null };
+const DONGU = ["l1", "l2", "l3", "l4", "l5", "lc"];
+/** Posterler: tip + kare kaynağı. pN.json `tip` / `kaynak_klip` / `kaynak_kare` alanı ezer (posterTablosu). */
 const POSTER_TABAN = {
   p1: { tip: "dongu", kaynak: "l1" },
   p2: { tip: "dongu", kaynak: "l2" },
@@ -84,12 +96,18 @@ const POSTER_TABAN = {
   p5: { tip: "dongu", kaynak: "l5" },
   p6: { tip: "son-kare", kaynak: "t56" },
   p7: { tip: "son-kare", kaynak: "t67" },
-  p8: { tip: "plaka", kaynak: "p8", eski: "p6" },
+  p8: { tip: "son-kare", kaynak: "t78" }, // G-B: t78[59] (t78f kareleri); eski plaka render-son-f/p8/
+  p9: { tip: "son-kare", kaynak: "t89" }, // t89[59]
+  pa: { tip: "son-kare", kaynak: "t9a" }, // t9a[53]
+  pb: { tip: "son-kare", kaynak: "tab" }, // tab[53]
+  pc: { tip: "dongu", kaynak: "lc" }, // lc[0] (pc.json tip "dongu-ilk")
 };
 /** Kaynak (kare dizisi) sırası: liste sırası ve kodlama sırası bu. */
-const KAYNAK_SIRA = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "p8"];
+const KAYNAK_SIRA = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "t89", "t9a", "tab", "tbc", "lc"];
 const KODEK_SIRA = ["h264", "hevc", "av1", "webp"];
 const TUR_SIRA = ["poster", "ileri", "dongu", "geri"];
+/** pN.json `tip` eşanlamlıları (S3: pc "dongu-ilk" = döngünün 0. karesi). */
+const TIP_ES = { dongu: "dongu", "dongu-ilk": "dongu", "son-kare": "son-kare" };
 
 function posterTablosu() {
   const t = {};
@@ -101,13 +119,19 @@ function posterTablosu() {
     } catch {
       console.warn(`UYARI ${ad}.json okunamadı`);
     }
-    const tip = f?.tip ? String(f.tip).replace("_", "-") : v.tip;
-    if (!["dongu", "son-kare", "plaka"].includes(tip)) throw new Error(`${ad}.json tip "${f.tip}" tanınmıyor (dongu | son-kare | plaka)`);
-    // Plaka hep kendi klasöründen (p8.json'daki kamera kaynağı t78 olsa da kare render-son/p8/k_0000.png).
-    const kaynak = tip === "plaka" ? ad : (f?.kaynak_klip ?? f?.kaynakKlip ?? v.kaynak);
+    const ham = f?.tip ? String(f.tip).replace("_", "-") : null;
+    if (ham === "plaka") {
+      // Geriye dönük (E/F turu p8 = eski p6 banko plakası): G-B'de kalktı; tablo geçerli, json'un kaynak/kare alanları yok sayılır.
+      console.warn(`UYARI ${ad}: ${ad}.json tip "plaka" artık desteklenmiyor (G-B §14.4.3; eski plaka render-son-f/p8/); tablo "${v.tip}" ← ${v.kaynak} geçerli`);
+      f = null;
+    } else if (ham && !TIP_ES[ham]) throw new Error(`${ad}.json tip "${f.tip}" tanınmıyor (${Object.keys(TIP_ES).join(" | ")})`);
+    const tip = ham && TIP_ES[ham] ? TIP_ES[ham] : v.tip;
+    const kaynak = f?.kaynak_klip ?? f?.kaynakKlip ?? v.kaynak;
     if (f?.tip && tip !== v.tip) console.warn(`UYARI ${ad}: ${ad}.json tip "${tip}", tablo "${v.tip}" — json geçerli`);
-    if (!f?.tip && v.tip !== "plaka" && existsSync(join(KAYNAK, ad))) console.warn(`UYARI ${ad}: ${join(KAYNAK, ad)} klasörü var ama ${ad}.json'da tip yok; tablo "${v.tip}" (← ${v.kaynak}) geçerli, klasör yok sayıldı (eski plaka mı? §12.9-4)`);
-    t[ad] = { tip, kaynak, eski: v.eski ?? null, kare: f?.kaynak_kare ?? null };
+    if (f && kaynak !== v.kaynak) console.warn(`UYARI ${ad}: ${ad}.json kaynak_klip "${kaynak}", tablo "${v.kaynak}" — json geçerli`);
+    if (!f?.tip && existsSync(join(KAYNAK, ad, "k_0000.png")))
+      console.warn(`UYARI ${ad}: ${join(KAYNAK, ad)} klasörü var ama ${ad}.json'da tip yok; tablo "${v.tip}" (← ${v.kaynak}) geçerli, klasör yok sayıldı (poster kareleri hep kaynak klipten okunur)`);
+    t[ad] = { tip, kaynak, kare: f?.kaynak_kare ?? null };
   }
   return t;
 }
@@ -117,7 +141,10 @@ const POSTER = posterTablosu();
 function ciktilar(kaynak) {
   const o = [];
   for (const [ad, p] of Object.entries(POSTER)) if (p.kaynak === kaynak) o.push({ ad, tur: "poster", tip: p.tip });
-  if (GERI[kaynak]) o.push({ ad: kaynak, tur: "ileri" }, { ad: GERI[kaynak], tur: "geri" });
+  if (kaynak in GERI) {
+    o.push({ ad: kaynak, tur: "ileri" });
+    if (GERI[kaynak]) o.push({ ad: GERI[kaynak], tur: "geri" });
+  }
   if (DONGU.includes(kaynak)) o.push({ ad: kaynak, tur: "dongu" });
   return o;
 }
@@ -161,8 +188,13 @@ const RENK = "out_color_matrix=bt709:out_range=tv";
  * klibin nesnesini ileri kare numarasıyla kullanır; ters rampa reverse'ten gelir).
  * E2 (§12.12, D1-02): d6 293 ("İklim Eylemleri"), d7 233 ("1.000.000+"). F-B ilerleme eşikleri E kare eşiklerinin
  * ilerleme karşılığı (S2-F2 rapor §5; t23: E t23.json kadraj_m'den ln ilerlemesi, kare 24 → s 0,1822, kare 72 → 0,985):
- * t56 E 30→59 ≡ s 0,5133→1 (F-B kare 17→53), t78 E 0→40 ≡ s 0→0,6773 (F-B kare 0→24; 24–59 = 420: d8 kapak
- * geometrisi, brosurDikdortgen, bankoDonusum, p8 dikişi), p6 = t56[53] = 293, p7 = t67[47] = 233.
+ * t56 E 30→59 ≡ s 0,5133→1 (F-B kare 17→53), t78 E 0→40 ≡ s 0→0,6773 (F-B kare 0→24; 24–59 = 420: d8 banko,
+ * p8 = t78[59] ≡ t89[0] dikişi), p6 = t56[53] = 293, p7 = t67[47] = 233.
+ * G-B (fidan, §14.4.3): S3 `kirpimY_oneri` (öznenin dikey ortası yatay karenin %46'sında; sahne.py kirpim_y_oneri):
+ * p9 420, pa 222, pb 194, pc 165. t89 (r98) 420 sabit (t78 sonu 420 → dikiş kırpımsız); t9a/tab/tbc rampaları fiske
+ * profilinin hızlı bölümünde, s 0,04 → 0,90 (S3 önizleme ilerlemesiyle değişen kareler t9a 5–29 [en çok 21 master px/kare],
+ * tab 7–25, tbc 8–31 [≤ 3 px/kare]; kalkış ve kuyruk karelerinde kırpım durur — kuyrukta kamera ≤ %0,6 kadraj değişimi;
+ * k0/k1 yalnız ilerlemesiz yedek); lc (pc) 165 = tbc sonu.
  */
 const KIRPIM_Y_TANIM = {
   t23: { bas: 420, son: 200, s0: 0.1822, s1: 0.985, k0: 8, k1: 57 },
@@ -171,6 +203,11 @@ const KIRPIM_Y_TANIM = {
   t56: { bas: 420, son: 293, s0: 0.5133, s1: 1, k0: 17, k1: 53 },
   t67: { bas: 293, son: 233, k0: 0, k1: 47 },
   t78: { bas: 233, son: 420, s0: 0, s1: 0.6773, k0: 0, k1: 24 },
+  t89: 420,
+  t9a: { bas: 420, son: 222, s0: 0.04, s1: 0.9, k0: 4, k1: 34 },
+  tab: { bas: 222, son: 194, s0: 0.04, s1: 0.9, k0: 4, k1: 34 },
+  tbc: { bas: 194, son: 165, s0: 0.04, s1: 0.9, k0: 4, k1: 41 },
+  lc: 165,
 };
 const KIRPIM_Y_VARSAYILAN = 420;
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2);
@@ -232,6 +269,14 @@ const CRF_TABLO = {
   t56: [23, 25, 32], // duvar ileri: AV1 +2 (oturum bütçesi)
   t67: [23, 25, 32],
   t78: [23, 25, 32],
+  // G-B fidan (§14.4.3): ileri geçişler t78 ailesi (AV1 32), lc döngü ailesi (AV1 30), r98 r87 ailesi (AV1 36).
+  // K-son (§14.4.1 bütçe merdiveni, son render 1920² TAA 64; set+0,664 = AV1 12,733 / HEVC 12,513 MB > 12,0):
+  // (1) lc AV1 30 → 32, HEVC 25 → 27; (2) fidan geçişleri t89/t9a/tab/tbc +2 (H.264 25, HEVC 27, AV1 34).
+  t89: [25, 27, 34],
+  t9a: [25, 27, 34],
+  tab: [25, 27, 34],
+  tbc: [23, 27, 34], // H.264 25'te yatay VMAF 90,91 < 93 (§14.4.1 koşulu; 23'te 92,56) → 23 (H.264 oturum kapısında değil)
+  lc: [23, 27, 32],
   dongu: [23, 25, 30], // l1, l4, l5
   l2: [23, 25, 32], // AV1 368 kB, H.264'ten büyük
   l3: [23, 25, 34], // yalnız yeniden kodlama (32'de VMAF 97,1)
@@ -241,6 +286,7 @@ const CRF_TABLO = {
   r65: [26, 28, 36], // duvar geri: AV1 +2
   r76: [26, 28, 36],
   r87: [26, 28, 36],
+  r98: [26, 28, 36], // t89 tersi (d9→d8). K-son'da KALDIRILDI (§14.4.1 merdiven 4. adım; GERI.t89 null). Geri gelirse bu CRF
 };
 const KODEK_I = { h264: 0, hevc: 1, av1: 2 };
 const crfTaban = (ad, tur, kodek) => (CRF_TABLO[ad] ?? CRF_TABLO[tur])[KODEK_I[kodek]];
@@ -282,7 +328,9 @@ const POSTER_HEDEF_DIKEY = 60_000;
 // Kare aralığına CRF farkı (t23 → l3 dikişi): `--bolge t23.h264=74-83:-4`. x264/x265 `zones` CRF kipinde `b=` (bit
 // hızı çarpanı; qscale'i böler) ile uygulanır: ΔCRF −4 ≈ b = 2^(4/6). AV1'de yok. Taban: t23.h264 (C turundan beri).
 // `--bolge t23.h264=yok` kaldırır.
-const BOLGE = { "t23.h264": { k0: 62, k1: 71, d: -4 } }; // F-B: t23 72 kare → son 10 kare 62–71 (E: 84 kare, 74–83)
+// t34.h264 0-0:-1 (K-son, G4 ilkbahar l3/t34): d3 kalkış dikişi yatay H.264 3,36 > 3,27 (§13.7 kapısı) → 3,21; dikey 3,22 →
+// 3,05. Bedel dikey +13,4 kB (d3 H.264 penceresi 2,484 → 2,497 ≤ 2,5); −2'de 3,04 ama pencere 2,509 ✗.
+const BOLGE = { "t23.h264": { k0: 62, k1: 71, d: -4 }, "t34.h264": { k0: 0, k1: 0, d: -1 } }; // F-B: t23 72 kare → son 10 kare 62–71 (E: 84 kare, 74–83)
 for (const s of arg("--bolge", "").split(",").filter(Boolean)) {
   const [k, v] = s.split("=");
   if (v === "yok" || v === "0") {
@@ -385,7 +433,8 @@ function sureKare(yol) {
   return { kare: Number(s.nb_read_frames), etiket: `${s.codec_tag_string} ${s.profile} L${s.level} ${s.width}x${s.height} ${s.color_space ?? "?"}` };
 }
 
-const OZETLI = /^([a-z]\d{1,2})\.([0-9a-f]{8})\.((?:h264|hevc|av1)\.mp4|webp)$/;
+// Ad: harf + 1–2 hane/harf (t01, l3, p6; G-B: t9a, tab, tbc, lc, r98, pa, pb, pc).
+const OZETLI = /^([a-z][0-9a-z]{1,2})\.([0-9a-f]{8})\.((?:h264|hevc|av1)\.mp4|webp)$/;
 /** `<dz>` içinde `<ad>.<8 hex>.<uzantı>` biçimli, `tut` dışındaki dosyalar. */
 function eskiler(dz, ad, uzanti, tut) {
   if (!existsSync(dz)) return [];
@@ -461,7 +510,6 @@ async function webpLab(yol) {
 // ---------- liste (kilitli oku-birleştir-yaz) ----------
 mkdirSync(dirname(LISTE), { recursive: true });
 const listeOku = () => (existsSync(LISTE) ? JSON.parse(readFileSync(LISTE, "utf8")) : []);
-const ESKI_LISTE = listeOku(); // koşu başındaki görüntü (p8 ← eski p6 karşılaştırması)
 const anahtar = (s) => `${s.klip}|${s.tur}|${s.boyut}|${s.kodek}`;
 const siraAnahtar = (s) => {
   const k = KAYNAKLAR.indexOf(s.kaynakKlip);
@@ -532,6 +580,25 @@ if (bayrak("--artik")) {
   process.exit(0);
 }
 
+// ---------- listeden çıkarma (`--dus r98[,…]`) ----------
+// Bütçe merdiveni (§14.4.1: önce lc CRF 30 → 32, sonra r98): çıktı adının bütün kayıtları listeden silinir; dosyalar
+// sonraki `--artik` ile gider, manifest-birlestir o geri klibi bulamayınca `geri: null` yazar (`--geri-yok r98` uyarısız).
+if (arg("--dus", "")) {
+  const dus = new Set(arg("--dus", "").split(",").filter(Boolean));
+  for (const ad of dus) if (!TUM_ADLAR.has(ad)) throw new Error(`--dus: "${ad}" bilinmeyen çıktı adı`);
+  let n = 0;
+  kilitli(() => {
+    const l = listeOku();
+    const kalan = l.filter((s) => !dus.has(s.klip));
+    n = l.length - kalan.length;
+    const gec = `${LISTE}.${process.pid}.tmp`;
+    writeFileSync(gec, JSON.stringify(kalan, null, 1));
+    renameSync(gec, LISTE);
+  });
+  console.log(`--dus ${[...dus].join(",")}: ${n} kayıt listeden çıkarıldı → ${LISTE} (dosyalar için: --artik)`);
+  process.exit(0);
+}
+
 // ---------- poster ----------
 /** Tek kare kaynağı (ffmpeg girişi + filtre başı) ve kaynak karesi. */
 function posterGirdi(p, G) {
@@ -554,15 +621,6 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
   const vf = `${PG.bas};[g]${kirp},scale=${B.g}:${B.y}:flags=lanczos,format=rgb24[o]`;
   const kaynakOzet = PG.png ? ozetTam(PG.png).slice(0, 16) : null;
   const kayit = { kaynakKlip: p.kaynak, klip: ad, tur: "poster", boyut, kodek: "webp", posterTip: p.tip, kaynakKare: PG.kaynakKare, kaynakOzet, kirpimY: kY, kirpim: kirp, giris: G.giris };
-
-  // p8 (plaka): master aynı ve dosya duruyorsa yeniden kodlama yok.
-  if (p.tip === "plaka") {
-    const once = ESKI_LISTE.find((s) => s.klip === ad && s.tur === "poster" && s.boyut === boyut);
-    if (once && kaynakOzet && once.kaynakOzet === kaynakOzet && existsSync(once.yol)) {
-      console.log(`${boyut} ${ad}: master değişmedi (${kaynakOzet}), dosya duruyor → yeniden kodlama yok (${basename(once.yol)})`);
-      return null;
-    }
-  }
   const kodla = (q, yol) => calistir([...PG.args, "-filter_complex", vf, "-map", "[o]", "-frames:v", "1", "-c:v", "libwebp", "-quality", String(q), "-compression_level", "6", yol]);
   let q = posterQ(ad, boyut);
   const gecici = join(pdz, `${ad}.tmp.webp`);
@@ -595,27 +653,8 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
   if (existsSync(son)) rmSync(son);
   renameSync(gecici, son);
   Object.assign(kayit, { dosya: `/icinden/p/${B.kisa}/${ad}.${h}.webp`, bayt: statSync(son).size, kalite: q, ...(merdiven ? { merdiven } : {}), yol: son });
-  if (p.eski) {
-    // p8 ≡ eski p6 plakası mı (aynı master → libwebp belirlenimci → aynı özet)?
-    const e = ESKI_LISTE.find((s) => s.klip === p.eski && s.tur === "poster" && s.boyut === boyut && (s.posterTip ?? "plaka") === "plaka" && s.kaynakKlip === p.eski);
-    const eh = e ? /\.([0-9a-f]{8})\.webp$/.exec(e.dosya)?.[1] : null;
-    kayit.esdeger = eh === h ? `${p.eski}.${eh}` : null;
-    if (eh && eh !== h) console.warn(`UYARI ${boyut} ${ad}: eski ${p.eski} plakası ${eh}, yeni ${h} — master değişmiş (§12.7-4: p8 + kapak-ton + RECT + FLIP yeniden)`);
-    else if (eh) console.log(`${boyut} ${ad} ≡ eski ${p.eski} (${eh}; bayt bayt aynı)`);
-  }
-  console.log(`${boyut} ${ad} poster (${p.tip} ← ${p.kaynak}[${PG.kaynakKare}]): q${q} ${(kayit.bayt / 1000).toFixed(1)} kB → ${basename(son)}`);
+  console.log(`${boyut} ${ad} poster (${p.tip} ← ${p.kaynak}[${PG.kaynakKare}]${kY != null ? `, kirpimY ${kY}` : ""}): q${q} ${(kayit.bayt / 1000).toFixed(1)} kB → ${basename(son)}`);
   return kayit;
-}
-
-/** render-son/p8 yoksa: eski p6 plaka dosyası p8 adıyla kopyalanır (yeniden kodlama yok). */
-function plakaKopyala({ ad, p, boyut, B, pdz }) {
-  const e = ESKI_LISTE.find((s) => s.klip === p.eski && s.tur === "poster" && s.boyut === boyut && s.kaynakKlip === p.eski && (s.posterTip ?? "plaka") === "plaka" && s.yol && existsSync(s.yol));
-  if (!e) return null;
-  const h = /\.([0-9a-f]{8})\.webp$/.exec(e.dosya)[1];
-  const son = join(pdz, `${ad}.${h}.webp`);
-  copyFileSync(e.yol, son);
-  console.log(`${boyut} ${ad} ← eski ${p.eski} dosyası (${basename(e.yol)} kopyası; yeniden kodlama yok)`);
-  return { ...e, kaynakKlip: ad, klip: ad, posterTip: "plaka", esdeger: `${p.eski}.${h}`, dosya: `/icinden/p/${B.kisa}/${ad}.${h}.webp`, bayt: statSync(son).size, yol: son };
 }
 
 // ---------- ana döngü ----------
@@ -633,17 +672,15 @@ for (const kaynak of KAYNAKLAR) {
   if (!cik.length) continue;
   const G = girdi(kaynak);
   if (!G) {
-    const p8 = cik.every((c) => c.tur === "poster" && POSTER[c.ad].tip === "plaka" && POSTER[c.ad].eski);
-    if (!p8) {
-      const m = `kaynak yok: ${kaynak} (${join(KAYNAK, kaynak)}\\k_0000.png ya da ${join(KAYNAK, kaynak)}.mkv) — ${cik.map((c) => c.ad).join(", ")} atlandı`;
-      if (SECIM.length) throw new Error(m);
-      console.warn(`UYARI ${m}`);
-      continue;
-    }
+    const m = `kaynak yok: ${ESLE[kaynak] ?? join(KAYNAK, kaynak)}\\k_0000.png ya da ${join(KAYNAK, kaynak)}.mkv — ${cik.map((c) => c.ad).join(", ")} atlandı`;
+    if (SECIM.length) throw new Error(m);
+    console.warn(`UYARI ${m}`);
+    continue;
   }
-  if (G) {
+  {
     const fr = fragmanOku(FRAGMAN, kaynak, (m) => console.warn(`UYARI ${m}`));
     if (fr && fr.kare !== G.kare) console.warn(`UYARI ${kaynak}: fragman ${fr.kare} kare, kaynak ${G.kare} kare`);
+    if (!fr) console.warn(`UYARI ${kaynak}: fragman yok (${join(FRAGMAN, `${kaynak}.json`)}); yatay kırpım rampası kare numarasıyla`);
     console.log(`${kaynak}: ${G.kare} kare, giriş ${G.giris} → ${cik.map((c) => c.ad).join(", ")}`);
   }
   for (const [boyut, B] of Object.entries(BOYUT)) {
@@ -655,8 +692,7 @@ for (const kaynak of KAYNAKLAR) {
       if (c.tur === "poster") {
         if (!secildi(c.ad, boyut, "webp")) continue;
         const p = POSTER[c.ad];
-        const k = G ? await posterKodla({ ad: c.ad, p, G, boyut, B, pdz }) : plakaKopyala({ ad: c.ad, p, boyut, B, pdz });
-        if (!G && !k) throw new Error(`${c.ad}: ne ${join(KAYNAK, p.kaynak)} ne de eski ${p.eski} plaka dosyası var`);
+        const k = await posterKodla({ ad: c.ad, p, G, boyut, B, pdz });
         if (k) {
           kaydet(k);
           sayac++;

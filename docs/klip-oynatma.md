@@ -28,6 +28,16 @@ Prototip: `C:\Users\user\AppData\Local\Temp\claude\D--soft-cop31\4935df5b-f395-4
 | 4 | `<img id="yedek">` | Yedek geçiş (poster çapraz sönmesi). |
 | 5 | `<main>` > 10 × `section{height:100svh}` | Metin (DOM). Belge kaydırması adımla aynı sürede (easeInOutCubic). |
 
+**Üretimde (`src/components/icinden/`, G turu, 4 Kasım 2026; brief-icinden-3 §14.4):** sahne kabı (`.v3-sahne`, fixed,
+`container-type: size`, aria-hidden) içinde z0 poster `<img>` (altında satır içi LQIP) → z1–3 üç `<video>` → z4 yedek
+`<div>` (poster çapraz sönmesi: hem yedek hem fidan içi geri adım) → z5 lombar kâğıdı (yalnız d0 ↔ d1) → z8 etiket katmanı
+(d1 yaylar, d2 emanet ışıkları, sahne etiketleri) ve **fidan katmanı** (`FidanKatmani.tsx`: d9 81 kök ucu halkası — yön
+başına tek `<svg>`, `xMidYMid slice` = cover; d10 iki boğum etiketi) → z8 kılavuz çizgisi (d5 sütun, d6 duvar) → z20 kiosk
+perdesi. Sahnenin dışında: z10 metin bantları ve **z9 d11 polaroid katmanı** (ikisi de durak bölümünün içinde `position:
+fixed`; polaroidler ekran okuyucu akışında), z12 kadraj okuması, z30 kapanış. DOM broşürü (kapak FLIP'i, sayfa çevirme,
+dalış) ve Dünya dönüşü (d11) G turunda kalktı; masadaki broşür artık render'ın son karesi (d8, son-kare durak), "Dijital
+broşür →" bağlantısı `/brosur`'a (d0 şeridi, d8 bandı, kapanış).
+
 ### 1.2 Durum makinesi ve adımlama
 
 `dur(k)` → jest → `gecis(k→j)` → klip `ended` → `dur(j)`; klip hazır değil / `play()` reddi → `yedek(k→j)` →
@@ -36,6 +46,17 @@ Prototip: `C:\Users\user\AppData\Local\Temp\claude\D--soft-cop31\4935df5b-f395-4
 WebKit güvenli konum (`here()`, geri okumaya göre iptal yok). Farklar: uzun bölüm yok; adım süresi = klip süresi;
 **geçiş sürerken jest yok sayılır** (kilit; ters yön iptali yok, §7); otomatik oynatma engelliyken dokunma adımı
 `touchend`'de atılır.
+
+**Üretimde (G turu):** durak türleri — döngülü (d1–d5, d12 `lc`), **döngüsüz son-kare** (d6–d7 duvar, d8 masa, d9–d11
+fidan: gelen klibin son karesinde durur, posteri o kare; giden klibin 0. karesi aynı kare) ve DOM (d0 lombar, 13 kapanış).
+Geri klibi olmayan geçiş (`Gecis.geri === null`, manifest; d8/d9/d10/d11'in ileri geçişleri) için geri adım
+`gecis(k→k−1)` = **350 ms poster çapraz sönmesi** (`Oynatici.posterGeri`): hedef durağın posteri yedek katmanında üste
+söner (kadraj okuması zamana bağlı tersten akar), 350 + 40 ms'de `dur(k−1)` (adımlayıcının 350 ms'lik kilitli adımı bittikten
+sonra; tuzak zinciri), video katmanları kalkar, yedek katmanı alttaki poster `<img>` çözülünce (≤ 300 ms) kaldırılır. Kayıtta
+`sonme: "poster"` (yedek sayılmaz). d8 → d7 `r87`. d9 → d8 de sönmedir: `r98` (t89 tersi) K-son'da bütçe merdiveninin
+4. adımıyla kalktı (brief §14.4.1; kod değişmedi). Fidan katmanının görünürlüğü yalnız kök özniteliklerinden (`data-dinlenme-rol`: varıştan
+400 ms sonra): halkalar 300 ms opaklık, boğum etiketleri opaklık + 8 px kayma, polaroidler (d10 dinlenmesinde
+`img.decode()`, figür `data-hazir`) opaklık + 8 px translateY ve ±1,2° sarkaç; her karede JS stil yazımı yok.
 
 ### 1.3 Havuz (en çok 3 canlı `<video>`)
 
@@ -576,11 +597,22 @@ Eski tahmin (R4, ağır vekil set): H.264 ~16 MB, HEVC ~12, AV1 ~10. Gerçek dik
    - düşen x/y 0 olmalı.
 3. Aynı turu `?hud=1&kodek=av1` ve `?hud=1&kodek=hevc` ile (sayfayı yeniden yükleyerek) yap; `p50 devir`, `düşen`, `>50ms`, `başla`
    ve gözle akıcılığı karşılaştır. AV1 belirgin iyi değilse HEVC kalır. İkisi de takılıyorsa `?hud=1&kodek=h264`.
-4. Gözle: (a) varışta görüntü duruyor mu; (b) jestte yeni klip ilk karesinde donuk mu sönüyor; (c) d0→d1 ve d10→d11'de kâğıttaki
-   delik kesik kesik mi büyüyor (lombar maskesi, değişmedi); (d) d1/d11 yaylar; (e) d7→d8 broşür gelişi ve d8↔d10 sayfa çevirme
-   (G-B'de kalkıyor); (f) d7'de varıştan ~1 s sonra hemen kaydırınca geçişin geç başlaması.
+4. Gözle: (a) varışta görüntü duruyor mu; (b) jestte yeni klip ilk karesinde donuk mu sönüyor; (c) d0→d1'de kâğıttaki delik
+   kesik kesik mi büyüyor (lombar maskesi, değişmedi); (d) d1 yaylar; (e) d7→d8 masadaki broşüre iniş (render; DOM kapak yok);
+   (f) d7'de varıştan ~1 s sonra hemen kaydırınca geçişin geç başlaması.
+4b. **Fidan (G turu):** d7 → d12 ileri, sonra d12 → d7 geri; her durakta 2–3 s bekle.
+   - İleri: t78 (masa), t89 (kökler), t9a (gövde), tab (dallar), tbc (yapraklar). d9–d11 döngüsüz: HUD `devir` "-" normal
+     (döngü yok); d12'de `lc` döngüsü: `devir` 17–60 ms. Düşen 0.
+   - d9 dinlenmesinde 81 krem halka tek seferde (300 ms) belirmeli, kök uçlarının üstünde; d10'da iki boğum etiketi (2017 /
+     TBMM) yana kayarak; d11'de 4 polaroid dal uçlarında, belirirken boş/beyaz çerçeve görünmemeli (görsel d10'da çözülür),
+     hafif sarkaç. Geçişe başlayınca hepsi 200 ms'de sönmeli.
+   - Geri: d12→d11, d11→d10, d10→d9 klip değil, **350 ms poster çapraz sönmesi**: beyaz/siyah flaş, eski karenin bir an geri
+     gelmesi ya da ekranın kayması (sahne yerinde kalmalı) olmamalı. HUD'da bu adımlar sayılmaz (klipsiz). d9→d8 de sönme (`r98` bütçe için kalktı); d8→d7 `r87` klibi.
+   - Ters jest: d10'a varınca hemen geri, sonra hemen ileri (3 kez): her jest tek adım.
+   - "Dijital broşür →": d0 şeridinde (sağda) ve d8 bandında dokununca `/brosur` açılmalı; kapanışta slogan altında düğme.
 5. Düşük Güç Modu açıkken HUD 1. satırda `ENGEL`; adım parmak kalkınca atılır; ilk dokunuştan sonra geçişler video olmalı.
-6. Mac varsa: Safari ▸ Geliştir ▸ iPhone ▸ Zaman Çizelgeleri ("Görüntü Kareleri") ile d1→d3 ve d7→d10 kaydı.
+6. Mac varsa: Safari ▸ Geliştir ▸ iPhone ▸ Zaman Çizelgeleri ("Görüntü Kareleri") ile d1→d3 ve d7→d12→d7 kaydı (fidan
+   geçişlerinde > 50 ms kare 0 hedefi, brief §14.3 / S3 raporu §5-11).
 7. Sonuç: her koşu için HUD 2.–4. satırlar + gözlem. Başla büyükse bu yama asıl düzeltmedir; küçükse sıradaki iş brief §13.8'deki
    WebKit DOM maddeleri (adim.ts kaydırma yazımı, lombar maskesi, d7 görsellerini d6'da çözme).
 

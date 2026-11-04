@@ -5,8 +5,8 @@
  * kameraya daha yakın: paralaks), en geç 1,1 s'de ekran köşegenini geçer. Kenarda 1 px yumuşatma + 2 px iç
  * gölge rgba(0,0,0,.12) (kâğıt kalınlığı). Beyaz tam #FFFFFF: DOM'da, render renk dönüşümü dokunmaz.
  *
- * d9 → d10'da aynı delik arka kapağın kendisinde (broşür kökü) ve broşürün çevresindeki kâğıtta açılır.
- * Delik `mask-image` radyal gradyanıyla; yalnız bu katmanlar boyanır (transform yok, ölçek bulanıklığı yok).
+ * Delik `mask-image` radyal gradyanıyla; yalnız bu katman boyanır (transform yok, ölçek bulanıklığı yok). G turunda
+ * Dünya'ya dönüş (eski d10 → d11 broşür dalışı) kalktı: lombar yalnız d0 ↔ d1.
  */
 export default function Lombar() {
   return <div data-v3-kagit aria-hidden="true" className="v3-kagit" />;

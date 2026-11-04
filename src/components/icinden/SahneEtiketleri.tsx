@@ -14,7 +14,7 @@ import { dizinler } from "./rol";
  * d4 bölge etiketleri numarasız, ≤ 40 px kılavuz çizgiyle parçaya bağlı; spot döngüsünde etkin olmayan %60.
  * Görünürlük kökün `data-etiket="k"` özniteliğiyle (300 ms, birlikte).
  *
- * E turu (W2a, §12.4-2/3): d1/d11 ışık yayları (DunyaYaylari) ve d2 bağları (EmanetBaglari) aynı katmanda, etiketlerin
+ * E turu (W2a, §12.4-2/3): d1 ışık yayları (DunyaYaylari) ve d2 bağları (EmanetBaglari) aynı katmanda, etiketlerin
  * altında. `kunye` (d1 Antalya): 18 px kılavuz + "Antalya" + SSR satırı (KunyeSatiri, mount sonrası gün sayacı).
  * `emanet` (d2): dönem renkli çekirdek + numara (ad yok); varış dizisi ve ofsetler CSS değişkeninde (icinden3-isik.css).
  */

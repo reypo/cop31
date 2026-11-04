@@ -56,10 +56,10 @@ ap.add_argument("--uzay_ev", type=float, default=1.0)         # uzay karelerinde
 ap.add_argument("--kilit", action="store_true")               # klip başına GPU kilidi (render\.gpu-kilit)
 ap.add_argument("--ham", default="t34a")                      # bu klipler <cikis>/<klip>/ham/'a yazılır (görüntü uzayı parlama)
 # C turu (brief §11.1)
-ap.add_argument("--poz", default="oto", choices=["oto", "egri", "egri_f", "rampa"])   # egri: ölçülmüş POZ_EGRI; rampa: --poz_rampa
+ap.add_argument("--poz", default="oto", choices=["oto", "egri", "egri_f", "egri_g", "rampa"])   # egri: ölçülmüş POZ_EGRI; rampa: --poz_rampa
 # F turu: egri_f = POZ_EGRI'nin 25–88 km kısmı yeniden (C turunun 37–66 km negatif düğümleri kare 36'dan açılan yerel
 # kümülüsün parlaklığını bastırmak içindi; bulut kalkınca kent yaklaşımında luma %23 → %16,8 çukuru yaptı; ölçüldü).
-# oto: --profil fiske ve --t23_bulut yok → egri_f; aksi hâlde egri (E turu bire bir).
+# oto: --profil fiske ve --t23_bulut yok → egri_g (G4; F turu egri_f ile: --poz egri_f); aksi hâlde egri (E turu bire bir).
 ap.add_argument("--poz_rampa", default="30e3,400e3")          # uzay pozlaması rampası (m); B: 150e3,1000e3
 # geçişlerde sabit tohumlu kareler (l3 ile aynı tohum 31): t23'ün durgun son 6 karesi, t34a'nın ilk 3 karesi.
 # F turu: "oto" = kamera.KLIPLER'den (t23: N−6…N−1, iniş/durgun kareler; t34a: 0–2) → E'de "t23:78-83;t34a:0-2", F-B'de "t23:66-71;t34a:0-2"
@@ -88,6 +88,16 @@ ap.add_argument("--golge_m", type=float, default=0.0005)
 ap.add_argument("--isik_carpan", type=float, default=1.0)
 # teşhis (F turu, EEVEE çökmesi t34a kare 19–20): EEVEE ekran-uzayı ışın izleme + hızlı GI (1 = E ayarı)
 ap.add_argument("--ee_rt", type=int, default=1)
+# G turu (brief §14.4.5, G4): irtifaya bağlı mevsim karışımı — Kasım (s2_bolge/s2_genis.jpg) ↔ ilkbahar
+# (s2_bolge_ilkbahar/s2_genis_ilkbahar.jpg, hazirla.py s2 --mevsim ilkbahar). mevsim_k = ss(irtifa, ÜST → ALT): ÜST'te ve
+# üstünde 0 (l2 ≡ t23[0]: karışım düğümü 0'da A girişini aynen verir), ALT'ta ve altında 1 (l3/t34a ilkbahar).
+#   oto     : t23/l3/t34a içeren koşularda iki doku da yüklenir (yoksa eski ağaç: l1/l2/t01/t12 bayt bayt aynı)
+#   kasim   : eski düğüm ağacı (ilkbahar dokusu ve karışım düğümü yok; F turu bire bir)
+#   ilkbahar: karışım düğümü kurulur, mevsim_k her karede 1
+ap.add_argument("--mevsim", default="oto", choices=["oto", "kasim", "ilkbahar"])
+ap.add_argument("--mevsim_aralik", default="500e3,100e3")    # ÜST,ALT (m; ss doğrusal irtifada): t23 kare 9–17 (hız tepesinde: ln d 0,20–0,17/kare, tam kare 297–330 px/kare); 350→120 bölgede ΔE00 1,04/kare (> 1), 500→100 0,97 (BENIOKU G4)
+ap.add_argument("--mevsim_sabit", type=float, default=-1.0)  # teşhis/ölçüm: ≥ 0 ise mevsim_k her karede bu değer
+ap.add_argument("--yesil_k", type=float, default=1.0)       # G4-yeşil (brief §14.4.5): yakın alan yeşili; 0 = eski görünüm (BENIOKU G4)
 a = ap.parse_args(argv)
 KM.profil_sec(a.profil)
 KM.T34A_KIP = a.t34a_kip
@@ -303,7 +313,20 @@ def rolyef_tumsek(d, vr, normal=None):
 uzay_klip = {"t01", "l1", "t12", "l2", "t23"}
 kure_gerek = (a.kure == 1) or (a.kure == -1 and any(k in uzay_klip for k in klipler)) or a.sadece_json
 yakin_gerek = any(k in ("t23", "l3", "t34a") for k in klipler)
-log("klipler", klipler, "küre", kure_gerek)
+# G4: mevsim karışımı yalnız yakın alanlı (t23/l3/t34a) koşularda kurulur; l1/l2/t01/t12 tek başına eski ağaçla render edilir
+MEVSIM = a.mevsim != "kasim" and yakin_gerek
+MEVSIM_ARALIK = tuple(float(x) for x in a.mevsim_aralik.split(","))
+log("klipler", klipler, "küre", kure_gerek, "mevsim", a.mevsim if MEVSIM else "kasim (eski ağaç)",
+    MEVSIM_ARALIK if MEVSIM else "")
+
+
+def mevsim_doku(d, ad, vec, renk_out):
+    """G4: S2 dokusu (Kasım, renk_out) ↔ aynı UV'de <ad>_ilkbahar.jpg; faktör sahne özelliği mevsim_k (ShaderNodeMix,
+    MIX, faktör kıskaçlı). mevsim_k = 0'da çıktı A girişinin kendisi ((1 − 0)·A + 0·B = A). MEVSIM kapalıysa dokunmaz."""
+    if not MEVSIM:
+        return renk_out
+    yeni = resim(d, ad.replace(".jpg", "_ilkbahar.jpg"), True, vec)
+    return d.karistir(attr(d, "mevsim_k"), renk_out, yeni.outputs["Color"])
 
 # ------------------------------------------------------------------ Dünya küresi
 OB = {}
@@ -341,7 +364,8 @@ if kure_gerek and not a.sadece_json:
     v2 = esle(d, uv, 360 * KX / W2, 180 * KY / W2, ((-180 - LON0) * KX + 76800) / W2, ((-90 - LAT0) * KY + 76800) / W2)
     s2 = resim(d, "s2_bolge.jpg", True, v2); s2s = resim(d, "deniz-maskesi-bolge-50m.png", False, v2)
     w2 = radyal_agirlik(d, v2, W2)
-    col = d.karistir(w2, col, s2.outputs["Color"]); su = d.karistir(w2, su, s2s.outputs["Color"], "FLOAT")
+    s2c = mevsim_doku(d, "s2_bolge.jpg", v2, s2.outputs["Color"])          # G4: Kasım ↔ ilkbahar (mevsim_k)
+    col = d.karistir(w2, col, s2c); su = d.karistir(w2, su, s2s.outputs["Color"], "FLOAT")
     d.b(col, bs.inputs["Base Color"])
     d.b(d.karistir(su, 0.85, 0.22, "FLOAT"), bs.inputs["Roughness"])
     d.b(d.karistir(su, 0.2, 0.7, "FLOAT"), bs.inputs["Specular IOR Level"])
@@ -456,7 +480,9 @@ if not a.sadece_json:
     wg = kenar_agirlik(d, vg, 2000 / 61440, 2000 / 61440)
     wb = radyal_agirlik(d, vb, 153600.0)
     hsc = d("ShaderNodeHueSaturation", i_Saturation=1.15, i_Value=1.0); d.b(cc.outputs["Color"], hsc.inputs["Color"])
-    col = d.karistir(wb, hsc.outputs["Color"], cb_.outputs["Color"]); col = d.karistir(wg, col, cg.outputs["Color"])
+    # G4: bölge ve geniş S2 dokuları Kasım ↔ ilkbahar (mevsim_k; deniz maskeleri ve C1 aynı)
+    cbc = mevsim_doku(d, "s2_bolge.jpg", vb, cb_.outputs["Color"]); cgc = mevsim_doku(d, "s2_genis.jpg", vg, cg.outputs["Color"])
+    col = d.karistir(wb, hsc.outputs["Color"], cbc); col = d.karistir(wg, col, cgc)
     su = d.karistir(wb, scc.outputs["Color"], sb.outputs["Color"], "FLOAT"); su = d.karistir(wg, su, sg.outputs["Color"], "FLOAT")
     col_kure, su_kure = col, su          # E turu: küre (Dunya) malzemesiyle aynı renk ve su (yumuşak) — kenar halkası
     su = d.aralik(su, 0.35, 0.65)
@@ -478,15 +504,21 @@ if not a.sadece_json:
         ara = d.math("ADD", 4.5, d.math("MULTIPLY", vre.outputs["Green"], 2.0))
         sira = d.math("MULTIPLY", d.math("SINE", d.math("DIVIDE", d.math("MULTIPLY", uu, 2 * math.pi), ara)), 0.5)
         csp = d("ShaderNodeSeparateColor"); d.b(col, csp.inputs[0])
-        yesil = d.aralik(d.math("SUBTRACT", csp.outputs["Green"], d.math("MAXIMUM", csp.outputs["Red"], csp.outputs["Blue"])), -0.004, 0.02)
+        YK = a.yesil_k      # G4-yeşil: çıplak parsel eşiği −0,004…0,02 → −0,026…0,004 (k = 1)
+        yesil = d.aralik(d.math("SUBTRACT", csp.outputs["Green"], d.math("MAXIMUM", csp.outputs["Red"], csp.outputs["Blue"])),
+                         -0.004 - 0.022 * YK, 0.02 - 0.016 * YK)
         genlik = d.math("ADD", 0.16, d.math("MULTIPLY", yesil, 0.5))
         yol_ = d.math("MULTIPLY", d.aralik(d.math("MULTIPLY", vke.outputs["Distance"], 70.0), 1.8, 0.7),
                       d.math("GREATER_THAN", vre.outputs["Blue"], 0.55))
         # parsel başına ton (±%13): tek düze bej yerine tarla yamalı örtüsü
         yakin9 = d.aralik(cd_.outputs["View Distance"], 9000.0, 2500.0)
-        detay = d.math("ADD", detay, d.math("MULTIPLY", d.math("MULTIPLY", d.math("SUBTRACT", vre.outputs["Blue"], 0.5), 0.26), yakin9))
+        detay = d.math("ADD", detay, d.math("MULTIPLY", d.math("MULTIPLY", d.math("SUBTRACT", vre.outputs["Blue"], 0.5), 0.26 * (1 - 0.385 * YK)), yakin9))   # ±%13 → ±%8 (k = 1)
         detay = d.math("ADD", detay, d.math("MULTIPLY", d.math("MULTIPLY", sira, genlik), yakin9))
-        col = d.karistir(d.math("MULTIPLY", d.math("MULTIPLY", yol_, 0.75), yakin9), col, (0.332, 0.254, 0.150))   # #9c8a6c
+        col = d.karistir(d.math("MULTIPLY", d.math("MULTIPLY", yol_, 0.75 * (1 - 0.65 * YK)), yakin9), col, (0.332, 0.254, 0.150))   # #9c8a6c; ×0,75 → ×0,26 (k = 1)
+        if YK > 0:      # G4-yeşil: bitkili (yeşil maskeli) pikselde ton +15° (zeytin → bahar yeşili), doygunluk ×1,65, parlaklık ×1,12; 9 km'de söner
+            hsg = d("ShaderNodeHueSaturation", i_Hue=0.5 + 0.042 * YK, i_Saturation=1 + 0.65 * YK, i_Value=1 + 0.12 * YK)
+            d.b(col, hsg.inputs["Color"])
+            col = d.karistir(d.math("MULTIPLY", yesil, yakin9), col, hsg.outputs["Color"])
     if B_YAKIN:     # kara rengi biraz daha doygun (müşteri: renkli); deniz rengi ayrı (dkol) etkilenmez
         hsb = d("ShaderNodeHueSaturation", i_Saturation=1.18, i_Value=1.0); d.b(col, hsb.inputs["Color"]); col_kara = hsb.outputs["Color"]
     else:
@@ -1064,9 +1096,19 @@ def ss(x, a_, b_):
     return t * t * (3 - 2 * t)
 
 
+def mevsim_k(irtifa):
+    """G4: Kasım (0) ↔ ilkbahar (1) S2 dokusu karışımı; ss doğrusal irtifada (MEVSIM_ARALIK = ÜST, ALT)."""
+    if a.mevsim_sabit >= 0.0:
+        return float(a.mevsim_sabit)
+    if a.mevsim == "ilkbahar":
+        return 1.0
+    return ss(irtifa, *MEVSIM_ARALIK)
+
+
 POZ_RAMPA = tuple(float(x) for x in a.poz_rampa.split(","))
 if a.poz == "oto":
-    a.poz = "egri_f" if (a.profil == "fiske" and T23_BULUT == "yok") else "egri"
+    # G4: fiske + bulutsuz t23 → egri_g (ilkbahar karışımlı dokuyla ölçülmüş eğri); eski profil → egri (E bire bir)
+    a.poz = "egri_g" if (a.profil == "fiske" and T23_BULUT == "yok") else "egri"
 # C turu, ölçülmüş eğri (poz_egri.py; önizleme EXR + OCIO AgX Punchy): (irtifa km, k), pozlama = exposure + uzay_ev · k.
 # Uçlarda kıskaç: ≥ 965,6 km → k = 1 (l2/t12/l1/t01: B ile aynı), ≤ 28,1 km → k = 0 (l3/t34a: B ile aynı). Arada
 # luma tabanı %23 (kare 16–36), kare 36–40 en çok +2 puan; 30–400 km rampası çukuru kapatmıyordu (ölçüm: kare 20 %15,1,
@@ -1094,7 +1136,19 @@ def _fc_egimleri(xs, ys):
 # %22,5 hedefiyle; ≤ 25 km k = 0 (l3/t34a ve t23'ün kare 31 sonrası E ile aynı 0,3 EV).
 POZ_EGRI_F = [(25.00, 0.000), (28.27, 0.030), (31.93, 0.130), (36.06, 0.220), (40.75, 0.290), (46.13, 0.360),
               (52.32, 0.410), (59.50, 0.430), (66.42, 0.440), (88.35, 0.450)] + [q for q in POZ_EGRI if q[0] > 100.0]
-_PE = POZ_EGRI_F if a.poz == "egri_f" else POZ_EGRI
+# G4 (brief §14.4.5; --poz egri_g, fiske + bulutsuz t23'te oto): ilkbahar karışımlı dokuyla (mevsim 500 → 100 km) Cycles
+# 960² 16 örnek önizlemesinin EXR'larından (render/_onizleme/s1g-cy; EEVEE 120 km altında Cycles'tan 5–15 luma puanı karanlık,
+# ölçüldü → tasarım Cycles'la), poz_egri.py --kip g: ≥ 1.644 km k = 1 (l2 ≡ t23[0]); kare 3 → 8 luma %25,6 → %22,5
+# smoothstep; kare 8–16 luma tabanı %22,5; kare 16 → 27 kübik Hermite ile k = 0'ın doğal lumasına (%44,9, eğim 2,17/kare);
+# ≤ 23 km k = 0 (l3/t34a ve t23 iniş sonu F ile aynı 0,3 EV). Her t23 karesinin irtifası bir düğüm. Öngörülen (960²):
+# ardışık |Δ| ≤ 2,72 luma puanı (6,93/255), 77–1.580 km'de ≤ 0,97 (2,46/255) ve tek yön (azalan, geri yükseliş 1,31);
+# F'deki kare 6→7 +4,69 yerine −0,77. 26–89 km düğümleri negatif: doğal luma k = 0'da bile hedefin üstünde (ilkbahar dokusu).
+POZ_EGRI_G = [(23.03, 0.000), (26.71, -0.004), (30.89, -0.055), (35.70, -0.134), (41.28, -0.272), (47.86, -0.353),
+              (55.65, -0.436), (64.95, -0.468), (76.11, -0.330), (89.55, -0.061), (105.81, 0.240), (125.53, 0.401),
+              (149.56, 0.465), (178.92, 0.549), (214.96, 0.603), (259.34, 0.811), (314.21, 1.097), (382.31, 1.376),
+              (467.16, 1.470), (573.27, 1.530), (706.50, 1.455), (874.45, 1.379), (1086.99, 1.170), (1355.09, 1.052),
+              (1644.32, 1.000)]
+_PE = {"egri_f": POZ_EGRI_F, "egri_g": POZ_EGRI_G}.get(a.poz, POZ_EGRI)
 _PX = [math.log(x) for x, _ in _PE]
 _PY = [k for _, k in _PE]
 _PM = _fc_egimleri(_PX, _PY)
@@ -1138,6 +1192,8 @@ def ortam(klip, f, st):
         # S1b: kopuk hale düzeltmesi l1 irtifasında (15.529 km) 0 → t12 k10 (13.475 km) 1; 1.000 km altında yine 0
         "hale_ic_k": ss(alt, 15.45e6, 13.45e6) * ss(alt, 1.0e6, 1.9e6),
     }
+    if MEVSIM:
+        o["mevsim_k"] = mevsim_k(alt)
     if klip == "t23" and T23_BULUT == "eski":
         o["yerel_bulut_k"] = ss(f, 36, 50) * (1 - ss(f, 66, 76))
         o["perde_k"] = 0.97 * math.exp(-((f - T23_PERDE) / 2.6) ** 2)
@@ -1356,8 +1412,10 @@ def disari_aktar():
                 "tohum_notu": "bu kareler l3 ile ayni sabit tohumla (use_animated_seed=False), digerleri animasyonlu",
                 "pozlama": ({"kip": a.poz, "egri_km_k": _PE, "exposure": a.exposure, "uzay_ev": a.uzay_ev,
                              "not": "pozlama = exposure + uzay_ev * k(irtifa); k Fritsch-Carlson, ln irtifa (poz_egri.py)"
-                                    + ("; egri_f: 25-88 km dugumleri luma tabani %22,5 (F turu, bulutsuz)" if a.poz == "egri_f" else "")}
-                            if a.poz in ("egri", "egri_f") else {"kip": "rampa", "rampa_m": list(POZ_RAMPA)}),
+                                    + ("; egri_f: 25-88 km dugumleri luma tabani %22,5 (F turu, bulutsuz)" if a.poz == "egri_f" else "")
+                                    + ("; egri_g: G4 ilkbahar karisimli dokuyla (poz_egri.py --kip g), 25-1580 km yeniden"
+                                       if a.poz == "egri_g" else "")}
+                            if a.poz in ("egri", "egri_f", "egri_g") else {"kip": "rampa", "rampa_m": list(POZ_RAMPA)}),
                 "zaman": (({"T23_FA": KM.T23_FA, "T23_VARIS": KM.T23_VARIS, "perde_karesi": T23_PERDE,
                             "not": "kare T23_VARIS-83 kamera tam d3 (l3[0]); kare <= T23_FA B turu yolu"} if klip == "t23" else
                            {"T34A_F": KM.T34A_F, "T34A_BEKLE": KM.T34A_BEKLE,
@@ -1369,6 +1427,13 @@ def disari_aktar():
                            {"T34A_BEKLE": KM.T34A_BEKLE,
                             "not": f"F turu: kare 0-{KM.T34A_BEKLE} tam d3 (l3[0]); kare {n - 1} = eski kare 47; zaman egrisi f_turu.ilerleme"})),
             }
+        if MEVSIM and klip in ("t23", "l3", "t34a"):
+            # G4 (brief §14.4.5): kare kare mevsim karışımı (0 Kasım 2025-11-16, 1 ilkbahar; kaynaklar sentinel/KAYNAK.md)
+            js["g_turu"] = {"mevsim": a.mevsim, "mevsim_aralik_m": list(MEVSIM_ARALIK), "mevsim_sabit": a.mevsim_sabit,
+                            "mevsim_k": [round(mevsim_k(KM.kamera(klip, f, D3)["irtifa"]), 6) for f in range(n)],
+                            "dokular": {"kasim": ["s2_bolge.jpg", "s2_genis.jpg"],
+                                        "ilkbahar": ["s2_bolge_ilkbahar.jpg", "s2_genis_ilkbahar.jpg"]},
+                            "not": "mevsim_k = ss(irtifa, UST, ALT): UST ve ustu 0 (l2 = t23[0] eski agacla ayni), ALT ve alti 1"}
         # poster çapaları (döngünün 0. karesi, master px)
         poster = {"l1": "p1", "l2": "p2", "l3": "p3"}.get(klip)
         if poster:
@@ -1544,7 +1609,8 @@ for klip in klipler:
                 bpy.data.images["Render Result"].save_render(os.path.join(kd, f"k_{f:04d}.exr"), scene=sc)
                 im.file_format = "PNG"; im.color_depth = derinlik
             olcum.append({"klip": klip, "kare": f, "sn": round(dt, 3), "kilit_bekleme_sn": round(bekle, 1),
-                          "pozlama": round(sc.view_settings.exposure, 5), "sabit_tohum": sabit})
+                          "pozlama": round(sc.view_settings.exposure, 5), "sabit_tohum": sabit,
+                          **({"mevsim_k": round(float(sc["mevsim_k"]), 6)} if MEVSIM else {})})
             print(f"[KARE] {klip} {f:4d} {dt:6.2f} sn  poz {sc.view_settings.exposure:.4f}  tohum {'sabit' if sabit else 'anim'}",
                   flush=True)
     finally:

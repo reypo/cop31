@@ -3,29 +3,33 @@
 #   python -X utf8 -P scripts/icinden/kodlama-dogrula.py [--liste D:/soft/cop31-varlik/kodlama/render-son.json]
 #        [--fragman D:/soft/cop31-varlik/render-son] [--cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son.json]
 #        [--temel 0.5] [--oturum-temel 1.27] [--vmaf] [--ref D:/soft/cop31-varlik/kodlama/ref]
-#        [--sec l3.av1,t56,r65.av1.dikey] [--yalniz-vmaf]
+#        [--sec l3.av1,t56,r65.av1.dikey] [--yalniz-vmaf] [--esle t78=<klasör>,t89=<klasör>] [--geri-yok r98]
 #
-# Durak zinciri (E turu, §12.1; 12 durak d0–d11): t01 → l1 → t12 → l2 → t23 → l3 → t34 → l4 → t45 → l5 → t56 →
-# (d6: döngü yok, t56 son karesi = p6) → t67 → (d7: t67 son karesi = p7) → t78 → p8 (d8 broşür kapağı; d9–d10 DOM,
-# d11 = t01 + l1 yeniden). Geri: r10 r21 r32 r43 r54 r65 r76 r87 (açık tablo, GERI).
+# Durak zinciri (G turu, §14.4.2; 13 durak d0–d12, kapanış 13): t01 → l1 → t12 → l2 → t23 → l3 → t34 → l4 → t45 →
+# l5 → t56 → (d6: döngü yok, t56 son karesi = p6) → t67 → (d7: p7 = t67 son) → t78 → (d8 masa: p8 = t78 son) → t89 →
+# (d9 kök: p9 = t89 son) → t9a → (d10 gövde: pa) → tab → (d11 dal: pb) → tbc → lc (d12 yaprak; pc = lc[0]).
+# Geri: r10 r21 r32 r43 r54 r65 r76 r87 (açık tablo, GERI; r98 K-son'da kalktı); t89/t9a/tab/tbc geri klipsiz (sitede 350 ms poster çapraz
+# sönmesi, §14.4.1 K4) → geri dikişi ölçülmez, pencere = kritik. `--geri-yok r98`: bütçe merdiveninde kaldırılan geri
+# klip yok sayılır. `--esle klip=klasör`: master kareleri (son-kare posterleri, VMAF referansı) o klasörden (G-B
+# önizleme seti; kodla.mjs --esle ile aynı).
 # 1. Kodek dizesi MP4 örnek tanımından (avcC / hvcC / av1C, RFC 6381): avc1.64001f, hvc1.1.6.L93.90 (x265'in
 #    gerçek dizesi; manifest de bunu kullanır), av01.0.05M.08.
 # 2. Kare sayısı (ffprobe -count_frames) = fragman `kare` (t34: t34.json ya da t34a + t34b).
 # 3. Dikişler (her kodek ve kırpım, kodlanmış kareler): geçişin SON karesi ↔ hedef döngünün 0. karesi ve posteri
 #    (ΔE00 ortalama, hedef ≤ 3); kalkış: döngünün 0. karesi (döngüsüz durakta gelen geçişin son karesi) ↔ çıkan
-#    geçişin 0. karesi (t56[59] ↔ t67[0], t67[47] ↔ t78[0]); t78 son ↔ p8 broşür dikdörtgeninin DIŞINDA; geri:
-#    r(k+1→k) son karesi ↔ l_k 0. karesi ya da (d6/d7) p_k ve gelen geçişin son karesi.
+#    geçişin 0. karesi (t56[53] ↔ t67[0], t67[47] ↔ t78[0], t78[59] ↔ t89[0], t89 ↔ t9a, t9a ↔ tab, tab ↔ tbc); geri:
+#    r(k+1→k) son karesi ↔ l_k 0. karesi ya da (d6–d8) p_k ve gelen geçişin son karesi.
 # 4. Döngü kapanışı: son→ilk fark ↔ ardışık kare farkı (ortalama mutlak /255 ve ΔE00).
 # 5. t34 iç dikişi (kesme k0 ↔ k0+1; k0 = t34a kare − 1, F-B'de 35 ↔ 36, E'de 47 ↔ 48) ve parlama karelerinin tonu
 #    (#FFF1DC). Rapor alanları `fark_kesme`, `k0_ort_rgb`… (`kesme` = [k0, k0+1]).
-# 6. Son-kare posterleri (p6 ← t56, p7 ← t67; §12.6): poster ve her kodekte geçişin son karesi ↔ master son karesi
+# 6. Son-kare posterleri (p6 ← t56, p7 ← t67, p8 ← t78, p9 ← t89, pa ← t9a, pb ← tab; §12.6): poster ve her kodekte geçişin son karesi ↔ master son karesi
 #    (aynı kırpım/ölçek, rgb24): tüm kare, en kötü karo (8×8 ızgara) ve fragman çapalarının çevresi (±60 video px;
 #    başlık/rakam bölgesi; hedef ΔE00 ortalaması ≤ 2).
 # 7. Bütçe (§11.2-3, §12.5; MB = 10^6 bayt): ilk yükleme = temel (HTML+JS+CSS+font, W ölçümü) + t01 + p1 + l1 + t12
 #    ≤ 2,5; d_j'de (j = 1…8) kritik yol t(j→j+1) + l(j+1) + p(j+1) ≤ 1,8 (§11.6-1: d2 istisnası ≤ 2,1; d5/d6'da
 #    döngü yok, d7'de p8, d8'de yalnız geri), pencere = kritik + r(j→j−1) ≤ 2,5 (AV1 d3 istisnası ≤ 2,6; `*_tamam`
-#    istisnalarla, `*_katı_tamam` 1,8 / 2,5 ile); set (video + poster) ≤ 15/kodek; tam tur oturumu (0→11) = set +
-#    oturum-temel (W ölçümü: oturum − set, font/JS/HTML/broşür fotoğrafları) ≤ 12 (AV1).
+#    istisnalarla, `*_katı_tamam` 1,8 / 2,5 ile); set (video + poster) ≤ 15/kodek; tam tur oturumu (0→12) = set +
+#    oturum-temel (W ölçümü: oturum − set, font/JS/HTML/fotoğraflar) ≤ 12 (G-B §14.4.1: AV1 ve HEVC; en çok 12,5).
 # 8. --vmaf: master → aynı kırpım/ölçek (listedeki `kirpim` filtresi, lanczos, 8 bit yuv420p, FFV1 önbellek `--ref`;
 #    önbellek adı kırpım + kaynak kare zamanından özetli, yeniden render'da kendiliğinden yenilenir) ile libvmaf v0.6.1.
 #    Eşikler (§12.6): her dosya ortalama ≥ 90; l3 ≥ 93; duvar klipleri (t56 t67 t78 r65 r76 r87) en kötü kare ≥ 80.
@@ -51,7 +55,16 @@ ap.add_argument("--vmaf", action="store_true")
 ap.add_argument("--ref", default="D:/soft/cop31-varlik/kodlama/ref")
 ap.add_argument("--yalniz-vmaf", action="store_true", help="yalnız VMAF (dikiş/bütçe atlanır; çıktı yalnız vmaf)")
 ap.add_argument("--sec", default="", help="kodek/kare/VMAF yalnız bu çıktılarda: ad[.kodek][.boyut], virgüllü")
+ap.add_argument("--esle", default="", help="master kare klasörü eşlemesi: klip=klasör, virgüllü (kodla.mjs --esle)")
+ap.add_argument("--geri-yok", default="", help="bilerek kaldırılan geri klipler (bütçe merdiveni): r98")
 a = ap.parse_args()
+ESLE = {k: v for k, v in (x.split("=", 1) for x in filter(None, a.esle.split(",")))}
+GERI_YOK = set(filter(None, a.geri_yok.split(",")))
+
+
+def kaynak_dizin(klip):
+    """Klibin master kare klasörü: --esle ya da <fragman>/<klip>."""
+    return Path(ESLE[klip]) if klip in ESLE else Path(a.fragman) / klip
 liste = json.load(open(a.liste, encoding="utf8"))
 _ad = Path(a.liste).stem
 if a.cikti is None:
@@ -61,8 +74,10 @@ BEKLENEN = {"h264": "avc1.64001f", "hevc": "hvc1.1.6.L93.90", "av1": "av01.0.05M
 KODEK_BOYUT = {"dikey": ["h264", "hevc", "av1"], "yatay": ["h264", "av1"]}
 VIDEO = {"dikey": (720, 1280), "yatay": (1280, 720)}
 
-# ---------- durak zinciri (§12.1) ----------
-GERI = {"t01": "r10", "t12": "r21", "t23": "r32", "t34": "r43", "t45": "r54", "t56": "r65", "t67": "r76", "t78": "r87"}
+# ---------- durak zinciri (§12.1; G turu §14.4.2) ----------
+# t89: r98 K-son'da kaldırıldı (§14.4.1 merdiven 4. adım; kodla.mjs GERI ile aynı) → d9→d8 poster çapraz sönmesi.
+GERI = {"t01": "r10", "t12": "r21", "t23": "r32", "t34": "r43", "t45": "r54", "t56": "r65", "t67": "r76", "t78": "r87", "t89": None, "t9a": None, "tab": None, "tbc": None}
+GERI = {k: (None if v in GERI_YOK else v) for k, v in GERI.items()}
 # (gelen geçiş, varış döngüsü, varış posteri, çıkan geçiş)
 HEDEF = [
     ("t01", "l1", "p1", "t12"),
@@ -72,17 +87,19 @@ HEDEF = [
     ("t45", "l5", "p5", "t56"),
     ("t56", None, "p6", "t67"),  # d6 İklim Eylemleri: döngü yok, son kare durur (p6 = t56 son karesi)
     ("t67", None, "p7", "t78"),  # d7 Sen de söz ver: döngü yok (p7 = t67 son karesi)
-    ("t78", None, "p8", None),  # d8 broşür kapağı: p8 = eski p6 plakası; DOM broşür dikdörtgeninin dışında ölçülür
+    ("t78", None, "p8", "t89"),  # d8 masa: p8 = t78 son karesi (G-B; eski plaka kalktı)
+    ("t89", None, "p9", "t9a"),  # d9 fidan-kök: p9 = t89 son
+    ("t9a", None, "pa", "tab"),  # d10 fidan-gövde: pa = t9a son
+    ("tab", None, "pb", "tbc"),  # d11 fidan-dal: pb = tab son
+    ("tbc", "lc", "pc", None),  # d12 fidan-yaprak: lc döngüsü, pc = lc[0]
 ]
+ROLLER = ["dunya", "emanet", "expo", "anatomi", "sutunlar", "duvar", "duvar", "masa", "fidan-kok", "fidan-govde", "fidan-dal", "fidan-yaprak"]
 DURAKLAR = [
     {"id": "d0", "rol": "lombar", "gelen": None, "dongu": None, "poster": None},
-    *[{"id": f"d{i + 1}", "rol": r, "gelen": h[0], "dongu": h[1], "poster": h[2]} for i, (h, r) in enumerate(zip(HEDEF, ["dunya", "emanet", "expo", "anatomi", "sutunlar", "duvar", "duvar", "brosur-kapak"]))],
-    {"id": "d9", "rol": "brosur-sayfa", "gelen": None, "dongu": None, "poster": "p8"},
-    {"id": "d10", "rol": "brosur-arka", "gelen": None, "dongu": None, "poster": "p8"},
-    {"id": "d11", "rol": "dunya", "gelen": "t01", "dongu": "l1", "poster": "p1"},
+    *[{"id": f"d{i + 1}", "rol": r, "gelen": h[0], "dongu": h[1], "poster": h[2]} for i, (h, r) in enumerate(zip(HEDEF, ROLLER))],
 ]
 DUVAR = {"t56", "t67", "t78", "r65", "r76", "r87"}
-SON_KARE = {"p6": "t56", "p7": "t67"}
+SON_KARE = {"p6": "t56", "p7": "t67", "p8": "t78", "p9": "t89", "pa": "t9a", "pb": "tab"}
 
 
 def _sec_oku(s):
@@ -270,20 +287,6 @@ def kirpimY_kare(kirpimY, n=-1):
     return 420
 
 
-def dikdortgen_disi(kaynak, boyut, kirpimY, sekil):
-    """Fragmanın `brosur_dikdortgen`'inin (master px) dışı, video px maskesi; pay 0 ve 45 master px."""
-    fr = fragman(kaynak) or {}
-    if "brosur_dikdortgen" not in fr:
-        return None
-    q = np.array(fr["brosur_dikdortgen"], float)
-    x0, y0, x1, y1 = q[:, 0].min(), q[:, 1].min(), q[:, 0].max(), q[:, 1].max()
-    ox, oy = (420, 0) if boyut == "dikey" else (0, kirpimY_kare(kirpimY, -1))
-    hh, ww = sekil
-    yy, xx = np.mgrid[0:hh, 0:ww] * 1.5
-    xx, yy = xx + ox, yy + oy
-    return {pay: (xx < x0 - pay) | (xx > x1 + pay) | (yy < y0 - pay) | (yy > y1 + pay) for pay in (0, 45)}
-
-
 # 1–2
 for s in [] if a.yalniz_vmaf else liste:
     if s["tur"] == "poster" or not secili(s):
@@ -304,7 +307,7 @@ for D in [] if a.yalniz_vmaf else DURAKLAR:
                 eks.append(f"{D['gelen']}.{kodek}")
             if D["dongu"] and not satir(D["dongu"], "dongu", boyut, kodek):
                 eks.append(f"{D['dongu']}.{kodek}")
-            if D["gelen"] and not satir(GERI[D["gelen"]], "geri", boyut, kodek):
+            if D["gelen"] and GERI.get(D["gelen"]) and not satir(GERI[D["gelen"]], "geri", boyut, kodek):
                 eks.append(f"{GERI[D['gelen']]}.{kodek}")
         if D["poster"] and not satir(D["poster"], "poster", boyut):
             eks.append(f"{D['poster']}.webp")
@@ -322,14 +325,6 @@ for boyut, kodekler in {} if a.yalniz_vmaf else KODEK_BOYUT.items():
             T = K(st)
             P = poster_kare(sp)
             r = {"boyut": boyut, "kodek": kodek, "gecis": t, "poster": p, "dE00_poster": round(de00(T[-1], P), 2)}
-            if t == "t78":
-                # p8 broşürsüz plaka; DOM broşürü dikdörtgende (§11.1 S2-C 2 → §12.5: brosur_dikdortgen t78'de).
-                m = dikdortgen_disi("t78", boyut, st.get("kirpimY"), P.shape[:2])
-                if m is None:
-                    r["not"] = "t78.json'da brosur_dikdortgen yok: yalnız tüm kare"
-                for pay, dis in (m or {}).items():
-                    r[f"dE00_poster_dis{pay}"] = round(de00(T[-1][dis], P[dis]), 3)
-                    r[f"fark_poster_dis{pay}"] = round(fark(T[-1][dis], P[dis]), 3)
             if l:
                 sl = gerekli(l, "dongu", boyut, kodek, "döngü")
                 if sl:
@@ -349,8 +344,9 @@ for boyut, kodekler in {} if a.yalniz_vmaf else KODEK_BOYUT.items():
                 C = K(sc)
                 sonuc["kalkis"].append({"boyut": boyut, "kodek": kodek, "durak": f"d{i + 1}", "dongu": None, "cikan": cikan, "dE00_gelenSon_cikan0": round(de00(T[-1], C[0]), 2), "fark_gelenSon_cikan0": round(fark(T[-1], C[0]), 2), "dE00_poster_cikan0": round(de00(P, C[0]), 2)})
             sonuc["dikis"].append(r)
-            # geri: r(k+1→k) son karesi ↔ önceki durağın dinlenme karesi (l_k 0. karesi; d6/d7'de p_k ve gelen son karesi)
-            if i > 0:
+            # geri: r(k+1→k) son karesi ↔ önceki durağın dinlenme karesi (l_k 0. karesi; d6–d8'de p_k ve gelen son karesi).
+            # Geri klipsiz adım (fidan içi; --geri-yok) poster çapraz sönmesidir: ölçülmez.
+            if i > 0 and GERI.get(t):
                 tp, lp, pp, _ = HEDEF[i - 1]
                 rg = gerekli(GERI[t], "geri", boyut, kodek, "geri")
                 so = gerekli(pp, "poster", boyut, None, "önceki poster")
@@ -374,7 +370,7 @@ for boyut, kodekler in {} if a.yalniz_vmaf else KODEK_BOYUT.items():
 # 6. son-kare posterleri ↔ master (§12.6: başlık/rakam bölgesi ΔE00 ≤ 2)
 def master_kare(kaynak, n, kirp, boyut):
     g, h = VIDEO[boyut]
-    png = Path(a.fragman) / kaynak / f"k_{n:04d}.png"
+    png = kaynak_dizin(kaynak) / f"k_{n:04d}.png"
     if not png.exists():
         return None
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(png), "-vf", f"{kirp},scale={g}:{h}:flags=lanczos,format=rgb24", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True)
@@ -419,6 +415,8 @@ for p, kaynak in {} if a.yalniz_vmaf else SON_KARE.items():
             sonuc["son_kare"].append({"poster": p, "boyut": boyut, "hata": f"master yok: {kaynak}/k_{n:04d}.png"})
             continue
         capa = fr.get("capalar") or (fragman(p) or {}).get("capalar")
+        # Yalnız [x, y] çapaları (S3'ün liste çapaları — kok_uclari, bogumlar, dal_uclari — tek tek ölçülmez).
+        capa = {k: v for k, v in (capa or {}).items() if isinstance(v, list) and len(v) == 2 and all(isinstance(x, (int, float)) for x in v)} or None
         r = {"poster": p, "kaynak": f"{kaynak}[{n}]", "boyut": boyut, "kalite": sp.get("kalite"), "bayt": sp["bayt"], "poster_master": bolge_olc(poster_kare(sp), M, capa, boyut, sp.get("kirpimY"))}
         for kodek in kodekler:
             st = satir(kaynak, "ileri", boyut, kodek)
@@ -445,17 +443,17 @@ for boyut, kodekler in KODEK_BOYUT.items():
     for kodek in kodekler:
         ilk = a.temel * MB + b("t01", "ileri", boyut, kodek) + b("p1", "poster", boyut) + b("l1", "dongu", boyut, kodek) + b("t12", "ileri", boyut, kodek)
         adim = []
-        for j in range(1, len(HEDEF) + 1):  # d1 … d8 (d9–d10 DOM; d11 t01 + l1 önbellekte)
+        for j in range(1, len(HEDEF) + 1):  # d1 … d12 (d12'de ileri yok: kritik 0, pencere = tbc geri yok → 0)
             ileri = HEDEF[j] if j < len(HEDEF) else None  # (t(j→j+1), l(j+1), p(j+1))
             gelen = HEDEF[j - 1][0]
             parca = {
                 "t": b(ileri[0], "ileri", boyut, kodek) if ileri else 0,
                 "l": b(ileri[1], "dongu", boyut, kodek) if ileri and ileri[1] else 0,
                 "p": b(ileri[2], "poster", boyut) if ileri else 0,
-                "r": b(GERI[gelen], "geri", boyut, kodek),
+                "r": b(GERI[gelen], "geri", boyut, kodek) if GERI.get(gelen) else 0,
             }
             kritik = parca["t"] + parca["l"] + parca["p"]
-            adim.append({"varis": f"d{j}", "ileri": ileri[0] if ileri else None, "geri": GERI[gelen], "kritik_MB": round(kritik / MB, 3), "kritik_sinir": kritik_sinir(f"d{j}"), "pencere_MB": round((kritik + parca["r"]) / MB, 3), "pencere_sinir": pencere_sinir(kodek, f"d{j}"), "parca_KB": {k: round(v / 1000) for k, v in parca.items()}})
+            adim.append({"varis": f"d{j}", "ileri": ileri[0] if ileri else None, "geri": GERI.get(gelen), "kritik_MB": round(kritik / MB, 3), "kritik_sinir": kritik_sinir(f"d{j}"), "pencere_MB": round((kritik + parca["r"]) / MB, 3), "pencere_sinir": pencere_sinir(kodek, f"d{j}"), "parca_KB": {k: round(v / 1000) for k, v in parca.items()}})
         video = sum(s["bayt"] for s in liste if s["boyut"] == boyut and s["kodek"] == kodek)
         poster = sum(s["bayt"] for s in liste if s["boyut"] == boyut and s["tur"] == "poster")
         oturum = video + poster + a.oturum_temel * MB
@@ -479,7 +477,7 @@ def ref_kirp(s):
 
 def ref_yol(s):
     # Önbellek adı: kırpım filtresi + kaynak ilk/son karenin değişme zamanı (yeniden render → yeni referans).
-    pngs = sorted((Path(a.fragman) / s["kaynakKlip"]).glob("k_*.png"))
+    pngs = sorted(kaynak_dizin(s["kaynakKlip"]).glob("k_*.png"))
     imza = f"{ref_kirp(s)}|{pngs[0].stat().st_mtime_ns}|{pngs[-1].stat().st_mtime_ns}|{len(pngs)}"
     return Path(a.ref) / f"{s['kaynakKlip']}-{s['boyut']}-{hashlib.sha256(imza.encode()).hexdigest()[:8]}.mkv"
 
@@ -491,7 +489,7 @@ def ref_yap(s):
     y.parent.mkdir(parents=True, exist_ok=True)
     kirp = ref_kirp(s)
     g, h = VIDEO[s["boyut"]]
-    dz = Path(a.fragman) / s["kaynakKlip"]
+    dz = kaynak_dizin(s["kaynakKlip"])
     gec = y.with_suffix(".tmp.mkv")
     bas = min(int(p.stem[2:]) for p in dz.glob("k_*.png"))
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", "30", "-start_number", str(bas), "-i", str(dz / "k_%04d.png"), "-vf", f"{kirp},scale={g}:{h}:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "ffv1", "-level", "3", str(gec)], check=True)
@@ -539,6 +537,9 @@ for k in ("dikis", "kalkis", "dongu", "t34", "geri", "son_kare"):
         print(k, json.dumps(r, ensure_ascii=False))
 for k, v in sonuc["butce"].items():
     print("butce", k, f"ilk {v['ilk_MB']} MB, kritik maks {v['kritik_maks_MB']}, pencere maks {v['pencere_maks_MB']}, set {v['set_MB']} MB (video {v['video_MB']}, poster {v['poster_MB']}), oturum {v['oturum_MB']} (temel {v['oturum_temel_MB']})", "kritik", [x["kritik_MB"] for x in v["adim"]], "pencere", [x["pencere_MB"] for x in v["adim"]], f"§11.6-1 kritik {v['kritik_tamam']} pencere {v['pencere_tamam']} (katı {v['kritik_katı_tamam']}/{v['pencere_katı_tamam']}) oturum {v['oturum_tamam']}")
+for k in ("dikey-av1", "dikey-hevc"):
+    if k in sonuc["butce"]:
+        print(f"bütçe adımları ({k}):", " · ".join(f"{x['varis']} {x['kritik_MB']}/{x['pencere_MB']}" for x in sonuc["butce"][k]["adim"]))
 if sonuc["vmaf"]:
     alt = [x for x in sonuc["vmaf"] if "ort" in x and not x["tamam"]]
     print("VMAF eşik altı (§12.6):", len(alt), [(x["boyut"], x["klip"], x["kodek"], x["ort"], x["min"]) for x in alt])

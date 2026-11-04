@@ -1,6 +1,7 @@
 """S1 (dış sahne) doku ve geometri hazırlığı — sistem Python'u (numpy, PIL, rasterio, shapely; `su` için scipy).
 
     python -X utf8 -P hazirla.py [su|dunya|c1|rolyef|s2|arazi|osm|hepsi] [--varlik D:/soft/cop31-varlik]
+    python -X utf8 -P hazirla.py s2 --mevsim ilkbahar        # G4: s2_{bolge,genis,yakin}_ilkbahar.jpg (Kasım dosyaları durur)
 
 Çıktı: <varlik>/s1/tex/ (depo dışı); `su` → <varlik>/dunya/su-maskesi-*.png (+ .c-yedek.png, su-maskesi.json) ve
 <varlik>/render-son/_onizleme/s1-maske-fark.png (kaynak: GEBCO bath + elev, BMNG Kasım). Bellek: 21600'lük kaynaklar
@@ -30,6 +31,10 @@ from geo import LAT0, LON0, KX, KY, R, eqc_latlon, latlon_enu  # noqa: E402
 p = argparse.ArgumentParser()
 p.add_argument("is_", nargs="?", default="hepsi")
 p.add_argument("--varlik", default="D:/soft/cop31-varlik")
+# G turu (brief §14.4.5, G4): s2 işinin kaynak sahnesi. kasim (varsayılan): s2-*-kasim → s2_{bolge,genis,yakin}.jpg (bayt
+# bayt eskisi); ilkbahar: s2-*-ilkbahar → s2_{bolge,genis,yakin}_ilkbahar.jpg (aynı 45→70 km C1 halka düzeltmesi). Yalnız
+# `s2` işiyle geçerli (öteki işler mevsimden bağımsız; dunya/c1'in S2 deniz rengi Kasım bölge mozaiğinden kalır).
+p.add_argument("--mevsim", default="kasim", choices=["kasim", "ilkbahar"])
 a = p.parse_args()
 V = a.varlik
 OUT = os.path.join(V, "s1", "tex")
@@ -622,12 +627,16 @@ def rolyef():
 # ---------------------------------------------------------------------------------------------- Sentinel-2
 def s2():
     """s2-bolge-kasim: kenardaki 25 km'lik halkada düşük frekanslı renk BMNG C1'e eşitlenir (küre yamasında dikiş
-    olmasın). s2-genis-kasim aynen JPEG'e (yükleme hızı)."""
+    olmasın). s2-genis-kasim aynen JPEG'e (yükleme hızı).
+    G4 (--mevsim ilkbahar): aynı işlem s2-*-ilkbahar kaynaklarıyla; çıktı adlarına _ilkbahar eklenir, Kasım dosyaları
+    yazılmaz. Halka düzeltmesinin oran istatistiği ayrıca s2_bolge_ilkbahar.json'a yazılır (yalnız ilkbahar)."""
     rasterio = rio()
-    s2b = Image.open(os.path.join(V, "sentinel", "s2-bolge-kasim.png")).convert("RGB")
+    kay = "kasim" if a.mevsim == "kasim" else "ilkbahar"          # sentinel/s2-<kutu>-<kay>.*
+    ek = "" if a.mevsim == "kasim" else "_ilkbahar"                # s1/tex/s2_<kutu><ek>.jpg
+    s2b = Image.open(os.path.join(V, "sentinel", f"s2-bolge-{kay}.png")).convert("RGB")
     n = s2b.size[0]                 # 6144, 25 m/px, ±76,8 km
     # BMNG C1 aynı kutuya: eqc doğrusal → enlem/boylam doğrusal
-    bb = json.load(open(os.path.join(V, "sentinel", "s2-bolge-kasim.json")))["bbox_wgs84"]
+    bb = json.load(open(os.path.join(V, "sentinel", f"s2-bolge-{kay}.json")))["bbox_wgs84"]
     c1 = np.asarray(Image.open(os.path.join(OUT, "c1_yama.jpg")).convert("RGB"))
     la1 = C1_ENLEM[1]; lo0 = C1_BOYLAM[0]
     x0 = (bb["bati"] - lo0) * 240; x1 = (bb["dogu"] - lo0) * 240
@@ -653,17 +662,27 @@ def s2():
     for r0 in range(0, n, 1024):
         r1 = min(n, r0 + 1024)
         out[r0:r1] = np.clip(A[r0:r1] * corr_big[r0:r1], 0, 255).astype(np.uint8)
-    Image.fromarray(out).save(os.path.join(OUT, "s2_bolge.jpg"), quality=94, subsampling=0)
-    Image.fromarray(out).resize((1024, 1024), Image.LANCZOS).save(os.path.join(OUT, "_onizleme_s2_bolge.jpg"), quality=88)
-    log("s2_bolge.jpg, halka düzeltmesi oran ort", oran.reshape(-1, 3).mean(0).round(3))
+    Image.fromarray(out).save(os.path.join(OUT, f"s2_bolge{ek}.jpg"), quality=94, subsampling=0)
+    Image.fromarray(out).resize((1024, 1024), Image.LANCZOS).save(os.path.join(OUT, f"_onizleme_s2_bolge{ek}.jpg"), quality=88)
+    log(f"s2_bolge{ek}.jpg, halka düzeltmesi oran ort", oran.reshape(-1, 3).mean(0).round(3))
+    if ek:
+        # G4: halka düzeltmesinin büyüklüğü (oran = BMNG C1 / S2, ~3 km ölçeğinde; w = 45→70 km smoothstep)
+        hk = w > 0.0
+        json.dump({"kaynak": f"s2-bolge-{kay}.png", "c1": "c1_yama.jpg", "halka_km": [45.0, 70.0], "izgara": [K, K],
+                   "oran_ort_rgb": [round(float(x), 4) for x in oran.reshape(-1, 3).mean(0)],
+                   "oran_halka_agirlikli_rgb": [round(float(x), 4) for x in
+                                                (oran * w[..., None]).reshape(-1, 3).sum(0) / max(float(w.sum()), 1e-9)],
+                   "duzeltme_halka_ort_rgb": [round(float(x), 4) for x in corr[hk].reshape(-1, 3).mean(0)],
+                   "duzeltme_dis_kenar_ort_rgb": [round(float(x), 4) for x in corr[w >= 0.999].reshape(-1, 3).mean(0)]},
+                  open(os.path.join(OUT, f"s2_bolge{ek}.json"), "w"), ensure_ascii=False, indent=1)
     del A, out, corr_big
-    g = Image.open(os.path.join(V, "sentinel", "s2-genis-kasim.png")).convert("RGB")
-    g.save(os.path.join(OUT, "s2_genis.jpg"), quality=95, subsampling=0)
-    log("s2_genis.jpg")
+    g = Image.open(os.path.join(V, "sentinel", f"s2-genis-{kay}.png")).convert("RGB")
+    g.save(os.path.join(OUT, f"s2_genis{ek}.jpg"), quality=95, subsampling=0)
+    log(f"s2_genis{ek}.jpg")
     # yakın 2 m mozaik (10 m'den büyütme) — yakın plan zemin rengi için ±3,072 km
-    y = Image.open(os.path.join(V, "sentinel", "s2-yakin-kasim.png")).convert("RGB")
-    y.save(os.path.join(OUT, "s2_yakin.jpg"), quality=95, subsampling=0)
-    log("s2_yakin.jpg")
+    y = Image.open(os.path.join(V, "sentinel", f"s2-yakin-{kay}.png")).convert("RGB")
+    y.save(os.path.join(OUT, f"s2_yakin{ek}.jpg"), quality=95, subsampling=0)
+    log(f"s2_yakin{ek}.jpg")
 
 
 # ---------------------------------------------------------------------------------------------- arazi
@@ -773,6 +792,8 @@ def osm():
 
 if __name__ == "__main__":
     isler = {"su": su, "dunya": dunya, "c1": c1, "rolyef": rolyef, "s2": s2, "arazi": arazi, "osm": osm}
+    if a.mevsim != "kasim" and a.is_ != "s2":
+        sys.exit(f"--mevsim {a.mevsim} yalnız 's2' işiyle geçerli (öteki işler mevsimden bağımsız)")
     if a.is_ == "hepsi":
         for k in ("su", "dunya", "c1", "rolyef", "s2", "arazi", "osm"):
             isler[k]()

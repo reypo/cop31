@@ -23,7 +23,7 @@ const featured = [
   {
     href: "/icinden",
     title: "COP31'in İçinden",
-    text: "Resmî COP31 logosundan uzaya, Antalya Expo'ya, standımıza ve broşürümüze bölüm bölüm inen sinematik bir dalış.",
+    text: "Resmî COP31 logosundan uzaya, Antalya Expo'ya ve standımıza bölüm bölüm inen sinematik bir dalış; masadaki broşürden bizi anlatan bir fidan büyür.",
     art: <IcindenArt />,
     genis: true,
     // Kart görseli p1 render'ından: NASA ve değiştirilmiş Copernicus Sentinel verisi içerir (atıf zorunlu, kartın hemen altında).

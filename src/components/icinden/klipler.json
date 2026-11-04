@@ -1,6 +1,6 @@
 {
- "surum": 2,
- "olusturma": "2026-11-03T22:01:04.887Z",
+ "surum": 3,
+ "olusturma": "2026-11-04T12:30:29.533Z",
  "kaynak": "render",
  "fps": 30,
  "master": 1920,
@@ -206,22 +206,10 @@
    },
    "etiketler": {
     "dikey": [
-     {
-      "ad": "antalya",
-      "metin": "9–20 Kasım 2026",
-      "x": 386.5,
-      "y": 758.1,
-      "tur": "kunye"
-     }
+     {"ad": "antalya", "metin": "9–20 Kasım 2026", "x": 386.5, "y": 758.1, "tur": "kunye"}
     ],
     "yatay": [
-     {
-      "ad": "antalya",
-      "metin": "9–20 Kasım 2026",
-      "x": 666.5,
-      "y": 478.1,
-      "tur": "kunye"
-     }
+     {"ad": "antalya", "metin": "9–20 Kasım 2026", "x": 666.5, "y": 478.1, "tur": "kunye"}
     ]
    },
    "ozel": {
@@ -1692,24 +1680,24 @@
     "kare": 72,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t23.a73d3c28.h264.mp4",
-      "hevc": "/icinden/v/d/t23.11b35728.hevc.mp4",
-      "av1": "/icinden/v/d/t23.e1f4f36e.av1.mp4"
+      "h264": "/icinden/v/d/t23.26c320cc.h264.mp4",
+      "hevc": "/icinden/v/d/t23.ddf9e3fc.hevc.mp4",
+      "av1": "/icinden/v/d/t23.1011fa0f.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t23.1d39d34c.h264.mp4",
-      "av1": "/icinden/v/y/t23.6ae3b15d.av1.mp4"
+      "h264": "/icinden/v/y/t23.411c0539.h264.mp4",
+      "av1": "/icinden/v/y/t23.0ec5e92f.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 1529877,
-      "hevc": 1512039,
-      "av1": 1359125
+      "h264": 1545079,
+      "hevc": 1491720,
+      "av1": 1376135
      },
      "yatay": {
-      "h264": 1507724,
-      "av1": 1304581
+      "h264": 1492822,
+      "av1": 1313889
      }
     },
     "geri": {
@@ -1718,24 +1706,24 @@
      "kare": 72,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r32.b9212e56.h264.mp4",
-       "hevc": "/icinden/v/d/r32.358f62cb.hevc.mp4",
-       "av1": "/icinden/v/d/r32.e0338a5d.av1.mp4"
+       "h264": "/icinden/v/d/r32.a1751227.h264.mp4",
+       "hevc": "/icinden/v/d/r32.a4d31aaf.hevc.mp4",
+       "av1": "/icinden/v/d/r32.642412ad.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r32.7ab9b0e9.h264.mp4",
-       "av1": "/icinden/v/y/r32.78ec1294.av1.mp4"
+       "h264": "/icinden/v/y/r32.e760df86.h264.mp4",
+       "av1": "/icinden/v/y/r32.69bdda59.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 1327277,
-       "hevc": 1225806,
-       "av1": 1338361
+       "h264": 1358714,
+       "hevc": 1221750,
+       "av1": 1359995
       },
       "yatay": {
-       "h264": 1148592,
-       "av1": 1291900
+       "h264": 1150870,
+       "av1": 1297572
       }
      }
     },
@@ -1743,248 +1731,34 @@
    },
    "etiketler": {
     "dikey": [
-     {
-      "ad": "emanet01",
-      "metin": "",
-      "x": 159.6,
-      "y": 519.9,
-      "tur": "emanet",
-      "no": 1,
-      "donem": "Doğal miras"
-     },
-     {
-      "ad": "emanet02",
-      "metin": "",
-      "x": 358.5,
-      "y": 579.8,
-      "tur": "emanet",
-      "no": 2,
-      "donem": "Tunç Çağı"
-     },
-     {
-      "ad": "emanet03",
-      "metin": "",
-      "x": 117.9,
-      "y": 643.4,
-      "tur": "emanet",
-      "no": 3,
-      "donem": "Lidya – Demir Çağı"
-     },
-     {
-      "ad": "emanet04",
-      "metin": "",
-      "x": 157.4,
-      "y": 747.5,
-      "tur": "emanet",
-      "no": 4,
-      "donem": "Likya – Helenistik",
-      "dx": -10
-     },
-     {
-      "ad": "emanet05",
-      "metin": "",
-      "x": 202.1,
-      "y": 719.7,
-      "tur": "emanet",
-      "no": 5,
-      "donem": "Helenistik – Roma",
-      "dx": -10
-     },
-     {
-      "ad": "emanet06",
-      "metin": "",
-      "x": 362.6,
-      "y": 658,
-      "tur": "emanet",
-      "no": 6,
-      "donem": "Bizans",
-      "dx": 10
-     },
-     {
-      "ad": "emanet07",
-      "metin": "",
-      "x": 318.7,
-      "y": 663.5,
-      "tur": "emanet",
-      "no": 7,
-      "donem": "Selçuklu",
-      "dx": -10
-     },
-     {
-      "ad": "emanet08",
-      "metin": "",
-      "x": 597.3,
-      "y": 577.6,
-      "tur": "emanet",
-      "no": 8,
-      "donem": "Selçuklu"
-     },
-     {
-      "ad": "emanet09",
-      "metin": "",
-      "x": 566.6,
-      "y": 673.7,
-      "tur": "emanet",
-      "no": 9,
-      "donem": "Akkoyunlu"
-     },
-     {
-      "ad": "emanet10",
-      "metin": "",
-      "x": 290,
-      "y": 521.7,
-      "tur": "emanet",
-      "no": 10,
-      "donem": "Osmanlı"
-     },
-     {
-      "ad": "emanet11",
-      "metin": "",
-      "x": 210,
-      "y": 588.5,
-      "tur": "emanet",
-      "no": 11,
-      "donem": "Osmanlı'dan bugüne"
-     },
-     {
-      "ad": "emanet12",
-      "metin": "",
-      "x": 519.7,
-      "y": 708.4,
-      "tur": "emanet",
-      "no": 12,
-      "donem": "Neolitik"
-     },
-     {
-      "ad": "antalya",
-      "metin": "Antalya",
-      "x": 211.3,
-      "y": 724.1,
-      "tur": "yapi",
-      "nokta": true
-     }
+     {"ad": "emanet01", "metin": "", "x": 159.6, "y": 519.9, "tur": "emanet", "no": 1, "donem": "Doğal miras"},
+     {"ad": "emanet02", "metin": "", "x": 358.5, "y": 579.8, "tur": "emanet", "no": 2, "donem": "Tunç Çağı"},
+     {"ad": "emanet03", "metin": "", "x": 117.9, "y": 643.4, "tur": "emanet", "no": 3, "donem": "Lidya – Demir Çağı"},
+     {"ad": "emanet04", "metin": "", "x": 157.4, "y": 747.5, "tur": "emanet", "no": 4, "donem": "Likya – Helenistik", "dx": -10},
+     {"ad": "emanet05", "metin": "", "x": 202.1, "y": 719.7, "tur": "emanet", "no": 5, "donem": "Helenistik – Roma", "dx": -10},
+     {"ad": "emanet06", "metin": "", "x": 362.6, "y": 658, "tur": "emanet", "no": 6, "donem": "Bizans", "dx": 10},
+     {"ad": "emanet07", "metin": "", "x": 318.7, "y": 663.5, "tur": "emanet", "no": 7, "donem": "Selçuklu", "dx": -10},
+     {"ad": "emanet08", "metin": "", "x": 597.3, "y": 577.6, "tur": "emanet", "no": 8, "donem": "Selçuklu"},
+     {"ad": "emanet09", "metin": "", "x": 566.6, "y": 673.7, "tur": "emanet", "no": 9, "donem": "Akkoyunlu"},
+     {"ad": "emanet10", "metin": "", "x": 290, "y": 521.7, "tur": "emanet", "no": 10, "donem": "Osmanlı"},
+     {"ad": "emanet11", "metin": "", "x": 210, "y": 588.5, "tur": "emanet", "no": 11, "donem": "Osmanlı'dan bugüne"},
+     {"ad": "emanet12", "metin": "", "x": 519.7, "y": 708.4, "tur": "emanet", "no": 12, "donem": "Neolitik"},
+     {"ad": "antalya", "metin": "Antalya", "x": 211.3, "y": 724.1, "tur": "yapi", "nokta": true}
     ],
     "yatay": [
-     {
-      "ad": "emanet01",
-      "metin": "",
-      "x": 439.6,
-      "y": 239.9,
-      "tur": "emanet",
-      "no": 1,
-      "donem": "Doğal miras"
-     },
-     {
-      "ad": "emanet02",
-      "metin": "",
-      "x": 638.5,
-      "y": 299.8,
-      "tur": "emanet",
-      "no": 2,
-      "donem": "Tunç Çağı"
-     },
-     {
-      "ad": "emanet03",
-      "metin": "",
-      "x": 397.9,
-      "y": 363.4,
-      "tur": "emanet",
-      "no": 3,
-      "donem": "Lidya – Demir Çağı"
-     },
-     {
-      "ad": "emanet04",
-      "metin": "",
-      "x": 437.4,
-      "y": 467.5,
-      "tur": "emanet",
-      "no": 4,
-      "donem": "Likya – Helenistik",
-      "dx": -10
-     },
-     {
-      "ad": "emanet05",
-      "metin": "",
-      "x": 482.1,
-      "y": 439.7,
-      "tur": "emanet",
-      "no": 5,
-      "donem": "Helenistik – Roma",
-      "dx": -10
-     },
-     {
-      "ad": "emanet06",
-      "metin": "",
-      "x": 642.6,
-      "y": 378,
-      "tur": "emanet",
-      "no": 6,
-      "donem": "Bizans",
-      "dx": 10
-     },
-     {
-      "ad": "emanet07",
-      "metin": "",
-      "x": 598.7,
-      "y": 383.5,
-      "tur": "emanet",
-      "no": 7,
-      "donem": "Selçuklu",
-      "dx": -10
-     },
-     {
-      "ad": "emanet08",
-      "metin": "",
-      "x": 877.3,
-      "y": 297.6,
-      "tur": "emanet",
-      "no": 8,
-      "donem": "Selçuklu"
-     },
-     {
-      "ad": "emanet09",
-      "metin": "",
-      "x": 846.6,
-      "y": 393.7,
-      "tur": "emanet",
-      "no": 9,
-      "donem": "Akkoyunlu"
-     },
-     {
-      "ad": "emanet10",
-      "metin": "",
-      "x": 570,
-      "y": 241.7,
-      "tur": "emanet",
-      "no": 10,
-      "donem": "Osmanlı"
-     },
-     {
-      "ad": "emanet11",
-      "metin": "",
-      "x": 490,
-      "y": 308.5,
-      "tur": "emanet",
-      "no": 11,
-      "donem": "Osmanlı'dan bugüne"
-     },
-     {
-      "ad": "emanet12",
-      "metin": "",
-      "x": 799.7,
-      "y": 428.4,
-      "tur": "emanet",
-      "no": 12,
-      "donem": "Neolitik"
-     },
-     {
-      "ad": "antalya",
-      "metin": "Antalya",
-      "x": 491.3,
-      "y": 444.1,
-      "tur": "yapi",
-      "nokta": true
-     }
+     {"ad": "emanet01", "metin": "", "x": 439.6, "y": 239.9, "tur": "emanet", "no": 1, "donem": "Doğal miras"},
+     {"ad": "emanet02", "metin": "", "x": 638.5, "y": 299.8, "tur": "emanet", "no": 2, "donem": "Tunç Çağı"},
+     {"ad": "emanet03", "metin": "", "x": 397.9, "y": 363.4, "tur": "emanet", "no": 3, "donem": "Lidya – Demir Çağı"},
+     {"ad": "emanet04", "metin": "", "x": 437.4, "y": 467.5, "tur": "emanet", "no": 4, "donem": "Likya – Helenistik", "dx": -10},
+     {"ad": "emanet05", "metin": "", "x": 482.1, "y": 439.7, "tur": "emanet", "no": 5, "donem": "Helenistik – Roma", "dx": -10},
+     {"ad": "emanet06", "metin": "", "x": 642.6, "y": 378, "tur": "emanet", "no": 6, "donem": "Bizans", "dx": 10},
+     {"ad": "emanet07", "metin": "", "x": 598.7, "y": 383.5, "tur": "emanet", "no": 7, "donem": "Selçuklu", "dx": -10},
+     {"ad": "emanet08", "metin": "", "x": 877.3, "y": 297.6, "tur": "emanet", "no": 8, "donem": "Selçuklu"},
+     {"ad": "emanet09", "metin": "", "x": 846.6, "y": 393.7, "tur": "emanet", "no": 9, "donem": "Akkoyunlu"},
+     {"ad": "emanet10", "metin": "", "x": 570, "y": 241.7, "tur": "emanet", "no": 10, "donem": "Osmanlı"},
+     {"ad": "emanet11", "metin": "", "x": 490, "y": 308.5, "tur": "emanet", "no": 11, "donem": "Osmanlı'dan bugüne"},
+     {"ad": "emanet12", "metin": "", "x": 799.7, "y": 428.4, "tur": "emanet", "no": 12, "donem": "Neolitik"},
+     {"ad": "antalya", "metin": "Antalya", "x": 491.3, "y": 444.1, "tur": "yapi", "nokta": true}
     ]
    }
   },
@@ -1995,14 +1769,14 @@
    "okuma": [1688000, 1672000, 1578000, 1387000, 1143000, 917100, 737800, 596100, 483600, 394100, 322500, 265100, 218800, 181300, 150900, 126100, 105900, 89220, 75510, 64160, 54750, 46910, 40350, 34850, 30230, 26320, 23010, 20190, 17790, 15700, 13870, 12250, 10820, 9545, 8408, 7396, 6496, 5697, 5005, 4444, 3986, 3608, 3292, 3026, 2800, 2607, 2440, 2296, 2170, 2061, 1965, 1880, 1806, 1741, 1685, 1635, 1592, 1554, 1523, 1496, 1474, 1456, 1442, 1431, 1425, 1421, 1420, 1420, 1420, 1420, 1420, 1420],
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p3.491502ef.webp",
-     "bayt": 168554,
-     "lqip": "data:image/webp;base64,UklGRjwBAABXRUJQVlA4IDABAADwBgCdASoYACsAPtFaqE+oJKOiKrgIAQAaCWcAzNbyUe2bq7SfNo77R+LVFgYy57BnMMqp/4RCXEgZjkzk5WgAAP75bLide+MK8+q/ddSUL3ZtvQcdY86cYD7okv6bsXPJVkYhG1aFMz39tceB7IWzZ7+5UERJH3odPsJm2R2LtmFkxZ6EVVKedJggeU6Z38sOkM7FC9zO6A8Z6mGlxVioTunOXxqrVf0pbH/A2aIziB6fNULm6jLM7jakZZ6wPs1zSlpOZkJiMrL5ljfbe8reL5u46sCxlanKKdzrqCUqRRkSZjuvGynDa7Twfeu3+4pMcFllJPBbd9GMbQMrEO/LgmRp8DT0GT8d5jmTTEcZPx5pZMSUYpHwnyR42D93umFNbY9DuStrTuop6AUgwAAA"
+     "dosya": "/icinden/p/d/p3.f695678c.webp",
+     "bayt": 170024,
+     "lqip": "data:image/webp;base64,UklGRkwBAABXRUJQVlA4IEABAACwBwCdASoYACsAPtFYqE+oJKOiKrgIAQAaCWcAthrwJ+BcM0l7QCDLY7jR1r1Mxnx9VOpcE/2pf17y7YG7d4EF+sxg5R5AAP75bLide+MK8+rzDBEiBPPjY67rfEwCNV8+WW9lPr3bOkWWLL5+gAxRY6F1DsZGFXgmL1pXNGR9nnbXWAZkgSKM5di+oNDICG50HUnXIApUyKKe5WfjMmzg4Obx1bYMhmACaTcBadzDExstqohb0A1QoZuNvNCeDrkjlCXG0k54NTQHerygJwDiPcFB4Bck4foyasrnhwOqGFPt+gHGDQyipS7ZmffXNPXjqJhW0tQERbIpEc08DrJTcGKSQ8czmdiqXZ0eaX+V5VCDhNWn/GdOfucKhDRvXxoDR+6N9qelfP3ln8cc2pyMf+CYiUxoq/tD/JI6lTNgAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p3.7628f30c.webp",
-     "bayt": 176202,
-     "lqip": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAACwBACdASoYAA4APtFUo0uoJKMhsAgBABoJZQCsBagxgA5PmUBe1cFAhN2xymgAAP6RqBSATulAs6C5gNMAexWNhL49YhloKpob+kh09El8E8HNajgKArRX3zpJf9eExNUFCvRcRp9YHp9vqb2kVsSLXVFTqQamJC/XzR8A2XisfAmmQ4AAAA=="
+     "dosya": "/icinden/p/y/p3.1072fbb8.webp",
+     "bayt": 177384,
+     "lqip": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAACQBACdASoYAA4APtFUo0uoJKMhsAgBABoJZQC7BagxgA5PmUBWEy9OHretHcAA/pGoFJI/RvnHuguYDTAHsVjYS+PVs333aQyfOBIiNJ4lCXVI/wR49nN1FlOkZqIkm4DsLNQD/2B5TBrbsXqo0O7eXMrS1TEhfuIcxDrxehGOJTj6wOa4AA=="
     }
    },
    "dongu": {
@@ -2011,24 +1785,24 @@
     "kare": 150,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/l3.a724c7d1.h264.mp4",
-      "hevc": "/icinden/v/d/l3.c9b2e929.hevc.mp4",
-      "av1": "/icinden/v/d/l3.b299ee8b.av1.mp4"
+      "h264": "/icinden/v/d/l3.f132927e.h264.mp4",
+      "hevc": "/icinden/v/d/l3.eae95486.hevc.mp4",
+      "av1": "/icinden/v/d/l3.5f5c7ab7.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/l3.a56ac4ef.h264.mp4",
-      "av1": "/icinden/v/y/l3.b8283a89.av1.mp4"
+      "h264": "/icinden/v/y/l3.698d03e9.h264.mp4",
+      "av1": "/icinden/v/y/l3.c6802d72.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 324307,
-      "hevc": 259636,
-      "av1": 468946
+      "h264": 332240,
+      "hevc": 264924,
+      "av1": 480137
      },
      "yatay": {
-      "h264": 349004,
-      "av1": 500693
+      "h264": 352233,
+      "av1": 511117
      }
     }
    },
@@ -2038,24 +1812,24 @@
     "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t34.ceb6da90.h264.mp4",
-      "hevc": "/icinden/v/d/t34.db7f5790.hevc.mp4",
-      "av1": "/icinden/v/d/t34.933cc0b5.av1.mp4"
+      "h264": "/icinden/v/d/t34.fc565fce.h264.mp4",
+      "hevc": "/icinden/v/d/t34.5d50e9e8.hevc.mp4",
+      "av1": "/icinden/v/d/t34.651e05a3.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t34.0fd7a1ac.h264.mp4",
-      "av1": "/icinden/v/y/t34.1d46f566.av1.mp4"
+      "h264": "/icinden/v/y/t34.a2b4478d.h264.mp4",
+      "av1": "/icinden/v/y/t34.022cd6ba.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 864321,
-      "hevc": 797102,
-      "av1": 872186
+      "h264": 882231,
+      "hevc": 799605,
+      "av1": 880869
      },
      "yatay": {
-      "h264": 895749,
-      "av1": 877741
+      "h264": 916935,
+      "av1": 888808
      }
     },
     "geri": {
@@ -2064,24 +1838,24 @@
      "kare": 60,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r43.b7045440.h264.mp4",
-       "hevc": "/icinden/v/d/r43.f37f5d14.hevc.mp4",
-       "av1": "/icinden/v/d/r43.0e811470.av1.mp4"
+       "h264": "/icinden/v/d/r43.c3fdc00c.h264.mp4",
+       "hevc": "/icinden/v/d/r43.5d2bb97d.hevc.mp4",
+       "av1": "/icinden/v/d/r43.c83a0eb7.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r43.8482642a.h264.mp4",
-       "av1": "/icinden/v/y/r43.68a91183.av1.mp4"
+       "h264": "/icinden/v/y/r43.733233ce.h264.mp4",
+       "av1": "/icinden/v/y/r43.7e8e3655.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 897105,
-       "hevc": 708682,
-       "av1": 846682
+       "h264": 904723,
+       "hevc": 717624,
+       "av1": 859664
       },
       "yatay": {
-       "h264": 836389,
-       "av1": 847117
+       "h264": 863322,
+       "av1": 854621
       }
      }
     },
@@ -2089,78 +1863,18 @@
    },
    "etiketler": {
     "dikey": [
-     {
-      "ad": "expo",
-      "metin": "Antalya Expo Center",
-      "x": 360,
-      "y": 658.3,
-      "tur": "yapi"
-     },
-     {
-      "ad": "d400",
-      "metin": "D400",
-      "x": 211.9,
-      "y": 809.8,
-      "tur": "yapi"
-     },
-     {
-      "ad": "beydaglari",
-      "metin": "Beydağları",
-      "x": 342.3,
-      "y": 173.5,
-      "tur": "doga"
-     },
-     {
-      "ad": "antalya",
-      "metin": "Antalya",
-      "x": 363.7,
-      "y": 291.9,
-      "tur": "yapi"
-     },
-     {
-      "ad": "korfez",
-      "metin": "Antalya Körfezi",
-      "x": 226.3,
-      "y": 270,
-      "tur": "doga"
-     }
+     {"ad": "expo", "metin": "Antalya Expo Center", "x": 360, "y": 658.3, "tur": "yapi"},
+     {"ad": "d400", "metin": "D400", "x": 211.9, "y": 809.8, "tur": "yapi"},
+     {"ad": "beydaglari", "metin": "Beydağları", "x": 342.3, "y": 173.5, "tur": "doga"},
+     {"ad": "antalya", "metin": "Antalya", "x": 363.7, "y": 291.9, "tur": "yapi"},
+     {"ad": "korfez", "metin": "Antalya Körfezi", "x": 226.3, "y": 270, "tur": "doga"}
     ],
     "yatay": [
-     {
-      "ad": "expo",
-      "metin": "Antalya Expo Center",
-      "x": 640,
-      "y": 525,
-      "tur": "yapi"
-     },
-     {
-      "ad": "d400",
-      "metin": "D400",
-      "x": 491.9,
-      "y": 676.5,
-      "tur": "yapi"
-     },
-     {
-      "ad": "beydaglari",
-      "metin": "Beydağları",
-      "x": 622.3,
-      "y": 40.2,
-      "tur": "doga"
-     },
-     {
-      "ad": "antalya",
-      "metin": "Antalya",
-      "x": 643.7,
-      "y": 158.6,
-      "tur": "yapi"
-     },
-     {
-      "ad": "korfez",
-      "metin": "Antalya Körfezi",
-      "x": 506.3,
-      "y": 136.7,
-      "tur": "doga"
-     }
+     {"ad": "expo", "metin": "Antalya Expo Center", "x": 640, "y": 525, "tur": "yapi"},
+     {"ad": "d400", "metin": "D400", "x": 491.9, "y": 676.5, "tur": "yapi"},
+     {"ad": "beydaglari", "metin": "Beydağları", "x": 622.3, "y": 40.2, "tur": "doga"},
+     {"ad": "antalya", "metin": "Antalya", "x": 643.7, "y": 158.6, "tur": "yapi"},
+     {"ad": "korfez", "metin": "Antalya Körfezi", "x": 506.3, "y": 136.7, "tur": "doga"}
     ]
    }
   },
@@ -2265,64 +1979,15 @@
    },
    "etiketler": {
     "dikey": [
-     {
-      "ad": "rotunda",
-      "metin": "Emanet Rotundası",
-      "x": 324.5,
-      "y": 633.8,
-      "tur": "bolge",
-      "no": 1
-     },
-     {
-      "ad": "kiosk",
-      "metin": "Söz Kiosku",
-      "x": 350.1,
-      "y": 587.5,
-      "tur": "bolge",
-      "no": 3
-     },
-     {
-      "ad": "amfi",
-      "metin": "Amfi",
-      "x": 477.3,
-      "y": 605.1,
-      "tur": "bolge",
-      "no": 4
-     }
+     {"ad": "rotunda", "metin": "Emanet Rotundası", "x": 324.5, "y": 633.8, "tur": "bolge", "no": 1},
+     {"ad": "kiosk", "metin": "Söz Kiosku", "x": 350.1, "y": 587.5, "tur": "bolge", "no": 3},
+     {"ad": "amfi", "metin": "Amfi", "x": 477.3, "y": 605.1, "tur": "bolge", "no": 4}
     ],
     "yatay": [
-     {
-      "ad": "rotunda",
-      "metin": "Emanet Rotundası",
-      "x": 604.5,
-      "y": 353.8,
-      "tur": "bolge",
-      "no": 1
-     },
-     {
-      "ad": "oyun",
-      "metin": "Oyna – Sen olsan ne yapardın?",
-      "x": 625.3,
-      "y": 462.8,
-      "tur": "bolge",
-      "no": 2
-     },
-     {
-      "ad": "kiosk",
-      "metin": "Söz Kiosku",
-      "x": 630.1,
-      "y": 307.5,
-      "tur": "bolge",
-      "no": 3
-     },
-     {
-      "ad": "amfi",
-      "metin": "Amfi",
-      "x": 757.3,
-      "y": 325.1,
-      "tur": "bolge",
-      "no": 4
-     }
+     {"ad": "rotunda", "metin": "Emanet Rotundası", "x": 604.5, "y": 353.8, "tur": "bolge", "no": 1},
+     {"ad": "oyun", "metin": "Oyna – Sen olsan ne yapardın?", "x": 625.3, "y": 462.8, "tur": "bolge", "no": 2},
+     {"ad": "kiosk", "metin": "Söz Kiosku", "x": 630.1, "y": 307.5, "tur": "bolge", "no": 3},
+     {"ad": "amfi", "metin": "Amfi", "x": 757.3, "y": 325.1, "tur": "bolge", "no": 4}
     ]
    }
   },
@@ -2376,24 +2041,24 @@
     "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t56.f26800ab.h264.mp4",
-      "hevc": "/icinden/v/d/t56.62b51278.hevc.mp4",
-      "av1": "/icinden/v/d/t56.6cd02f12.av1.mp4"
+      "h264": "/icinden/v/d/t56.25fce188.h264.mp4",
+      "hevc": "/icinden/v/d/t56.bfbad7f6.hevc.mp4",
+      "av1": "/icinden/v/d/t56.3223f197.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t56.2994a9e3.h264.mp4",
-      "av1": "/icinden/v/y/t56.626b755c.av1.mp4"
+      "h264": "/icinden/v/y/t56.37ff1a37.h264.mp4",
+      "av1": "/icinden/v/y/t56.3dc7360f.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 524235,
-      "hevc": 382796,
-      "av1": 315135
+      "h264": 527205,
+      "hevc": 398195,
+      "av1": 321557
      },
      "yatay": {
-      "h264": 546612,
-      "av1": 359809
+      "h264": 543416,
+      "av1": 363057
      }
     },
     "geri": {
@@ -2402,24 +2067,24 @@
      "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r65.c449101b.h264.mp4",
-       "hevc": "/icinden/v/d/r65.ad4c6658.hevc.mp4",
-       "av1": "/icinden/v/d/r65.1065e32a.av1.mp4"
+       "h264": "/icinden/v/d/r65.551fb9e3.h264.mp4",
+       "hevc": "/icinden/v/d/r65.1cf3331c.hevc.mp4",
+       "av1": "/icinden/v/d/r65.543fb399.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r65.2e7be6f2.h264.mp4",
-       "av1": "/icinden/v/y/r65.3a1216c8.av1.mp4"
+       "h264": "/icinden/v/y/r65.8130e958.h264.mp4",
+       "av1": "/icinden/v/y/r65.0b4ea68b.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 385386,
-       "hevc": 282677,
-       "av1": 251091
+       "h264": 389308,
+       "hevc": 285073,
+       "av1": 257118
       },
       "yatay": {
-       "h264": 422520,
-       "av1": 281978
+       "h264": 423491,
+       "av1": 284766
       }
      }
     },
@@ -2466,14 +2131,14 @@
    "okumaDurak": "arka duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p6.8543b5be.webp",
-     "bayt": 43528,
-     "lqip": "data:image/webp;base64,UklGRigBAABXRUJQVlA4IBwBAAAQBwCdASoYACsAPtFgp08oJaMiKrgIAQAaCUAW/WtIHkwG3/qaILP1gD6YeVUG40yheObvs3vQRAFeybDU1mZhQAD++E23YtddIglVWQBlJELEnXNVE6lpkHYhXKIf5MF4/RdozJUkWaWPtZemnogUhzi0aFWV7FX6JhY2l22fTrJGsVEVMCs99sXPYb53Qmu1wmxILpM/NooiytEQnXLqjeprlPD7rsWFGKqu1A5KQLx9nXggXLQ1nLO2xI6qJOV9nN+/GYdL4hrUPA4hpXqfV2xsXszkT69+9rXZkPZZqstMkUiuGB4ODr8nhqN/ZZicvj6R5t2u3Ud+N8wFVXd+Xzmrd97dPjWwRbltSbj5NgOYPpandv4YK3gAAA=="
+     "dosya": "/icinden/p/d/p6.e3c4c59f.webp",
+     "bayt": 43034,
+     "lqip": "data:image/webp;base64,UklGRjABAABXRUJQVlA4ICQBAAAwBwCdASoYACsAPtFcpk4oJSMiKqgBABoJQBcMZi3/1NJLfhVMy/vy1xln57d0yYQAZcfC826OyKgYM9pssI9R9QAA/vd4nIV7doZEZmMNpmZG5rmi7rrUxyNhCFHlM/DWaaRIY035j6wOyg/4jkUtStB+3eOXDDrVFi2u2BiZvP756m6kcXSYsWpZ/vXwkaRWtMgMH6fNFHuijrpXyXMYciMwFDTlZWsjJMcC/6NipCHuTof2zXqzI+jdZ2I5FiADFdldaFBj//8zow+o2Hg6ZFVSnoecm9N+g4iY21TV2M0FS/t8YTYDOfZcENCBrMH04AoTtp2Xwh9Cut1ItUuzFGXC5M3Y5P7O5VfXZGIN2ddg4Gdf+xVl5pCp1Hg5r5mwxHwA"
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p6.22d78de6.webp",
-     "bayt": 44380,
-     "lqip": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4IJAAAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUAAvSf99efuuIjiAAMybAotqc9UUW2uFUNGEq3UXLJlKnO0q+B7T4imExK0gA2Ztt8Hs77PVoMYRkgkm5LDAdDGPJo6GdCNQW5BYLlm6A7PoQexSr8WGdEWjaEfE3WZKmWvuycWax/kg5JN9LY25JF0TAAA="
+     "dosya": "/icinden/p/y/p6.011cb558.webp",
+     "bayt": 43218,
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBYdgxtv/xTiB+vxOMsAAMyaA75XZKKP3DehxMoMO7GPkHCl6iaGjohQQu7wHLfuBHmoTq6RfB8/dzeV4nQ0Xy5FqChoHbijSX0dN8qle7UF0Bh5rFM55lPtWgaKn3W4gtT5ocGw1RWl2ct1dJ+MwOdA6gAA"
     }
    },
    "dongu": null,
@@ -2483,24 +2148,24 @@
     "kare": 48,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t67.aa4fc588.h264.mp4",
-      "hevc": "/icinden/v/d/t67.973aa4cb.hevc.mp4",
-      "av1": "/icinden/v/d/t67.25b49b36.av1.mp4"
+      "h264": "/icinden/v/d/t67.9bf1289f.h264.mp4",
+      "hevc": "/icinden/v/d/t67.35bb3844.hevc.mp4",
+      "av1": "/icinden/v/d/t67.a4d35991.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t67.23e1b9a5.h264.mp4",
-      "av1": "/icinden/v/y/t67.4a4ae6be.av1.mp4"
+      "h264": "/icinden/v/y/t67.27388584.h264.mp4",
+      "av1": "/icinden/v/y/t67.7c4785cc.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 315802,
-      "hevc": 237539,
-      "av1": 199521
+      "h264": 315770,
+      "hevc": 237514,
+      "av1": 202674
      },
      "yatay": {
-      "h264": 331595,
-      "av1": 227084
+      "h264": 333830,
+      "av1": 231063
      }
     },
     "geri": {
@@ -2509,24 +2174,24 @@
      "kare": 48,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r76.8e15e46c.h264.mp4",
-       "hevc": "/icinden/v/d/r76.7eee5630.hevc.mp4",
-       "av1": "/icinden/v/d/r76.e915af6d.av1.mp4"
+       "h264": "/icinden/v/d/r76.aa5e7dbd.h264.mp4",
+       "hevc": "/icinden/v/d/r76.cd902645.hevc.mp4",
+       "av1": "/icinden/v/d/r76.6eef5b5f.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r76.6f810511.h264.mp4",
-       "av1": "/icinden/v/y/r76.7f75f641.av1.mp4"
+       "h264": "/icinden/v/y/r76.b957759d.h264.mp4",
+       "av1": "/icinden/v/y/r76.f595fddb.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 220141,
-       "hevc": 163113,
-       "av1": 149775
+       "h264": 222281,
+       "hevc": 167323,
+       "av1": 152123
       },
       "yatay": {
-       "h264": 240726,
-       "av1": 174280
+       "h264": 241788,
+       "av1": 177247
       }
      }
     },
@@ -2535,19 +2200,18 @@
    "ozel": {
     "duvarCapalari": [
      {
-      "ad": "fidan",
-      "dikey": [189.9, 547.3],
-      "yatay": [469.9, 352]
+      "ad": "bulusma",
+      "dikey": [160.4, 536.9],
+      "yatay": [440.4, 341.5]
      },
      {
-      "ad": "genc_iklim",
-      "dikey": [467.4, 665.2],
-      "yatay": [747.4, 469.9]
+      "ad": "solen",
+      "dikey": [264.7, 762.1],
+      "yatay": [544.7, 566.7]
      },
      {
-      "ad": "orman",
-      "dikey": [315.1, 956.1],
-      "yatay": [595.1, 760.8]
+      "ad": "motto",
+      "yatay": [1191.5, 247.3]
      }
     ]
    }
@@ -2560,14 +2224,14 @@
    "okumaDurak": "sol duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p7.f29024f3.webp",
-     "bayt": 31686,
-     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ2pGoWXai0S7S8cry19y7Jwon+BXNRtd+nce6la6pmantatyDWsAAAA/vSA9vcdsIEB2V+zJkjXc9i0AtB5x0Xrj4auh9pYiOQ6CurSIDl2xqkT968X36jqGC30N6Vpygc5NliWiQXpKGSQAgXA/Ur46UxaLVtPtfJlxuaneWTgG1NCowoAC9l7lDmtcnOvLjztDsH3ylcrRI7jYCL/IyTUmEaobE/YgMDDvA548Fgit/T4BG7IcC+gFnXbG9lsm4HfVA4Sc/BoAUG8/shm0nH04w67g+tKciCYvXQVzYsu6yGrR8lC2/PtLejWX+gPvyKbOX9K8tJFWvlXVRotOk2mB9vPvw27HeZSqxW6ybU1LOFpA0Zjney20FiUA4Yrk5K2+0GkwEyhOi4RJMFN1aYjXWAAAA=="
+     "dosya": "/icinden/p/d/p7.fbbca2ba.webp",
+     "bayt": 31794,
+     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ3TmnuXmi0S7S8cry19y7InjOk8alIOAdhF9G/bprjLJva1bkGtZLAA/vSA9vcdsYEB2WOvHad+g9XTU424lbcLNk3BTnBgIHf0LLhbWsHNeKkzBhfdNMenNj/3piv+STrGh/4/+IvH5DsG4/D2j3rbECU4X3exgcLbjyYdu/73tKETFu57MccH6Wk3yTWADAA5g/WCp6VNITatXL+slNg63JZBx1qUrJmGFtkKyotTeAfIIaLVfgWOMHJOcpCQpKVdZuu389/mE477GEbVkGwpUBVRQENsm/19NokHPB8g5EiMfiiQw/2Oany4U1lZBTj8hsTx/aesk3S2LgXWTOvgJj0RTXAfueU3pURem8L5prAFCdJpW5OzRRM+ICfNW0bDZddXW4KQ+3rYSiwVj0WDESIAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p7.8da09e8a.webp",
-     "bayt": 27090,
-     "lqip": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAAAwBACdASoYAA4APtFWpEuoJKOhsAgBABoJQBOmUGMABbZu4PdOHKTPD6AA9yHZojChH+B/QsdnARicO+Ktrit0+WSZMOcbbJOr78zSH5wOKQHuB4KY8Xx/fA1c8dv4r3A9UEbcckgDmH98VF7RT/jsPXORLtTRcI7HsseOEwajH2m3cIT4zY4zDWUQAA=="
+     "dosya": "/icinden/p/y/p7.722cef3d.webp",
+     "bayt": 27300,
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAwBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4Pn44wTV3CAA9yHZojChH+B/QsdnARicO+Ktrit0+WSZMOcbbJOr78zSH5wOKQHuB4KY8Xx/fA1c8dv7zbMlssX0QGIrnwLZB238t25HvtK/LeL8MF7zHXtkZhE9Bx4EcEIDshBbSXhjhAAA"
     }
    },
    "dongu": null,
@@ -2577,24 +2241,24 @@
     "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t78.057a0f54.h264.mp4",
-      "hevc": "/icinden/v/d/t78.b3d5bb5e.hevc.mp4",
-      "av1": "/icinden/v/d/t78.65ac041d.av1.mp4"
+      "h264": "/icinden/v/d/t78.68720281.h264.mp4",
+      "hevc": "/icinden/v/d/t78.0a1ae67c.hevc.mp4",
+      "av1": "/icinden/v/d/t78.911932c5.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t78.f309b34a.h264.mp4",
-      "av1": "/icinden/v/y/t78.3d77b399.av1.mp4"
+      "h264": "/icinden/v/y/t78.8144d5fb.h264.mp4",
+      "av1": "/icinden/v/y/t78.217a0b08.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 531531,
-      "hevc": 318906,
-      "av1": 265394
+      "h264": 530924,
+      "hevc": 318452,
+      "av1": 266526
      },
      "yatay": {
-      "h264": 524555,
-      "av1": 254012
+      "h264": 527382,
+      "av1": 255067
      }
     },
     "geri": {
@@ -2603,24 +2267,24 @@
      "kare": 60,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r87.6c46fb66.h264.mp4",
-       "hevc": "/icinden/v/d/r87.250da24a.hevc.mp4",
-       "av1": "/icinden/v/d/r87.11828772.av1.mp4"
+       "h264": "/icinden/v/d/r87.befd988d.h264.mp4",
+       "hevc": "/icinden/v/d/r87.a3581582.hevc.mp4",
+       "av1": "/icinden/v/d/r87.2b9dded7.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r87.1e895b20.h264.mp4",
-       "av1": "/icinden/v/y/r87.24e91aba.av1.mp4"
+       "h264": "/icinden/v/y/r87.ef6b5f52.h264.mp4",
+       "av1": "/icinden/v/y/r87.ef5de8cf.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 356322,
-       "hevc": 235935,
-       "av1": 205517
+       "h264": 359893,
+       "hevc": 237828,
+       "av1": 205604
       },
       "yatay": {
-       "h264": 358281,
-       "av1": 195824
+       "h264": 356215,
+       "av1": 196245
       }
      }
     },
@@ -2629,1602 +2293,466 @@
   },
   {
    "id": "d8",
-   "rol": "brosur-kapak",
-   "tur": "dom",
+   "rol": "masa",
+   "tur": "klip",
    "okuma": [3.012, 2.995, 2.891, 2.656, 2.3, 1.919, 1.711, 1.621, 1.577, 1.548, 1.514, 1.491, 1.488, 1.514, 1.579, 1.674, 1.801, 1.968, 2.137, 2.291, 2.422, 2.456, 1.91, 1.5, 1.199, 0.981, 0.831, 0.737, 0.679, 0.626, 0.564, 0.496, 0.428, 0.369, 0.324, 0.298, 0.288, 0.285, 0.286, 0.289, 0.292, 0.296, 0.3, 0.303, 0.303, 0.291, 0.281, 0.273, 0.266, 0.259, 0.252, 0.246, 0.241, 0.236, 0.233, 0.23, 0.229, 0.227, 0.227, 0.227],
-   "okumaDurak": "sayfa 1/12",
+   "okumaDurak": "banko · broşür",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p8.abbd0d25.webp",
-     "bayt": 25756,
-     "lqip": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACQAwCdASoYACsAPtFgpk+oJSwmpWsxgBoJZwCo9A5DtWqq4/QAAP7sWo1jEYa3Lse4D/uDj04JkOkPiOSN6eFakMHs47CguffAAA=="
+     "dosya": "/icinden/p/d/p8.07253be3.webp",
+     "bayt": 49830,
+     "lqip": "data:image/webp;base64,UklGRvwAAABXRUJQVlA4IPAAAAAQBwCdASoYACsAPtFkq1EoJSOipWgBABoJYgCxHyrHyEIpBz/4tiMJ0X1bksR6XUGzOB71VIxOV7ISwhggw8tb4AD+7VBXIOKfAc4fDfPbrMCAr875G/oUrCL/eOya3FufvNy8ki6iOXhMg3LGq+wr4b0VYPZDRmpJqStC6ssgkazAt1dDVlvrU41OYqtj3IpJMD9sdNNq/14Wcq3gmLcITM8fnRDyNSzyE5dbQ519+BFCudr2YH/6Xm7qC5b+ftgR6q9w6WaJvpmBdLHVNVU8tyIk6G6NjbJC4JjJeX7W4QORDje4w2Tl8s67qHoTkAA="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p8.9a55966f.webp",
-     "bayt": 28216,
-     "lqip": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAAAQAwCdASoYAA4APtFUo0uqpKMhsAgBUBoJYwCdOUABMUAA/useCpa6WihOnvwe9RF7Ak88UUPRJRAAAAA="
-    }
-   },
-   "dongu": null,
-   "ileri": null,
-   "ozel": {
-    "brosurDikdortgen": {
-     "dikey": [
-      [124, 306.7],
-      [596, 306.7],
-      [596, 973.3],
-      [124, 973.3]
-     ],
-     "yatay": [
-      [404, 26.7],
-      [876, 26.7],
-      [876, 693.3],
-      [404, 693.3]
-     ]
-    },
-    "kapakTon": {
-     "saturate": 0.934,
-     "contrast": 0.894,
-     "brightness": 1,
-     "sepia": 0.058
-    }
-   }
-  },
-  {
-   "id": "d9",
-   "rol": "brosur-sayfa",
-   "tur": "dom",
-   "okuma": "sayfa 8/12",
-   "poster": {
-    "dikey": {
-     "dosya": "/icinden/p/d/p8.abbd0d25.webp",
-     "bayt": 25756,
-     "lqip": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACQAwCdASoYACsAPtFgpk+oJSwmpWsxgBoJZwCo9A5DtWqq4/QAAP7sWo1jEYa3Lse4D/uDj04JkOkPiOSN6eFakMHs47CguffAAA=="
-    },
-    "yatay": {
-     "dosya": "/icinden/p/y/p8.9a55966f.webp",
-     "bayt": 28216,
-     "lqip": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAAAQAwCdASoYAA4APtFUo0uqpKMhsAgBUBoJYwCdOUABMUAA/useCpa6WihOnvwe9RF7Ak88UUPRJRAAAAA="
-    }
-   },
-   "dongu": null,
-   "ileri": null
-  },
-  {
-   "id": "d10",
-   "rol": "brosur-arka",
-   "tur": "dom",
-   "okuma": "sayfa 12/12",
-   "poster": {
-    "dikey": {
-     "dosya": "/icinden/p/d/p8.abbd0d25.webp",
-     "bayt": 25756,
-     "lqip": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACQAwCdASoYACsAPtFgpk+oJSwmpWsxgBoJZwCo9A5DtWqq4/QAAP7sWo1jEYa3Lse4D/uDj04JkOkPiOSN6eFakMHs47CguffAAA=="
-    },
-    "yatay": {
-     "dosya": "/icinden/p/y/p8.9a55966f.webp",
-     "bayt": 28216,
-     "lqip": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAAAQAwCdASoYAA4APtFUo0uqpKMhsAgBUBoJYwCdOUABMUAA/useCpa6WihOnvwe9RF7Ak88UUPRJRAAAAA="
+     "dosya": "/icinden/p/y/p8.81554b64.webp",
+     "bayt": 52410,
+     "lqip": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABQBACdASoYAA4APtFWpEuoJKOhsAgBABoJZACdOUAA46vrAPTyS1h8hyMAAP7TXzPmlp+FHsB8i0RzEDl5HbrmrSUXbujEUZKOBMO7DlX6s4WrBpSoxmaGr2Sg+7k6AyE0M2tMD8GplOL9vXseQx+AAAA="
     }
    },
    "dongu": null,
    "ileri": {
-    "ad": "t01",
-    "sure": 1.8,
-    "kare": 54,
+    "ad": "t89",
+    "sure": 2,
+    "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t01.a912a662.h264.mp4",
-      "hevc": "/icinden/v/d/t01.e89e2062.hevc.mp4",
-      "av1": "/icinden/v/d/t01.0f8f6133.av1.mp4"
+      "h264": "/icinden/v/d/t89.0de3b819.h264.mp4",
+      "hevc": "/icinden/v/d/t89.a3bcb5b2.hevc.mp4",
+      "av1": "/icinden/v/d/t89.35570446.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t01.d5ee30c9.h264.mp4",
-      "av1": "/icinden/v/y/t01.9f55a450.av1.mp4"
+      "h264": "/icinden/v/y/t89.5c4d3a1e.h264.mp4",
+      "av1": "/icinden/v/y/t89.617c8c2f.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 301169,
-      "hevc": 326555,
-      "av1": 249998
+      "h264": 334274,
+      "hevc": 196618,
+      "av1": 171670
      },
      "yatay": {
-      "h264": 270096,
-      "av1": 234545
+      "h264": 318944,
+      "av1": 162728
      }
     },
-    "geri": {
-     "ad": "r10",
-     "sure": 1.8,
-     "kare": 54,
-     "dosya": {
-      "dikey": {
-       "h264": "/icinden/v/d/r10.0cb17e78.h264.mp4",
-       "hevc": "/icinden/v/d/r10.6a471daf.hevc.mp4",
-       "av1": "/icinden/v/d/r10.57ba673a.av1.mp4"
-      },
-      "yatay": {
-       "h264": "/icinden/v/y/r10.537b1a80.h264.mp4",
-       "av1": "/icinden/v/y/r10.15a9797a.av1.mp4"
-      }
-     },
-     "bayt": {
-      "dikey": {
-       "h264": 213826,
-       "hevc": 190097,
-       "av1": 206586
-      },
-      "yatay": {
-       "h264": 187851,
-       "av1": 183110
-      }
-     }
-    },
+    "geri": null,
     "hizGeri": 1
    }
   },
   {
-   "id": "d11",
-   "rol": "dunya",
+   "id": "d9",
+   "rol": "fidan-kok",
    "tur": "klip",
-   "okuma": [40200000, 40100000, 39520000, 38230000, 36370000, 34370000, 32540000, 30860000, 29330000, 27920000, 26620000, 25440000, 24340000, 23340000, 22410000, 21550000, 20760000, 20040000, 19360000, 18740000, 18160000, 17630000, 17140000, 16680000, 16260000, 15870000, 15510000, 15170000, 14870000, 14580000, 14320000, 14070000, 13850000, 13650000, 13460000, 13290000, 13130000, 12990000, 12860000, 12740000, 12640000, 12550000, 12470000, 12400000, 12330000, 12280000, 12240000, 12200000, 12170000, 12150000, 12140000, 12130000, 12120000, 12120000],
-   "okumaDurak": "ortak evimiz",
+   "okuma": [0.2268, 0.2268, 0.2269, 0.2273, 0.2288, 0.2318, 0.2361, 0.2423, 0.2506, 0.261, 0.2735, 0.288, 0.3041, 0.3216, 0.3401, 0.3593, 0.3786, 0.3978, 0.4165, 0.4342, 0.4509, 0.4662, 0.48, 0.4922, 0.5027, 0.5117, 0.5191, 0.525, 0.5297, 0.5331, 0.5356, 0.5372, 0.5381, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384, 0.5384],
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p1.7f5fcab2.webp",
-     "bayt": 72258,
-     "lqip": "data:image/webp;base64,UklGRgABAABXRUJQVlA4IPQAAAAwBgCdASoYACsAPtFYo00oJSMiKrgN+QAaCUAKlX4AXBQZeAylQgCw+vqhYOZFJHRBoz9ZvtZHh9AAAP75IbIJHHE+47+1mbSRunWtBIZjgdFM3PEuIxzePjAs3dg2OYUbeaBvPuOLAozBVbcvZq3nrgrvNYtH6QaMUVyQxEQ8uPa4jZ7uQqg7Y0yH7qj1uUwK3Lk2/e2z7oMSv2ceM5436gRqGc65sUthiCurZIL4KEZjpgPZQVPTq+SkaPcS6fBTQsXV0SAVco3IfORSeKczIeD6yScDbXIeIiby7fW/aA5eBlj+QwJEKLDzJRnlxo+MgAAA"
+     "dosya": "/icinden/p/d/p9.bd80b7c4.webp",
+     "bayt": 40026,
+     "lqip": "data:image/webp;base64,UklGRhYBAABXRUJQVlA4IAoBAABQBgCdASoYACsAPtFgqE+oJSOjJWsxABoJYwDHJv6+yBj4x486WT0kA8iw+T4v64PHbgDasENWrsxiOAD+7xmehup8tCD1FlqbgkgBCh4u45dJvKYfy+ya1Qj1oEBLLd+7bb3cfTvPauvNQYdmxQ+x6fxIvG7nw8CoyCXTvZphb8eMOgZGTmeh986p0g7le8OlJnia6+XN0noSqJ9qK3nQWeCvhwv/nQdHRSQKOk93aYfx0XjobLnflDH9x7OnB8c06InTEstvIHOlvvlfnfwNQMxFb4v5DP5YkpPCwSCKD4dodj1kHoD+JXs4uN7ODzSDACpVwNhH1nNAEIaxX6DMDkcDmAip7AAAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p1.da142093.webp",
-     "bayt": 55872,
-     "lqip": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAADQAwCdASoYAA4APtFUpEuoJKOhsAgBABoJQBlABDvuJWHGCQUd4AAA/vd4gsgDb2G1Knpx9Ry5wNJ2y+9QhotMd6DrG93bdrmGaub+fJQjxBjOOj5JD1uPsjp8BmLwi+2AAA=="
+     "dosya": "/icinden/p/y/p9.11a083e1.webp",
+     "bayt": 39216,
+     "lqip": "data:image/webp;base64,UklGRqIAAABXRUJQVlA4IJYAAAAwBACdASoYAA4APtFUo0uoJKMhsAgBABoJYgCsLwABvPI+JVFXf2/Z0AAA/veCbugvK5K2Y+ai4Q9XSncR6ZqeOd7ej4uSgqQeduAKadEinTyYFkIqNFess7aGOUQDrTx5isdRSVg/kJNebwZRZEGUQ+FWQP4jOxl6L63JTCVVgodRuQo1907b1DSEvSgVXnm8PE/gaAA="
     }
    },
-   "dongu": {
-    "ad": "l1",
-    "sure": 4,
-    "kare": 120,
+   "dongu": null,
+   "ileri": {
+    "ad": "t9a",
+    "sure": 1.8,
+    "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/l1.7470fab6.h264.mp4",
-      "hevc": "/icinden/v/d/l1.c4fb5dd1.hevc.mp4",
-      "av1": "/icinden/v/d/l1.c62bf56c.av1.mp4"
+      "h264": "/icinden/v/d/t9a.c79b3633.h264.mp4",
+      "hevc": "/icinden/v/d/t9a.22b7ad7d.hevc.mp4",
+      "av1": "/icinden/v/d/t9a.0d11e42a.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/l1.12d8b9c7.h264.mp4",
-      "av1": "/icinden/v/y/l1.ee8bb7e6.av1.mp4"
+      "h264": "/icinden/v/y/t9a.6543f061.h264.mp4",
+      "av1": "/icinden/v/y/t9a.0f56245d.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 523811,
-      "hevc": 425882,
-      "av1": 409961
+      "h264": 182638,
+      "hevc": 135657,
+      "av1": 130346
      },
      "yatay": {
-      "h264": 377735,
-      "av1": 318653
+      "h264": 143200,
+      "av1": 101120
+     }
+    },
+    "geri": null,
+    "hizGeri": 1
+   },
+   "ozel": {
+    "kokUclari": {
+     "dikey": [
+      {"x": 354.4, "y": 778.8, "grup": 0, "ana": true},
+      {"x": 342.5, "y": 549.1, "grup": 0, "ana": false},
+      {"x": 390.2, "y": 585.9, "grup": 0, "ana": false},
+      {"x": 325.5, "y": 585.7, "grup": 0, "ana": false},
+      {"x": 373.9, "y": 603.9, "grup": 0, "ana": false},
+      {"x": 321.1, "y": 639.7, "grup": 0, "ana": false},
+      {"x": 333.9, "y": 643.1, "grup": 0, "ana": false},
+      {"x": 338.1, "y": 668.7, "grup": 0, "ana": false},
+      {"x": 335, "y": 692, "grup": 0, "ana": false},
+      {"x": 328.4, "y": 708.6, "grup": 0, "ana": false},
+      {"x": 378.7, "y": 725.9, "grup": 0, "ana": false},
+      {"x": 333.6, "y": 743.7, "grup": 0, "ana": false},
+      {"x": 321.9, "y": 765.8, "grup": 0, "ana": false},
+      {"x": 112.8, "y": 555.1, "grup": 1, "ana": true},
+      {"x": 319.3, "y": 510.3, "grup": 1, "ana": false},
+      {"x": 293.9, "y": 518.7, "grup": 1, "ana": false},
+      {"x": 283, "y": 524.9, "grup": 1, "ana": false},
+      {"x": 261.4, "y": 545.7, "grup": 1, "ana": false},
+      {"x": 241.7, "y": 522.9, "grup": 1, "ana": false},
+      {"x": 224.1, "y": 556.3, "grup": 1, "ana": false},
+      {"x": 207.4, "y": 552.8, "grup": 1, "ana": false},
+      {"x": 187.7, "y": 561.1, "grup": 1, "ana": false},
+      {"x": 155.5, "y": 571.7, "grup": 1, "ana": false},
+      {"x": 136, "y": 562.3, "grup": 1, "ana": false},
+      {"x": 609.7, "y": 544.2, "grup": 2, "ana": true},
+      {"x": 409.7, "y": 542.6, "grup": 2, "ana": false},
+      {"x": 431.4, "y": 541.7, "grup": 2, "ana": false},
+      {"x": 437.7, "y": 519, "grup": 2, "ana": false},
+      {"x": 476.9, "y": 541.5, "grup": 2, "ana": false},
+      {"x": 468.5, "y": 524.8, "grup": 2, "ana": false},
+      {"x": 495.2, "y": 544.4, "grup": 2, "ana": false},
+      {"x": 535.1, "y": 554.4, "grup": 2, "ana": false},
+      {"x": 556.7, "y": 553.1, "grup": 2, "ana": false},
+      {"x": 569.9, "y": 554.1, "grup": 2, "ana": false},
+      {"x": 602.7, "y": 570.1, "grup": 2, "ana": false},
+      {"x": 154.9, "y": 717.7, "grup": 3, "ana": true},
+      {"x": 305.7, "y": 511.2, "grup": 3, "ana": false},
+      {"x": 341.9, "y": 589.8, "grup": 3, "ana": false},
+      {"x": 284.4, "y": 545.9, "grup": 3, "ana": false},
+      {"x": 265.9, "y": 567.7, "grup": 3, "ana": false},
+      {"x": 279.1, "y": 600.1, "grup": 3, "ana": false},
+      {"x": 266.9, "y": 604.9, "grup": 3, "ana": false},
+      {"x": 223.2, "y": 604.5, "grup": 3, "ana": false},
+      {"x": 240.7, "y": 655.3, "grup": 3, "ana": false},
+      {"x": 211.7, "y": 672.5, "grup": 3, "ana": false},
+      {"x": 206.7, "y": 685.4, "grup": 3, "ana": false},
+      {"x": 185, "y": 722.3, "grup": 3, "ana": false},
+      {"x": 572, "y": 731.6, "grup": 4, "ana": true},
+      {"x": 374.7, "y": 564.9, "grup": 4, "ana": false},
+      {"x": 402.7, "y": 575.1, "grup": 4, "ana": false},
+      {"x": 463.2, "y": 547, "grup": 4, "ana": false},
+      {"x": 418.3, "y": 602.7, "grup": 4, "ana": false},
+      {"x": 443.4, "y": 604, "grup": 4, "ana": false},
+      {"x": 510.1, "y": 605.9, "grup": 4, "ana": false},
+      {"x": 487.3, "y": 652.5, "grup": 4, "ana": false},
+      {"x": 527.7, "y": 643.1, "grup": 4, "ana": false},
+      {"x": 509.6, "y": 682.5, "grup": 4, "ana": false},
+      {"x": 554.3, "y": 676.2, "grup": 4, "ana": false},
+      {"x": 538.5, "y": 730.3, "grup": 4, "ana": false},
+      {"x": 244.5, "y": 784.3, "grup": 5, "ana": true},
+      {"x": 330.3, "y": 555.7, "grup": 5, "ana": false},
+      {"x": 360.5, "y": 611.4, "grup": 5, "ana": false},
+      {"x": 292.4, "y": 601.8, "grup": 5, "ana": false},
+      {"x": 328.1, "y": 655.1, "grup": 5, "ana": false},
+      {"x": 294.7, "y": 649.7, "grup": 5, "ana": false},
+      {"x": 313, "y": 706.1, "grup": 5, "ana": false},
+      {"x": 316.9, "y": 727.8, "grup": 5, "ana": false},
+      {"x": 309.6, "y": 753.7, "grup": 5, "ana": false},
+      {"x": 238.9, "y": 750.7, "grup": 5, "ana": false},
+      {"x": 270.7, "y": 783.9, "grup": 5, "ana": false},
+      {"x": 472.1, "y": 788.9, "grup": 6, "ana": true},
+      {"x": 341.9, "y": 576.1, "grup": 6, "ana": false},
+      {"x": 404.3, "y": 588.5, "grup": 6, "ana": false},
+      {"x": 354.3, "y": 632.4, "grup": 6, "ana": false},
+      {"x": 449.7, "y": 637.5, "grup": 6, "ana": false},
+      {"x": 395.3, "y": 672.8, "grup": 6, "ana": false},
+      {"x": 447.7, "y": 684.8, "grup": 6, "ana": false},
+      {"x": 409.2, "y": 714, "grup": 6, "ana": false},
+      {"x": 472.9, "y": 743.7, "grup": 6, "ana": false},
+      {"x": 439.3, "y": 783, "grup": 6, "ana": false},
+      {"x": 491.2, "y": 769.3, "grup": 6, "ana": false}
+     ],
+     "yatay": [
+      {"x": 634.4, "y": 498.8, "grup": 0, "ana": true},
+      {"x": 622.5, "y": 269.1, "grup": 0, "ana": false},
+      {"x": 670.2, "y": 305.9, "grup": 0, "ana": false},
+      {"x": 605.5, "y": 305.7, "grup": 0, "ana": false},
+      {"x": 653.9, "y": 323.9, "grup": 0, "ana": false},
+      {"x": 601.1, "y": 359.7, "grup": 0, "ana": false},
+      {"x": 613.9, "y": 363.1, "grup": 0, "ana": false},
+      {"x": 618.1, "y": 388.7, "grup": 0, "ana": false},
+      {"x": 615, "y": 412, "grup": 0, "ana": false},
+      {"x": 608.4, "y": 428.6, "grup": 0, "ana": false},
+      {"x": 658.7, "y": 445.9, "grup": 0, "ana": false},
+      {"x": 613.6, "y": 463.7, "grup": 0, "ana": false},
+      {"x": 601.9, "y": 485.8, "grup": 0, "ana": false},
+      {"x": 392.8, "y": 275.1, "grup": 1, "ana": true},
+      {"x": 599.3, "y": 230.3, "grup": 1, "ana": false},
+      {"x": 573.9, "y": 238.7, "grup": 1, "ana": false},
+      {"x": 563, "y": 244.9, "grup": 1, "ana": false},
+      {"x": 541.4, "y": 265.7, "grup": 1, "ana": false},
+      {"x": 521.7, "y": 242.9, "grup": 1, "ana": false},
+      {"x": 504.1, "y": 276.3, "grup": 1, "ana": false},
+      {"x": 487.4, "y": 272.8, "grup": 1, "ana": false},
+      {"x": 467.7, "y": 281.1, "grup": 1, "ana": false},
+      {"x": 435.5, "y": 291.7, "grup": 1, "ana": false},
+      {"x": 416, "y": 282.3, "grup": 1, "ana": false},
+      {"x": 889.7, "y": 264.2, "grup": 2, "ana": true},
+      {"x": 689.7, "y": 262.6, "grup": 2, "ana": false},
+      {"x": 711.4, "y": 261.7, "grup": 2, "ana": false},
+      {"x": 717.7, "y": 239, "grup": 2, "ana": false},
+      {"x": 756.9, "y": 261.5, "grup": 2, "ana": false},
+      {"x": 748.5, "y": 244.8, "grup": 2, "ana": false},
+      {"x": 775.2, "y": 264.4, "grup": 2, "ana": false},
+      {"x": 815.1, "y": 274.4, "grup": 2, "ana": false},
+      {"x": 836.7, "y": 273.1, "grup": 2, "ana": false},
+      {"x": 849.9, "y": 274.1, "grup": 2, "ana": false},
+      {"x": 882.7, "y": 290.1, "grup": 2, "ana": false},
+      {"x": 434.9, "y": 437.7, "grup": 3, "ana": true},
+      {"x": 585.7, "y": 231.2, "grup": 3, "ana": false},
+      {"x": 621.9, "y": 309.8, "grup": 3, "ana": false},
+      {"x": 564.4, "y": 265.9, "grup": 3, "ana": false},
+      {"x": 545.9, "y": 287.7, "grup": 3, "ana": false},
+      {"x": 559.1, "y": 320.1, "grup": 3, "ana": false},
+      {"x": 546.9, "y": 324.9, "grup": 3, "ana": false},
+      {"x": 503.2, "y": 324.5, "grup": 3, "ana": false},
+      {"x": 520.7, "y": 375.3, "grup": 3, "ana": false},
+      {"x": 491.7, "y": 392.5, "grup": 3, "ana": false},
+      {"x": 486.7, "y": 405.4, "grup": 3, "ana": false},
+      {"x": 465, "y": 442.3, "grup": 3, "ana": false},
+      {"x": 852, "y": 451.6, "grup": 4, "ana": true},
+      {"x": 654.7, "y": 284.9, "grup": 4, "ana": false},
+      {"x": 682.7, "y": 295.1, "grup": 4, "ana": false},
+      {"x": 743.2, "y": 267, "grup": 4, "ana": false},
+      {"x": 698.3, "y": 322.7, "grup": 4, "ana": false},
+      {"x": 723.4, "y": 324, "grup": 4, "ana": false},
+      {"x": 790.1, "y": 325.9, "grup": 4, "ana": false},
+      {"x": 767.3, "y": 372.5, "grup": 4, "ana": false},
+      {"x": 807.7, "y": 363.1, "grup": 4, "ana": false},
+      {"x": 789.6, "y": 402.5, "grup": 4, "ana": false},
+      {"x": 834.3, "y": 396.2, "grup": 4, "ana": false},
+      {"x": 818.5, "y": 450.3, "grup": 4, "ana": false},
+      {"x": 524.5, "y": 504.3, "grup": 5, "ana": true},
+      {"x": 610.3, "y": 275.7, "grup": 5, "ana": false},
+      {"x": 640.5, "y": 331.4, "grup": 5, "ana": false},
+      {"x": 572.4, "y": 321.8, "grup": 5, "ana": false},
+      {"x": 608.1, "y": 375.1, "grup": 5, "ana": false},
+      {"x": 574.7, "y": 369.7, "grup": 5, "ana": false},
+      {"x": 593, "y": 426.1, "grup": 5, "ana": false},
+      {"x": 596.9, "y": 447.8, "grup": 5, "ana": false},
+      {"x": 589.6, "y": 473.7, "grup": 5, "ana": false},
+      {"x": 518.9, "y": 470.7, "grup": 5, "ana": false},
+      {"x": 550.7, "y": 503.9, "grup": 5, "ana": false},
+      {"x": 752.1, "y": 508.9, "grup": 6, "ana": true},
+      {"x": 621.9, "y": 296.1, "grup": 6, "ana": false},
+      {"x": 684.3, "y": 308.5, "grup": 6, "ana": false},
+      {"x": 634.3, "y": 352.4, "grup": 6, "ana": false},
+      {"x": 729.7, "y": 357.5, "grup": 6, "ana": false},
+      {"x": 675.3, "y": 392.8, "grup": 6, "ana": false},
+      {"x": 727.7, "y": 404.8, "grup": 6, "ana": false},
+      {"x": 689.2, "y": 434, "grup": 6, "ana": false},
+      {"x": 752.9, "y": 463.7, "grup": 6, "ana": false},
+      {"x": 719.3, "y": 503, "grup": 6, "ana": false},
+      {"x": 771.2, "y": 489.3, "grup": 6, "ana": false}
+     ]
+    }
+   }
+  },
+  {
+   "id": "d10",
+   "rol": "fidan-govde",
+   "tur": "klip",
+   "okuma": [0.5384, 0.5384, 0.5381, 0.5374, 0.5363, 0.5351, 0.534, 0.5328, 0.5317, 0.5307, 0.5296, 0.5287, 0.5277, 0.5268, 0.5259, 0.525, 0.5242, 0.5233, 0.5226, 0.5218, 0.5211, 0.5204, 0.5198, 0.5192, 0.5186, 0.518, 0.5174, 0.5169, 0.5164, 0.516, 0.5155, 0.5151, 0.5148, 0.5144, 0.5141, 0.5137, 0.5135, 0.5132, 0.513, 0.5127, 0.5125, 0.5124, 0.5122, 0.5121, 0.5119, 0.5118, 0.5117, 0.5117, 0.5116, 0.5116, 0.5115, 0.5115, 0.5115, 0.5115],
+   "poster": {
+    "dikey": {
+     "dosya": "/icinden/p/d/pa.de6cafd1.webp",
+     "bayt": 44548,
+     "lqip": "data:image/webp;base64,UklGRgQBAABXRUJQVlA4IPgAAABwBgCdASoYACsAPtFapUwoJSOiKqwBABoJQBhBAt4dPOO9Si5HjwuAOZ23S1tVRUayPyt94bgOvcVU2NgA/u8p3vDmK33UA08qN72V2xXw4GLsnoShOl/VMUp4PrZj4J7fown4XxSj3qeCcw2ROhm3EwDTW7KZa/7CQtxILB5sTiMwBOMsS/XTmPReZINraLi4cbkXfHI/vWgBGAK5k0RgVBdEN0LAunN2rY1yiUMjP3LqHlfchYl9w1bVJ92EaD+jX/UpGB1sUs9mSp1hMrSmfNnQM9EUk1OMpXUSCy39oyum7CEi26hUrumHvBoXd6SWMDC87LgAAA=="
+    },
+    "yatay": {
+     "dosya": "/icinden/p/y/pa.fd961dfe.webp",
+     "bayt": 17218,
+     "lqip": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAAAQBACdASoYAA4APtFWpEuoJKOhsAgBABoJYwDCgB4TdMJvdpCiyTmVAAD+94J2AIiqejpKXtoKJqmVEfHRf485D8GDsed7ZGnNMWdH4/nrvfsGS1zb735iKrF+UghhH0zkkl2/LgZpkrktiTH8ao8Gx61333w+3EWt9dnveE8Pq7IHiSD9xh1yVAA="
+    }
+   },
+   "dongu": null,
+   "ileri": {
+    "ad": "tab",
+    "sure": 1.8,
+    "kare": 54,
+    "dosya": {
+     "dikey": {
+      "h264": "/icinden/v/d/tab.0ead1019.h264.mp4",
+      "hevc": "/icinden/v/d/tab.ce7188d8.hevc.mp4",
+      "av1": "/icinden/v/d/tab.da75b188.av1.mp4"
+     },
+     "yatay": {
+      "h264": "/icinden/v/y/tab.ec84ed95.h264.mp4",
+      "av1": "/icinden/v/y/tab.1615d0f0.av1.mp4"
+     }
+    },
+    "bayt": {
+     "dikey": {
+      "h264": 273277,
+      "hevc": 187222,
+      "av1": 174631
+     },
+     "yatay": {
+      "h264": 152977,
+      "av1": 100011
+     }
+    },
+    "geri": null,
+    "hizGeri": 1
+   },
+   "ozel": {
+    "bogumlar": {
+     "dikey": [
+      {"x": 359.7, "y": 722, "taraf": -1},
+      {"x": 349.7, "y": 626, "taraf": 1}
+     ],
+     "yatay": [
+      {"x": 639.7, "y": 574, "taraf": -1},
+      {"x": 629.7, "y": 478, "taraf": 1}
+     ]
+    }
+   }
+  },
+  {
+   "id": "d11",
+   "rol": "fidan-dal",
+   "tur": "klip",
+   "okuma": [0.5115, 0.5116, 0.5122, 0.5137, 0.5159, 0.5183, 0.5208, 0.5231, 0.5254, 0.5276, 0.5297, 0.5318, 0.5338, 0.5357, 0.5376, 0.5394, 0.5411, 0.5428, 0.5444, 0.5459, 0.5474, 0.5488, 0.5502, 0.5515, 0.5527, 0.5539, 0.555, 0.5561, 0.5571, 0.5581, 0.559, 0.5598, 0.5606, 0.5614, 0.5621, 0.5627, 0.5633, 0.5639, 0.5644, 0.5648, 0.5652, 0.5656, 0.5659, 0.5662, 0.5665, 0.5667, 0.5669, 0.567, 0.5672, 0.5672, 0.5673, 0.5673, 0.5674, 0.5674],
+   "poster": {
+    "dikey": {
+     "dosya": "/icinden/p/d/pb.9cc9253d.webp",
+     "bayt": 54374,
+     "lqip": "data:image/webp;base64,UklGRhgBAABXRUJQVlA4IAwBAABQBgCdASoYACsAPs1UokunpKMhqq348BmJQBgD7BLAAY0fEKE9f8P3291Mn68UO4d9XAWD6kyd39crAAD+/QI7SHfK8nAPeI/4nCJm4giuEBTMyKvzotG1Zzz1H0kiPOdhg0sffCLXOrLcQRCF9QbtIO0HICSJcyQimJHCxRG+MO54OaNARUzdU8Pvdzssu2SwpPPhECnm+8XQBPZUkWjwyFc+Sd/kRxfy85R+RGm2n1ULW0om0Io9CKZML/tj/nRVGpPOYe4jL0zQbSNzgxtxaM1wduDm7tooA4Yp/1z2LE5nCGGyfGGNGL6S006FDfKg6JQES/jdr2mZuEWflk1KVxnXMJC0fZociyAA"
+    },
+    "yatay": {
+     "dosya": "/icinden/p/y/pb.27192a7c.webp",
+     "bayt": 25452,
+     "lqip": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAAAQBACdASoYAA4APtFWpEuoJKOhsAgBABoJYwCw7CFsrQ8FMG2owAeCUAD+93z5AnMRFh3764d4XnKtvyrcmrXPHwASdjiscVVcrS1oGknaL4V/R6wuMmfTIyGteAB/eG3cuXOLxHJWrqKFFyAAAA=="
+    }
+   },
+   "dongu": null,
+   "ileri": {
+    "ad": "tbc",
+    "sure": 2.2,
+    "kare": 66,
+    "dosya": {
+     "dikey": {
+      "h264": "/icinden/v/d/tbc.0f92e991.h264.mp4",
+      "hevc": "/icinden/v/d/tbc.60515094.hevc.mp4",
+      "av1": "/icinden/v/d/tbc.25ba4e55.av1.mp4"
+     },
+     "yatay": {
+      "h264": "/icinden/v/y/tbc.35f2ae2e.h264.mp4",
+      "av1": "/icinden/v/y/tbc.57310799.av1.mp4"
+     }
+    },
+    "bayt": {
+     "dikey": {
+      "h264": 402036,
+      "hevc": 242321,
+      "av1": 242458
+     },
+     "yatay": {
+      "h264": 276007,
+      "av1": 173405
+     }
+    },
+    "geri": null,
+    "hizGeri": 1
+   },
+   "ozel": {
+    "dalUclari": {
+     "dikey": [
+      {"ad": "solAlt", "x": 174.9, "y": 543.9},
+      {"ad": "sağAlt", "x": 557.5, "y": 506.4},
+      {"ad": "solOrta", "x": 224.1, "y": 387.3},
+      {"ad": "sağOrta", "x": 537.5, "y": 353.5},
+      {"ad": "solÜst", "x": 266.1, "y": 246.1},
+      {"ad": "sağÜst", "x": 422.4, "y": 227.6}
+     ],
+     "yatay": [
+      {"ad": "solAlt", "x": 454.9, "y": 414.5},
+      {"ad": "sağAlt", "x": 837.5, "y": 377.1},
+      {"ad": "solOrta", "x": 504.1, "y": 257.9},
+      {"ad": "sağOrta", "x": 817.5, "y": 224.2},
+      {"ad": "solÜst", "x": 546.1, "y": 116.8},
+      {"ad": "sağÜst", "x": 702.4, "y": 98.3}
+     ]
+    }
+   }
+  },
+  {
+   "id": "d12",
+   "rol": "fidan-yaprak",
+   "tur": "klip",
+   "okuma": [0.5674, 0.5675, 0.5681, 0.5696, 0.5718, 0.5743, 0.5767, 0.5791, 0.5814, 0.5837, 0.5859, 0.5881, 0.5902, 0.5923, 0.5943, 0.5962, 0.5981, 0.6, 0.6018, 0.6035, 0.6052, 0.6068, 0.6084, 0.6099, 0.6114, 0.6128, 0.6142, 0.6155, 0.6168, 0.6181, 0.6192, 0.6204, 0.6215, 0.6225, 0.6235, 0.6245, 0.6254, 0.6263, 0.6271, 0.6279, 0.6287, 0.6294, 0.63, 0.6307, 0.6313, 0.6318, 0.6323, 0.6328, 0.6332, 0.6336, 0.634, 0.6344, 0.6347, 0.6349, 0.6352, 0.6354, 0.6356, 0.6358, 0.6359, 0.636, 0.6361, 0.6362, 0.6362, 0.6362, 0.6362, 0.6362],
+   "poster": {
+    "dikey": {
+     "dosya": "/icinden/p/d/pc.f9f23f2d.webp",
+     "bayt": 52352,
+     "lqip": "data:image/webp;base64,UklGRioBAABXRUJQVlA4IB4BAAAQBwCdASoYACsAPtFUokuoJKMhsBVdUQAaCUAXwG1/QYTQIkvaTgGhDOA5a+cbeDpBKtCwOsNkVuilN3NZnW3AAAD+931sjMr2BQJruMxM2ORledGqB807IlGTOIgII/iypJ5OWWfjQ3cADNkpSFBbtSLfstgxqGGLcuQUXAigvFNfabvt2IyO6OfpLS3fMp9aj331tkk3NckL6x55YBpJMAsytqwbZgZR/EbRBQxzWibRarcfgRwzLWefME+hEuHbNzE9tTPXt9sUl0WXuI/ZZHVWgdzizSoQLwPPqVWSuJg6/CB/aauS01Digu7Z2AErUoSsPtbcTehn1H3f/s3zAJWSj4ILp4+M8HVgalYwHJvmkfHVTTKQ2ExTAAAA"
+    },
+    "yatay": {
+     "dosya": "/icinden/p/y/pc.2f98bb99.webp",
+     "bayt": 30112,
+     "lqip": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAQBACdASoYAA4APtFWo0uoJKMhsAgBABoJQBYdhC12xz+padDIVXzqAAD+9qim91oIOZK38L1WUwgCtERlZtf1PGPieQFCaug5Ur8uPJbp61D/iBagTWR6PRqb2/R4+/TxeA+EX1ST47Pr37JTAAAA"
+    }
+   },
+   "dongu": {
+    "ad": "lc",
+    "sure": 4,
+    "kare": 120,
+    "dosya": {
+     "dikey": {
+      "h264": "/icinden/v/d/lc.b3f6d486.h264.mp4",
+      "hevc": "/icinden/v/d/lc.adada5f8.hevc.mp4",
+      "av1": "/icinden/v/d/lc.5311e7b2.av1.mp4"
+     },
+     "yatay": {
+      "h264": "/icinden/v/y/lc.b9a7e6c3.h264.mp4",
+      "av1": "/icinden/v/y/lc.d28bac79.av1.mp4"
+     }
+    },
+    "bayt": {
+     "dikey": {
+      "h264": 263384,
+      "hevc": 160865,
+      "av1": 223203
+     },
+     "yatay": {
+      "h264": 220620,
+      "av1": 158986
      }
     }
    },
    "ileri": null,
    "ozel": {
-    "dunyaR": [115, 115.3, 117, 120.9, 127, 134.3, 141.7, 149.3, 157, 164.8, 172.6, 180.6, 188.6, 196.6, 204.7, 212.8, 221, 229.2, 237.3, 245.3, 253.3, 261.1, 268.9, 276.4, 283.8, 291, 297.9, 304.7, 311.2, 317.4, 323.4, 329.1, 334.6, 339.7, 344.5, 349.1, 353.3, 357.3, 360.9, 364.2, 367.3, 370, 372.5, 374.6, 376.5, 378.1, 379.5, 380.6, 381.5, 382.2, 382.6, 382.9, 383.1, 383.1],
-    "dunyaC": {
-     "dikey": [360, 512],
-     "yatay": [640, 232]
-    },
-    "yaylar": {
+    "dalUclari": {
      "dikey": [
-      [
-       [289.7, 623.6],
-       [293.1, 627.5],
-       [296.6, 631.5],
-       [300.2, 635.8],
-       [303.9, 640.3],
-       [307.7, 645],
-       [311.7, 649.9],
-       [315.8, 655.1],
-       [320, 660.5],
-       [324.2, 666.1],
-       [328.6, 671.9],
-       [333, 678],
-       [337.5, 684.2],
-       [342.1, 690.6],
-       [346.6, 697.2],
-       [351.2, 703.8],
-       [355.8, 710.6],
-       [360.3, 717.4],
-       [364.8, 724.2],
-       [369.3, 731.1],
-       [373.7, 737.9],
-       [378, 744.7],
-       [382.3, 751.4],
-       [386.5, 758.1]
-      ],
-      [
-       [238, 667.4],
-       [243, 669.9],
-       [248.2, 672.4],
-       [253.6, 675.2],
-       [259.2, 678],
-       [264.9, 681.1],
-       [270.9, 684.3],
-       [277.1, 687.7],
-       [283.4, 691.3],
-       [289.9, 695],
-       [296.6, 698.9],
-       [303.4, 703],
-       [310.3, 707.2],
-       [317.3, 711.6],
-       [324.4, 716],
-       [331.5, 720.6],
-       [338.6, 725.2],
-       [345.7, 729.9],
-       [352.7, 734.6],
-       [359.6, 739.3],
-       [366.5, 744.1],
-       [373.3, 748.8],
-       [380, 753.5],
-       [386.5, 758.1]
-      ],
-      [
-       [649.9, 557.9],
-       [657.4, 551.1],
-       [664.1, 545],
-       [669.6, 539.8],
-       [673.8, 535.6],
-       [676.5, 532.6],
-       [677.4, 531.1],
-       [676.3, 531.1],
-       [673, 532.8],
-       [667.4, 536.5],
-       [659.4, 542.1],
-       [648.8, 549.8],
-       [635.7, 559.6],
-       [620.2, 571.5],
-       [602.3, 585.3],
-       [582.3, 600.9],
-       [560.4, 618],
-       [537, 636.5],
-       [512.5, 656.1],
-       [487.3, 676.3],
-       [461.7, 696.9],
-       [436.1, 717.6],
-       [411, 738.1],
-       [386.5, 758.1]
-      ],
-      [
-       [28.6, 998.6],
-       [15.7, 1005.5],
-       [4.3, 1011.4],
-       [-5.4, 1016.1],
-       [-13.1, 1019.5],
-       [-18.3, 1021.4],
-       [-20.7, 1021.5],
-       [-20.1, 1019.6],
-       [-16.2, 1015.7],
-       [-8.6, 1009.5],
-       [2.8, 1001.1],
-       [18, 990.3],
-       [37.1, 977.2],
-       [59.8, 961.9],
-       [86, 944.7],
-       [115.3, 925.8],
-       [147, 905.5],
-       [180.6, 884.2],
-       [215.5, 862.4],
-       [251, 840.4],
-       [286.4, 818.6],
-       [321.1, 797.5],
-       [354.6, 777.2],
-       [386.5, 758.1]
-      ],
-      [
-       [254.4, 632.9],
-       [258.7, 636.3],
-       [263.3, 639.8],
-       [268, 643.6],
-       [272.9, 647.6],
-       [278, 651.8],
-       [283.3, 656.2],
-       [288.7, 660.9],
-       [294.4, 665.9],
-       [300.2, 671.1],
-       [306.1, 676.5],
-       [312.2, 682.2],
-       [318.4, 688],
-       [324.7, 694],
-       [331, 700.2],
-       [337.3, 706.5],
-       [343.7, 712.9],
-       [350, 719.4],
-       [356.3, 725.9],
-       [362.5, 732.4],
-       [368.7, 738.9],
-       [374.7, 745.3],
-       [380.7, 751.7],
-       [386.5, 758.1]
-      ],
-      [
-       [244.6, 620.6],
-       [249, 624],
-       [253.7, 627.7],
-       [258.6, 631.7],
-       [263.7, 635.9],
-       [269.1, 640.3],
-       [274.6, 645.1],
-       [280.4, 650.2],
-       [286.5, 655.6],
-       [292.7, 661.2],
-       [299.1, 667.2],
-       [305.6, 673.4],
-       [312.3, 679.9],
-       [319.1, 686.6],
-       [326, 693.4],
-       [332.9, 700.5],
-       [339.8, 707.6],
-       [346.7, 714.8],
-       [353.6, 722.1],
-       [360.4, 729.4],
-       [367.1, 736.7],
-       [373.7, 743.9],
-       [380.2, 751],
-       [386.5, 758.1]
-      ],
-      [
-       [122.2, 764.2],
-       [128.8, 763.3],
-       [135.9, 762.4],
-       [143.6, 761.5],
-       [151.9, 760.7],
-       [160.8, 759.8],
-       [170.4, 759.1],
-       [180.6, 758.4],
-       [191.5, 757.7],
-       [202.9, 757.1],
-       [214.9, 756.7],
-       [227.4, 756.3],
-       [240.3, 755.9],
-       [253.6, 755.7],
-       [267.1, 755.6],
-       [280.7, 755.6],
-       [294.5, 755.6],
-       [308.2, 755.8],
-       [321.9, 756],
-       [335.3, 756.3],
-       [348.6, 756.7],
-       [361.6, 757.1],
-       [374.2, 757.6],
-       [386.5, 758.1]
-      ],
-      [
-       [671.3, 749.2],
-       [667.6, 748.3],
-       [663.2, 747.5],
-       [657.9, 746.8],
-       [651.8, 746.1],
-       [644.8, 745.5],
-       [636.7, 745],
-       [627.5, 744.7],
-       [617.3, 744.5],
-       [606, 744.4],
-       [593.7, 744.5],
-       [580.5, 744.7],
-       [566.3, 745.1],
-       [551.4, 745.7],
-       [535.7, 746.4],
-       [519.6, 747.3],
-       [503, 748.3],
-       [486.2, 749.4],
-       [469.2, 750.7],
-       [452.2, 752.1],
-       [435.4, 753.5],
-       [418.7, 755],
-       [402.4, 756.5],
-       [386.5, 758.1]
-      ],
-      [
-       [253.2, 676.2],
-       [257.9, 678.5],
-       [262.7, 681],
-       [267.7, 683.6],
-       [272.9, 686.3],
-       [278.2, 689.1],
-       [283.6, 692.1],
-       [289.2, 695.2],
-       [294.9, 698.5],
-       [300.8, 701.9],
-       [306.8, 705.4],
-       [312.9, 709.1],
-       [319, 712.9],
-       [325.2, 716.7],
-       [331.5, 720.7],
-       [337.8, 724.8],
-       [344.1, 728.9],
-       [350.3, 733],
-       [356.5, 737.2],
-       [362.7, 741.4],
-       [368.8, 745.6],
-       [374.8, 749.8],
-       [380.7, 754],
-       [386.5, 758.1]
-      ],
-      [
-       [93.3, 533],
-       [89.4, 526.4],
-       [86.6, 520.6],
-       [84.8, 515.7],
-       [84.5, 512],
-       [85.6, 509.5],
-       [88.5, 508.6],
-       [93.3, 509.5],
-       [100.2, 512.2],
-       [109.2, 517.1],
-       [120.4, 524],
-       [133.7, 533.2],
-       [149.2, 544.6],
-       [166.7, 558.1],
-       [185.9, 573.6],
-       [206.7, 591],
-       [228.7, 609.9],
-       [251.5, 630],
-       [274.7, 651],
-       [298.1, 672.6],
-       [321.3, 694.4],
-       [343.9, 716.1],
-       [365.7, 737.4],
-       [386.5, 758.1]
-      ],
-      [
-       [443.7, 1068.2],
-       [443.4, 1061.8],
-       [443, 1054.6],
-       [442.4, 1046.6],
-       [441.6, 1037.8],
-       [440.6, 1028],
-       [439.3, 1017.2],
-       [437.8, 1005.5],
-       [435.9, 992.9],
-       [433.8, 979.4],
-       [431.5, 965.1],
-       [428.9, 950.1],
-       [426, 934.4],
-       [422.9, 918.3],
-       [419.6, 901.8],
-       [416.2, 885.1],
-       [412.6, 868.3],
-       [408.9, 851.6],
-       [405.2, 835],
-       [401.4, 818.8],
-       [397.6, 802.9],
-       [393.8, 787.4],
-       [390.1, 772.5],
-       [386.5, 758.1]
-      ],
-      [
-       [739.6, 846.5],
-       [752, 846.2],
-       [763, 845.7],
-       [772.5, 844.8],
-       [779.9, 843.4],
-       [785.1, 841.7],
-       [787.7, 839.5],
-       [787.4, 836.8],
-       [784, 833.6],
-       [777.1, 830],
-       [766.6, 825.8],
-       [752.4, 821.3],
-       [734.4, 816.3],
-       [712.9, 811],
-       [688, 805.4],
-       [660, 799.7],
-       [629.3, 793.9],
-       [596.5, 788.1],
-       [562.1, 782.4],
-       [526.7, 776.8],
-       [490.9, 771.6],
-       [455.3, 766.7],
-       [420.3, 762.2],
-       [386.5, 758.1]
-      ],
-      [
-       [307.4, 626],
-       [310.3, 630],
-       [313.3, 634.2],
-       [316.3, 638.5],
-       [319.4, 643],
-       [322.6, 647.7],
-       [325.9, 652.6],
-       [329.3, 657.8],
-       [332.7, 663.1],
-       [336.2, 668.7],
-       [339.8, 674.4],
-       [343.4, 680.3],
-       [347.1, 686.4],
-       [350.7, 692.6],
-       [354.4, 699],
-       [358.1, 705.5],
-       [361.8, 712],
-       [365.5, 718.6],
-       [369.1, 725.2],
-       [372.7, 731.9],
-       [376.2, 738.5],
-       [379.7, 745.1],
-       [383.1, 751.6],
-       [386.5, 758.1]
-      ],
-      [
-       [291.7, 599.9],
-       [294.9, 604.2],
-       [298.2, 608.7],
-       [301.6, 613.5],
-       [305.1, 618.5],
-       [308.8, 623.8],
-       [312.7, 629.5],
-       [316.6, 635.4],
-       [320.7, 641.7],
-       [324.9, 648.3],
-       [329.2, 655.1],
-       [333.6, 662.3],
-       [338, 669.7],
-       [342.5, 677.3],
-       [347, 685.1],
-       [351.6, 693.1],
-       [356.1, 701.2],
-       [360.6, 709.3],
-       [365.1, 717.5],
-       [369.5, 725.7],
-       [373.9, 733.9],
-       [378.2, 742.1],
-       [382.4, 750.1],
-       [386.5, 758.1]
-      ],
-      [
-       [41.2, 596.7],
-       [31.9, 588.4],
-       [24, 580.6],
-       [17.5, 573.6],
-       [13, 567.6],
-       [10.4, 562.7],
-       [10.3, 559.2],
-       [12.7, 557.1],
-       [17.9, 556.7],
-       [26.1, 558.2],
-       [37.5, 561.7],
-       [52, 567.2],
-       [69.8, 574.8],
-       [90.6, 584.6],
-       [114.2, 596.4],
-       [140.5, 610.2],
-       [168.9, 625.7],
-       [199, 642.6],
-       [230.3, 660.8],
-       [262.3, 679.8],
-       [294.4, 699.4],
-       [326.1, 719.2],
-       [356.9, 738.8],
-       [386.5, 758.1]
-      ],
-      [
-       [386.5, 1184.4],
-       [388.2, 1188.2],
-       [389.9, 1190.6],
-       [391.5, 1191.1],
-       [393.1, 1189.6],
-       [394.7, 1185.6],
-       [396.1, 1179.1],
-       [397.3, 1169.7],
-       [398.4, 1157.4],
-       [399.3, 1142.1],
-       [400, 1123.7],
-       [400.4, 1102.5],
-       [400.5, 1078.6],
-       [400.4, 1052.3],
-       [399.9, 1024.1],
-       [399.2, 994.3],
-       [398.2, 963.5],
-       [397, 932.3],
-       [395.6, 901],
-       [394, 870.1],
-       [392.2, 840.1],
-       [390.4, 811.3],
-       [388.5, 783.9],
-       [386.5, 758.1]
-      ],
-      [
-       [548, 838.9],
-       [543.2, 835.9],
-       [538.2, 832.8],
-       [533, 829.6],
-       [527.5, 826.4],
-       [521.7, 823],
-       [515.7, 819.5],
-       [509.4, 816],
-       [502.8, 812.4],
-       [495.9, 808.7],
-       [488.8, 805],
-       [481.5, 801.3],
-       [473.9, 797.5],
-       [466.2, 793.7],
-       [458.4, 789.9],
-       [450.4, 786.2],
-       [442.3, 782.4],
-       [434.2, 778.8],
-       [426.1, 775.1],
-       [418.1, 771.6],
-       [410, 768.1],
-       [402.1, 764.7],
-       [394.3, 761.3],
-       [386.5, 758.1]
-      ],
-      [
-       [328.4, 628.7],
-       [330.6, 632.7],
-       [332.9, 637],
-       [335.2, 641.3],
-       [337.6, 645.9],
-       [340, 650.6],
-       [342.5, 655.5],
-       [345, 660.6],
-       [347.5, 665.8],
-       [350.1, 671.3],
-       [352.8, 676.9],
-       [355.4, 682.7],
-       [358.1, 688.6],
-       [360.8, 694.7],
-       [363.4, 700.9],
-       [366.1, 707.1],
-       [368.8, 713.5],
-       [371.4, 719.9],
-       [374, 726.3],
-       [376.6, 732.7],
-       [379.1, 739.1],
-       [381.6, 745.5],
-       [384.1, 751.8],
-       [386.5, 758.1]
-      ],
-      [
-       [-21.5, 804.8],
-       [-35.7, 803.2],
-       [-48.3, 801.5],
-       [-58.8, 799.6],
-       [-67.1, 797.5],
-       [-72.6, 795.2],
-       [-75.1, 792.8],
-       [-74.3, 790.2],
-       [-69.7, 787.5],
-       [-61.2, 784.7],
-       [-48.6, 781.8],
-       [-31.7, 778.9],
-       [-10.5, 776],
-       [14.7, 773.1],
-       [43.8, 770.4],
-       [76.4, 767.9],
-       [111.9, 765.6],
-       [149.7, 763.6],
-       [189.1, 761.8],
-       [229.5, 760.4],
-       [270.1, 759.3],
-       [310.2, 758.6],
-       [349.1, 758.2],
-       [386.5, 758.1]
-      ],
-      [
-       [225.8, 642.8],
-       [230.9, 645.7],
-       [236.1, 648.7],
-       [241.7, 652],
-       [247.5, 655.5],
-       [253.5, 659.2],
-       [259.8, 663.1],
-       [266.3, 667.4],
-       [273.1, 671.8],
-       [280.2, 676.6],
-       [287.4, 681.6],
-       [294.8, 686.8],
-       [302.4, 692.2],
-       [310.1, 697.8],
-       [317.9, 703.6],
-       [325.7, 709.5],
-       [333.6, 715.5],
-       [341.4, 721.6],
-       [349.2, 727.7],
-       [356.9, 733.8],
-       [364.5, 740],
-       [372, 746.1],
-       [379.3, 752.1],
-       [386.5, 758.1]
-      ],
-      [
-       [315.9, 643.4],
-       [318.6, 647.1],
-       [321.3, 650.9],
-       [324.1, 654.8],
-       [327, 658.9],
-       [329.9, 663.1],
-       [332.9, 667.5],
-       [335.9, 672],
-       [339, 676.7],
-       [342.1, 681.5],
-       [345.3, 686.5],
-       [348.5, 691.6],
-       [351.7, 696.9],
-       [355, 702.2],
-       [358.2, 707.7],
-       [361.5, 713.2],
-       [364.7, 718.8],
-       [367.9, 724.4],
-       [371.1, 730],
-       [374.3, 735.7],
-       [377.4, 741.3],
-       [380.5, 747],
-       [383.5, 752.5],
-       [386.5, 758.1]
-      ],
-      [
-       [169.5, 701.1],
-       [175.8, 702.1],
-       [182.5, 703.1],
-       [189.5, 704.3],
-       [196.9, 705.6],
-       [204.8, 707.1],
-       [213.1, 708.8],
-       [221.7, 710.6],
-       [230.8, 712.6],
-       [240.3, 714.8],
-       [250.1, 717.2],
-       [260.2, 719.7],
-       [270.5, 722.5],
-       [281.1, 725.3],
-       [291.8, 728.3],
-       [302.7, 731.4],
-       [313.5, 734.6],
-       [324.3, 737.9],
-       [335.1, 741.2],
-       [345.7, 744.6],
-       [356.2, 748],
-       [366.5, 751.4],
-       [376.6, 754.7],
-       [386.5, 758.1]
-      ],
-      [
-       [221.6, 586.3],
-       [226, 589.7],
-       [230.8, 593.5],
-       [235.8, 597.6],
-       [241.2, 602.2],
-       [247, 607.2],
-       [253.1, 612.7],
-       [259.6, 618.6],
-       [266.4, 625.1],
-       [273.5, 632],
-       [281, 639.4],
-       [288.7, 647.3],
-       [296.7, 655.5],
-       [304.8, 664.2],
-       [313.1, 673.1],
-       [321.5, 682.3],
-       [329.9, 691.6],
-       [338.3, 701.1],
-       [346.6, 710.7],
-       [354.9, 720.4],
-       [363.1, 729.9],
-       [371.1, 739.4],
-       [378.9, 748.8],
-       [386.5, 758.1]
-      ],
-      [
-       [418, 837.5],
-       [416.9, 834.2],
-       [415.7, 830.8],
-       [414.6, 827.5],
-       [413.4, 824.1],
-       [412.2, 820.7],
-       [411, 817.2],
-       [409.7, 813.7],
-       [408.4, 810.2],
-       [407.1, 806.7],
-       [405.7, 803.1],
-       [404.3, 799.6],
-       [402.9, 796],
-       [401.5, 792.5],
-       [400, 788.9],
-       [398.5, 785.4],
-       [397.1, 781.9],
-       [395.6, 778.4],
-       [394, 774.9],
-       [392.5, 771.5],
-       [391, 768.1],
-       [389.5, 764.7],
-       [388, 761.4],
-       [386.5, 758.1]
-      ],
-      [
-       [572.6, 832.1],
-       [567.5, 829.4],
-       [562.1, 826.6],
-       [556.4, 823.7],
-       [550.4, 820.7],
-       [544, 817.6],
-       [537.2, 814.5],
-       [530.1, 811.2],
-       [522.6, 807.9],
-       [514.7, 804.5],
-       [506.5, 801.1],
-       [498, 797.6],
-       [489.2, 794.1],
-       [480.2, 790.6],
-       [471, 787.1],
-       [461.6, 783.6],
-       [452.2, 780.2],
-       [442.6, 776.8],
-       [433.1, 773.5],
-       [423.6, 770.3],
-       [414.1, 767.1],
-       [404.8, 764],
-       [395.6, 761],
-       [386.5, 758.1]
-      ],
-      [
-       [507.5, 712.5],
-       [503.4, 713.8],
-       [499.3, 715.1],
-       [495, 716.6],
-       [490.6, 718],
-       [486.1, 719.6],
-       [481.4, 721.2],
-       [476.5, 722.9],
-       [471.5, 724.7],
-       [466.4, 726.6],
-       [461.1, 728.5],
-       [455.7, 730.5],
-       [450.1, 732.6],
-       [444.5, 734.7],
-       [438.8, 736.9],
-       [433, 739.2],
-       [427.2, 741.5],
-       [421.4, 743.8],
-       [415.5, 746.2],
-       [409.6, 748.6],
-       [403.8, 750.9],
-       [398, 753.3],
-       [392.2, 755.7],
-       [386.5, 758.1]
-      ],
-      [
-       [-18.6, 855.5],
-       [-28.1, 855.5],
-       [-36.2, 855.1],
-       [-42.5, 854.4],
-       [-46.8, 853.2],
-       [-48.7, 851.5],
-       [-47.8, 849.2],
-       [-43.9, 846.4],
-       [-36.6, 843.1],
-       [-25.7, 839.1],
-       [-11.2, 834.5],
-       [7, 829.5],
-       [28.9, 823.9],
-       [54.2, 817.9],
-       [82.5, 811.6],
-       [113.6, 805.1],
-       [146.7, 798.4],
-       [181.3, 791.8],
-       [216.8, 785.4],
-       [252.4, 779.1],
-       [287.7, 773.2],
-       [322.1, 767.7],
-       [355.2, 762.7],
-       [386.5, 758.1]
-      ]
+      {"ad": "solAlt", "x": 201.9, "y": 564.1},
+      {"ad": "sağAlt", "x": 538.4, "y": 528.5},
+      {"ad": "solOrta", "x": 245.7, "y": 425.6},
+      {"ad": "sağOrta", "x": 521.2, "y": 394.9},
+      {"ad": "solÜst", "x": 279.2, "y": 298.3},
+      {"ad": "sağÜst", "x": 417.9, "y": 282.3}
      ],
      "yatay": [
-      [
-       [569.7, 343.6],
-       [573.1, 347.5],
-       [576.6, 351.5],
-       [580.2, 355.8],
-       [583.9, 360.3],
-       [587.7, 365],
-       [591.7, 369.9],
-       [595.8, 375.1],
-       [600, 380.5],
-       [604.2, 386.1],
-       [608.6, 391.9],
-       [613, 398],
-       [617.5, 404.2],
-       [622.1, 410.6],
-       [626.6, 417.2],
-       [631.2, 423.8],
-       [635.8, 430.6],
-       [640.3, 437.4],
-       [644.8, 444.2],
-       [649.3, 451.1],
-       [653.7, 457.9],
-       [658, 464.7],
-       [662.3, 471.4],
-       [666.5, 478.1]
-      ],
-      [
-       [518, 387.4],
-       [523, 389.9],
-       [528.2, 392.4],
-       [533.6, 395.2],
-       [539.2, 398],
-       [544.9, 401.1],
-       [550.9, 404.3],
-       [557.1, 407.7],
-       [563.4, 411.3],
-       [569.9, 415],
-       [576.6, 418.9],
-       [583.4, 423],
-       [590.3, 427.2],
-       [597.3, 431.6],
-       [604.4, 436],
-       [611.5, 440.6],
-       [618.6, 445.2],
-       [625.7, 449.9],
-       [632.7, 454.6],
-       [639.6, 459.3],
-       [646.5, 464.1],
-       [653.3, 468.8],
-       [660, 473.5],
-       [666.5, 478.1]
-      ],
-      [
-       [929.9, 277.9],
-       [937.4, 271.1],
-       [944.1, 265],
-       [949.6, 259.8],
-       [953.8, 255.6],
-       [956.5, 252.6],
-       [957.4, 251.1],
-       [956.3, 251.1],
-       [953, 252.8],
-       [947.4, 256.5],
-       [939.4, 262.1],
-       [928.8, 269.8],
-       [915.7, 279.6],
-       [900.2, 291.5],
-       [882.3, 305.3],
-       [862.3, 320.9],
-       [840.4, 338],
-       [817, 356.5],
-       [792.5, 376.1],
-       [767.3, 396.3],
-       [741.7, 416.9],
-       [716.1, 437.6],
-       [691, 458.1],
-       [666.5, 478.1]
-      ],
-      [
-       [308.6, 718.6],
-       [295.7, 725.5],
-       [284.3, 731.4],
-       [274.6, 736.1],
-       [266.9, 739.5],
-       [261.7, 741.4],
-       [259.3, 741.5],
-       [259.9, 739.6],
-       [263.8, 735.7],
-       [271.4, 729.5],
-       [282.8, 721.1],
-       [298, 710.3],
-       [317.1, 697.2],
-       [339.8, 681.9],
-       [366, 664.7],
-       [395.3, 645.8],
-       [427, 625.5],
-       [460.6, 604.2],
-       [495.5, 582.4],
-       [531, 560.4],
-       [566.4, 538.6],
-       [601.1, 517.5],
-       [634.6, 497.2],
-       [666.5, 478.1]
-      ],
-      [
-       [534.4, 352.9],
-       [538.7, 356.3],
-       [543.3, 359.8],
-       [548, 363.6],
-       [552.9, 367.6],
-       [558, 371.8],
-       [563.3, 376.2],
-       [568.7, 380.9],
-       [574.4, 385.9],
-       [580.2, 391.1],
-       [586.1, 396.5],
-       [592.2, 402.2],
-       [598.4, 408],
-       [604.7, 414],
-       [611, 420.2],
-       [617.3, 426.5],
-       [623.7, 432.9],
-       [630, 439.4],
-       [636.3, 445.9],
-       [642.5, 452.4],
-       [648.7, 458.9],
-       [654.7, 465.3],
-       [660.7, 471.7],
-       [666.5, 478.1]
-      ],
-      [
-       [524.6, 340.6],
-       [529, 344],
-       [533.7, 347.7],
-       [538.6, 351.7],
-       [543.7, 355.9],
-       [549.1, 360.3],
-       [554.6, 365.1],
-       [560.4, 370.2],
-       [566.5, 375.6],
-       [572.7, 381.2],
-       [579.1, 387.2],
-       [585.6, 393.4],
-       [592.3, 399.9],
-       [599.1, 406.6],
-       [606, 413.4],
-       [612.9, 420.5],
-       [619.8, 427.6],
-       [626.7, 434.8],
-       [633.6, 442.1],
-       [640.4, 449.4],
-       [647.1, 456.7],
-       [653.7, 463.9],
-       [660.2, 471],
-       [666.5, 478.1]
-      ],
-      [
-       [402.2, 484.2],
-       [408.8, 483.3],
-       [415.9, 482.4],
-       [423.6, 481.5],
-       [431.9, 480.7],
-       [440.8, 479.8],
-       [450.4, 479.1],
-       [460.6, 478.4],
-       [471.5, 477.7],
-       [482.9, 477.1],
-       [494.9, 476.7],
-       [507.4, 476.3],
-       [520.3, 475.9],
-       [533.6, 475.7],
-       [547.1, 475.6],
-       [560.7, 475.6],
-       [574.5, 475.6],
-       [588.2, 475.8],
-       [601.9, 476],
-       [615.3, 476.3],
-       [628.6, 476.7],
-       [641.6, 477.1],
-       [654.2, 477.6],
-       [666.5, 478.1]
-      ],
-      [
-       [951.3, 469.2],
-       [947.6, 468.3],
-       [943.2, 467.5],
-       [937.9, 466.8],
-       [931.8, 466.1],
-       [924.8, 465.5],
-       [916.7, 465],
-       [907.5, 464.7],
-       [897.3, 464.5],
-       [886, 464.4],
-       [873.7, 464.5],
-       [860.5, 464.7],
-       [846.3, 465.1],
-       [831.4, 465.7],
-       [815.7, 466.4],
-       [799.6, 467.3],
-       [783, 468.3],
-       [766.2, 469.4],
-       [749.2, 470.7],
-       [732.2, 472.1],
-       [715.4, 473.5],
-       [698.7, 475],
-       [682.4, 476.5],
-       [666.5, 478.1]
-      ],
-      [
-       [533.2, 396.2],
-       [537.9, 398.5],
-       [542.7, 401],
-       [547.7, 403.6],
-       [552.9, 406.3],
-       [558.2, 409.1],
-       [563.6, 412.1],
-       [569.2, 415.2],
-       [574.9, 418.5],
-       [580.8, 421.9],
-       [586.8, 425.4],
-       [592.9, 429.1],
-       [599, 432.9],
-       [605.2, 436.7],
-       [611.5, 440.7],
-       [617.8, 444.8],
-       [624.1, 448.9],
-       [630.3, 453],
-       [636.5, 457.2],
-       [642.7, 461.4],
-       [648.8, 465.6],
-       [654.8, 469.8],
-       [660.7, 474],
-       [666.5, 478.1]
-      ],
-      [
-       [373.3, 253],
-       [369.4, 246.4],
-       [366.6, 240.6],
-       [364.8, 235.7],
-       [364.5, 232],
-       [365.6, 229.5],
-       [368.5, 228.6],
-       [373.3, 229.5],
-       [380.2, 232.2],
-       [389.2, 237.1],
-       [400.4, 244],
-       [413.7, 253.2],
-       [429.2, 264.6],
-       [446.7, 278.1],
-       [465.9, 293.6],
-       [486.7, 311],
-       [508.7, 329.9],
-       [531.5, 350],
-       [554.7, 371],
-       [578.1, 392.6],
-       [601.3, 414.4],
-       [623.9, 436.1],
-       [645.7, 457.4],
-       [666.5, 478.1]
-      ],
-      [
-       [723.7, 788.2],
-       [723.4, 781.8],
-       [723, 774.6],
-       [722.4, 766.6],
-       [721.6, 757.8],
-       [720.6, 748],
-       [719.3, 737.2],
-       [717.8, 725.5],
-       [715.9, 712.9],
-       [713.8, 699.4],
-       [711.5, 685.1],
-       [708.9, 670.1],
-       [706, 654.4],
-       [702.9, 638.3],
-       [699.6, 621.8],
-       [696.2, 605.1],
-       [692.6, 588.3],
-       [688.9, 571.6],
-       [685.2, 555],
-       [681.4, 538.8],
-       [677.6, 522.9],
-       [673.8, 507.4],
-       [670.1, 492.5],
-       [666.5, 478.1]
-      ],
-      [
-       [1019.6, 566.5],
-       [1032, 566.2],
-       [1043, 565.7],
-       [1052.5, 564.8],
-       [1059.9, 563.4],
-       [1065.1, 561.7],
-       [1067.7, 559.5],
-       [1067.4, 556.8],
-       [1064, 553.6],
-       [1057.1, 550],
-       [1046.6, 545.8],
-       [1032.4, 541.3],
-       [1014.4, 536.3],
-       [992.9, 531],
-       [968, 525.4],
-       [940, 519.7],
-       [909.3, 513.9],
-       [876.5, 508.1],
-       [842.1, 502.4],
-       [806.7, 496.8],
-       [770.9, 491.6],
-       [735.3, 486.7],
-       [700.3, 482.2],
-       [666.5, 478.1]
-      ],
-      [
-       [587.4, 346],
-       [590.3, 350],
-       [593.3, 354.2],
-       [596.3, 358.5],
-       [599.4, 363],
-       [602.6, 367.7],
-       [605.9, 372.6],
-       [609.3, 377.8],
-       [612.7, 383.1],
-       [616.2, 388.7],
-       [619.8, 394.4],
-       [623.4, 400.3],
-       [627.1, 406.4],
-       [630.7, 412.6],
-       [634.4, 419],
-       [638.1, 425.5],
-       [641.8, 432],
-       [645.5, 438.6],
-       [649.1, 445.2],
-       [652.7, 451.9],
-       [656.2, 458.5],
-       [659.7, 465.1],
-       [663.1, 471.6],
-       [666.5, 478.1]
-      ],
-      [
-       [571.7, 319.9],
-       [574.9, 324.2],
-       [578.2, 328.7],
-       [581.6, 333.5],
-       [585.1, 338.5],
-       [588.8, 343.8],
-       [592.7, 349.5],
-       [596.6, 355.4],
-       [600.7, 361.7],
-       [604.9, 368.3],
-       [609.2, 375.1],
-       [613.6, 382.3],
-       [618, 389.7],
-       [622.5, 397.3],
-       [627, 405.1],
-       [631.6, 413.1],
-       [636.1, 421.2],
-       [640.6, 429.3],
-       [645.1, 437.5],
-       [649.5, 445.7],
-       [653.9, 453.9],
-       [658.2, 462.1],
-       [662.4, 470.1],
-       [666.5, 478.1]
-      ],
-      [
-       [321.2, 316.7],
-       [311.9, 308.4],
-       [304, 300.6],
-       [297.5, 293.6],
-       [293, 287.6],
-       [290.4, 282.7],
-       [290.3, 279.2],
-       [292.7, 277.1],
-       [297.9, 276.7],
-       [306.1, 278.2],
-       [317.5, 281.7],
-       [332, 287.2],
-       [349.8, 294.8],
-       [370.6, 304.6],
-       [394.2, 316.4],
-       [420.5, 330.2],
-       [448.9, 345.7],
-       [479, 362.6],
-       [510.3, 380.8],
-       [542.3, 399.8],
-       [574.4, 419.4],
-       [606.1, 439.2],
-       [636.9, 458.8],
-       [666.5, 478.1]
-      ],
-      [
-       [666.5, 904.4],
-       [668.2, 908.2],
-       [669.9, 910.6],
-       [671.5, 911.1],
-       [673.1, 909.6],
-       [674.7, 905.6],
-       [676.1, 899.1],
-       [677.3, 889.7],
-       [678.4, 877.4],
-       [679.3, 862.1],
-       [680, 843.7],
-       [680.4, 822.5],
-       [680.5, 798.6],
-       [680.4, 772.3],
-       [679.9, 744.1],
-       [679.2, 714.3],
-       [678.2, 683.5],
-       [677, 652.3],
-       [675.6, 621],
-       [674, 590.1],
-       [672.2, 560.1],
-       [670.4, 531.3],
-       [668.5, 503.9],
-       [666.5, 478.1]
-      ],
-      [
-       [828, 558.9],
-       [823.2, 555.9],
-       [818.2, 552.8],
-       [813, 549.6],
-       [807.5, 546.4],
-       [801.7, 543],
-       [795.7, 539.5],
-       [789.4, 536],
-       [782.8, 532.4],
-       [775.9, 528.7],
-       [768.8, 525],
-       [761.5, 521.3],
-       [753.9, 517.5],
-       [746.2, 513.7],
-       [738.4, 509.9],
-       [730.4, 506.2],
-       [722.3, 502.4],
-       [714.2, 498.8],
-       [706.1, 495.1],
-       [698.1, 491.6],
-       [690, 488.1],
-       [682.1, 484.7],
-       [674.3, 481.3],
-       [666.5, 478.1]
-      ],
-      [
-       [608.4, 348.7],
-       [610.6, 352.7],
-       [612.9, 357],
-       [615.2, 361.3],
-       [617.6, 365.9],
-       [620, 370.6],
-       [622.5, 375.5],
-       [625, 380.6],
-       [627.5, 385.8],
-       [630.1, 391.3],
-       [632.8, 396.9],
-       [635.4, 402.7],
-       [638.1, 408.6],
-       [640.8, 414.7],
-       [643.4, 420.9],
-       [646.1, 427.1],
-       [648.8, 433.5],
-       [651.4, 439.9],
-       [654, 446.3],
-       [656.6, 452.7],
-       [659.1, 459.1],
-       [661.6, 465.5],
-       [664.1, 471.8],
-       [666.5, 478.1]
-      ],
-      [
-       [258.5, 524.8],
-       [244.3, 523.2],
-       [231.7, 521.5],
-       [221.2, 519.6],
-       [212.9, 517.5],
-       [207.4, 515.2],
-       [204.9, 512.8],
-       [205.7, 510.2],
-       [210.3, 507.5],
-       [218.8, 504.7],
-       [231.4, 501.8],
-       [248.3, 498.9],
-       [269.5, 496],
-       [294.7, 493.1],
-       [323.8, 490.4],
-       [356.4, 487.9],
-       [391.9, 485.6],
-       [429.7, 483.6],
-       [469.1, 481.8],
-       [509.5, 480.4],
-       [550.1, 479.3],
-       [590.2, 478.6],
-       [629.1, 478.2],
-       [666.5, 478.1]
-      ],
-      [
-       [505.8, 362.8],
-       [510.9, 365.7],
-       [516.1, 368.7],
-       [521.7, 372],
-       [527.5, 375.5],
-       [533.5, 379.2],
-       [539.8, 383.1],
-       [546.3, 387.4],
-       [553.1, 391.8],
-       [560.2, 396.6],
-       [567.4, 401.6],
-       [574.8, 406.8],
-       [582.4, 412.2],
-       [590.1, 417.8],
-       [597.9, 423.6],
-       [605.7, 429.5],
-       [613.6, 435.5],
-       [621.4, 441.6],
-       [629.2, 447.7],
-       [636.9, 453.8],
-       [644.5, 460],
-       [652, 466.1],
-       [659.3, 472.1],
-       [666.5, 478.1]
-      ],
-      [
-       [595.9, 363.4],
-       [598.6, 367.1],
-       [601.3, 370.9],
-       [604.1, 374.8],
-       [607, 378.9],
-       [609.9, 383.1],
-       [612.9, 387.5],
-       [615.9, 392],
-       [619, 396.7],
-       [622.1, 401.5],
-       [625.3, 406.5],
-       [628.5, 411.6],
-       [631.7, 416.9],
-       [635, 422.2],
-       [638.2, 427.7],
-       [641.5, 433.2],
-       [644.7, 438.8],
-       [647.9, 444.4],
-       [651.1, 450],
-       [654.3, 455.7],
-       [657.4, 461.3],
-       [660.5, 467],
-       [663.5, 472.5],
-       [666.5, 478.1]
-      ],
-      [
-       [449.5, 421.1],
-       [455.8, 422.1],
-       [462.5, 423.1],
-       [469.5, 424.3],
-       [476.9, 425.6],
-       [484.8, 427.1],
-       [493.1, 428.8],
-       [501.7, 430.6],
-       [510.8, 432.6],
-       [520.3, 434.8],
-       [530.1, 437.2],
-       [540.2, 439.7],
-       [550.5, 442.5],
-       [561.1, 445.3],
-       [571.8, 448.3],
-       [582.7, 451.4],
-       [593.5, 454.6],
-       [604.3, 457.9],
-       [615.1, 461.2],
-       [625.7, 464.6],
-       [636.2, 468],
-       [646.5, 471.4],
-       [656.6, 474.7],
-       [666.5, 478.1]
-      ],
-      [
-       [501.6, 306.3],
-       [506, 309.7],
-       [510.8, 313.5],
-       [515.8, 317.6],
-       [521.2, 322.2],
-       [527, 327.2],
-       [533.1, 332.7],
-       [539.6, 338.6],
-       [546.4, 345.1],
-       [553.5, 352],
-       [561, 359.4],
-       [568.7, 367.3],
-       [576.7, 375.5],
-       [584.8, 384.2],
-       [593.1, 393.1],
-       [601.5, 402.3],
-       [609.9, 411.6],
-       [618.3, 421.1],
-       [626.6, 430.7],
-       [634.9, 440.4],
-       [643.1, 449.9],
-       [651.1, 459.4],
-       [658.9, 468.8],
-       [666.5, 478.1]
-      ],
-      [
-       [698, 557.5],
-       [696.9, 554.2],
-       [695.7, 550.8],
-       [694.6, 547.5],
-       [693.4, 544.1],
-       [692.2, 540.7],
-       [691, 537.2],
-       [689.7, 533.7],
-       [688.4, 530.2],
-       [687.1, 526.7],
-       [685.7, 523.1],
-       [684.3, 519.6],
-       [682.9, 516],
-       [681.5, 512.5],
-       [680, 508.9],
-       [678.5, 505.4],
-       [677.1, 501.9],
-       [675.6, 498.4],
-       [674, 494.9],
-       [672.5, 491.5],
-       [671, 488.1],
-       [669.5, 484.7],
-       [668, 481.4],
-       [666.5, 478.1]
-      ],
-      [
-       [852.6, 552.1],
-       [847.5, 549.4],
-       [842.1, 546.6],
-       [836.4, 543.7],
-       [830.4, 540.7],
-       [824, 537.6],
-       [817.2, 534.5],
-       [810.1, 531.2],
-       [802.6, 527.9],
-       [794.7, 524.5],
-       [786.5, 521.1],
-       [778, 517.6],
-       [769.2, 514.1],
-       [760.2, 510.6],
-       [751, 507.1],
-       [741.6, 503.6],
-       [732.2, 500.2],
-       [722.6, 496.8],
-       [713.1, 493.5],
-       [703.6, 490.3],
-       [694.1, 487.1],
-       [684.8, 484],
-       [675.6, 481],
-       [666.5, 478.1]
-      ],
-      [
-       [787.5, 432.5],
-       [783.4, 433.8],
-       [779.3, 435.1],
-       [775, 436.6],
-       [770.6, 438],
-       [766.1, 439.6],
-       [761.4, 441.2],
-       [756.5, 442.9],
-       [751.5, 444.7],
-       [746.4, 446.6],
-       [741.1, 448.5],
-       [735.7, 450.5],
-       [730.1, 452.6],
-       [724.5, 454.7],
-       [718.8, 456.9],
-       [713, 459.2],
-       [707.2, 461.5],
-       [701.4, 463.8],
-       [695.5, 466.2],
-       [689.6, 468.6],
-       [683.8, 470.9],
-       [678, 473.3],
-       [672.2, 475.7],
-       [666.5, 478.1]
-      ],
-      [
-       [261.4, 575.5],
-       [251.9, 575.5],
-       [243.8, 575.1],
-       [237.5, 574.4],
-       [233.2, 573.2],
-       [231.3, 571.5],
-       [232.2, 569.2],
-       [236.1, 566.4],
-       [243.4, 563.1],
-       [254.3, 559.1],
-       [268.8, 554.5],
-       [287, 549.5],
-       [308.9, 543.9],
-       [334.2, 537.9],
-       [362.5, 531.6],
-       [393.6, 525.1],
-       [426.7, 518.4],
-       [461.3, 511.8],
-       [496.8, 505.4],
-       [532.4, 499.1],
-       [567.7, 493.2],
-       [602.1, 487.7],
-       [635.2, 482.7],
-       [666.5, 478.1]
-      ]
+      {"ad": "solAlt", "x": 481.9, "y": 454.1},
+      {"ad": "sağAlt", "x": 818.4, "y": 418.5},
+      {"ad": "solOrta", "x": 525.7, "y": 315.6},
+      {"ad": "sağOrta", "x": 801.2, "y": 284.9},
+      {"ad": "solÜst", "x": 559.2, "y": 188.3},
+      {"ad": "sağÜst", "x": 697.9, "y": 172.3}
      ]
+    },
+    "govdeUcu": {
+     "dikey": [356.8, 350.7],
+     "yatay": [636.8, 240.7]
     }
    }
   }

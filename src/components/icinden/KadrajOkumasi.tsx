@@ -1,8 +1,9 @@
 /**
  * Kadraj okuması (brief-icinden-3 §5): sağ üst, 16 px içeride, Montserrat 500 tabular, düz metin. Tek
- * gösterge: ölçek ("kadraj ~12.100 km" → "~2,3 km" → "~19 m"), sonra durak adı ("sayfa 1/12" … "ortak
- * evimiz"). Klip boyunca Blender'ın `kadraj_m[kare]` değeri rVFC ile akar. React state YOK: VideoSahne
- * `okumaYaz()` ile yalnız değişince `textContent` yazar.
+ * gösterge: ölçek ("kadraj ~12.100 km" → "~2,3 km" → "~19 m" → fidanda "~54 cm"), ya da durağın sabit adı (manifest
+ * `okumaDurak`: "arka duvar · ~3 m", "banko · broşür"). Klip boyunca Blender'ın `kadraj_m[kare]` değeri rVFC ile akar
+ * (fidan içi geri adımın poster sönmesinde zamana bağlı). React state YOK: VideoSahne `okumaYaz()` ile yalnız değişince
+ * `textContent` yazar.
  */
 export default function KadrajOkumasi() {
   return <p data-v3-kadraj aria-hidden="true" className="v3-kadraj" />;
@@ -14,13 +15,6 @@ export function okumaYaz(el: HTMLElement | null, deger: number | string | null |
   const metin = deger == null || deger === "" ? "" : typeof deger === "number" ? kadrajMetni(deger) : deger;
   if (el.textContent !== metin) el.textContent = metin;
 }
-
-/**
- * Broşür sayfa okuması ("sayfa 8/12"; manifestteki okumaDurak metinleriyle aynı biçim). Sayfa çevirmede Brosur, hayalet
- * sayfalar geçerken ara numaraları bununla yazar (§12.4-6: 2…7 → 8; 9…11 → 12); varışta VideoSahne durağın metnini yazar.
- */
-export const BROSUR_SAYFA_SAYISI = 12;
-export const sayfaOkumasi = (n: number) => `sayfa ${n}/${BROSUR_SAYFA_SAYISI}`;
 
 /** Kadraj okuması (istemcide; klipler.ts'i, dolayısıyla manifest JSON'unu istemci paketine çekmemek için burada): "kadraj ~12.100 km", "~2,3 km", "~19 m", "~14 cm". */
 export function kadrajMetni(m: number): string {

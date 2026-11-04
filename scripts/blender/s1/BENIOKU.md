@@ -5,18 +5,18 @@ Bağlayıcı belge: `docs/brief-icinden-3.md` §9. Klipler: `t01` (54), `l1` (12
 
 | Dosya | İş |
 |---|---|
-| `hazirla.py` | Sistem Python'u: su maskesi (`su`, D turu, scipy), dokular, arazi ızgarası, OSM ağları → `D:\soft\cop31-varlik\s1\tex\` (`python -X utf8 -P hazirla.py hepsi`, ~2,5 dk) |
+| `hazirla.py` | Sistem Python'u: su maskesi (`su`, D turu, scipy), dokular, arazi ızgarası, OSM ağları → `D:\soft\cop31-varlik\s1\tex\` (`python -X utf8 -P hazirla.py hepsi`, ~2,5 dk); G4: `s2 --mevsim ilkbahar` → `s2_*_ilkbahar.jpg` |
 | `osm_yakin.py` | OSM ±1 km → bina/sera/salon/ışıklık/zemin/yol/tramvay/araç/ağaç ağları; S2'den dolgu sera, ev, ağaç |
 | `geo.py` | Küresel Dünya (R 6371008,8), Expo teğet ENU çerçevesi, eqc dönüşümleri |
 | `gunes.py` | NOAA güneş konumu (`python -X utf8 gunes.py 2026-11-09T13:00`) |
 | `kamera.py` | Analitik kamera yolları, easing (§2.1), disk/kadraj hesapları |
 | `yaylar.py` | E turu: d1/d11 yayları (COP1–30 ev sahibi 27 kent → Antalya) → `render-son/yaylar.json` ve `src/lib/cop-kentleri.ts`; `emanet_oku()` (emanet.ts) |
-| `sahne.py` | Blender sahnesi + render + `<klip>.json` (§9.3). `--engine EEVEE|CYCLES`, `--onizleme`, `--res`, `--klip`, `--kareler`, `--saat` (UTC), `--sadece_json` |
+| `sahne.py` | Blender sahnesi + render + `<klip>.json` (§9.3). `--engine EEVEE|CYCLES`, `--onizleme`, `--res`, `--klip`, `--kareler`, `--saat` (UTC), `--sadece_json`; G4: `--mevsim`, `--mevsim_aralik`, `--mevsim_sabit`, `--poz egri_g` |
 | `calis.py` | Blender'ı çalıştırır, RAM/VRAM tepe ölçer, `--kilit` ile GPU kilidi (§9.3) |
 | `kontak.py` | Kontak sayfaları, poster önizlemeleri (işaretli + `-temiz` tam boy), 720p mp4, ölçümler (`_onizleme/s1-olcum.json`: dikiş ΔE00, döngü kapanışı, parlama, metin bandı) |
 | `parlama.py` | t34a parlaması görüntü uzayında: `ham/` → kare 38'den rampa, kare 47 tam `#FFF1DC` (S2 t34b kare 48 ile aynı) |
 | `olcum16.py` | C turu: PNG16 ölçüm yardımcıları (ardışık fark /255, ortalama ΔE00, luma) |
-| `poz_egri.py` | C turu: t23 pozlama eğrisi tasarımı (Blender'ın Python'u, OCIO AgX Punchy; önizleme EXR'lerinden luma(EV)) |
+| `poz_egri.py` | C turu: t23 pozlama eğrisi tasarımı (Blender'ın Python'u, OCIO AgX Punchy; önizleme EXR'lerinden luma(EV)); G4: `--kip g` (POZ_EGRI_G, mevsim karışımının kare başına ΔE00'ı) |
 
 Örnek:
 
@@ -398,3 +398,152 @@ python -X utf8 -P kontak.py hepsi --render D:/soft/cop31-varlik/render-son
 ```
 
 Tahmin (ölçülmedi; D/E kare sürelerinden): t01 ~1,8 + t12 ~4,7 + t23 ~11–13 + t34a ~4,9 ≈ **22–25 dk** GPU.
+
+## G4 (brief §14.4.5): Antalya ilkbahar, irtifaya bağlı mevsim karışımı, POZ_EGRI_G (hazırlık; son render A7)
+
+Müşteri: "Antalya çöl gibi gözüküyor". Kasım sahnesinde (2025-11-16) Döşemealtı ve doğu ovası sürülmüş kızıl-kahverengi
+tarlalarla kaplı. Bu turda son render yok; aşağıdaki ölçümler 960² önizlemelerden.
+
+**Sahne** (`D:\soft\cop31-varlik\sentinel\KAYNAK.md` "İlkbahar sahnesi"): Planetary Computer STAC'ta Nisan–Mayıs 2026'da
+bulut < %3 olan tek dört karolu datatake 2026-05-30. Önizlemede elendi: ova hasat/sürüm kızılı, bölge kutusunun doğusunda
+kümülüs, denizde parıltı bantları var. 2025'te **2025-04-17** (`GS2A_20250417T083741_051284_N05.11`) seçildi: bulut
+%0,004–0,07, ova ve Döşemealtı yeşil, doruklarda kar, deniz koyu. **Atıf yılı yine 2025.** `s2.py` değişmedi.
+Ürünler `sentinel\s2-{bolge,genis,yakin}-ilkbahar.*`. Boş piksel bölgede %0,032, genişte %0,0004, yakında 0.
+
+**`hazirla.py s2 --mevsim ilkbahar`** (4,0 sn) şunları üretir: `s1\tex\s2_bolge_ilkbahar.jpg` (aynı 45 → 70 km C1 halka
+düzeltmesi), `s2_genis_ilkbahar.jpg`, `s2_yakin_ilkbahar.jpg`, `_onizleme_s2_bolge_ilkbahar.jpg` ve `s2_bolge_ilkbahar.json`
+(halka istatistiği). `--mevsim` yalnız `s2` işiyle geçerli, öteki işlerde hata verip çıkar. Kasım çıktıları bayt bayt aynı:
+HEAD ve yeni `hazirla.py s2` aynı girdilerle (scratchpad kopyası) çalıştırıldı, çıktıların MD5'i birbirinin ve mevcut
+`s1\tex` dosyalarının aynısı (`s2_bolge.jpg` `1e67da8e…`, `s2_genis.jpg` `7f5cd97c…`, `s2_yakin.jpg` `0050cfe3…`).
+
+Halka düzeltmesinde oran = BMNG C1 / S2 (~3 km ölçeğinde):
+
+| | ortalama oran (R, G, B) | halka ağırlıklı | dış kenarda düzeltme |
+|---|---|---|---|
+| Kasım | 1,035 / 0,960 / 0,703 | — | — |
+| İlkbahar | 0,646 / 0,671 / 0,657 | 0,602 / 0,652 / 0,645 | 0,579 / 0,641 / 0,641 |
+
+İlkbahar mozaiği BMNG'den ~%35 parlak. Bu yüzden halka, BMNG'nin Kasım kahverengisine doğru koyulaşır: iç kısım (≤ 45 km)
+yeşil kalır, küre yamasında dikiş oluşmaz. Önizleme `s1\tex\_onizleme_s2_bolge_ilkbahar.jpg`.
+
+`s2_yakin_ilkbahar.jpg` `sahne.py`'de kullanılmıyor (Kasım `s2_yakin.jpg`'yi yalnız `osm_yakin.py` nokta sınıflaması
+okuyor). Kasım kalıyor, böylece `orn_*.npz` ve `ag_*.npz` değişmiyor.
+
+**`sahne.py` mevsim karışımı.** `mevsim_doku()` Dunya malzemesinde `s2_bolge`'yi, Arazi malzemesinde `s2_bolge` ve
+`s2_genis`'i ShaderNodeMix (MIX, faktör kıskaçlı) ile `*_ilkbahar.jpg`'ye karıştırır. Faktör sahne özelliği
+`mevsim_k = ss(irtifa, 500 km → 100 km)`, `ortam()` içinde kare kare anahtarlanır.
+
+- t23'te kare 0–8 → 0 ve kare 18–71 → 1. Pencere kare 9–17 (467 → 106 km). Bu pencere hız tepesinin içinde: ln d
+  0,200 → 0,167 /kare (tepe 0,22), tam kare 297–330 px/kare. Fiske'de bulut perdesi yok.
+- l3/t34a ≡ 1. l2/l1/t01/t12 tek başına render edilince ağaç eskisi gibi kurulur (`MEVSIM` yalnız t23/l3/t34a içeren
+  koşularda açık).
+- `--mevsim kasim` eski ağacı aynen verir. `--mevsim ilkbahar` her karede 1 verir. `--mevsim_sabit x` ölçüm içindir.
+- JSON'a `g_turu` alanı eklendi (aralık ve kare kare `mevsim_k`). `--sadece_json` ile t23/l3/t34a'nın kamera, kadraj,
+  çapa ve kesme alanları render-son F JSON'larıyla birebir aynı, yalnız `g_turu` yeni.
+
+Doğrulamalar:
+
+- **l2 ≡ t23[0]:** Yeni ağaçla t23[0], F ayarlarıyla (Cycles 1920², 64 örnek uyarlamalı, OIDN, tohum animasyonlu) render
+  edildi (`render\_onizleme\s1g-t23k0`). `render-son\t23\k_0000.png` ile karşılaştırma: **ΔE00 0,0268** (≤ 0,05),
+  ortalama fark 0,021/255, en çok 0,498/255, 16 bitte özdeş piksel %52,6. Bu, iki ayrı süreç arasındaki render gürültüsü
+  düzeyi (D turunda 0,022/255). Dikişler F ile aynı: l2[0] ↔ t23[0] 0,1346 (F 0,1346), l2[119] ↔ t23[0] 0,2358 (F 0,2358).
+- **Karışımın kare başına ΔE00'ı:** Aynı kamera ve aynı pozlamada m(f) ↔ m(f−1) karşılaştırıldı (EEVEE 960²,
+  `s1g-k0`/`s1g-k1` EXR doğrusal karışımı). Tam kare ortalaması en çok **0,059** (kare 12). Değişen bölge
+  (Kasım ↔ ilkbahar farkı > 0,5) ortalaması en çok **0,969** (kare 11), p95 en çok 2,11. Brief önerisi 350 → 120 km
+  pencereyi kare 11–17'ye sıkıştırıyor: bölge ortalaması 1,045 (> 1,0), tam kare 0,108. Bu yüzden 500 → 100 km seçildi.
+  Kasım ↔ ilkbahar tam farkı bölgede 2,8–4,3 ΔE00. Tam karede kare 9'da 0,11, kare 17'de 1,33.
+
+**POZ_EGRI_G** (`--poz egri_g`; fiske + bulutsuz t23'te `oto`'nun yeni karşılığı; F için `--poz egri_f`):
+
+- **Tasarım Cycles'la yapıldı.** EEVEE 960², 120 km'nin altında gök ve pus ışığını Cycles'tan 5–15 luma puanı karanlık
+  veriyor. Ölçüm: F son render ↔ aynı ayarlı EEVEE k0, kare 0–16'da +0,3…0,7, kare 17–20'de +1,6 / 5,2 / 8,8 / 11,5;
+  l3[0]'da Cycles %53,8, EEVEE %40,1. F'nin `egri_f`'i EEVEE'den türediği için kare 17–21'de +3,8–4,1/kare dikleşmişti.
+- Cycles 960² 16 örnek, F'nin 1920² luma'sını kare 0–10'da 0,01–0,07 puan farkla veriyor. Tasarım kökü bu:
+  `render\_onizleme\s1g-cy`, EXR, `--mevsim oto`, 61 sn GPU.
+- `poz_egri.py --kip g` kuralları:
+  - ≥ 1.644 km (kare 0–3): EV 1,3.
+  - Kare 3 → 8: luma %25,6 → %22,5 (smoothstep).
+  - Kare 8–16: taban %22,5.
+  - Kare 16 → 27: kübik Hermite, k = 0'ın doğal lumasına (%44,9, eğim 2,17/kare) bağlanır. Yükseliş başı, en büyük kare
+    eğimi ≤ 0,95 · 3 olan en geç kare.
+  - ≤ 23 km: k = 0.
+  - Her karenin irtifası bir düğüm (25 düğüm). 26–89 km düğümleri negatif çıkıyor: ilkbahar dokusunda doğal luma, k = 0'da
+    bile hedefin üstünde.
+
+Doğrulama render'ı: `render\_onizleme\s1g-dog`, Cycles 960² 16 örnek, `--poz oto` → egri_g, t23 0–71 + l3 0,149 + t34a 0,
+165 sn GPU. Ölçüm `D:\soft\cop31\.qa\icinden3\gb\g4-hazirlik\dogrula-960.json`. Öngörü ↔ ölçüm farkı en çok 0,021 puan.
+
+| Ölçüt | F (render-son) | G4 (960² Cycles) |
+|---|---|---|
+| kare 6 → 7 luma | **+4,69** | **−0,77** |
+| 77–1.580 km (kare 4–18) ardışık en büyük \|Δ\| | 4,69 | **0,97** puan (2,47/255) |
+| 77–1.580 km tek yön (kontak.py olc_c tanımı, ≤ 3) | 4,18 (artan) / 7,85 (azalan) | **1,31** (azalan) |
+| bütün klip ardışık en büyük \|Δ\| | 4,69 (kare 6→7; 17–20'de +3,8 / 4,1 / 3,1) | **2,73** puan (6,96/255, kare 23→24) |
+| iniş öncesi (≥ 2,9 km) en düşük luma (≥ %20) | %20,53 | %22,50 |
+| l3[0] luma | %53,76 | %55,63 (ilkbahar dokusu) |
+| t23[71] ↔ l3[0] / l3[149] ↔ l3[0] / l3[0] ↔ t34a[0] ΔE00 | 0,032 / — / 0,032 | 0,030 / 0,031 / 0,030 |
+
+"|Δ| ≤ 3/255" okumasıyla 77–1.580 km penceresi tutuyor (2,47/255). Pencerenin dışında kare 19–29'daki yükseliş
+5–7/255/kare: %22,5'ten %44,9'a 11 karede çıkılıyor. Brief'in ölçütü luma puanıyla "≤ 3"; F'nin +4,69'u da bu birimde.
+
+Kontak: `render\_onizleme\s1g-dog-t23.jpg` (72 kare + irtifa). d3 önce/sonra: `render\_onizleme\s1g-l3-kasim-ilkbahar.jpg`.
+
+Bu turda GPU render süresi toplam 10,3 dk:
+
+| Koşu | Süre (sn) |
+|---|---|
+| t23k0 | 7,9 |
+| EEVEE k0 | 78,5 |
+| EEVEE k1 | 306,7 |
+| Cycles 960² | 61,2 |
+| doğrulama | 165,2 |
+
+RAM tepe RSS 3,41–4,83 GB, makine VRAM tepe 4,4–6,5 GB.
+
+```
+cd D:/soft/cop31/scripts/blender/s1
+python -X utf8 -u D:/soft/cop31-varlik/_betikler/s2.py D:/soft/cop31-varlik/sentinel/_stac-search-ilkbahar-2025.json D:/soft/cop31-varlik/sentinel S2A_MSIL2A_20250417T083741_R064_T36STF_20250417T142513,S2A_MSIL2A_20250417T083741_R064_T36SUF_20250417T142513,S2A_MSIL2A_20250417T083741_R064_T36STG_20250417T142513,S2A_MSIL2A_20250417T083741_R064_T36SUG_20250417T142513 genis,yakin,bolge -ilkbahar   # ~26 dk ağ
+python -X utf8 -P hazirla.py s2 --mevsim ilkbahar
+python -X utf8 -P calis.py --etiket g4_t23k0 -- --klip t23 --kareler t23:0 --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1g-t23k0 --olcum D:/soft/cop31-varlik/render/_onizleme/s1g-t23k0/olcum.jsonl
+python -X utf8 -P calis.py --etiket g4_on_k0 -- --klip t23 --kareler t23:0-20 --res 960 --onizleme --samples 8 --exr --mevsim_sabit 0 --poz egri_f --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1g-k0 --olcum D:/soft/cop31-varlik/render/_onizleme/s1g-k0/olcum.jsonl
+python -X utf8 -P calis.py --etiket g4_on_k1 -- --klip t23,l3 --kareler "t23:6-34;l3:0" --res 960 --onizleme --samples 8 --exr --mevsim_sabit 1 --poz egri_f --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1g-k1 --olcum D:/soft/cop31-varlik/render/_onizleme/s1g-k1/olcum.jsonl
+python -X utf8 -P calis.py --etiket g4_on_cy -- --klip t23,l3 --kareler "t23:0-34;l3:0" --engine CYCLES --res 960 --samples 16 --depth 16 --exr --poz egri_f --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1g-cy --olcum D:/soft/cop31-varlik/render/_onizleme/s1g-cy/olcum.jsonl
+D:/soft/cop31-varlik/blender/blender-5.2.3-windows-x64/5.2/python/bin/python.exe -X utf8 poz_egri.py D:/soft/cop31-varlik/render/_onizleme/s1g-cy --kip g --kok0 D:/soft/cop31-varlik/render/_onizleme/s1g-k0 --kok1 D:/soft/cop31-varlik/render/_onizleme/s1g-k1 --mevsim_aralik 500e3,100e3 --taban 22.5
+python -X utf8 -P calis.py --etiket g4_dogrula -- --klip t23,l3,t34a --kareler "t23:0-71;l3:0,149;t34a:0" --engine CYCLES --res 960 --samples 16 --depth 16 --kilit --cikis D:/soft/cop31-varlik/render/_onizleme/s1g-dog --olcum D:/soft/cop31-varlik/render/_onizleme/s1g-dog/olcum.jsonl
+python -X utf8 kontak.py kontak t23 --render D:/soft/cop31-varlik/render/_onizleme/s1g-dog --on D:/soft/cop31-varlik/render/_onizleme --onek s1g-dog- --n 0 --bicim jpg --motor "Cycles 960² 16 örnek"
+```
+
+### A7: G4 son render (Cycles 1920², F ayarları; varsayılanlar doğru, ek bayrak yok)
+
+Varsayılanlar: `--profil fiske`, `--t23_bulut oto` → yok, `--poz oto` → egri_g, `--mevsim oto` (500 → 100 km),
+`--sabit_tohum oto` (t23 66–71, t34a 0–2), `--t34a_kip kalkis`. Beklenen kare sayıları t23 72, l3 150, t34a 36 (+ `ham/`
+36); parlama kareleri 33–35 (kare 35 tam #FFF1DC). Önce eski F kareleri `render-son-f\` altına taşınır (aynı disk, taşıma
+anlık). `t34\` sabit bağları eski t34a verisini tutar; `t34-birlestir.py` onu silip yeniden kurar.
+
+```
+cd D:/soft/cop31/scripts/blender/s1
+mkdir -p D:/soft/cop31-varlik/render-son-f
+cp D:/soft/cop31-varlik/render-son/_onizleme/s1-olcum.json D:/soft/cop31-varlik/render-son-f/s1-olcum-f.json   # kontak.py olc üzerine yazar
+for k in t23 l3 t34a; do mv D:/soft/cop31-varlik/render-son/$k D:/soft/cop31-varlik/render-son-f/$k; mv D:/soft/cop31-varlik/render-son/$k.json D:/soft/cop31-varlik/render-son-f/$k.json; done
+python -X utf8 -P calis.py --etiket g_son_t23  -- --klip t23  --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/g_son_olcum.jsonl
+python -X utf8 -P calis.py --etiket g_son_l3   -- --klip l3   --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/g_son_olcum.jsonl
+python -X utf8 -P calis.py --etiket g_son_t34a -- --klip t34a --engine CYCLES --res 1920 --kilit --cikis D:/soft/cop31-varlik/render-son --olcum D:/soft/cop31-varlik/s1/g_son_olcum.jsonl
+python -X utf8 -P parlama.py D:/soft/cop31-varlik/render-son/t34a --bas 33
+cd D:/soft/cop31 && python -X utf8 -P scripts/icinden/t34-birlestir.py
+cd D:/soft/cop31/scripts/blender/s1 && python -X utf8 -P kontak.py hepsi --render D:/soft/cop31-varlik/render-son
+python -X utf8 -P kontak.py olc_c --render D:/soft/cop31-varlik/render-son
+```
+
+Süre tahmini (önceki ölçümlerden): t23 ~10,7 dk (F 642 sn), l3 ~28 dk (B turu `son_l3_tohum` 1.665 sn, 150 kare), t34a ~5 dk
+(F 304 sn). Toplam **~44 dk** GPU; brief'in "~25 dk"sı l3'ü saymıyor. Kabul: `olc_c` → t23[0] ↔ l2[0] ≤ 0,3
+(beklenen 0,135), t23[71] ↔ l3[0] ≤ 0,3, l3[0] ↔ t34a[0] ≤ 0,3, "t23 78–1.580 km tek yönlü (±3)" doğru, iniş öncesi luma
+≥ %20, t34a[35] tam #FFF1DC ve t34b[36] ile fark 0. l2[119] ↔ t23[0] ≤ 0,3 `olc` dikişlerinde (beklenen 0,236).
+Kodlanmış set `scripts/icinden/dikis-olc.py` ile ölçülür (A8/K).
+
+### G4-yeşil (orkestratör, 4 Kasım 2026 ~14.25)
+
+`--yesil_k` (varsayılan 1; 0 = eski görünüm): yakın alan `B_YAKIN` bloğunda çıplak parsel eşiği −0,004…0,02 → −0,026…0,004, yeşil maskede
+HueSaturation ton +15° / doygunluk ×1,65 / parlaklık ×1,12 (9 km'de söner), toprak yol karışımı ×0,75 → ×0,26, parsel tonu ±%13 → ±%8.
+Ölçüm (l3[0] 960² Cycles 16, alt 2/3, HSV ton 60–170° doygunluk > 0,18): yeşil oranı 0,21 → 0,297 (ilkbahar mozaiğinin ±4 km penceresi 0,295),
+doygunluk ort. 0,238 → 0,268; üst 1/3 ve sera çatıları değişmedi (fark ≤ 0,26/255). Önizleme `render/_onizleme/s1g-yesil-karsilastir.jpg`.
+

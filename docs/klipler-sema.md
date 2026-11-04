@@ -1,7 +1,8 @@
 # `/icinden` v3 klip manifesti — şema ve üretim yolu
 
-Tarih: 2 Kasım 2026 (A turu, W; B turu ön entegrasyonu: önizleme render'ı, t34 birleşimi, kapak tonu); **E turu (3 Kasım
-2026, W1): `surum: 2`, 12 durak + `rol`, §0**. Bağlayıcı karar: `docs/brief-icinden-3.md` §9.3–§9.5, §12.1, §12.4-9. Oynatıcı mimarisi:
+Tarih: 2 Kasım 2026 (A turu, W; B turu ön entegrasyonu: önizleme render'ı, t34 birleşimi, kapak tonu); E turu (3 Kasım
+2026, W1): `surum: 2`, 12 durak + `rol`, §0; **G turu (4 Kasım 2026, k-kod): `surum: 3`, 13 durak (masa + fidan), §0.2 —
+§0 ile çelişirse §0.2 geçerli**. Bağlayıcı karar: `docs/brief-icinden-3.md` §9.3–§9.5, §12.1, §12.4-9, §14.4. Oynatıcı mimarisi:
 `docs/klip-oynatma.md`. Bu belge **Blender ekibi (S1, S2), kodlama ajanı ve site (W) arasındaki sözleşmedir.**
 A turunda manifest yer tutucu kliplerle üretildi (`"kaynak": "yer-tutucu"`); B turunda yalnız girdiler değişir,
 yol ve şema aynı kalır.
@@ -36,7 +37,7 @@ Geri yön: k+1 → k = `duraklar[k].ileri.geri` (açık ad tablosu `GERI`: r10, 
 FLIP geri 420 ms + kesişme 200 ms + r87; d7 → d6 r76; d6 → d5 r65. Döngüsüz klip durağında oynatıcı gelen klibin son
 karesini gösterir (video görünür kalır); poster kipi/yedekte posteri (son-kare) aynı kare.
 
-**`--gecici`** (W1, yeni S2 render/kodlama yokken): `node scripts/icinden/manifest-birlestir.mjs --gecici` →
+**`--gecici`** (W1, yeni S2 render/kodlama yokken; **G turunda kalktı**, §0.2): `node scripts/icinden/manifest-birlestir.mjs --gecici` →
 `kaynak: "onizleme"`, `gecici: {t67: "t56", t78: "t56", r76: "r65", r87: "r65", p6: "p5", p7: "p5", p8: "p6"}` (eksik klip
 ve posterler mevcut dosyalarla; d8'in `brosurDikdortgen`'i eski t56 fragmanından, `kapakTon` eski ton dosyasından).
 yaylar.json, emanet ve duvar çapaları yoksa ilgili alan boş (uyarı). K2 son kodlamadan sonra **bayraksız** çalıştırır.
@@ -63,6 +64,145 @@ manifestten okur, kodda kare sayısına bağlı sabit yok — W-F denetimi). Ger
 - **Fontlar** (W-F): Montserrat, Great Vibes ve Lora (`Cop31 Serif` adıyla, OFL §3) `src/app/fonts/` altında alt
   kümelenmiş woff2, `next/font/local` ile (`src/app/layout.tsx`, `src/app/icinden/page.tsx`); derleme Google'a gitmiyor.
   `/icinden`'de 4 istek, 242,4 kB (E: 8 istek, 301,7 kB). CSS değişken adları aynı; manifest ve oynatıcıyı etkilemez.
+
+### 0.2 G turu (4 Kasım 2026, brief §14.4): 13 durak, masa + fidan, `surum: 3`
+
+Müşteri revizyonu: dalış d0–d8 (masadaki broşür) kalır; broşür sayfaları (d9–d10) ve Dünya dönüşü (d11) yerine render
+edilmiş fidan bölümü (S3, `scripts/blender/s3/`). Durak tablosu `manifest-birlestir.mjs` `DURAKLAR`'da (§0'daki 12 duraklı
+tablonun yerine); site numarayı `rol.ts` `dizinler()`'den türetir, kapanış dizini **N = 13**.
+
+| id | rol | tur | gelen (ileri) | ileri / geri | döngü | poster | okuma (dinlenme) |
+|---|---|---|---|---|---|---|---|
+| d0 | lombar | dom | — | t01 / r10 | — | — | — |
+| d1 | dunya | klip | t01 | t12 / r21 | l1 | p1 | kadraj (t01) |
+| d2 | emanet | klip | t12 | t23 / r32 | l2 | p2 | kadraj (t12) |
+| d3 | expo | klip | t23 | t34 / r43 | l3 | p3 | kadraj (t23) |
+| d4 | anatomi | klip | t34 | t45 / r54 | l4 | p4 | kadraj (t34) |
+| d5 | sutunlar | klip | t45 | t56 / r65 | l5 | p5 | kadraj (t45) |
+| d6 | duvar | klip | t56 | t67 / r76 | — | p6 = t56[53] | "arka duvar · ~3 m" |
+| d7 | duvar | klip | t67 | t78 / r87 | — | p7 = t67[47] | "sol duvar · ~3 m" |
+| d8 | **masa** | klip | t78 (= S3 t78f kareleri; S2'nin `t78.json`'u) | **t89 / null** (r98 K-son'da kalktı) | — | **p8 = t78[59]** (son-kare; plaka kalktı) | "banko · broşür" |
+| d9 | **fidan-kok** | klip | t89 | t9a / **null** | — | p9 = t89[59] | kadraj (t89; m, ~0,23 → 0,54) |
+| d10 | **fidan-govde** | klip | t9a | tab / null | — | pa = t9a[53] | kadraj (t9a; ~0,54 → 0,51) |
+| d11 | **fidan-dal** | klip | tab | tbc / null | — | pb = tab[53] | kadraj (tab; ~0,51 → 0,57) |
+| d12 | **fidan-yaprak** | klip | tbc | — | **lc** (4 s, 120 kare) | pc = lc[0] | kadraj (tbc; ~0,57 → 0,64) |
+| (13) | kapanış | — | DOM | — | — | — | — |
+
+- **Geri**: `duraklar[k].ileri.geri` k+1 → k. `geri: null` (d8, d9, d10, d11'in ileri geçişlerinde) = geri klip YOK: oynatıcı
+  hedef durağın (k) posterini 350 ms çapraz söndürür (§14.4.1 K4; d9→d8, d10→d9, d11→d10, d12→d11). d8→d7 = r87. `hizGeri` 1.
+  **r98 (t89 `reverse`'ü) K-son'da bütçe merdiveninin 4. adımıyla kalktı** (aşağıda "K-son sonucu"): `GERI.t89 = null`
+  üç betikte de (`kodla.mjs`, `manifest-birlestir.mjs`, `kodlama-dogrula.py`); `--dus`/`--geri-yok` bayrakları artık gerekmez.
+  Geri almak: üç tabloda `t89: "r98"` + `kodla.mjs --klip r98` + manifest.
+- **Kalkanlar**: roller `brosur-kapak`/`brosur-sayfa`/`brosur-arka` ve ikinci `dunya` (d11 dönüşü; `ozel.yaylar` artık
+  yalnız d1); `ozel.kapakTon`, `ozel.brosurDikdortgen` (tipler `KapakTon` dahil); `manifest-birlestir.mjs --gecici` ve
+  `--ton` (verilirse hata); `kapak-ton.py`, `kapak-dom.mjs` (depodan silindi; G3 yeni broşür kapak dokusu ayrı iş);
+  `kodla.mjs` `plaka` poster tipi ve eski p6 → p8 kopya mantığı (json'da `tip: "plaka"` → uyarı, tablo geçerli). Eski
+  plaka master'ı ve `p8.json`'u `D:\soft\cop31-varlik\render-son-f\p8\`'de; yeni `render-son/p8.json` `{tip: "son-kare",
+  kaynak_klip: "t78", kaynak_kare: 59}`.
+- **`rol.ts`** `Dizinler`: `N, lombar, dunya, emanet, expo, anatomi, sutunlar, duvarlar[], masa, fidanlar[]`
+  (`fidanlar` = `FIDAN_ROLLERI` sırasıyla [kök, gövde, dal, yaprak] dizinleri, olmayan −1); `donus/kapak/sayfalar/arka`,
+  `brosurRolu`, `BrosurDizin`, `brosurDizini` kalktı; yerine `fidanRolu(r)` (tip koruyucu), `FIDAN_ROLLERI`, `FidanRol`.
+
+**Ad tablosu (`kodla.mjs`; tek hane a = 10, b = 11, c = 12):**
+
+| Kaynak (kare dizisi) | Çıktılar | Kare (önizleme) | CRF H.264 / HEVC / AV1 | `kirpimY` (yatay, master px) |
+|---|---|---|---|---|
+| t78 (t78f) | t78 ileri, r87 geri, **p8** son-kare | 60 | 23/25/32 · r87 26/28/36 | {233 → 420, s 0 → 0,6773} (aynı) |
+| **t89** | t89 ileri (geri yok; r98 K-son'da kalktı), **p9** son-kare | 60 | **25/27/34** (K-son merdiveni; A4'te 23/25/32) | **420** sabit |
+| **t9a** | t9a ileri (geri yok), **pa** son-kare | 54 | **25/27/34** | **{420 → 222, s 0,04 → 0,90}** (değişen kareler 5–29) |
+| **tab** | tab ileri, **pb** son-kare | 54 | **25/27/34** | **{222 → 194, s 0,04 → 0,90}** (7–25) |
+| **tbc** | tbc ileri | 66 | **23/27/34** (H.264 +2'de yatay VMAF 90,91 < 93) | **{194 → 165, s 0,04 → 0,90}** (8–31) |
+| **lc** | lc döngü, **pc** (döngü 0. karesi; `pc.json` tip `dongu-ilk`) | 120 | **23/27/32** (K-son; A4'te 23/25/30) | **165** sabit |
+
+`GERI` artık bütün ileri geçişleri anahtar olarak taşır (`t9a/tab/tbc: null`); `DONGU` + lc; `POSTER_TABAN` p8 ← t78,
+p9 ← t89, pa ← t9a, pb ← tab (son-kare), pc ← lc (dongu); `KAYNAK_SIRA` … t78 t89 t9a tab tbc lc. Rampalar S3
+fragmanlarının `ilerleme` dizisine bağlı (fiske profilinin hızlı bölümü; §4 biçimi), uçlar S3 `kirpimY_oneri`'yle aynı:
+p9 420, pa 222, pb 194, pc 165 (öznenin dikey ortası yatay karenin %46'sında). Dikişler kırpımsız: t78 sonu 420 = t89,
+t9a sonu 222 = pa, tab sonu 194 = pb, tbc sonu 165 = lc = pc. Özetli dosya adı deseni `[a-z][0-9a-z]{1,2}` (t9a, tab, lc,
+pa… `--artik`/`--temizle` tanır). Posterler q80 (`POSTER_Q_TABAN`'da fidan için ayar yok).
+
+**Manifest `ozel` yeni alanları** (video px, yön başına; master → video dönüşümü durağın **posterinin** `kirpimY`'siyle —
+listedeki yatay poster kaydının sayısal `kirpimY`'si: p9 420, pa 222, pb 194, pc 165; kırpım dışı ya da kenara < 24 px nokta o
+yönde atlanır, uyarı yön başına sayı verir). Kaynak önce poster fragmanı (`p9.json`…), yoksa gelen geçiş (d12'de lc, tbc):
+
+```jsonc
+// d9 fidan-kok — p9.capalar.kok_uclari (81; grup 0 kazık, 1–6 ana kökler; ana: ana kökün ucu)
+"kokUclari": { "dikey": [ {"x": 354.4, "y": 778.8, "grup": 0, "ana": true}, … × 81 ], "yatay": [ … × 81 ] },
+// d10 fidan-govde — pa.capalar.bogumlar (2; taraf −1 sol / +1 sağ). JSON'daki baslik/satirlar YAZILMAZ (metin content.ts'ten)
+"bogumlar": { "dikey": [ {"x": 359.7, "y": 722.2, "taraf": -1}, {"x": 349.7, "y": 626, "taraf": 1} ], "yatay": [ … ] },
+// d11 fidan-dal — pb.capalar.dal_uclari (6, alttan üste; polaroid çapaları)
+"dalUclari": { "dikey": [ {"ad": "solAlt", "x": 174.9, "y": 543.9}, {"ad": "sağAlt", …}, "solOrta", "sağOrta", "solÜst", "sağÜst" ], "yatay": [ … ] },
+// d12 fidan-yaprak — pc.capalar.dal_uclari + govde_ucu
+"dalUclari": { … × 6 }, "govdeUcu": { "dikey": [356.8, 350.7], "yatay": [636.8, 240.7] }   // kırpım dışı yön yazılmaz
+```
+
+Tipler (`klipler.ts`): `KokUcu {x, y, grup, ana}`, `Bogum {x, y, taraf: -1 | 1}`, `DalUcuAd` ("solAlt" | "sağAlt" |
+"solOrta" | "sağOrta" | "solÜst" | "sağÜst"), `DalUcu {ad, x, y}`, `YonluListe<T> = Record<Boyut, T[]>`; `Ozel.kokUclari`,
+`bogumlar`, `dalUclari: YonluListe<…>`, `govdeUcu: Partial<Record<Boyut, Nokta>>`. d6 **`duvarCapalari`** (G7, §14.4.4)
+yeni adlarla: `DuvarCapaAd` = `bulusma` ("50+"), `solen` ("100.000+"), `motto` (`backCover.quote`); sıra = d6 bandının 3 spot
+satırı. Yatay dönüşüm p6 posterinin `kirpimY`'si (293). Yeni adlar `p6.json`'da yoksa (A6 G7 render'ından önce; şimdiki
+p6.json `fidan/genc_iklim/orman`) alan **yazılmaz** ve uyarı verilir.
+
+**S3 fragmanları** (`render-son/<klip>.json`, S2 biçimi + S3 alanları; `scripts/blender/s3/BENIOKU.md` "JSON"): `t89 t9a
+tab tbc lc` (`tip` gecis/dongu, `kare`, `kadraj_m[]`, `ilerleme[]`, `buyume{}`, `isik{}`, `capalar`, `kirpimY_oneri`) ve
+`p9 pa pb` (`tip: "son-kare"`, `kaynak_klip`, `kaynak_kare`) + `pc` (`tip: "dongu-ilk"`). G-B A4'te önizleme kopyalarıdır
+(`kaynak_set: "onizleme"`, `kaynak_not`); A5 `son.sh` üstüne yazar. `manifest-birlestir.mjs --kaynak render` önizleme
+fragmanı ya da 960² girişli liste kaydı görürse uyarır.
+
+**Önizleme kodlaması (A4, G-B):** S3 960² kareleri `D:\soft\cop31-varlik\kodlama\onizleme-gb\<klip>\` anlık kopyası
+(A1'in olası önizleme yeniden render'ı koşuyu bozmasın diye; içerik `render\_onizleme\s3-<klip>\` ile aynı):
+
+```
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --esle t78=D:/soft/cop31-varlik/kodlama/onizleme-gb/t78f,t89=…/t89,t9a=…/t9a,tab=…/tab,tbc=…/tbc,lc=…/lc --klip t78,r87,p8,t89,r98,t9a,tab,tbc,lc,p9,pa,pb,pc
+node scripts/icinden/manifest-birlestir.mjs --kaynak onizleme
+python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t78,r87,p8,t89,r98,t9a,tab,tbc,lc,p9,pa,pb,pc --esle t78=…/t78f,… --temel 0.673 --oturum-temel 0.928 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-GB-onizleme.json
+```
+
+**K-son sonucu (A8, 4 Kasım 2026 ~15.45; son render 1920², hepsi `kaynak_set` render, liste girişleri `1920² rgb48be`).**
+Koşulan komutlar (depo kökü; `kapak-ton.py` adımı YOK; t34 sabit bağları G4'te kurulmuştu, 60/60 aynı dosya):
+
+```
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip t23,r32,l3,p3,t34,r43,t56,r65,p6,t67,r76,p7,t78,r87,p8,t89,r98,t9a,tab,tbc,lc,p9,pa,pb,pc --temizle
+#   101 dosya, 206 s; --temizle 113 eski özetli dosya (F'nin t23…r87/p8 + A4 önizlemesi)
+# bütçe merdiveni (§14.4.1), CRF_TABLO'ya kalıcı yazıldı:
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip lc.av1,lc.hevc,t89,t9a,tab,tbc --temizle
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip tbc.h264 --temizle   # tbc H.264 23'e geri (VMAF)
+node scripts/icinden/kodla.mjs --dus r98        # 4. adım; sonra GERI.t89 = null (üç betik)
+node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --klip t34.h264 --temizle   # BOLGE t34.h264 0-0:-1
+node scripts/icinden/manifest-birlestir.mjs
+node scripts/icinden/kodla.mjs --artik --kuru && node scripts/icinden/kodla.mjs --artik             # 5 dosya (r98), 0,991 MB
+python -X utf8 -P scripts/icinden/kodlama-dogrula.py --vmaf --sec t23,r32,l3,p3,t34,r43,t56,r65,p6,t67,r76,p7,t78,r87,p8,t89,t9a,tab,tbc,lc,p9,pa,pb,pc --temel 0.697 --oturum-temel 0.664 --cikti D:/soft/cop31-varlik/kodlama/dogrula-render-son-G.json
+```
+
+- **CRF değişiklikleri** (`CRF_TABLO`, [H.264, HEVC, AV1]): lc [23, 25, 30] → **[23, 27, 32]**; t89/t9a/tab **[25, 27, 34]**;
+  tbc **[23, 27, 34]** (H.264 25'te yatay VMAF 90,91 < 93; 23'te 92,56, H.264 oturum kapısında değil). `BOLGE` + **`t34.h264`
+  0-0:-1**: d3 kalkış dikişi yatay H.264 3,36 → 3,21 (kapı ≤ 3,27; dikey 3,22 → 3,05), bedeli dikey +13,4 kB (d3 H.264
+  penceresi 2,497 ≤ 2,5; −2'de 2,509 ✗).
+- **r98 kalktı** (merdiven 4. adımı): lc + fidan +2 sonrası oturum AV1 12,615 > 12,25.
+- **Bütçe** (dikey, MB = 10⁶; oturum = set + W'nin medya dışı payı 0,664; ilk yükleme temeli 0,697 = W'nin ölçtüğü 1,985 −
+  1,289):
+
+  | | ilk | kritik maks | pencere maks | set | oturum | F oturum (temel 0,928) |
+  |---|---|---|---|---|---|---|
+  | AV1 | 1,986 | 2,026 (d2 ≤ 2,1) | 2,523 (d3 ≤ 2,6) | 11,791 | **12,455** ✗ 12,0 · ✓ 12,5 | 11,470 |
+  | HEVC | 2,163 | 1,927 (d2) | 2,302 | 11,435 | **12,099** ✗ 12,0 · ✓ 12,25 | 11,208 |
+  | H.264 | 2,333 | 2,047 (d2) | 2,497 (d3) | 13,919 | — | 13,083 |
+
+  Merdiven adım adım (AV1 / HEVC oturum): ilk kodlama 12,733 / 12,513 → (1) lc 12,700 / 12,469 → (2) fidan +2 12,615 /
+  12,269 → (4) r98 kalkar 12,455 / 12,099. Fidan bölümü (t89 t9a tab tbc lc + p9 pa pb pc) dikey AV1 1,134, HEVC 1,114 MB.
+- **Dikişler** (kodlanmış ΔE00): ileri son ↔ döngü 0 ≤ 2,94; d3 kalkış ≤ 3,21; r43 son ↔ l3[0] ≤ 3,80, ↔ p3 ≤ 4,05 (≤ 4,2);
+  t23 son ↔ p3 3,18–3,49 (p3 q68, F'de 3,24–3,45); fidan son ↔ poster ≤ 1,97, kalkışlar d8–d11 ≤ 1,45; lc kapanışı AV1 0,316.
+- **VMAF** (80 dosya): eşik altı 0; ortalama en düşük 90,88 (r32 yatay H.264), l3 ≥ 94,94, duvar en kötü kare ≥ 83,04,
+  fidan AV1/HEVC ortalaması ≥ 93,78.
+- Manifest: `kaynak` render, 154 dosya (liste = manifest), 24 poster LQIP'i; uyarılar yalnız t01 `dunyaC` ve d6 `motto`
+  dikey kırpım dışı (o yönde yazılmadı, §14.4.4).
+
+**Bütçe merdiveni (kalan seçenek, uygulanmadı):** d3/d4 AV1 +2 (`--crf t34.av1=36,r43.av1=36,l3.av1=36`) dikey AV1 −269,9
+kB (oturum ≈ 12,185), VMAF ortalaması ≥ 96,97, kalkış 2,81/3,04, r43 son ↔ l3[0] 3,24/3,52 (K-son denemesi, rapor).
+
+**V doğrulaması (A9, 4 Kasım ~16.00; prod, headless Chrome, 4G, önbelleksiz):** oturum HEVC **12,098** / AV1 **12,454** MB
+(K-son tahmini ile ±1 kB), ilk yükleme 2,163 / 1,985, adım penceresi maks 1,737 / 1,877; geri klipler yalnız boşta. Kodlanmış
+dikişler ve kapılar `docs/brief-icinden-3.md` §14.5.
 
 ## 1. Yol (üç adım, hepsi depodan yeniden üretilebilir)
 
@@ -99,11 +239,14 @@ ortak kod `scripts/icinden/fragman.mjs`). VMAF referansı (`kodlama-dogrula.py`)
 | `dunyaR` | number[kare] | yalnız t01 | Dünya diskinin yarıçapı, master px. Lombar deliği bundan büyür |
 | `dunyaC` | [x, y] | yalnız t01 | 0. karede disk merkezi, master px. **Sabit nokta beklenir** (lombarın merkezi = amblem merkezi (960, 768)); kare başına dizi verilirse yalnız 0. öğe kullanılır |
 | `capalar` | {ad: [x, y]} | döngülerde | poster karesindeki etiket noktaları (adlar §3). Döngü fragmanında yoksa gelen geçişinkinden okunur (d6/d7: t56/t67 son karesi = p6/p7) |
-| `brosur_dikdortgen` | [[x, y] × 4] | yalnız t78 (E turundan önce t56) | son karede broşür kapağının köşeleri (sol üst, sağ üst, sağ alt, sol alt); manifestte d8 (`brosur-kapak`) `ozel.brosurDikdortgen` |
+| `brosur_dikdortgen` | [[x, y] × 4] | **G'de okunmaz** (t78'de durabilir) | E/F: son karede broşür kapağının köşeleri; manifestte d8 `ozel.brosurDikdortgen` idi (§0.2 kalkanlar) |
+| `ilerleme` | number[kare] | kırpım rampalı geçişlerde | F turundan beri kirpimY rampası buna bağlı (§4) |
+| `capalar.kok_uclari` / `bogumlar` / `dal_uclari` / `govde_ucu` | S3 | p9/t89, pa/t9a, pb/tab, pc/lc/tbc | fidan çapaları → `ozel.kokUclari` / `bogumlar` / `dalUclari` / `govdeUcu` (§0.2) |
 | `kamera` | {} | hayır | serbest (manifeste girmez) |
 
-Ayrı fragmanlar (E turu): `p6.json` `capalar` {`fidan`, `genc_iklim`, `orman`} (S2b json_yaz; yoksa t56 son karesinin
-`capalar`'ı) → d6 `ozel.duvarCapalari`. `yaylar.json` (S1a `scripts/blender/s1/yaylar.py`): `{dikey: [[[x, y] × ≤ 24] ×
+Ayrı fragmanlar: `p6.json` `duvarCapalari` [{ad, dikey: [x, y], yatay: [x, y]}] ve `capalar` {ad: [x, y]} (S2 json_yaz;
+G-B G7: `bulusma`, `solen`, `motto`; E/F: `fidan`, `genc_iklim`, `orman`; yoksa t56 son karesinin `capalar`'ı) → d6
+`ozel.duvarCapalari`. `yaylar.json` (S1a `scripts/blender/s1/yaylar.py`): `{dikey: [[[x, y] × ≤ 24] ×
 27], yatay: …}` **video px** (master değil), son nokta Antalya → d1 ve d11 `ozel.yaylar` (aynı veri; `--yaylar` ile
 başka yol).
 
@@ -121,7 +264,7 @@ yatay kırpımda yok).
 | d3 | l3 | `expo` → "Antalya Expo Center", `d400` → "D400", `antalya` → "Antalya" (yapı); `korfez` → "Antalya Körfezi", `beydaglari` → "Beydağları" (doğa) |
 | d4 | l4 | `rotunda` → "Emanet Rotundası", `oyun` → "Oyna – Sen olsan ne yapardın?" (**yalnız yatay**, `ETIKET` `boyutlar: ["yatay"]`; F turu, D1-14: dikeyde render'daki aynı metinli bandın üstüne biniyordu), `kiosk` → "Söz Kiosku", `amfi` → "Amfi" (bölge, kılavuz çizgili, spot sırası 1–4) |
 | d5 | l5 | `sutun01` … `sutun12` → 12 sütun yüzünün ortası (etkin sütundan alt banda kılavuz çizgi) |
-| d6 | p6 (yoksa t56 son kare) | `fidan` ("300"), `genc_iklim`, `orman` (dağ şeridi) → `ozel.duvarCapalari` sırası = `iklim.items[0..2]`. Manifestte kalır; **site F turundan beri duvarda kılavuz çizmez** (D1-11: nokta glifin üstüne düşüyordu; spot satır döngüsü sürer) |
+| d6 | p6 (`duvarCapalari`, yoksa `capalar`; yoksa t56 son kare) | **G-B (G7, §14.4.4):** `bulusma` ("50+" rakamı), `solen` ("100.000+" rakamı), `motto` (`backCover.quote`) → `ozel.duvarCapalari` sırası = d6 bandının 3 spot satırı (`li[data-capa]`). Kırpım dışına ya da kenara < 24 px düşen yön **yazılmaz** (`motto` dikeyde x ≈ 911 video px → yalnız `yatay`). Site G-B'de d6 kılavuzunu yeniden çizer: nokta yok, çizgi ≤ 0,35 · kısa kenar ise ve rakamdan 22 px önce biter; çapa yoksa çizilmez. (E/F: `fidan`, `genc_iklim`, `orman`; F'de kılavuz yoktu, D1-11) |
 
 Sözlük `manifest-birlestir.mjs` `ETIKET` sabitinde. Bilinmeyen ad uyarı verir ve atlanır. Bir yönün video karesinde kenara
 24 px'ten yakın çapa o yönde atlanır (B turu: d3 yatayda "Antalya" y 11,9).
@@ -213,7 +356,8 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
      | diğerleri | 420 | | t01/l1/t12/l2/t45/l4/l5: lombar hizası, `dunyaC`, `sutunlar` aynı |
 
      `duvarCapalari` yatayı p6'nın `kirpimY`'siyle (293) çevrilir; `orman` çapası (master y 1434) bu kırpımda kadraj
-     dışında kalır (manifest uyarısı; site duvarda kılavuz çizmez).
+     dışında kalır (manifest uyarısı; F'de site duvarda kılavuz çizmezdi). G-B'de çapalar `bulusma`/`solen`/`motto`
+     (§0.2, §3); `motto` dikeyde kırpım dışı, yalnız yatay.
      ffmpeg: kare numarası biçiminde `crop=w=iw:h=ih*1080/1920:x=0:y='ih*(<bas>+(<son>-<bas>)*e(n))/1920'` (`e`
      easeInOutCubic); ilerleme biçiminde `y='ih*(y0-d1*gte(n,i1)-…)/1920'` (yalnız değişen kareler terim). Crop değeri
      tam sayıya yuvarlar (lrint), ölçekten önce. Geri klipler
@@ -221,7 +365,7 @@ Doğrulama (C turunda 8 dk 08 s: dikişler + 22 FFV1 referansının yeniden kuru
    - Tek klip: `--klip t56`. Önizleme seti örneği: `--kaynak D:/soft/cop31-varlik/render --esle
      t34b=D:/soft/cop31-varlik/render/_onizleme/s2-t34b,l4=…` (A/B turu ön entegrasyonu). Liste varsayılanı
      `D:/soft/cop31-varlik/kodlama/<kaynak klasör adı>.json` (render-son → `render-son.json`).
-3. `kapak-ton.py`: d8 kesişmesi için render kapağının tonu (CSS `saturate contrast brightness sepia`, sRGB en küçük
+3. ~~`kapak-ton.py`~~ (**G turunda silindi**, §0.2; aşağısı E/F kaydı): d8 kesişmesi için render kapağının tonu (CSS `saturate contrast brightness sepia`, sRGB en küçük
    kareler; F-B'de t78 son karesi **k_0059**'daki (E'de k_0065) `brosur_dikdortgen` ↔ `D:/soft/cop31-varlik/s2/doku/kapak-dom-sirtsiz.png`;
    D turuna dek t56/k_0071).
    Render kapak oranı 0,708 değilse uyarır (doku farklı → sonuç güvenilmez; o zaman `--cift FFFFFF=<kâğıt>,…`).
@@ -259,8 +403,7 @@ Tipler: `src/components/icinden/klipler.ts`. Sunucu bileşeni (`page.tsx`) okur;
 
 ```jsonc
 {
-  "surum": 2, "olusturma": "2026-11-03T…Z", "kaynak": "render",   // "onizleme" (EEVEE 960² ya da --gecici) | "yer-tutucu" (A)
-  // "gecici": { "t67": "t56", … }                                  // yalnız --gecici (§0)
+  "surum": 3, "olusturma": "2026-11-04T…Z", "kaynak": "render",   // "onizleme" (EEVEE 960²) | "yer-tutucu" (A); G: 3 (§0.2)
   "fps": 30, "master": 1920,
   "boyutlar": {
     "dikey": { "g": 720,  "y": 1280, "kirpim": [420, 0, 1080, 1920] },   // [x, y, g, y] master px
@@ -271,13 +414,13 @@ Tipler: `src/components/icinden/klipler.ts`. Sunucu bileşeni (`page.tsx`) okur;
     { "ad": "hevc", "tip": "video/mp4; codecs=\"hvc1.1.6.L93.90\"", "boyutlar": ["dikey"] },
     { "ad": "h264", "tip": "video/mp4; codecs=\"avc1.64001f\"",     "boyutlar": ["dikey", "yatay"] }  // her zaman yedek
   ],
-  "duraklar": [                                  // d0 … d11 (sıra = durak numarası; §0 tablosu)
+  "duraklar": [                                  // d0 … d12 (sıra = durak numarası; §0.2 tablosu, G turu)
     {
       "id": "d3",
-      "rol": "expo",                             // lombar|dunya|emanet|expo|anatomi|sutunlar|duvar|brosur-kapak|brosur-sayfa|brosur-arka
+      "rol": "expo",                             // lombar|dunya|emanet|expo|anatomi|sutunlar|duvar|masa|fidan-kok|fidan-govde|fidan-dal|fidan-yaprak (G, §0.2)
       "tur": "klip",                             // "klip": video (döngü varsa oynar; yoksa gelen klibin son karesi) | "dom": dinlenme DOM (ops. sabit poster)
       "okuma": [1260000, 1104000, …, 2300],      // gelen geçişin kare kare kadrajı (m), son öğe = dinlenme; ya da sabit metin
-      "okumaDurak": "sayfa 1/12",                // (ops.) dinlenmede diziye üstün sabit metin (d6, d7, d8, d11)
+      "okumaDurak": "banko · broşür",            // (ops.) dinlenmede diziye üstün sabit metin (d6, d7, d8)
       "poster": { "dikey": { "dosya": "/icinden/p/d/p3.1a2b3c4d.webp", "bayt": 31000, "lqip": "data:image/webp;base64,…" },
                   "yatay": { … } },              // null: posteri yok (d0)
       "dongu":  { "ad": "l3", "sure": 5, "kare": 150,
@@ -286,24 +429,27 @@ Tipler: `src/components/icinden/klipler.ts`. Sunucu bileşeni (`page.tsx`) okur;
                   "bayt":  { "dikey": { "h264": 0, … }, "yatay": { … } } },
       "ileri":  { "ad": "t34", "sure": 2.4, "kare": 72, "dosya": { … }, "bayt": { … },   // bu duraktan k+1'e
                   "geri": { "ad": "r43", "sure": 2.4, "kare": 72, "dosya": { … }, "bayt": { … } },  // k+1'den k'ya
-                  "hizGeri": 1 },                // null: DOM geçişi ya da son durak. F turunda 1,25 → 1 (D2-01)
+                  "hizGeri": 1 },                // ileri null: son durak (d12); geri null: geri klip yok → 350 ms poster çapraz sönmesi (G, §0.2). F: hizGeri 1,25 → 1
       "etiketler": { "dikey": [ { "ad": "expo", "metin": "Antalya Expo Center", "x": 360, "y": 657, "tur": "yapi" } ],
                      "yatay": [ … ] },           // tur: doga | yapi | bolge (+ "no" 1–4) | kunye (d1) | emanet (d2: no, donem, dx?, dy?); "nokta": true
       "ozel": {                                  // yalnız ilgili duraklarda
-        "dunyaR": [115, …, 378],                 // d1, d11: t01 kare başına disk yarıçapı (video px, iki yön aynı)
+        "dunyaR": [115, …, 378],                 // d1: t01 kare başına disk yarıçapı (video px, iki yön aynı)
         "dunyaC": { "dikey": [360, 512], "yatay": [640, 232] },
-        "yaylar": { "dikey": [[[x, y] × ≤ 24] × 27], "yatay": [ … ] },  // d1, d11 (yaylar.json; istemciye GİTMEZ)
+        "yaylar": { "dikey": [[[x, y] × ≤ 24] × 27], "yatay": [ … ] },  // d1 (yaylar.json; istemciye GİTMEZ)
         "sutunlar": { "dikey": [[x, y] × 12], "yatay": [ … ] },        // d5
-        "duvarCapalari": [ { "ad": "fidan", "dikey": [x, y], "yatay": [x, y] }, … ],  // d6 (p6; fidan, genc_iklim, orman)
-        "brosurDikdortgen": { "dikey": [[x, y] × 4], "yatay": [ … ] },  // d8 (t78 son kare)
-        "kapakTon": { "saturate": 1.49, "contrast": 0.51, "brightness": 1.11, "sepia": 0.09 }  // d8 (kapak-ton.py)
+        "duvarCapalari": [ { "ad": "bulusma", "dikey": [x, y], "yatay": [x, y] }, … ],  // d6 G7 adları: bulusma, solen, motto
+        "kokUclari": { "dikey": [ {"x", "y", "grup", "ana"} × 81 ], "yatay": [ … ] },  // d9 (§0.2)
+        "bogumlar": { "dikey": [ {"x", "y", "taraf"} × 2 ], "yatay": [ … ] },          // d10
+        "dalUclari": { "dikey": [ {"ad", "x", "y"} × 6 ], "yatay": [ … ] },            // d11, d12
+        "govdeUcu": { "dikey": [x, y], "yatay": [x, y] }                               // d12
+        // E/F'deki brosurDikdortgen ve kapakTon G'de kalktı
       }
     }
   ]
 }
 ```
 
-Durak tablosu: §0 (E turu, 12 durak). `istemciManifesti()` istemciye giden kopyadan `etiketler`'i ve `ozel.yaylar`'ı
+Durak tablosu: §0.2 (G turu, 13 durak; §0 E turu kaydı). `istemciManifesti()` istemciye giden kopyadan `etiketler`'i ve `ozel.yaylar`'ı
 siler (sunucuda HTML/SVG çizilir).
 
 Geri yön: k+1 → k, `duraklar[k].ileri.geri` klibi `hizGeri` hızında (süre = `sure / hizGeri`; F turundan beri 1: 1,25× her geri klipte 1 kare düşürüyordu, denetim D2-01); kadraj okuması

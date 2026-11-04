@@ -1,11 +1,11 @@
 /*
- * /icinden — v2'den kalan ortak stiller (v3 sinematik rotası, docs/brief-icinden-3.md §7.3): broşür (Brosur.tsx,
- * d6–d9 DOM sayfaları ve reduced kartları), kapanış (IcindenKapanis.tsx), ekran okuyucu kopyaları. Önek: .ic-
- * v3 sahne, bant, etiket stilleri icinden3.css'te (.v3-*). v2'nin bölüm/panel/sütun yüzü/katman kuralları
- * (derinlik.ts motoru) B turu temizliğinde silindi.
+ * /icinden — v2'den kalan ortak stiller (v3 sinematik rotası, docs/brief-icinden-3.md §7.3): kapanış (IcindenKapanis.tsx),
+ * ekran okuyucu kopyaları. Önek: .ic-. v3 sahne, bant, etiket ve fidan stilleri icinden3.css'te (.v3-*). v2'nin bölüm/panel/
+ * sütun yüzü/katman kuralları B turunda; DOM broşürü (.ic-br-*, Brosur.tsx, sarkaç/yörünge canlılığı) G turunda silindi
+ * (/brosur kendi brosur.css'ini kullanır, buradan bir şey almaz).
  * Kurallar: text-transform YOK (Türkçe i/İ); renkler marka tokenları + stant paleti
  * (--ic-krem, --ic-koyu, --ic-ahsap; page.tsx); tek turuncu marka #F08322.
- * Animasyon yalnızca transform/opacity (canlılıkta rotate + kayıtlı özel özellik genliği).
+ * Animasyon yalnızca transform/opacity.
  */
 
 .ic-kok {
@@ -23,7 +23,7 @@
 /* ============================== ekran okuyucu kopyaları ============================== */
 /*
  * Okunur kopyalar: hareketli düzende ekran okuyucuya açık ama görünmez (sr-only); reduced-motion'da
- * .ic-yalniz-azalt görünür olur, .ic-yalniz-hareket kaybolur (orada görünür kartlar var).
+ * .ic-yalniz-hareket kaybolur (orada görünür posterler ve bantlar var).
  */
 .ic-yalniz-hareket {
   position: absolute;
@@ -35,469 +35,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-/* ============================== broşür (brosur katmanı) ============================== */
-
-/* 1000×1000 nominal kutu; içerik --u biriminde (katmanda 1px). */
-.ic-br {
-  position: absolute;
-  inset: 0;
-}
-.ic-br-kagit {
-  position: absolute;
-  border-radius: calc(6 * var(--u));
-  background: #fff;
-  box-shadow:
-    0 0 0 calc(1 * var(--u)) rgb(40 51 47 / 0.06),
-    0 calc(10 * var(--u)) calc(22 * var(--u)) calc(-8 * var(--u)) rgb(40 51 47 / 0.45);
-}
-.ic-br-sayfa {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: calc(6 * var(--u));
-  background: #fff;
-  transform-origin: 0 50%;
-  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
-}
-/* JS gelmeden yalnızca kapak (üstte) çizilir; diğerlerini Brosur.tsx görünür yapar. */
-.ic-br .ic-br-sayfa:not(.ic-br-sayfa-kapak) {
-  visibility: hidden;
-}
-.ic-br-sayfa > p,
-.ic-br-taban > p,
-.ic-br-arka-metin > p,
-.ic-br-dalis > p,
-.ic-br-sanat,
-.ic-br-logolar,
-.ic-br-dalis,
-.ic-br-sayac-kutu,
-.ic-br-ikili,
-.ic-br-portre,
-.ic-br-mesaj {
-  position: absolute;
-  margin: 0;
-}
-.ic-br-taban,
-.ic-br-arka-metin {
-  position: absolute;
-  inset: 0;
-}
-/*
- * Sayfa çevirme ve polaroid dalışı kendi kompozit katmanlarında: transform/opacity her karede değişir;
- * katman olmasa broşürün tamamı (fotoğraflar dahil, DPR 3) her karede yeniden raster ediliyordu (K2:
- * 4× CPU mobil sürekli jestte 11–14 uzun kare). Gizli sayfa raster edilmez. Yalnız katmandaki broşürde
- * (.ic-br); akıştaki kartlar ve sr-only kopyalar etkilenmez.
- */
-.ic-br .ic-br-sayfa,
-.ic-br .ic-br-dalis {
-  will-change: transform;
-}
-.ic-br .ic-br-kagit {
-  will-change: opacity;
-}
-.ic-br .ic-br-kivrim,
-.ic-br .ic-br-golge {
-  will-change: transform, opacity;
-}
-.ic-br .ic-br-taban,
-.ic-br .ic-br-sayac-kutu,
-.ic-br .ic-br-en-foto {
-  will-change: opacity;
-}
-
-/* sırt, kıvrım ve kenar gölgesi (sayfa çevirme) */
-.ic-br-sirt {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 6;
-  width: calc(18 * var(--u));
-  background: linear-gradient(to right, rgb(40 51 47 / 0.12), rgb(40 51 47 / 0));
-  pointer-events: none;
-}
-.ic-br-kivrim {
-  position: absolute;
-  inset: 0;
-  z-index: 7;
-  background: linear-gradient(to left, rgb(40 51 47 / 0.6), rgb(40 51 47 / 0.12) 65%, rgb(40 51 47 / 0.04));
-  opacity: 0;
-  pointer-events: none;
-}
-.ic-br-golge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 7;
-  width: calc(130 * var(--u));
-  background: linear-gradient(to right, rgb(40 51 47 / 0.38), rgb(40 51 47 / 0));
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* tipografi (nominal ≥ 24) */
-.ic-br-yaprak {
-  z-index: 4;
-  border-radius: 0 60% 0 60%;
-  background: var(--color-brand-green);
-  padding: calc(9 * var(--u)) calc(24 * var(--u));
-  font-size: calc(24 * var(--u));
-  line-height: 1.2;
-  font-weight: 700;
-  white-space: nowrap;
-  color: #fff;
-}
-.ic-br-en {
-  z-index: 4;
-  font-size: calc(24 * var(--u));
-  line-height: 1.25;
-  font-weight: 600;
-  white-space: nowrap;
-  color: rgb(85 84 84 / 0.85);
-}
-.ic-br-arka-en {
-  text-align: center;
-}
-.ic-br-en-foto {
-  opacity: 0;
-  color: #fff;
-  text-shadow: 0 1px calc(6 * var(--u)) rgb(40 51 47 / 0.6);
-}
-.ic-br-kapak-baslik {
-  font-size: calc(60 * var(--u));
-  line-height: 0.98;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: var(--color-brand-blue);
-}
-.ic-br-kapak-alt {
-  font-size: calc(28 * var(--u));
-  line-height: 1.2;
-  font-weight: 700;
-  text-align: center;
-  text-wrap: balance;
-  color: var(--color-brand-green);
-}
-.ic-br-kapak-kurum {
-  font-size: calc(30 * var(--u));
-  line-height: 1.15;
-  font-weight: 900;
-  text-align: center;
-  color: var(--color-brand-blue);
-}
-.ic-br-logolar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: calc(18 * var(--u));
-}
-.ic-br-logo {
-  width: auto;
-  height: 100%;
-}
-.ic-br-logo-ayrac {
-  width: calc(2 * var(--u));
-  height: 70%;
-  background: var(--color-brand-mist);
-}
-.ic-br-taban-baslik {
-  font-size: calc(54 * var(--u));
-  line-height: 1.02;
-  font-weight: 900;
-  color: var(--color-brand-blue);
-}
-.ic-br-taban-alt {
-  font-size: calc(28 * var(--u));
-  line-height: 1.3;
-  font-weight: 700;
-  color: var(--color-brand-green);
-}
-.ic-br-blok-baslik {
-  font-size: calc(42 * var(--u));
-  line-height: 1.1;
-  font-weight: 900;
-  color: var(--color-brand-blue);
-}
-.ic-br-blok-alt {
-  display: block;
-  margin-top: calc(6 * var(--u));
-  font-size: calc(25 * var(--u));
-  line-height: 1.25;
-  font-weight: 600;
-  color: var(--color-brand-green);
-}
-.ic-br-govde {
-  font-size: calc(26 * var(--u));
-  line-height: 1.38;
-  font-weight: 500;
-  text-wrap: pretty;
-  color: var(--color-brand-ink);
-}
-.ic-br-govde-koyu {
-  font-weight: 600;
-}
-.ic-br-dev-sayi {
-  font-size: calc(92 * var(--u));
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: -0.015em;
-  color: var(--color-brand-blue);
-}
-.ic-br-yesil {
-  font-size: calc(32 * var(--u));
-  line-height: 1.22;
-  font-weight: 700;
-  text-wrap: balance;
-  color: var(--color-brand-green);
-}
-.ic-br-arka-alinti {
-  font-size: calc(40 * var(--u));
-  line-height: 1.16;
-  font-weight: 700;
-  text-align: center;
-  color: var(--color-brand-green);
-}
-.ic-br-arka-satir {
-  font-size: calc(25 * var(--u));
-  line-height: 1.24;
-  font-weight: 700;
-  text-align: right;
-  color: var(--color-brand-blue);
-}
-.ic-br-arka-cop {
-  font-size: calc(24 * var(--u));
-  color: var(--color-brand-green);
-}
-.ic-br-mesaj {
-  font-size: calc(25 * var(--u));
-  line-height: 1.38;
-  font-weight: 500;
-  color: var(--color-brand-ink);
-}
-.ic-br-imza {
-  display: flex;
-  flex-direction: column;
-  margin-top: calc(12 * var(--u));
-}
-.ic-br-imza-ad {
-  font-size: calc(28 * var(--u));
-  line-height: 1.2;
-  /* 900: Google yüzleri 700/900 olduğundan 800 hep 900 çiziliyordu; yerel değişken yazıyla görünüm aynı kalsın (W-F). */
-  font-weight: 900;
-  color: var(--color-brand-blue);
-}
-.ic-br-imza-rol {
-  /* Tek satır (C turu, denetim A1-01): 24u'da iki satıra kırılıyor ve blok sayfanın 10,6u altına taşıyordu
-     ("Başkanı" kesik). 22u'da "AK Parti Gençlik Kolları Başkanı" 366u'ya sığar (ölçüldü); alt pay ≥ 24u. */
-  font-size: calc(22 * var(--u));
-  line-height: 1.22;
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--color-brand-green);
-}
-
-/* kapak sanatı (küre dairesi, slogan dairesi, yaylar) — /brosur cover.tsx yüzdeleri */
-.ic-br-sanat {
-  container-type: inline-size;
-}
-.ic-br-yaylar {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.ic-br-yorunge {
-  transform-box: view-box;
-  transform-origin: 240px 152px;
-  animation: ic-yorunge 60s linear infinite;
-  animation-play-state: paused;
-}
-.ic-br-kure {
-  position: absolute;
-  left: 24%;
-  top: 2%;
-  width: 72%;
-  height: 72%;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #0f3b2e;
-  box-shadow:
-    0 0 0 calc(6 * var(--u)) #fff,
-    0 calc(20 * var(--u)) calc(40 * var(--u)) calc(-18 * var(--u)) rgb(15 60 40 / 0.55);
-}
-.ic-br-slogan-diski {
-  position: absolute;
-  left: 0;
-  top: 45%;
-  display: flex;
-  width: 52%;
-  height: 52%;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-image: linear-gradient(40deg, var(--color-brand-navy) 8%, var(--color-brand-blue) 92%);
-  box-shadow: 0 calc(16 * var(--u)) calc(32 * var(--u)) calc(-16 * var(--u)) rgb(27 79 156 / 0.65);
-}
-.ic-br-slogan {
-  margin: 0;
-  rotate: -6deg;
-  font-size: 7.6cqw;
-  line-height: 1.08;
-  text-align: center;
-  color: #fff;
-}
-
-/* polaroid */
-.ic-br-polaroid {
-  position: relative;
-  margin: 0;
-  border: calc(4 * var(--u)) solid var(--color-brand-green);
-  border-radius: calc(16 * var(--u));
-  background: #fff;
-  padding: calc(13 * var(--u));
-  box-shadow:
-    0 calc(2 * var(--u)) calc(4 * var(--u)) rgb(0 0 0 / 0.06),
-    0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-12 * var(--u)) rgb(40 51 47 / 0.4);
-}
-.ic-br-pin {
-  position: absolute;
-  top: calc(-12 * var(--u));
-  left: 50%;
-  z-index: 2;
-  width: calc(24 * var(--u));
-  height: calc(24 * var(--u));
-  margin-left: calc(-12 * var(--u));
-  border-radius: 50%;
-  background: var(--color-brand-orange);
-  box-shadow:
-    inset 0 calc(-3 * var(--u)) 0 rgb(0 0 0 / 0.14),
-    0 calc(2 * var(--u)) calc(5 * var(--u)) rgb(0 0 0 / 0.3);
-}
-.ic-br-polaroid-foto {
-  position: relative;
-  overflow: hidden;
-  border-radius: calc(8 * var(--u));
-  background: var(--color-brand-mist);
-}
-.ic-br-polaroid-yazi {
-  margin-top: calc(10 * var(--u));
-  font-size: calc(24 * var(--u));
-  line-height: 1.2;
-  font-weight: 700;
-  text-align: center;
-  color: var(--color-brand-ink);
-}
-
-/* sayfa 1: polaroid dalışı + sayaç */
-.ic-br-dalis {
-  z-index: 2;
-  transform-origin: 0 0;
-}
-.ic-br-dalis .ic-br-polaroid-foto::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgb(40 51 47 / 0.62),
-    rgb(40 51 47 / 0) 20%,
-    rgb(40 51 47 / 0) 56%,
-    rgb(40 51 47 / 0.9)
-  );
-  content: "";
-}
-.ic-br-sayac-kutu {
-  z-index: 4;
-  opacity: 0;
-  color: #fff;
-  text-shadow: 0 1px calc(8 * var(--u)) rgb(40 51 47 / 0.5);
-}
-.ic-br-sayac {
-  margin: 0;
-  font-size: calc(92 * var(--u));
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.ic-br-sayac-alt {
-  margin: calc(8 * var(--u)) 0 0;
-  font-size: calc(28 * var(--u));
-  line-height: 1.25;
-  font-weight: 700;
-}
-
-/* sayfa 2 ve arka kapak polaroidleri (statik eğim; sarkaç içte) */
-.ic-br-ikili-sol {
-  rotate: -3deg;
-}
-.ic-br-ikili-sag {
-  rotate: 3.5deg;
-}
-.ic-br-portre {
-  rotate: -2.5deg;
-}
-
-/* ------------------------------ broşür canlılık ------------------------------ */
-
-/*
- * B'nin sahne kökü dinlenmede data-dinlenme="k" yazar (kaydırma bitince 400 ms sonra; yoksa "-").
- * Sarkaç: açı animasyonu × genlik; genlik kayıtlı özellik olduğu için geçişle 0'a söner (sıçrama yok).
- */
-@property --ic-sarkac {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@property --ic-genlik {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-@keyframes ic-sarkac {
-  0%,
-  100% {
-    --ic-sarkac: -1.2deg;
-  }
-  50% {
-    --ic-sarkac: 1.2deg;
-  }
-}
-@keyframes ic-yorunge {
-  to {
-    rotate: 360deg;
-  }
-}
-.ic-sarkac {
-  --ic-genlik: 0;
-  transform-origin: 50% 0;
-  rotate: calc(var(--ic-sarkac) * var(--ic-genlik));
-  animation: ic-sarkac 5s ease-in-out infinite;
-  animation-play-state: paused;
-  transition: --ic-genlik 320ms ease-out;
-}
-.ic-sarkac-c {
-  animation-delay: -2.1s;
-}
-.ics-sahne[data-dinlenme="6"] .ic-sarkac-a,
-.ics-sahne[data-dinlenme="7"] .ic-sarkac-b,
-.ics-sahne[data-dinlenme="7"] .ic-sarkac-c {
-  --ic-genlik: 1;
-  animation-play-state: running;
-  transition-duration: 900ms;
-  will-change: rotate;
-}
-.ics-sahne[data-dinlenme="5"] .ic-br-yorunge {
-  animation-play-state: running;
-}
-
-/* ------------------------------ akıştaki broşür kartları (reduced) ------------------------------ */
-
-.ic-br-kart {
-  display: none;
 }
 
 /* ============================== kapanış ============================== */
@@ -628,47 +165,35 @@
   color: rgb(85 84 84 / 0.85);
 }
 
+/* "Dijital broşür" düğmesi (G turu §14.4.6, slogan altı): sitenin düğmesi gibi beyaz, marka mavisi kontur. */
+.ic-kapanis-brosur-satir {
+  margin-top: 14px;
+}
+.ic-kapanis-brosur {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--color-brand-blue);
+  border-radius: 999px;
+  background: #fff;
+  padding: 9px 18px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-brand-blue);
+  outline-offset: 2px;
+  transition: background-color 150ms ease;
+}
+.ic-kapanis-brosur:hover {
+  background: color-mix(in srgb, var(--color-brand-blue) 8%, #fff);
+}
+.ic-kapanis-brosur:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+}
+
 /* ============================== reduced-motion düzeni ============================== */
 
 @media (prefers-reduced-motion: reduce) {
   .ic-yalniz-hareket {
     display: none;
-  }
-  /* d6–d8: akış kartları okunurken sahnedeki kapak soluk (Brosur.tsx data-k); kartlar arası boşlukta ayrı sayfa gibi durmasın. */
-  .ic-br:is([data-k="6"], [data-k="7"], [data-k="8"]) {
-    opacity: 0.18;
-  }
-  /* Katmanda yalnızca kapak; sayfalar akıştaki kartlarda. */
-  .ic-br .ic-br-sayfa:not(.ic-br-sayfa-kapak) {
-    display: none;
-  }
-  .ic-br-kart {
-    --u: calc((min(100vw, 480px) - 2 * var(--ic-kenar)) / 680);
-    display: block;
-    width: 100%;
-    max-width: 448px;
-    margin-inline: auto;
-  }
-  .ic-br-statik {
-    position: relative;
-    inset: auto;
-    width: calc(680 * var(--u));
-    height: calc(960 * var(--u));
-    margin-inline: auto;
-    visibility: visible;
-    box-shadow:
-      0 0 0 1px rgb(40 51 47 / 0.08),
-      0 12px 28px -16px rgb(40 51 47 / 0.5);
-  }
-  .ic-br-statik [data-br="taban"] {
-    display: none;
-  }
-  .ic-br-statik .ic-br-sayac-kutu,
-  .ic-br-statik .ic-br-en-foto {
-    opacity: 1;
-  }
-  .ic-sarkac,
-  .ic-br-yorunge {
-    animation: none;
   }
 }

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { backCover, cop31, cover, socials } from "@/lib/content";
 import { logos } from "@/lib/photos";
 import { stant } from "@/lib/stant";
@@ -8,12 +9,13 @@ export type Atif = { readonly on?: string; readonly metin: string; readonly en?:
 
 /**
  * Kapanış (akış, snap'siz; docs/brief-icinden.md §1 son satır): logolar, "AK Parti Gençlik
- * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, #YaniBanaEmanet, slogan ve atıf satırları
- * (v3: brief-icinden-3 §9.6 — Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî COP31 logosu). Sahnenin
- * üstüne beyaz bir sayfa gibi kayarak gelir. İzin verilen linkler yalnızca sosyal hesaplar ve site.
- * Alıntı broşürün arka kapağıyla aynı tipografik tırnakla (“…”); meta satırlar orta noktasız, cümle.
+ * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, #YaniBanaEmanet, slogan, "Dijital broşür" düğmesi (G turu §14.4.6,
+ * slogan altı; `brosur`) ve atıf satırları (v3: brief-icinden-3 §9.6 — Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî
+ * COP31 logosu; G turu: "Stant ve fidan görünümü temsilîdir."). Sahnenin üstüne beyaz bir sayfa gibi kayarak gelir. İzin
+ * verilen linkler sosyal hesaplar, site ve /brosur. Alıntı broşürün arka kapağıyla aynı tipografik tırnakla (“…”); meta
+ * satırlar orta noktasız, cümle.
  */
-export default function IcindenKapanis({ atiflar }: { atiflar: readonly Atif[] }) {
+export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly Atif[]; brosur?: ReactNode }) {
   const sosyal = socials.filter((s) => s.name !== "Web");
   const web = socials.find((s) => s.name === "Web");
 
@@ -67,6 +69,7 @@ export default function IcindenKapanis({ atiflar }: { atiflar: readonly Atif[] }
           {stant.tema}. {stant.hashtag}
         </p>
         <p className="ic-kapanis-slogan font-script">{cover.slogan}</p>
+        {brosur ? <p className="ic-kapanis-brosur-satir">{brosur}</p> : null}
         <p className="ic-kapanis-etkinlik">
           {backCover.line1}: <span className="v3-nowrap">{cop31.dates}</span>, {cop31.venue}.
         </p>

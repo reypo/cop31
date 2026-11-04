@@ -1170,7 +1170,7 @@ Yeniden numaralama tek seferlik bir göç. Bu turda durak tablosu veriye taşın
 | d9 | Buluşmalar · Şölen, "sayfa 8/12" | DOM | DOM 2,0 s (menteşe + hayaletler + dalış) | DOM | — | p8 |
 | d10 | Arka kapak, "sayfa 12/12" | DOM | DOM 1,8 s | DOM | — | p8 |
 | d11 | Ortak evimiz | S1 + DOM ters yaylar | DOM 0,6 s + t01 tekrarı | l1 | üst, uzay, değişmez | p1 |
-| — | Kapanış | DOM | — | — | atıflara "Stant görünümü temsilîdir." eklenir | — |
+| — | Kapanış | DOM | — | — | atıflara "Stant görünümü temsilîdir." eklenir (G-B K9: "Stant ve fidan görünümü temsilîdir.") | — |
 
 - **Geri klipler:** r10, r21, r32, r43, r54, r65 (yeni), r76, r87 (eski t56'nın yerine). d11→d10 için r10.
 - **Kalkanlar:** eski d8 "sayfa 11/12" (İklim) arka duvara taşınır.
@@ -1312,7 +1312,7 @@ Kod yazmadan önce: `node_modules/next/dist/docs` içindeki ilgili rehber okunur
    - Yedek: `?brosur=duz` (eski scaleX).
    - Polaroid sarkacı ve kapak yörüngesi aynen.
 6. **KadrajOkumasi:** "sayfa n/12" hayaletlerle adım adım akar (2…7 → 8; 9…11 → 12).
-7. **Kapanış:** atıflara "Stant görünümü temsilîdir." eklenir; müşteri baskıyı teyit ederse çıkarılır.
+7. **Kapanış:** atıflara "Stant görünümü temsilîdir." eklenir; müşteri baskıyı teyit ederse çıkarılır. (G-B K9: satır "Stant ve fidan görünümü temsilîdir." oldu.)
 8. **Reduced-motion ve poster kipi:**
    - Reduced-motion: d1, d2 ve d11 posterlerinin üstünde statik SVG (yaylar, işaretler, bağlar, künye; halka yok). d6/d7 için poster + bant + tam liste; iklim listesi d6 altında. Broşür kartları kapak, 8/12, 12/12; menteşe yok.
    - Poster kipi (Save-Data, 2g/3g): 900 ms poster sönmesi; DOM menteşe kalır.
@@ -1438,7 +1438,7 @@ Gerçek iPhone testi açık kalır; memory'deki madde kapatılmaz.
 
 ### 12.8 Müşteriye sorular (onay-listesi §14.1'e)
 
-1. Arka duvar ("İklim Eylemleri / 300 fidan / Genç İklim"), sol duvar ("1.000.000+ / 81 / 922", iki ekranda "Sen de söz ver.") ve ön cephe giriş pankartı gerçek standa basılacak mı? Yanıt gelene kadar kapanışta "Stant görünümü temsilîdir." satırı durur.
+1. Arka duvar ("İklim Eylemleri / 300 fidan / Genç İklim"), sol duvar ("1.000.000+ / 81 / 922", iki ekranda "Sen de söz ver.") ve ön cephe giriş pankartı gerçek standa basılacak mı? Yanıt gelene kadar kapanışta "Stant görünümü temsilîdir." satırı durur (G-B K9: "Stant ve fidan görünümü temsilîdir.").
 2. Gençlik Kolları sayıları ve Üsküdar GK Hatıra Ormanı, d4'ten itibaren duvarda görünüyor. Uygun mu?
 3. Giriş pankartı PDF'te başka bir cephede. Ön cepheye uyarlanması uygun mu? Cephelere AK Parti GK logosu konsun mu (şu an yok)?
 4. Duvarda yalnız Hatıra Ormanı tabelası var (insansız). İnsanlı fidan ya da orman karelerinin duvara basılmasını ister misiniz?
@@ -2052,3 +2052,238 @@ EEVEE 960² önizleme (GPU kilidi; F renderları bitince) → kullanıcı sabah 
 | K10 | Görünüş ayarları (gövde, kök gömülme, yaprak tonu, tbc kuyruğu) | sabah bakışı | GPU'suz, önizlemede doğrulanır |
 
 **G-B sırası (F push'tan sonra, tek commit):** (1) K1–K10 kesinleşir → S3 görünüş düzeltmeleri + 960² kısa önizleme (~5 dk GPU) → `son.sh` (~38 dk GPU) ∥ Antalya ilkbahar Sentinel-2 hazırlığı (G4; t23/l3/t34a/p3 yeniden render ~25 dk, S1 kilitle sırayla) ∥ duvar dokuları (G7; t56/t67/t78f/p6/p7 yeniden render ~15 dk; t78f S3 ile birleşir) → (2) K: `kodla.mjs` ad tablosu (t89 t9a tab tbc lc r98, p9 pa pb pc; CRF AV1 32 / lc 30 / r98 36), `manifest-birlestir` S3 JSON (kirpimY: p9 420, pa 222, pb 194, pc 165; `capalar`) → (3) W: rol tablosu (`masa`, `fidan-kok/govde/dal/yaprak`, N = 13), d8 son-kare + "Dijital broşür →" (üst şeritte de), kartlar, 81 halka, polaroidler, kapanış, kiosk 115–125 s, akıcılık yaması birleşik → (4) V: bütçe (≤ 12,0), perf, kiosk, kontaklar, belgeler → commit + push. Yeni broşür gelince (G3) kapak dokusu + t78f kuyruğu + t89 yeniden (~8 dk).
+
+### 14.4 G-B kararları ve iş kırılımı (orkestratör, 4 Kasım 2026 ~09.30; bağlayıcı — kullanıcı "işlemi tamamla, yayına al" dedi, K1–K10 varsayılanlarıyla)
+
+Kullanıcı sabah önizlemeye bakamadı; §14.3'teki varsayılanlar (K1–K10) **kesinleşti**. G-B tek commit + push (Vercel
+kullanıcının bağlantısıyla yayına girer). Bu bölüm §14.3 ile çelişirse bu bölüm geçerli.
+
+#### 14.4.1 Kesinleşen kararlar
+
+| # | karar |
+|---|---|
+| K1 | kasa d4/d5'te yok, d8'de var: kabul |
+| K2 | `pankart_gel` S3 kliplerinde gizli: kabul |
+| K3 | meşe; tür adı hiçbir metinde yazılmaz |
+| K4 | fidan içi geri adım (d10→d9, d11→d10, d12→d11) = **350 ms poster çapraz sönmesi**; d9→d8 = r98 (t89 tersi); d8→d7 = r87 |
+| K5 | d12 arka planı **A (karanlık hol)**; `--gok altin` kullanılmaz |
+| K6 | d11 polaroidleri: sol **p12** (`bulusmaKampusSoylesi`) + **p17** (`bulusmaKampusSalonSelam`), sağ **p19** (`solenKocaeliTribunSelam`) + **p22** (`solenKocaeliSahaIkili`); kapanışta p22 kullanılmaz |
+| K7 | d6 arka duvarı **fotoğrafsız**, G7 metni §14.4.4; İklim Eylemleri satırları d12'ye (yaprak kartı) taşınır |
+| K8 | yalnız "81 İl · 922 İlçe" (`stats[1]`, `stats[2]`); "köklerin ucundaki 81 nokta" cümlesi yok (onay-listesi §14.1-G'de kalır) |
+| K9 | atıf "Stant görünümü temsilîdir." → **"Stant ve fidan görünümü temsilîdir."** |
+| K10 | görünüş (GPU'suz ayar, kısa 960² önizlemeyle doğrulanır): gövde taban çapı **×1,3**; kök gömülme **+1 mm** ve fidan_spot ~5° daha yandan; yaprak doygunluk hedefi **0,56–0,60** (ölçüt ≤ 0,62'ye gevşer; ton IQR ≥ 12°, luma > 0,97 ≤ %1 korunur); tbc `g_yaprak` penceresi **0,93 → 0,97** (sondaki durgun kare 6–8) |
+| Bütçe | mobil oturum (4G) **≤ 12,0 MB** AV1 ve HEVC hedef. **Merdiven (orkestratör, 4 Kasım ~10.30; K-kod önizleme tahmini AV1 12,58 / HEVC 12,56 üzerine):** (1) lc CRF 30 → 32; (2) fidan geçişleri t89/t9a/tab/tbc CRF +2 (AV1 34, HEVC/H.264 +2; VMAF ortalaması ≥ 93 kalmalı — karanlık sahne); (3) sonuç ≤ 12,25 ise **kabul**, rapora yazılır; (4) hâlâ > 12,25 ise r98 kaldırılır (d9→d8 de poster çapraz sönmesi); tavan 12,5. Oturum gerçek DOM ile ölçülür (broşür DOM görselleri kalktı, 4 polaroid geldi); K-son tahmini V'nin tarayıcı ölçümüyle doğrulanır. Öteki kapılar §12.6/§12.11/§13.8 aynen (d3 AV1 penceresi ≤ 2,6; kalkış dikişi ≤ 3,27; r43 ≤ 4,2) |
+| Bütçe sonucu | **K-son (4 Kasım ~15.40):** merdivenin dört adımı da uygulandı (lc AV1 32; t89/t9a/tab/tbc AV1 34, HEVC 27; **r98 kaldırıldı** → d9→d8 de 350 ms poster sönmesi; fidan içi bütün geri adımlar aynı dilde). Tahmin (set + 0,664 medya dışı): **AV1 12,455 / HEVC 12,099 MB** (F 11,470 / 11,208; fark ≈ fidan bölümü 1,13 MB). Orkestratör kararı: **kabul** (tavan 12,5'in altında; HEVC — iPhone yolu — kapıya 0,1 MB uzak). Ölçülen ama uygulanmayan kaldıraç: t34/r43/l3 AV1 34 → 36 (AV1 ≈ 12,185) — d3 Antalya görünümü müşterinin odağı olduğu için kalite düşürülmedi; istenirse K tek komutla uygular. V tarayıcıda 4G ile ölçer, rapora yazılır. |
+
+#### 14.4.2 Durak tablosu (N = 13; manifest `DURAKLAR`, `rol.ts`)
+
+| id | rol | tur | gelen | ileri / geri | döngü | poster | okuma |
+|---|---|---|---|---|---|---|---|
+| d0 | lombar | dom | — | t01 / r10 | — | — | — |
+| d1 | dunya | klip | t01 | t12 / r21 | l1 | p1 | kadraj |
+| d2 | emanet | klip | t12 | t23 / r32 | l2 | p2 | kadraj |
+| d3 | expo | klip | t23 | t34 / r43 | l3 | p3 | kadraj |
+| d4 | anatomi | klip | t34 | t45 / r54 | l4 | p4 | kadraj |
+| d5 | sutunlar | klip | t45 | t56 / r65 | l5 | p5 | kadraj |
+| d6 | duvar | klip | t56 | t67 / r76 | — | p6 son-kare | "arka duvar · ~3 m" |
+| d7 | duvar | klip | t67 | t78 / r87 | — | p7 son-kare | "sol duvar · ~3 m" |
+| d8 | **masa** | klip | t78 (= t78f kareleri; S2'nin t78.json'u) | **t89 / r98** | — | **p8 son-kare = t78[59]** (plaka kalkar) | "banko · broşür" |
+| d9 | **fidan-kok** | klip | t89 | t9a / **poster** | — | p9 son-kare = t89[59] | kadraj (cm) |
+| d10 | **fidan-govde** | klip | t9a | tab / poster | — | pa son-kare = t9a[53] | kadraj (cm) |
+| d11 | **fidan-dal** | klip | tab | tbc / poster | — | pb son-kare = tab[53] | kadraj (cm) |
+| d12 | **fidan-yaprak** | klip | tbc | — | **lc** (4 s) | pc = lc[0] | kadraj (cm) |
+| (13) | kapanış | DOM | | | | | |
+
+- Kalkanlar: `brosur-kapak`, `brosur-sayfa`, `brosur-arka`, ikinci `dunya` (d11 dönüşü), DOM kapak/FLIP/kesişme, `kapakTon`,
+  `brosurDikdortgen`, `Brosur.tsx` (icinden), `brosur-geometri.ts`, `d-yayin.ts`, `?brosur=duz`, `kapak-dom.mjs`/`kapak-ton.py`
+  (kodlamada), `HAYALET_BASLIKLARI`. `/brosur` sayfası kalır (bağlantı hedefi).
+- `Gecis.geri === null` → oynatıcı geri adımda 350 ms poster çapraz sönmesi yapar (hedef durağın posteri üstte söner, sonra
+  durum varışı; ters jest tuzağı ve stale kuralları aynen). `hizGeri` 1.
+- Manifest `ozel` yeni alanlar (video px, yön başına; master → video dönüşümü posterin kirpimY'siyle: p9 420, pa 222, pb 194,
+  pc 165): d9 `kokUclari: Record<Boyut, {x, y, grup, ana}[]>` (81), d10 `bogumlar: Record<Boyut, {x, y, taraf}[]>` (2; metin
+  content.ts'ten, JSON'daki baslik/satirlar kullanılmaz), d11 `dalUclari: Record<Boyut, {ad, x, y}[]>` (6: solAlt sağAlt solOrta
+  sağOrta solÜst sağÜst), d12 `dalUclari` + `govdeUcu`. Kırpım dışına düşen nokta yön başına atlanır (kenar ≥ 24 px kuralı).
+- d6 `duvarCapalari` yeni adlarla: **`bulusma`** ("50+" rakamı), **`solen`** ("100.000+" rakamı), **`motto`** (§14.4.4).
+- Kiosk (`?auto=1`): tur 115–125 s; dinlenmeler d8 ~3 s, d9 ~5 s, d10 ~4,5 s, d11 ~5 s, d12 ~6 s, kapanış 9 s (W ölçüp ayarlar).
+
+#### 14.4.3 Kodlama (K)
+
+`kodla.mjs`: `GERI` + `t89: "r98"`; `DONGU` + `lc`; `POSTER_TABAN` p8 → `{tip: "son-kare", kaynak: "t78"}` (render-son/p8 plakası
+ve p8.json `render-son-f/p8/`'e taşınır; yeni p8.json tip son-kare), p9 ← t89, pa ← t9a, pb ← tab (son-kare), pc ← lc (dongu);
+`KAYNAK_SIRA` + t89 t9a tab tbc lc; `KIRPIM_Y_TANIM`: t89 420, t9a 420 → 222, tab 222 → 194, tbc 194 → 165, lc 165 (rampalar
+ilerlemeye bağlı, s0/s1 hızlı bölümde; r98 reverse'ten); CRF AV1 t89/t9a/tab/tbc 32, lc 30, r98 36 (H.264/HEVC t78 ailesi;
+lc l-ailesi). `manifest-birlestir.mjs`: §14.4.2 tablosu, fragman listesi + S3 JSON'ları, `ozel` alanları, `--gecici` kalkar.
+`klipler-sema.md` §0.2 güncellenir. Önce önizleme kaynağıyla (`--esle` ile `_onizleme/s3-*` klasörleri, 960²) çalışır
+→ W geliştirir; son renderlar bitince aynı komutlar render-son'dan (t78 r87 p8 + S3 + t56 r65 p6 t67 r76 p7 + t23 r32 l3 p3
+t34 r43), `--temizle` ve `--artik`, `kodlama-dogrula.py`.
+
+#### 14.4.4 G7: d6 arka duvarı (dokular.mjs, fotoğrafsız; metinler content.ts'ten birebir)
+
+Pencere içi (x −6,95…−4,0): başlık `bulusmalar.title` ("Gençlik Buluşmaları", 0,26 m, turuncu vurgu çizgisi aynen), EN satırı
+"Youth Meetings" (italik 0,14; `data-onay="en"`), büyük rakam **"50+"** (`facts.meetings`, mürekkep 0,60 m; çapa `bulusma`) altında
+"gençlik buluşması" (0,20) ve "son 5 yılda" (`facts.meetingsYears`, 0,14; her ikisi `bulusmalar.paragraphs[3]`'ün kelimeleri);
+sağ sütun (hiza end, u −4,0): "Bir Gençlik Şöleni" (0,20, 600), rakam **"100.000+"** (`facts.solenAttendees`, mürekkep 0,35 m; çapa
+`solen`) + "genç" (0,20), `facts.solenDate`, `facts.solenPlace` (0,14). Pencere dışı (u −3,7, yalnız yatay): `backCover.quote`
+tırnaksız iki satır ("AK Parti" / "Her Anında Hep Yanında", 0,16; çapa `motto`) ve `stant.hashtag` (0,13). Dağ silueti, krem zemin,
+kontrast/harf ölçümleri ve `_duvar-olcum.json` aynen; `duvar-sol.png`, `ekran-soz.png`, `cephe-on.png` bayt bayt değişmez
+(`--sadece duvar-arka.png`). S2 `sahne.py` `DUVAR_CAPA_VARSAYILAN` ve `CAPA_DUVAR` yeni adlarla; d6 bandı (W) 3 spot satırı:
+(1) "Son 5 yılda 50'den fazla gençlik buluşması." → `bulusma`, (2) "Bir Gençlik Şöleni: 16 Mayıs 2026, Kocaeli Stadyumu,
+100.000+ genç." (`facts.solenDate`, `facts.solenPlace`, `facts.solenAttendees` → "100.000+"; content.ts'teki "100 binden fazla genci" yerine sayı biçimi, stats kuralı) → `solen`, (3) "AK Parti Her Anında Hep Yanında" (`backCover.quote` tırnaksız) → `motto`; DuvarYazisi sr-only listesi duvardaki yeni metinle birebir.
+**G7-doku sonucu (4 Kasım ~13.10):** boylar 2,95 m'lik pencereye birlikte sığmadığından ölçülerek sapıldı (başlık iki satır; "50+" 0,48 m ve etiketleri yanında; Şölen bloğu altta sağa hizalı, sıra başlık → tarih · yer → "100.000+ genç"; slogan üç satır) — **kabul**. `motto` çapası dikey kırpımın dışında (x 911 video px): manifest o yönde yazmaz (K-son dikey denetimi ekler), W çapa yoksa kılavuz çizgisi çizmez; yatayda dinlenme karesinde sloganın sağ ucu kesik (E'deki "Fidan dik…" gibi) — kabul. S2 `son.sh` p6 adımı render-son/p8 taşındığı için atlanır → A6 `son.sh`'daki p8 korumasını kaldırır ya da p6'yı elle üretir (g7-doku raporundaki komut).
+**G7-render sonucu (~14.15):** t56/t67 yeniden render edildi, dikişler 0,031/0,002/0,002, p6 okunurluk kapıları geçti (başlık ≥ 46,7, rakam ≥ 63,3, ikincil ≥ 24,0 video px; kontrast ≥ 5,13), net GPU 6,8 dk; `son.sh` p6 koruması p8.json tipine göre düzeltildi. 720 px dikey (tablet) sağ kenarında sloganın ~9 px'lik kırıntısı — kabul (telefon kırpımında yok). S2 `son.sh` varsayılan listesinden t78 çıkarıldı (t78 artık S3'ün t78f kareleri; orkestratör).
+Yeniden render: t56, t67 (+ p6 = t56[53], p7 = t67[47]) S2 `son.sh t56 t67`; t78f S3'te (kasa + yeni doku). Yatay 6→7 kuyruğu
+bilgi (kısaltma yok).
+
+#### 14.4.5 G4: Antalya ilkbahar (S1)
+
+- Sentinel-2 L2A, Planetary Computer (anonim STAC, `_betikler/s2.py`): **Nisan–Mayıs 2026** tercih (yoksa 2025), dört karo aynı
+  datatake, bulut < %3 (geniş/yakın kutuda ~0), kar çizgisi Beydağları'nda doğal; ova yeşil. Ürünler `s2-{bolge,genis,yakin}-ilkbahar.*`
+  (`KAYNAK.md` + `docs/varliklar-icinden.md` tablo, MD5, atıf yılı = sahne yılı → `Icinden3.tsx` `ATIFLAR` ve onay-listesi).
+- `hazirla.py --mevsim ilkbahar`: `s2_bolge_ilkbahar.jpg` (aynı 45→70 km halka düzeltmesi), `s2_genis_ilkbahar.jpg`,
+  `s2_yakin_ilkbahar.jpg`; Kasım dosyaları durur.
+- `sahne.py`: **irtifaya bağlı mevsim karışımı** — Kasım (mevcut) ↔ ilkbahar dokuları, karışım = ss(irtifa, ~350 km → ~120 km)
+  (l2 ≡ t23[0] **bayt bayt/ΔE00 ≤ 0,05** korunur: t23[0] 1920² tek kare Cycles ile mevcut l2[0] master'ına karşı ölçülür;
+  l3/t34a karışım 1). d2 yeniden render edilmez. Geçiş görünür bir "yeşillenme" değil, iniş sırasında doğal okunmalı (perde
+  kalktı; karışım penceresi hız tepesinin içinde kalsın, kare başına ΔE00 ≤ 1,0).
+- `POZ_EGRI_F` 25–88 km düğümleri yeni dokuyla 960² EEVEE önizlemesinden yeniden (poz_egri.py); 78–1.580 km yumuşatılır;
+  ölçüt: ardışık kare luma farkı tek yönlü, |Δ| ≤ 3 (F-B'deki 6→7 sıçraması kapanır).
+- Son render: t23 (72), l3 (150), t34a (36) Cycles OptiX 1920² `calis.py --kilit`; `parlama.py`, `t34-birlestir.py`;
+  p3 = l3[0]; eski kareler `render-son-f/`. Dikişler: l2[119]↔t23[0], t23[71]↔l3[0] ≤ 0,3; l3 döngü; l3[0]↔t34[0] kalkış ≤ 3,27.
+- d3 etiketleri aynen; `ALT.expo` yeni görünüme göre (W/V).
+- **G4-yeşil (orkestratör, 4 Kasım ~14.00; g4-hazirlik sonucu üzerine):** ilkbahar mozaiği 900 m'den bakışta yakın alanı yeterince
+  yeşillemiyor (d3 alt 2/3'te yeşil oranı 0,145 → 0,188): yakın alan zemini prosedürel parsel/sürüm izi/toprak yol katmanlarıyla
+  (#9c8a6c karışımı ×0,75) bej kalıyor, oysa `s2-yakin-ilkbahar` ovası yeşil. Ayrı ajan (`g4-yesil`) `sahne.py` yakın alanında
+  (a) parsel tonunu mozaiğin kendi renginden (ton korunur, yalnız parlaklık ±%13), (b) toprak/yol karışımını yalnız yol şeritlerinde
+  ve ×0,35'e, (c) çıplak parsel oranını düşürür; l3[0] 960² Cycles tek kare ile ölçer: alt 2/3 yeşil oranı ≥ 0,30, doygunluk ort.
+  ≤ 0,35 (neon yok), seralar/binalar/yollar aynen. Sonucu `D:/soft/cop31-varlik/s1/_g4-yesil.json` (`durum`, değerler, önizleme yolu).
+  **A7 (G4 render) t23'e başlamadan önce bu dosyada `durum: "tamam"` ya da `"vazgecildi"` görene kadar bekler (en çok 25 dk; süre dolarsa
+  mevcut sahne.py ile devam eder ve raporlar).** Üç klip (t23, l3, t34a) aynı sahne.py hâliyle render edilir (dikiş).
+  **Sonuç (~14.25):** aday C uygulandı (`--yesil_k 1` varsayılan): yeşil oranı 0,21 → 0,297 (mozaiğin kendisi 0,295; 0,30 ölçütü mozaiğin üstündeydi → 0,29), doygunluk 0,268, seralar/binalar/deniz/dağ değişmedi; görsel doğal. A7 bu hâlle render eder.
+
+
+#### 14.4.6 DOM (W)
+
+- Rol tablosu §14.4.2; `rol.ts` `Dizinler`: `masa`, `fidanlar: number[]` (sırayla kok/govde/dal/yaprak), `donus`/`kapak`/`sayfalar`/`arka` kalkar.
+- d8 masa: bant alt krem ince: "Standdan alabileceğin broşür" + En + **"Dijital broşür →"** bağlantısı (`/brosur`, `<Link>`).
+  Aynı bağlantı d0 üst şeridinde (sağda) ve kapanışta (slogan altı, düğme). Yeni broşür gelince hedef sayfa değişir.
+- Fidan kartları (alt bant, y ≥ %68, krem; /fidan `leaf-tag` çipi: "Kökler / Gövde / Dallar / Yapraklar"), metinler yalnız content.ts:
+  d9 `bizKimiz.title` + "81 İl · 922 İlçe" + `bizKimiz.paragraphs[0]`; d10 `vizyon.title`, boğum etiketleri `vizyon.items[1].title`
+  ("2017 Seçilme Yaşı Reformu") ve `vizyon.items[2].title` ("TBMM'de Gençlerin Sesi") + kısa satır (`facts`: "Seçilme yaşı 18",
+  "30 yaş altı 5 vekilden 4'ü"); d11 `bulusmalar.title` + `bulusmalar.paragraphs[3]` (cümle birebir) + 4 polaroid (K6, `photos.ts`
+  alt metinleri); d12 `iklim.title` + `iklim.items` (3 satır, d6'dan taşındı) + En "Climate Action".
+- 81 halka (d9): tek `<svg>` katmanı, 81 `<circle r=1.5>` krem 1,5 px; yalnız dinlenmede, tek 300 ms opaklık; reduced-motion'da
+  poster üstünde statik. Boğum etiketleri (d10): iki kutu, CSS/WAAPI opaklık + translate, her karede JS stil yok. Polaroidler (d11):
+  4 `<img>` (public/photos, `width/height`, lazy değil: d10 dinlenmesinde `img.decode()`), opaklık + 8 px translateY, sarkaç yalnız
+  transform ±1,2°, dinlenme dışında gizli.
+- WebKit kuralları (§13.8): SVG çocuğunda animasyon yok, `@property` yok, her karede `filter` yok, geçiş boyunca 0,003 opak ısınma
+  katmanı yok.
+- Kapanış: fidanla biter; Dünya dönüşü yok. Atıflar §14.4.1 K9 + Sentinel yılı. `IcindenKapanis` logolar/sosyal aynen.
+- `icinden3.css`: kimlik listeleri 0–12; `data-rol` seçicilerinde brosur-* → masa/fidan-*; kadraj okuması fidan duraklarında cm.
+- `ALT` (R3 alt metinleri) masa/fidan-* için son posterlere bakılarak; `okumaDurak` d8 "banko · broşür".
+- Akıcılık yaması (1940088) korunur; `?hud=1`, `?kodek=`, `?poster=1`, Save-Data/2g/3g, reduced-motion, kiosk, engel aynen.
+
+#### 14.4.7 Sıra ve GPU
+
+A1 S3 görünüş (K10) + kısa önizleme (~6 dk GPU) ∥ A2 G7 doku (GPU yok) ∥ A3 G4 hazırlık (mozaik, `--mevsim`, karışım, POZ_EGRI;
+~5 dk GPU) ∥ A4 K-kod (önizleme kaynağıyla manifest) → A5 S3 son render (`son.sh` 6 klip, ~38 dk; A1 ∧ A2 sonra) → A6 G7 render
+(`son.sh t56 t67`, ~10 dk) → A7 G4 render (~25 dk) → A8 K-son → A9 V (kapılar, kontaklar, belgeler) → commit + push (orkestratör).
+W (DOM) A4'ten sonra, renderlarla paralel. Ajanlar: Opus; portlar 3100–3107; `COP_DIST=.next-<ajan>`; :3000 ve `.next/` dokunulmaz;
+GPU kilidi `render/.gpu-kilit`; C: ≈ 9 GB, D: ≈ 28 GB (render-son-e G-B sonunda silinir).
+
+### 14.5 G-B sonucu (A1–A9 + W; V doğrulaması, 4 Kasım 2026 ~15.45–16.30)
+
+Ortam (V): prod `COP_DIST=.next-v`, `next start -p 3102`, headless Chrome (playwright-core + sistem Chrome, CDP) ve Playwright
+WebKit 2248 (yalnız poster kipi, göreli); **gerçek cihaz değil**. Medya son render'dan (manifest `kaynak: "render"`, 154 dosya).
+Araçlar: `scratchpad/g-b/icinden3.mjs` (W uyarlaması; her koşu tek senaryo), V eki `scratchpad/g-b/v/ek.mjs` (yedek kipler,
+kodek, HUD, font, d8 kapak), `v/dikis-v.py` (kodlanmış dikişler), `v/kapak-olc.py` + `v/kapak-lk.py` + `v/kapak-dosya.py`,
+`scripts/icinden/scrim-olc.mjs`, `b2/dikis-analiz.py` (lombar). Çıktılar `.qa/icinden3/gb/v/` (JSON + ekran görüntüleri +
+kontaklar). MB = 10⁶ B. Bütün koşularda konsol hatası 0.
+
+**1. Kapılar**
+
+| Kapı | Eşik | F (§13.6 / §13.8) | **G-B** | |
+|---|---|---|---|---|
+| tsc (`tsconfig.next-v.json`) · eslint `src scripts` · build | 0 · 0 · ✓ | ✓ · 0 · ✓ | 0 · **0 hata** (2 uyarı: `scripts/blender/s3/agac_disa.mjs` kullanılmayan `segs`) · ✓ | ✓ |
+| Rota JS gz (`/icinden`'e özgü) · HTML gz · RSC gz | ≤ 50 · ≤ 56,0 kB | 20,9 · 55,1 · 29,8 | **22,6** (8,4 + 14,2) · **55,4** · 34,5; `/icinden` toplam JS 198,0 | ✓ |
+| Font (`/icinden`, mobil = masaüstü) | ≤ 301,7 kB | 242,4 (4 istek) | **242,4 kB, 4 istek**, Google 0 | ✓ |
+| **Mobil oturum 4G** (önbelleksiz, 0→13): **HEVC** (Apple yolu) / **AV1** | ≤ 12,00 (tavan 12,5; AV1 kabul ≤ 12,25) | 11,210 / 11,471 | **12,098 / 12,454** (K-son hesabı 12,099 / 12,455) | **✗ 12,0** · ✓ 12,5 |
+| İlk yükleme (tanım: temel + t01 + p1 + l1 + t12) HEVC / AV1 | ≤ 2,5 | 2,176 / 1,999 | **2,163 / 1,985** (d1 hazır 1,521 / 1,428 MB; 3,3 / 3,2 s) | ✓ |
+| Adım penceresi maks (geçiş + 4 s, ölçülen) HEVC / AV1 | ≤ 2,5 | 1,726 / 1,849 | **1,737 / 1,877** (2→3) | ✓ |
+| Hesap (K-son `dogrula-render-son-G.json`): kritik maks · pencere maks · set (dikey AV1) | ≤ 2,1 (d2) · ≤ 2,6 (d3) · ≤ 15 | 1,997 · 2,493 · 10,542 | **2,026 · 2,523 · 11,791** (HEVC 1,927 · 2,302 · 11,435; H.264 2,047 · 2,497 · 13,919) | ✓ |
+| Geri klipler yalnız boşta (acil + pencere boş, varıştan ≥ 1 s) | hepsi | ✓ | ✓ (r10…r87, 8/8; r98 yok) | ✓ |
+| Perf 4× CPU (0→12→0, 24 adım): fps · > 50 ms kare · düşen (mobil dokunma / masaüstü fare) | ≥ 59,5 · ≤ 3 · bilgi | 59,9 / 59,9 · 1 / 0 · 0 / 3 (/948) | **59,9 / 60,0 · 0 / 0 · 4 / 6 (/1.066)**; jest → ilk kare p50 49,5 / 48,7 ms (0→1 lombar ~650 ms ayrı); yedek 0 | ✓ |
+| Perf 1× CPU: düşen kare (mobil / masaüstü) | ≤ 1/1.000 | 0 / 0 (/948) | **0 / 0 (/1.066)**; fps 60,0 / 60,0; > 50 ms 0 / 0 | ✓ |
+| Poster çapraz sönmesi (12→11, 11→10, 10→9, 9→8) | 350 ms + varış | — | 401–418 ms (4×), 394–401 ms (1×) | ✓ |
+| Tuzak: geçişte jest · uç · hızlı ileri-geri · kapanış · tekerlek · **fidan zinciri** | | ✓ | 1 · 0 · [1,0,1,0,1,0] · 13→12 · 1/2 · ileri [8…12], geri [11…7], hızlı [10,9,10,9,10,9], sönmede jest tek adım | ✓ |
+| Stale (`scrollY` 0/1/2 kare gecikme): taban · fidan yolu | 3/3 · 3/3 | 3/3 | **3/3 · 3/3** (hepsi hedef ± 2 px) | ✓ |
+| Kiosk tam tur (`?auto=1`, 1280×800) · girdide durma | 115–125 s | 118,5 | **122,7 s** (dinlenme d0 5 · d1 4,9 · d2 5 · d3 4,9 · d4 14,6 · d5 14,1 · d6 11,2 · d7 5 · d8 3 · d9 5 · d10 4,5 · d11 4,9 · d12 5,9; kapanış 9); yedek 0 · dokunuşta durur | ✓ |
+| Reduced motion · `?poster=1` · Save-Data · 2g · 3g: video isteği | 0 | 0 | **0 · 0 · 0 · 0 · 0** (poster kipi; 12 poster, 0,753 MB; 0→13→9 gezinti); 4g kontrolünde video 11 | ✓ |
+| Otomatik oynatma engeli (`play()` reddi) | açılış ENGEL, ilk dokunuşta video | ✓ | ✓ (0→1 fiske, sonra video; yedek 0) | ✓ |
+| `?hud=1` · `?kodek=av1` / `hevc` / `h264` | çalışır | ✓ | HUD 4 satır (`kodek av1 · dikey`, devir 17 ms, düşen 0/168, > 50 ms 0); mobilde üç kodek, masaüstünde AV1/H.264 dosyaları uyumlu; masaüstü `?kodek=hevc` → AV1 (yatay HEVC seti yok, beklenen) | ✓ |
+| Lombar (t01 kare 0 diski ↔ DOM amblem; m / D / yt) | ≤ 2 px | merkez 0,30 / 0,55 / 0,76 | merkez **0,30 / 0,55 / 0,76**, dr 0,78 / 1,18 / 0,72 | ✓ |
+| Yatay taşma (1280×800, 844×390; 13 durak) · fidan DOM (3 görünüm) | 0 | 0 | taşma 0, bant ekranda; halka 81/81 ekranda, bant altında 0; boğum etiketi 2/2, banda/birbirine değme 0; polaroid 4/4 hazır, değme/çakışma 0 | ✓ |
+| Scrim ≥ 4,5:1 (`scrim-olc.mjs`, d1–d12 × m / D / yt; d8 = t78[59], d12 = lc) | hepsi | 25/25 (5 durak) | **36/36** (en sıkı: m d7 0,651 ve m d12 0,650 gereken ↔ CSS 0,70) | ✓ |
+| d8 son-kare ≡ p8 posteri (video son karesi ↔ poster `<img>`, d8 dinlenmesi) | ≤ 0,5 px | (kapak DOM ↔ video ≤ 0,004) | dosyada ≤ 0,01 video px (5 kodek/yön); tarayıcıda m 0,49–0,54, D 0,01, yt 0,48–0,54 CSS px (faz korelasyonu / Lucas–Kanade; video katmanı ↔ img çizim yolu) | **sınırda** |
+| WebKit (poster kipi, göreli): fidan durakları | F broşür duraklarından az | F: d8/d9 dinlenme 113–220 ms/kare (fps ≈ 11), sayfa çevirme 100–200 ms/kare, 7→8 FLIP 560–720 ms | dinlenme fps 38,7 (taban d1–d5 38,7); > 50 ms kare: dinlenme 1 / 0 (ileri / geri, 5'er pencere), geçiş 7 / 7 (taban 2, 4 pencere); en uzun kare 64 ms | ✓ |
+
+**2. Dikişler (kodlanmış; `.qa/icinden3/gb/v/dikis-v.json`; ΔE00 ortalaması, dikey AV1 / dikey HEVC / yatay AV1)**
+
+| Dikiş | Eşik | Ölçülen |
+|---|---|---|
+| l2[0] ↔ t23[0] (d2 kalkışı) · l2 son ↔ t23[0] | ≤ 3 | 1,90 / 2,01 / 1,95 · 1,96 / 2,08 / 2,00 |
+| t23 son ↔ l3[0] | ≤ 3 | 2,54 / 2,94 / 2,74 |
+| **l3[0] ↔ t34[0] (d3 kalkışı)** | ≤ 3,27 | **2,67 / 3,07 / 2,86** (K-son: H.264 d 3,05, y 3,21) |
+| **r43 son ↔ l3[0] · ↔ p3** | ≤ 4,2 | **3,06 / 3,73 / 3,34 · 3,39 / 4,05 / 3,57** |
+| t56 son ↔ t67[0] · t67 son ↔ t78[0] | ≤ 3 | 0,77 / 1,09 / 0,81 · 0,88 / 1,14 / 0,88 |
+| t78 son ↔ t89[0] · t89 son ↔ t9a[0] · t9a son ↔ tab[0] · tab son ↔ tbc[0] · tbc son ↔ lc[0] | ≤ 3 | 0,99 / 1,35 / 0,99 · 1,05 / 1,19 / 1,00 · 0,90 / 1,23 / 0,62 · 1,09 / 1,40 / 0,85 · 1,10 / 1,39 / 0,89 |
+| son kare ↔ poster (p6, p7, p8, p9, pa, pb, pc; r76/r87 son ↔ p6/p7) | ≤ 3 | ≤ 1,93 |
+| lc döngü kapanışı (son ↔ ilk) | ≈ ardışık | 0,32 / 0,49 / 0,31 (ardışık örnek 0,03; döngü başı anahtar karesi, F l1 ile aynı desen) |
+| r98 | — | **yok** (K-son bütçe merdiveni 4. adımı; d9→d8 350 ms poster sönmesi) |
+| t23 son ↔ p3 (bilinen, p3 q68) | — | 3,32 / 3,38 / 3,49 (F 3,24–3,45; d3 dinlenmesinde döngü oynar) |
+
+Master dikişleri (render ajanları): S3 ≤ 0,0017, lc kapanışı oran 1,006; G7 l5[0]↔t56[0] 0,031, t56[53]↔t67[0] 0,002,
+t67[47]↔t78[0] 0,002 (S3'ün açık bıraktığı 0,0158 kapandı); G4 t23[0] G↔F 0,0268, t23[71]↔l3[0] 0,0291, l3[0]↔t34[0]
+0,0291, l3 döngüsü oran 1,004; t23 pozlama 6→7 −0,76 (F +4,69), 77–1.580 km'de |Δ| ≤ 0,96 luma puanı. VMAF (K-son, 80 dosya):
+eşik altı 0, ortalama en düşük 90,88 (r32 yatay H.264), l3 ≥ 94,94, duvar en kötü kare ≥ 83,04, fidan AV1/HEVC ≥ 93,78.
+
+**3. Görsel denetim** (`kontak-w1.png` 390×844, `kontak-w1D.png` 1280×800, `kontak-w1yt.png` 844×390, `kontak-gecis.png`,
+`fidan-{m,D,yt}-dNN.png`, `poster-p{3,6,8,9,a,b,c}-{d,y}.png`): metin taşması yok; çipler (Kökler / Gövde / Dallar /
+Yapraklar) yerinde; 81 halka krem 1,5 px çizgi, kök uçlarının üstünde (kırmızı/turuncu nokta yok); boğum etiketleri iki
+boğumda; polaroidler dal uçlarında (insan yalnız DOM fotoğraflarında, render'da insan yok); d6 duvar yazısı okunur, dikey
+kırpımda tam; d3 ilkbahar (yeşil bahçeler, seralar; Beydağları'nda kar okunmuyor); d8 "Dijital broşür →" görünür ve
+tıklanır (3 görünüm); kapanış atıfları 6 satır, son satır "Stant ve fidan görünümü temsilîdir.", Sentinel yılı 2025
+(Kasım 16.11.2025 + ilkbahar 17.04.2025); COP31 logosu render'da yok (yalnız d0 DOM'da; broşür kapağında "COP31" yazısı);
+tür adı (meşe/palamut) ve "köklerin ucundaki 81 nokta" `/icinden`'de hiçbir metinde yok (`/fidan`'da eski cümle duruyor,
+G-B kapsamı dışı). ALT metinleri son posterlerle uyumlu.
+
+**4. V düzeltmeleri** (`src/components/icinden/Icinden3.tsx`; build/tsc/eslint yeniden ✓, HTML gz 55,4 kB değişmedi):
+(a) d6 bant satırı (2) "…, 100.000'den fazla genç." → **"…, 100.000+ genç."** (§14.4.4 metni birebir); (b) `DuvarYazisi`
+sırası duvarla birebir: "Bir Gençlik Şöleni" → "16 Mayıs 2026 · Kocaeli Stadyumu" → "100.000+ genç" (önce sayı tarihten
+önceydi, tarih ve yer ayrı satırdı); (c) `ALT.expo` "seraların ve tarlaların" → "seraların ve **yeşil** tarlaların" (G4 render
+notu). Perf 4×/1×, kioskTur ve WebKit koşuları bu üç metin değişikliğinden önceki derlemeyle alındı (davranış aynı).
+
+**5. GPU ve süre (G-B):** A1 S3 K10 önizlemesi 2,8 dk · A3 G4 hazırlık 10,3 dk · g4-yeşil < 1 dk · A5 S3 son render
+35,3 dk (415 kare, duvar saati 41,5) · A6 G7 render 6,8 dk · A7 G4 render 36,0 dk (t23 10,3 + l3 20,6 + t34a 5,2; brief
+tahmini ~25 l3'ün 150 karesini saymıyordu) = **≈ 91,4 dk GPU**. VRAM tepe 4,63 GiB (S3), 5.662 MiB makine (G4). K-son
+kodlama 206 + 47 + 4 s (GPU yok). Disk: D: 15 GB boş; silinebilir `cop31-varlik/render-son-f/` (7,3 GB, F yedekleri),
+`render-son-e/` (8,2 GB), `kodlama/onizleme-gb/` (385 MB).
+
+**6. Kabul edilen sapmalar (G-B):** G7 boyları (başlık iki satır, "50+" 0,48 m, slogan üç satır; §14.4.4 sonuç notu);
+`motto` dikeyde kırpım dışı → o yönde çapa/kılavuz yok; yatayda slogan sağdan kesik; 720 px dikeyde sağ kenarda ~9 px
+slogan kırıntısı; K1 kasa d4/d5'te yok; tbc H.264 CRF 23'te kaldı (yatay VMAF 92,56; +2'de 90,91); t34 H.264 ilk karesine
+BOLGE −1 (kalkış 3,36 → 3,21); halka yarıçapı 5 video px (çizgi 1,5 px); kiosk'ta "Dijital broşür" gizli; 844×390'da
+d9/d11 bant paragrafı görsel gizli (ekran okuyucuda var); reduced-motion posterlerinde satır içi LQIP yok; d6 kılavuz
+çizgisi yalnız ≤ 0,35 × kısa kenar ise çizilir (ölçülen dinlenme karelerinde üç görünümde de çizilmedi); r98 kaldırıldı.
+
+**7. Açık maddeler**
+- **Oturum kapısı:** 4G mobil oturum HEVC 12,098 / AV1 12,454 MB, 12,0 hedefinin üstünde, 12,5 tavanının altında; AV1
+  12,25 kabul eşiğini de aşıyor (§14.4.1 merdiveni bitti, r98 dahil). Brief dışı, ölçülmüş ama uygulanmamış kaldıraç:
+  t34/r43/l3 AV1 CRF 34 → 36 (AV1 ≈ 12,185; VMAF ≥ 96,97; kalkış 2,81 / 3,04; r43 3,24 / 3,52; komutlar K-son raporu §7).
+  Orkestratör/kullanıcı kararı. iPhone yolu (HEVC) 12,10.
+  **Orkestratör kararı (4 Kasım ~16.35, commit öncesi): kabul.** Fark F'ye göre +0,99 / +0,89 MB ve neredeyse tamamı yeni fidan bölümü; d3 (Antalya) kalitesini düşüren kaldıraç müşterinin odağı olduğu için uygulanmadı; oturum kapısı G turu için **≤ 12,5 MB** olarak güncellenir (hedef 12,0 korunur, rapora yazılır). Kullanıcı isterse K tek komutla AV1'i ≈ 12,19'a indirir.
+- **Gerçek iPhone 16 testi** (`docs/klip-oynatma.md` §6.1, 4b fidan maddeleri): akıcılık yaması, fidan durakları, 350 ms
+  poster sönmesi (headless ekran görüntüsünde sönme sırasında fixed sahne kaymış görünüyor — kaydırma hızına bağlı yakalama
+  yapaylığı, DOM ve perf temiz; iPhone'da görülürse `POSTER_GERI_MS` 350 → ~600), d8 video ↔ poster hizası (~0,5 CSS px).
+- **Yeni broşür (G3):** gelince `/brosur` + bankodaki kapak dokusu + t78 kuyruğu ve t89 yeniden render (~8 dk GPU).
+- **Müşteri onayları:** `docs/onay-listesi.md` §14.1-G (fidan konsepti ve kartlar, d6 duvar metni ve "100.000+ genç",
+  "Dijital broşür", ilkbahar görüntüsü 17.04.2025, atıf "Stant ve fidan görünümü temsilîdir.", "81 nokta" cümlesi, K1).

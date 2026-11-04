@@ -1,27 +1,28 @@
-// /icinden v3 — Blender fragmanları + kodlama listesi → src/components/icinden/klipler.json (şema `surum: 2`)
-// Şema: docs/klipler-sema.md. Durak tablosu (12 durak + rol, brief-icinden-3 §12.1, §12.4-9) BURADA; site,
-// oynatıcı, CSS ve broşür dizinleri onu manifestteki `rol` ve sıradan türetir (src/components/icinden/rol.ts).
+// /icinden v3 — Blender fragmanları + kodlama listesi → src/components/icinden/klipler.json (şema `surum: 3`)
+// Şema: docs/klipler-sema.md (§0.2 G turu). Durak tablosu (13 durak + rol, brief-icinden-3 §14.4.2) BURADA; site,
+// oynatıcı ve CSS onu manifestteki `rol` ve sıradan türetir (src/components/icinden/rol.ts).
 //
 //   node scripts/icinden/manifest-birlestir.mjs [--fragman D:/soft/cop31-varlik/render-son]
 //        [--liste D:/soft/cop31-varlik/kodlama/<fragman klasör adı>.json]
 //        [--cikti src/components/icinden/klipler.json] [--kaynak render|onizleme|yer-tutucu] [--public public]
-//        [--ton D:/soft/cop31-varlik/kodlama/<fragman klasör adı>-kapak-ton.json]
-//        [--yaylar <fragman>/yaylar.json] [--gecici]
+//        [--yaylar <fragman>/yaylar.json] [--geri-yok r98]
 //
-// --gecici (E turu, W1): yeni S2 render'ı ve kodlaması yokken 12 duraklı sitenin çalışması için. Eksik klip ve
-// posterler mevcut dosyalarla doldurulur (ESLE_GECICI): t67, t78 → mevcut t56; r76, r87 → mevcut r65; p6, p7 → p5;
-// p8 → mevcut p6 plakası (eski broşür dikdörtgeni ve kapak tonu t56 fragmanından). yaylar.json ya da emanet çapaları
-// yoksa boş. `kaynak` varsayılanı "onizleme"; manifeste `gecici` eşlemesi yazılır. K2 son kodlamadan sonra --gecici'siz
-// çalıştırır.
+// G-B (§14.4.3): `--gecici`, kapak tonu (`--ton`, `kapakTon`) ve broşür dikdörtgeni (`brosurDikdortgen`) KALKTI; d8
+// masa son-kare durağı (p8 = t78[59]), d9–d12 fidan (t89 t9a tab tbc + lc). `--geri-yok r98`: bütçe merdiveninin
+// ikinci adımı (§14.4.1; önce `kodla.mjs --crf lc.av1=32`, sonra `kodla.mjs --dus r98` + bu bayrak): d8'in
+// `ileri.geri` null yazılır (site d9→d8'de de poster çapraz sönmesi yapar), uyarı verilmez.
 //
 // Fragman (`<dizin>/<klip>.json`, master px, §9.3): {ad, fps, kare, sure, kadraj_m[kare], dunyaR[kare] (t01),
-// dunyaC [cx, cy] (t01; tek nokta ya da kare başına), capalar {ad: [x, y]} (poster karesi), brosur_dikdortgen
-// [4×[x, y]] (t78 son kare; E turundan önce t56), kamera{}}. Master → video uzayı: dikey ((x−420)/1,5, y/1,5), yatay
+// dunyaC [cx, cy] (t01; tek nokta ya da kare başına), capalar {ad: [x, y]} (poster karesi), kamera{}}; S3 (fidan)
+// `capalar` alanları: p9/t89 `kok_uclari` [{x, y, grup, ana} × 81], pa/t9a `bogumlar` [{x, y, baslik, satirlar,
+// taraf} × 2], pb/tab `dal_uclari` [[x, y] × 6] (alttan üste solAlt, sağAlt, solOrta, sağOrta, solÜst, sağÜst),
+// pc/lc/tbc `dal_uclari` + `govde_ucu` [x, y]. Master → video uzayı: dikey ((x−420)/1,5, y/1,5), yatay
 // (x/1,5, (y − kirpimY)/1,5); kirpimY klip başına (kodla.mjs KIRPIM_Y → liste öğesinin `kirpimY`'si; yoksa 420; §11.2-5:
-// d3'te l3/p3 200; F turundan beri rampa ilerlemeye bağlı olabilir → `kareler` dizisi). Çapanın klibi ve karesi: etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son
-// karesi), dunyaC → t01 0. kare, brosurDikdortgen → t78 son kare, duvarCapalari → p6 (yoksa t56 son kare; yatayda
-// t56 son karesinin kirpimY'si, E2'den beri 293).
-// yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; d1 ve d11'e aynen.
+// d3'te l3/p3 200; F turundan beri rampa ilerlemeye bağlı olabilir → `kareler` dizisi). Çapanın klibi ve karesi:
+// etiket/sütun → poster karesi (döngü 0. karesi ya da gelen geçişin son karesi), dunyaC → t01 0. kare, duvarCapalari →
+// p6 (yatayda p6 posterinin kirpimY'si, E2'den beri 293), fidan çapaları → durağın posteri (yatayda posterin kirpimY'si:
+// p9 420, pa 222, pb 194, pc 165). Kırpım dışına ya da kenara 24 px'ten yakın düşen fidan noktası o yönde atlanır.
+// yaylar.json (S1a yaylar.py): {dikey: [[[x, y] × ≤ 24] × 27], yatay: …} video px; yalnız d1 (G'de Dünya dönüşü yok).
 // LQIP: posterden 24 px genişlikte WebP (sharp).
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -30,16 +31,18 @@ import { fragmanOku } from "./fragman.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (k, d) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : d);
-const GECICI = argv.includes("--gecici");
+for (const eski of ["--gecici", "--ton"]) if (argv.includes(eski)) throw new Error(`${eski} G-B'de kalktı (§14.4.3; docs/klipler-sema.md §0.2)`);
 const FRAGMAN = resolve(arg("--fragman", "D:/soft/cop31-varlik/render-son"));
 const LISTE = resolve(arg("--liste", `D:/soft/cop31-varlik/kodlama/${basename(FRAGMAN)}.json`));
 const CIKTI = resolve(arg("--cikti", "src/components/icinden/klipler.json"));
 const PUBLIC = resolve(arg("--public", "public"));
-const KAYNAK = arg("--kaynak", GECICI ? "onizleme" : "render");
-// brosur-kapak (d8) ton eşlemesi (scripts/icinden/kapak-ton.py çıktısı); yoksa kapakTon yazılmaz (site filtresiz geçer).
-const TON = resolve(arg("--ton", `D:/soft/cop31-varlik/kodlama/${basename(FRAGMAN)}-kapak-ton.json`));
+const KAYNAK = arg("--kaynak", "render");
+if (!["render", "onizleme", "yer-tutucu"].includes(KAYNAK)) throw new Error(`--kaynak ${KAYNAK}: render | onizleme | yer-tutucu`);
 const YAYLAR = resolve(arg("--yaylar", join(FRAGMAN, "yaylar.json")));
+/** Bilerek geri klipsiz bırakılan geri klipler (bütçe merdiveni; `kodla.mjs --dus`). */
+const GERI_YOK = new Set(arg("--geri-yok", "").split(",").filter(Boolean));
 
+const SURUM = 3;
 const MASTER = 1920;
 const OLCEK = 1.5;
 // 1,0 (F turu, denetim D2-01): 1,25 ile her geri klip 1 kare düşürüyordu (playbackRate ≠ 1); geri geçişler %25 uzar.
@@ -55,8 +58,9 @@ const KODEKLER = [
 ];
 
 /**
- * Durak tablosu (§12.1; sıra = durak numarası, id "d0"…"d11"). rol: §12.4-9. gelen: bu durağa ileri yönde varan
- * klip (kadraj okuması ondan). d6/d7: tur "klip", döngü yok (gelen klibin son karesinde durur; poster son-kare).
+ * Durak tablosu (G turu §14.4.2; sıra = durak numarası, id "d0"…"d12", kapanış = 13 manifest dışı). rol: §14.4.2.
+ * gelen: bu durağa ileri yönde varan klip (kadraj okuması ondan; fidan duraklarında metre, cm düzeyinde — site cm
+ * yazar). Döngüsüz klip durakları (d6–d11) gelen klibin son karesinde durur; posterleri o kare (son-kare).
  */
 const DURAKLAR = [
   { id: "d0", rol: "lombar", tur: "dom", poster: null, dongu: null, ileri: "t01", gelen: null, okuma: "" },
@@ -67,17 +71,18 @@ const DURAKLAR = [
   { id: "d5", rol: "sutunlar", tur: "klip", poster: "p5", dongu: "l5", ileri: "t56", gelen: "t45" },
   { id: "d6", rol: "duvar", tur: "klip", poster: "p6", dongu: null, ileri: "t67", gelen: "t56", okumaDurak: "arka duvar · ~3 m" },
   { id: "d7", rol: "duvar", tur: "klip", poster: "p7", dongu: null, ileri: "t78", gelen: "t67", okumaDurak: "sol duvar · ~3 m" },
-  { id: "d8", rol: "brosur-kapak", tur: "dom", poster: "p8", dongu: null, ileri: null, gelen: "t78", okumaDurak: "sayfa 1/12" },
-  { id: "d9", rol: "brosur-sayfa", tur: "dom", poster: "p8", dongu: null, ileri: null, gelen: null, okuma: "sayfa 8/12" },
-  { id: "d10", rol: "brosur-arka", tur: "dom", poster: "p8", dongu: null, ileri: "t01", gelen: null, okuma: "sayfa 12/12" },
-  { id: "d11", rol: "dunya", tur: "klip", poster: "p1", dongu: "l1", ileri: null, gelen: "t01", okumaDurak: "ortak evimiz" },
+  { id: "d8", rol: "masa", tur: "klip", poster: "p8", dongu: null, ileri: "t89", gelen: "t78", okumaDurak: "banko · broşür" },
+  { id: "d9", rol: "fidan-kok", tur: "klip", poster: "p9", dongu: null, ileri: "t9a", gelen: "t89" },
+  { id: "d10", rol: "fidan-govde", tur: "klip", poster: "pa", dongu: null, ileri: "tab", gelen: "t9a" },
+  { id: "d11", rol: "fidan-dal", tur: "klip", poster: "pb", dongu: null, ileri: "tbc", gelen: "tab" },
+  { id: "d12", rol: "fidan-yaprak", tur: "klip", poster: "pc", dongu: "lc", ileri: null, gelen: "tbc" },
 ];
-/** Açık geri klip adları (§12.1; kodla.mjs'in açık ad tablosuyla aynı). d10 → d11 = t01 tekrarı, geri r10. */
-const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87" };
-/** --gecici: istenen ad → mevcut dosyanın adı (liste ve fragman aramasında; tek adım, zincir yok). */
-const ESLE_GECICI = { t67: "t56", t78: "t56", r76: "r65", r87: "r65", p6: "p5", p7: "p5", p8: "p6" };
-const ESLE = GECICI ? ESLE_GECICI : {};
-const esle = (ad) => ESLE[ad] ?? ad;
+/**
+ * Açık geri klip adları (§12.1, §14.4.1 K4; kodla.mjs'in açık ad tablosuyla aynı). `null`: geri klip yok → manifestte
+ * `ileri.geri: null`, site geri adımda hedef durağın posterini 350 ms çapraz söndürür (d10→d9, d11→d10, d12→d11).
+ */
+// t89: r98 K-son'da kaldırıldı (§14.4.1 merdiven 4. adım; kodla.mjs GERI ile aynı): d9→d8 de poster çapraz sönmesi.
+const GERI = { t01: "r10", t12: "r21", t23: "r32", t34: "r43", t45: "r54", t56: "r65", t67: "r76", t78: "r87", t89: null, t9a: null, tab: null, tbc: null };
 
 /** Depodaki metinler (birebir; content.ts / emanet.ts düzenlenince yeniden üretilir). */
 const CONTENT = readFileSync(resolve("src/lib/content.ts"), "utf8");
@@ -127,8 +132,16 @@ const EMANET_AD = /^emanet_?0?(\d{1,2})$/;
  * ofsetsiz numara sağda (dx +10).
  */
 const EMANET_OFSET = { 4: { dx: -10, dy: 0 }, 5: { dx: -10, dy: 0 }, 6: { dx: 10, dy: 0 }, 7: { dx: -10, dy: 0 } };
-/** d6 kılavuz çapaları (p6), sıra = iklim.items[0..2] (Hatıra Ormanı 300 fidan · Genç İklim · fidan dikimi/orman). */
-const DUVAR_CAPA = ["fidan", "genc_iklim", "orman"];
+/**
+ * d6 arka duvar çapaları (p6; G7 §14.4.4, fotoğrafsız duvar): sıra = d6 bandının 3 spot satırı — `bulusma` ("50+"
+ * rakamı), `solen` ("100.000+" rakamı), `motto` (`backCover.quote`). E/F'nin `fidan`/`genc_iklim`/`orman` adları
+ * artık okunmaz (p6.json yeni G7 render'ıyla gelir; eski adlıysa alan boş + uyarı).
+ */
+const DUVAR_CAPA = ["bulusma", "solen", "motto"];
+/** d11/d12 ana dal uçlarının adları, S3 `dal_uclari` dizisinin sırası (alttan üste; scripts/blender/s3/BENIOKU.md). */
+const DAL_UCU_AD = ["solAlt", "sağAlt", "solOrta", "sağOrta", "solÜst", "sağÜst"];
+/** Beklenen fidan noktası sayıları (S3 agac_disa.mjs assert'leri: 81 uç, 2 boğum; 6 ana dal). */
+const BEKLENEN = { kokUclari: 81, bogumlar: 2, dalUclari: 6 };
 
 const uyarilar = [];
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -143,15 +156,24 @@ const video = (boyut, [x, y], yY = KIRPIM_Y_VARSAYILAN) =>
 const KENAR = 24;
 const icinde = (boyut, [x, y]) => x >= KENAR && y >= KENAR && x <= BOYUTLAR[boyut].g - KENAR && y <= BOYUTLAR[boyut].y - KENAR;
 
+const FRAGMAN_ADLARI = ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "t89", "t9a", "tab", "tbc", "lc", "p6", "p7", "p9", "pa", "pb", "pc"];
 const fragmanlar = {};
-for (const ad of ["t01", "l1", "t12", "l2", "t23", "l3", "t34", "l4", "t45", "l5", "t56", "t67", "t78", "p6", "p7"]) {
-  // t34: t34.json yoksa S1 t34a + S2 t34b birleşimi (fragman.mjs). --gecici: ESLE'deki ad.
-  const f = fragmanOku(FRAGMAN, esle(ad), (m) => uyarilar.push(m));
+for (const ad of FRAGMAN_ADLARI) {
+  // t34: t34.json yoksa S1 t34a + S2 t34b birleşimi (fragman.mjs).
+  const f = fragmanOku(FRAGMAN, ad, (m) => uyarilar.push(m));
   if (f) fragmanlar[ad] = f;
-  else if (!(GECICI && /^p[67]$/.test(ad))) uyarilar.push(`fragman yok: ${esle(ad)}${esle(ad) !== ad ? ` (${ad} yerine)` : ""}`);
+  else uyarilar.push(`fragman yok: ${ad}`);
 }
+const ONIZLEME_FRAGMAN = Object.entries(fragmanlar)
+  .filter(([, f]) => f.kaynak_set === "onizleme")
+  .map(([ad]) => ad);
+if (KAYNAK === "render" && ONIZLEME_FRAGMAN.length) uyarilar.push(`--kaynak render ama önizleme fragmanları var (kaynak_set "onizleme"): ${ONIZLEME_FRAGMAN.join(" ")} — A5 son render'ı bekleniyor`);
 const liste = JSON.parse(readFileSync(LISTE, "utf8"));
-const bul = (klip, tur) => liste.filter((x) => x.klip === esle(klip) && x.tur === tur);
+const bul = (klip, tur) => liste.filter((x) => x.klip === klip && x.tur === tur);
+if (KAYNAK === "render") {
+  const onizlemeGiris = [...new Set(liste.filter((s) => /^960²/.test(s.giris ?? "")).map((s) => s.klip))];
+  if (onizlemeGiris.length) uyarilar.push(`--kaynak render ama listede 960² (önizleme) girişli kodlamalar var: ${onizlemeGiris.join(" ")}`);
+}
 
 /**
  * Yatay kırpımın y ofseti `kare`de: kaynak klibin `kirpimY`'si — sayı, {bas, son, k0, k1} (easeInOutCubic, kare
@@ -161,18 +183,25 @@ const bul = (klip, tur) => liste.filter((x) => x.klip === esle(klip) && x.tur ==
  */
 const KIRPIM_Y_VARSAYILAN = 420;
 function kirpimYKare(klip, kare = 0) {
-  const yatay = liste.filter((x) => x.kaynakKlip === esle(klip) && x.boyut === "yatay" && x.kirpimY != null);
+  const yatay = liste.filter((x) => x.kaynakKlip === klip && x.boyut === "yatay" && x.kirpimY != null);
   const k = (yatay.find((x) => x.tur !== "poster") ?? yatay[0])?.kirpimY ?? KIRPIM_Y_VARSAYILAN;
   if (typeof k === "number") return k;
   if (Array.isArray(k.kareler)) return k.kareler[Math.min(k.kareler.length - 1, Math.max(0, kare))];
   const t = Math.min(1, Math.max(0, (kare - k.k0) / (k.k1 - k.k0)));
   return Math.round(k.bas + (k.son - k.bas) * (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2));
 }
+/** Posterin yatay kırpım ofseti (master px): listedeki yatay poster kaydının sayısal `kirpimY`'si (kodla.mjs posterKodla). */
+function posterKirpimY(poster, yedekKlip, yedekKare) {
+  const s = liste.find((x) => x.klip === poster && x.tur === "poster" && x.boyut === "yatay");
+  if (typeof s?.kirpimY === "number") return s.kirpimY;
+  uyarilar.push(`${poster}: yatay poster kaydında sayısal kirpimY yok; ${yedekKlip}[${yedekKare}] kırpımı kullanıldı`);
+  return kirpimYKare(yedekKlip, yedekKare);
+}
 
 function dosyalar(klip, tur) {
   const satir = bul(klip, tur);
   if (!satir.length) {
-    uyarilar.push(`kodlama yok: ${esle(klip)} (${tur})`);
+    uyarilar.push(`kodlama yok: ${klip} (${tur})`);
     return null;
   }
   const dosya = {};
@@ -187,7 +216,9 @@ function dosyalar(klip, tur) {
 function klipNesnesi(ad, tur) {
   const d = dosyalar(ad, tur);
   if (!d) return null;
-  const fr = fragmanlar[ad];
+  // Geri klip ileri klibin tersidir: fragmanı ileri klibinki.
+  const ileriAd = tur === "geri" ? Object.keys(GERI).find((k) => GERI[k] === ad) : ad;
+  const fr = fragmanlar[ileriAd];
   if (fr && fr.kare !== d.kare) uyarilar.push(`${ad}: fragman ${fr.kare} kare, kodlanmış ${d.kare} kare`);
   return { ad, sure: d.sure, kare: d.kare, dosya: d.dosya, bayt: d.bayt };
 }
@@ -203,9 +234,9 @@ async function poster(ad) {
   if (posterOnbellek.has(ad)) return posterOnbellek.get(ad);
   const p = {};
   for (const boyut of Object.keys(BOYUTLAR)) {
-    const s = liste.find((x) => x.klip === esle(ad) && x.tur === "poster" && x.boyut === boyut);
+    const s = liste.find((x) => x.klip === ad && x.tur === "poster" && x.boyut === boyut);
     if (!s) {
-      uyarilar.push(`poster yok: ${esle(ad)} ${boyut}`);
+      uyarilar.push(`poster yok: ${ad} ${boyut}`);
       continue;
     }
     const yol = s.yol && existsSync(s.yol) ? s.yol : join(PUBLIC, s.dosya);
@@ -239,14 +270,14 @@ function etiketTanimi(durakId, ad) {
     }
   }
   if (KALKAN[durakId]?.has(ad)) return null;
-  if (!/^sutun\d\d$/.test(ad) && !(durakId === "d6" && DUVAR_CAPA.includes(ad))) uyarilar.push(`${durakId}: sözlükte olmayan çapa "${ad}"`);
+  if (!/^sutun\d\d$/.test(ad)) uyarilar.push(`${durakId}: sözlükte olmayan çapa "${ad}"`);
   return null;
 }
 
-/** yaylar.json → {dikey, yatay} (video px; yay başına ≤ 24 nokta). Yoksa null (W2a yaysız çizer). */
+/** yaylar.json → {dikey, yatay} (video px; yay başına ≤ 24 nokta). Yoksa null (site yaysız çizer). */
 function yaylarOku() {
   if (!existsSync(YAYLAR)) {
-    uyarilar.push(`yaylar yok (${YAYLAR}): d1/d11 ozel.yaylar boş`);
+    uyarilar.push(`yaylar yok (${YAYLAR}): d1 ozel.yaylar boş`);
     return null;
   }
   const y = JSON.parse(readFileSync(YAYLAR, "utf8"));
@@ -262,6 +293,49 @@ function yaylarOku() {
 }
 const yaylar = yaylarOku();
 
+// ---------- fidan çapaları (S3; §14.4.2) ----------
+/** Durağın S3 çapası: önce poster fragmanı (p9/pa/pb/pc), sonra sırayla yedek klipler (gelen geçiş, döngü). */
+function s3Capa(alan, poster, ...yedek) {
+  for (const ad of [poster, ...yedek]) {
+    const c = fragmanlar[ad]?.capalar?.[alan];
+    if (c != null) return { c, ad };
+  }
+  return null;
+}
+/** Nokta biçimleri: [x, y] | {x, y, …}. */
+const xy = (n) => (Array.isArray(n) ? [n[0], n[1]] : [n.x, n.y]);
+/**
+ * Master px noktaları → yön başına video px; kırpım dışı / kenara 24 px'ten yakın nokta o yönde atlanır (uyarı: yön
+ * başına sayı). `ek(n)`: noktanın taşıdığı ek alanlar.
+ */
+function yonlu(durakId, alan, noktalar, yY, ek) {
+  const o = { dikey: [], yatay: [] };
+  for (const boyut of Object.keys(BOYUTLAR)) {
+    let atla = 0;
+    for (const [i, n] of noktalar.entries()) {
+      const v = video(boyut, xy(n), yY);
+      if (!icinde(boyut, v)) {
+        atla++;
+        continue;
+      }
+      o[boyut].push({ ...(ek ? ek(n, i).on ?? {} : {}), x: v[0], y: v[1], ...(ek ? ek(n, i).arka ?? {} : {}) });
+    }
+    if (atla) uyarilar.push(`${durakId} ${alan}: ${boyut} ${atla}/${noktalar.length} nokta kırpım dışı ya da kenara < ${KENAR} px (atlandı; kirpimY ${boyut === "yatay" ? yY : "—"})`);
+  }
+  return o;
+}
+/** S3 `dal_uclari`: [[x, y] × 6] (sıra DAL_UCU_AD) | [{ad, x, y}] | {ad: [x, y]} → [{ad, n}]. */
+function dalUcuListesi(c) {
+  if (Array.isArray(c)) return c.map((n, i) => ({ ad: n?.ad ?? DAL_UCU_AD[i] ?? `dal${i}`, n }));
+  return Object.entries(c).map(([ad, n]) => ({ ad, n }));
+}
+function dalUclari(durakId, kaynak, yY) {
+  const l = dalUcuListesi(kaynak.c);
+  if (l.length !== BEKLENEN.dalUclari) uyarilar.push(`${durakId} dalUclari: ${l.length} uç (${BEKLENEN.dalUclari} beklenir; ${kaynak.ad})`);
+  for (const { ad } of l) if (!DAL_UCU_AD.includes(ad)) uyarilar.push(`${durakId} dalUclari: bilinmeyen ad "${ad}" (${DAL_UCU_AD.join(", ")})`);
+  return yonlu(durakId, "dalUclari", l.map((x) => x.n), yY, (_, i) => ({ on: { ad: l[i].ad } }));
+}
+
 const duraklar = [];
 let emanetSay = 0;
 for (const D of DURAKLAR) {
@@ -269,12 +343,16 @@ for (const D of DURAKLAR) {
   // okuma: gelen klibin kare kare kadrajı (metre; son öğe dinlenme değeri) ya da sabit metin.
   const gk = D.gelen ? fragmanlar[D.gelen]?.kadraj_m : null;
   o.okuma = gk ? gk.map(sig) : (D.okuma ?? "");
+  if (D.gelen && !gk) uyarilar.push(`${D.id}: ${D.gelen} fragmanında kadraj_m yok (okuma boş)`);
   if (D.okumaDurak) o.okumaDurak = D.okumaDurak;
   o.poster = await poster(D.poster);
   o.dongu = D.dongu ? klipNesnesi(D.dongu, "dongu") : null;
   if (D.ileri) {
     const ileri = klipNesnesi(D.ileri, "ileri");
-    const geri = klipNesnesi(GERI[D.ileri], "geri");
+    if (!(D.ileri in GERI)) throw new Error(`GERI tablosunda yok: ${D.ileri}`);
+    const gAd = GERI[D.ileri];
+    // null: fidan içi geri adım (poster çapraz sönmesi) ya da bütçe merdiveninde bilerek kaldırılan geri klip.
+    const geri = gAd && !GERI_YOK.has(gAd) ? klipNesnesi(gAd, "geri") : null;
     o.ileri = ileri ? { ...ileri, geri, hizGeri: HIZ_GERI } : null;
   } else o.ileri = null;
 
@@ -282,13 +360,13 @@ for (const D of DURAKLAR) {
   const { capa, yY } = capalarDurak(D);
   if (capa && (ETIKET[D.id] || D.id === "d2")) {
     o.etiketler = { dikey: [], yatay: [] };
-    for (const [ad, xy] of Object.entries(capa)) {
+    for (const [ad, nokta] of Object.entries(capa)) {
       const e = etiketTanimi(D.id, ad);
       if (!e) continue;
       if (e.tur === "emanet") emanetSay++;
       for (const boyut of Object.keys(BOYUTLAR)) {
         if (e.boyutlar && !e.boyutlar.includes(boyut)) continue;
-        const v = video(boyut, xy, yY);
+        const v = video(boyut, nokta, yY);
         if (!icinde(boyut, v)) continue;
         o.etiketler[boyut].push({
           ad,
@@ -323,35 +401,69 @@ for (const D of DURAKLAR) {
     if (s.length !== 12) uyarilar.push(`${D.id}: ${s.length} sütun çapası (12 beklenir)`);
   }
   if (D.rol === "duvar" && D.gelen === "t56") {
-    // p6 çapaları (S2b json_yaz): önce p6 fragmanının yön başına `duvarCapalari` listesi (master px; her yön kendi
-    // kırpımına giren nokta), yoksa p6 `capalar` (iki kırpıma da giren tek nokta), yoksa t56 son karesi. --gecici'de
-    // eski p6 plakasında yok → boş.
-    // Yatay: p6 = t56 son karesi, kırpımı o karedeki `kirpimY` (E2: 293; §12.12). Kırpım dışına düşen yatay çapa uyarı
-    // verir ama yazılır (site F'den beri duvarda kılavuz çizmez; alan yalnız kayıt).
-    const yP6 = kirpimYKare("t56", (fragmanlar.t56?.kare ?? 1) - 1);
-    const yonlu = Array.isArray(fragmanlar.p6?.duvarCapalari) ? Object.fromEntries(fragmanlar.p6.duvarCapalari.map((x) => [x.ad, x])) : null;
-    const kaynak = fragmanlar.p6?.capalar ? { c: fragmanlar.p6.capalar, yY: yP6 } : capa ? { c: capa, yY } : null;
-    const bulunan = DUVAR_CAPA.filter((ad) => yonlu?.[ad] || kaynak?.c[ad]);
+    // p6 çapaları (S2 json_yaz): önce p6 fragmanının yön başına `duvarCapalari` listesi (master px; her yön kendi
+    // kırpımına giren nokta), yoksa p6 `capalar` (iki kırpıma da giren tek nokta). Yatay: p6 posterinin kirpimY'si
+    // (E2: 293; §12.12). G-B'de site d6 kılavuzunu yeniden çizer (bant satırı → rakam); kırpım dışına düşen yön
+    // yazılmaz (uyarı). G7 adları (bulusma, solen, motto) yoksa alan yazılmaz.
+    const yP6 = posterKirpimY("p6", "t56", (fragmanlar.t56?.kare ?? 1) - 1);
+    const yon = Array.isArray(fragmanlar.p6?.duvarCapalari) ? Object.fromEntries(fragmanlar.p6.duvarCapalari.map((x) => [x.ad, x])) : null;
+    const tek = fragmanlar.p6?.capalar ?? null;
+    const bulunan = DUVAR_CAPA.filter((ad) => yon?.[ad] || tek?.[ad]);
+    // G7 (§14.4.4, K-son): kırpım dışına ya da kenara 24 px'ten yakın düşen yön YAZILMAZ (motto dikeyde x ≈ 911 video
+    // px); site o yönde çapa yoksa kılavuz çizmez (VideoSahne kilavuzCapa `?.[boyut] ?? null`).
     if (bulunan.length)
-      ozel.duvarCapalari = bulunan.map((ad) =>
-        yonlu?.[ad]
-          ? { ad, dikey: video("dikey", yonlu[ad].dikey), yatay: video("yatay", yonlu[ad].yatay, yP6) }
-          : { ad, dikey: video("dikey", kaynak.c[ad]), yatay: video("yatay", kaynak.c[ad], kaynak.yY) },
-      );
-    for (const c of ozel.duvarCapalari ?? []) if (!icinde("yatay", c.yatay)) uyarilar.push(`${D.id}: duvar çapası "${c.ad}" yatay kırpım dışında (${c.yatay.join(", ")}; kirpimY ${yP6})`);
-    if (bulunan.length !== DUVAR_CAPA.length) uyarilar.push(`${D.id}: duvar çapası ${bulunan.length}/${DUVAR_CAPA.length} (${DUVAR_CAPA.join(", ")})`);
+      ozel.duvarCapalari = bulunan.map((ad) => {
+        const v = {
+          dikey: video("dikey", yon?.[ad]?.dikey ?? tek[ad]),
+          yatay: video("yatay", yon?.[ad]?.yatay ?? tek[ad], yP6),
+        };
+        const c = { ad };
+        for (const b of Object.keys(BOYUTLAR)) {
+          if (icinde(b, v[b])) c[b] = v[b];
+          else uyarilar.push(`${D.id}: duvar çapası "${ad}" ${b} kırpım dışında ya da kenara < ${KENAR} px (${v[b].join(", ")}${b === "yatay" ? `; kirpimY ${yP6}` : ""}) — o yönde yazılmadı (§14.4.4)`);
+        }
+        return c;
+      });
+    if (bulunan.length !== DUVAR_CAPA.length) {
+      const eski = Object.keys(yon ?? tek ?? {});
+      uyarilar.push(`${D.id}: duvar çapası ${bulunan.length}/${DUVAR_CAPA.length} (${DUVAR_CAPA.join(", ")}; p6.json'da: ${eski.join(", ") || "—"}) — G7 render'ı (A6 son.sh t56 t67) + A8 manifestiyle dolar`);
+    }
   }
-  if (D.rol === "brosur-kapak") {
-    const f = fragmanlar[D.gelen];
-    if (f?.brosur_dikdortgen) {
-      const b = f.brosur_dikdortgen;
-      const yB = kirpimYKare(D.gelen, f.kare - 1);
-      ozel.brosurDikdortgen = { dikey: b.map((p) => video("dikey", p)), yatay: b.map((p) => video("yatay", p, yB)) };
-    } else uyarilar.push(`${D.id}: ${esle(D.gelen)} fragmanında brosur_dikdortgen yok (kesişme okuma düzeninden başlar)`);
-    if (existsSync(TON)) {
-      const t = JSON.parse(readFileSync(TON, "utf8"));
-      ozel.kapakTon = { saturate: t.saturate, contrast: t.contrast, brightness: t.brightness, sepia: t.sepia };
-    } else uyarilar.push(`kapak tonu yok (${TON}): ${D.id} kesişmesi filtresiz`);
+  if (D.rol === "fidan-kok") {
+    // d9: 81 kök ucu (p9 = t89 son karesi; DOM 81 halka). grup 0 kazık, 1–6 ana kökler; ana: ana kökün ucu mu.
+    const k = s3Capa("kok_uclari", D.poster, D.gelen);
+    if (k) {
+      const yP = posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1);
+      if (k.c.length !== BEKLENEN.kokUclari) uyarilar.push(`${D.id} kokUclari: ${k.c.length} uç (${BEKLENEN.kokUclari} beklenir; ${k.ad})`);
+      ozel.kokUclari = yonlu(D.id, "kokUclari", k.c, yP, (n) => ({ arka: { grup: n.grup ?? 0, ana: !!n.ana } }));
+    } else uyarilar.push(`${D.id}: kok_uclari yok (${D.poster}.json / ${D.gelen}.json capalar)`);
+  }
+  if (D.rol === "fidan-govde") {
+    // d10: 2 boğum (2017 / TBMM; metin DOM'da content.ts'ten — JSON'daki baslik/satirlar KULLANILMAZ). taraf −1 sol, +1 sağ.
+    const k = s3Capa("bogumlar", D.poster, D.gelen);
+    if (k) {
+      const yP = posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1);
+      if (k.c.length !== BEKLENEN.bogumlar) uyarilar.push(`${D.id} bogumlar: ${k.c.length} (${BEKLENEN.bogumlar} beklenir; ${k.ad})`);
+      ozel.bogumlar = yonlu(D.id, "bogumlar", k.c, yP, (n) => ({ arka: { taraf: n.taraf < 0 ? -1 : 1 } }));
+    } else uyarilar.push(`${D.id}: bogumlar yok (${D.poster}.json / ${D.gelen}.json capalar)`);
+  }
+  if (D.rol === "fidan-dal") {
+    // d11: 6 ana dal ucu (polaroid çapaları; K6: sol p12 + p17, sağ p19 + p22).
+    const k = s3Capa("dal_uclari", D.poster, D.gelen);
+    if (k) ozel.dalUclari = dalUclari(D.id, k, posterKirpimY(D.poster, D.gelen, (fragmanlar[D.gelen]?.kare ?? 1) - 1));
+    else uyarilar.push(`${D.id}: dal_uclari yok (${D.poster}.json / ${D.gelen}.json capalar)`);
+  }
+  if (D.rol === "fidan-yaprak") {
+    // d12: dal uçları + gövde ucu (pc = lc[0] ≡ tbc son karesi).
+    const yP = posterKirpimY(D.poster, D.dongu ?? D.gelen, 0);
+    const k = s3Capa("dal_uclari", D.poster, D.dongu, D.gelen);
+    if (k) ozel.dalUclari = dalUclari(D.id, k, yP);
+    else uyarilar.push(`${D.id}: dal_uclari yok (${D.poster}/${D.dongu}/${D.gelen} capalar)`);
+    const g = s3Capa("govde_ucu", D.poster, D.dongu, D.gelen);
+    if (g) {
+      const v = yonlu(D.id, "govdeUcu", [g.c], yP);
+      ozel.govdeUcu = Object.fromEntries(Object.entries(v).filter(([, l]) => l.length).map(([b, [n]]) => [b, [n.x, n.y]]));
+    } else uyarilar.push(`${D.id}: govde_ucu yok (${D.poster}/${D.dongu}/${D.gelen} capalar)`);
   }
   if (Object.keys(ozel).length) o.ozel = ozel;
   duraklar.push(o);
@@ -359,34 +471,46 @@ for (const D of DURAKLAR) {
 if (emanetSay !== 12) uyarilar.push(`d2: ${emanetSay} emanet çapası (12 beklenir; S1a l2.json capalar "emanet01"…"emanet12")`);
 
 const manifest = {
-  surum: 2,
+  surum: SURUM,
   olusturma: new Date().toISOString(),
   kaynak: KAYNAK,
-  ...(GECICI ? { gecici: ESLE_GECICI } : {}),
   fps: 30,
   master: MASTER,
   boyutlar: BOYUTLAR,
   kodekler: KODEKLER,
   duraklar,
 };
-// Girintili, ama sayı dizileri tek satırda (okuma, dunyaR, yay noktaları): diff okunur kalsın.
-const metin = JSON.stringify(manifest, null, 1).replace(/\[\s+(-?[\d.]+(?:,\s+-?[\d.]+)*)\s+\]/g, (_, a) => `[${a.split(/,\s+/).join(", ")}]`);
+// Girintili, ama sayı dizileri tek satırda (okuma, dunyaR, yay noktaları) ve fidan noktaları tek satırda: diff okunur kalsın.
+const metin = JSON.stringify(manifest, null, 1)
+  .replace(/\[\s+(-?[\d.]+(?:,\s+-?[\d.]+)*)\s+\]/g, (_, a) => `[${a.split(/,\s+/).join(", ")}]`)
+  .replace(/\{\s+("(?:ad|x)":[^{}[\]]+?)\s+\}/g, (_, a) => `{${a.replace(/\s*\n\s*/g, " ")}}`);
 writeFileSync(CIKTI, metin + "\n");
 
-// Özet: bayt tablosu (liste toplamı) ve rol tablosu
-const kb = (n) => (n / 1024).toFixed(0);
-let toplam = { dikey: {}, yatay: {} };
-for (const s of liste) if (s.tur !== "poster") toplam[s.boyut][s.kodek] = (toplam[s.boyut][s.kodek] ?? 0) + s.bayt;
-console.log(`yazıldı: ${CIKTI} (${(JSON.stringify(manifest).length / 1024).toFixed(1)} KB; surum 2; kaynak ${KAYNAK}${GECICI ? "; GEÇİCİ" : ""})`);
-console.log("video toplamı (KB):", JSON.stringify(Object.fromEntries(Object.entries(toplam).map(([b, o]) => [b, Object.fromEntries(Object.entries(o).map(([k, v]) => [k, kb(v)]))]))));
+// ---------- özet: medya baytları (manifestin gösterdiği tekil dosyalar), rol tablosu, özel alanlar ----------
+const MB = 1e6;
+const medya = {};
+const ekle = (anahtar, dosya, bayt) => ((medya[anahtar] ??= new Map()).set(dosya, bayt));
+for (const d of duraklar) {
+  for (const k of [d.dongu, d.ileri, d.ileri?.geri].filter(Boolean))
+    for (const [b, kd] of Object.entries(k.dosya)) for (const [kodek, dosya] of Object.entries(kd)) ekle(`${b}-${kodek}`, dosya, k.bayt[b][kodek]);
+  for (const [b, p] of Object.entries(d.poster ?? {})) for (const kodek of ["h264", "hevc", "av1"]) if (KODEKLER.find((x) => x.ad === kodek).boyutlar.includes(b)) ekle(`${b}-${kodek}`, p.dosya, p.bayt);
+}
+console.log(`yazıldı: ${CIKTI} (${(JSON.stringify(manifest).length / 1024).toFixed(1)} KB; surum ${SURUM}; kaynak ${KAYNAK}; ${duraklar.length} durak + kapanış = N ${duraklar.length})`);
+console.log(
+  "manifest medyası (video + poster, tekil dosya, MB = 10^6; oturum = bu + W'nin medya dışı ölçümü):",
+  Object.entries(medya)
+    .map(([k, m]) => `${k} ${([...m.values()].reduce((s, v) => s + v, 0) / MB).toFixed(3)}`)
+    .join(" · "),
+);
 console.log("id | rol | tur | gelen | ileri / geri | döngü | poster | okuma");
 for (const [i, o] of duraklar.entries()) {
   const D = DURAKLAR[i];
-  const okuma = typeof o.okuma === "string" ? o.okuma || "—" : `${o.okuma.length} kare`;
+  const okuma = typeof o.okuma === "string" ? o.okuma || "—" : `${o.okuma.length} kare (${o.okuma[0]} → ${o.okuma.at(-1)} m)`;
   console.log(
-    [o.id, o.rol, o.tur, D.gelen ? `${D.gelen}${esle(D.gelen) !== D.gelen ? `←${esle(D.gelen)}` : ""}` : "—",
-      o.ileri ? `${o.ileri.ad}/${o.ileri.geri?.ad ?? "—"}${esle(o.ileri.ad) !== o.ileri.ad ? ` ←${esle(o.ileri.ad)}/${esle(GERI[o.ileri.ad])}` : ""}` : "—",
-      o.dongu?.ad ?? "—", D.poster ? `${D.poster}${esle(D.poster) !== D.poster ? `←${esle(D.poster)}` : ""}` : "—", `${okuma}${o.okumaDurak ? ` · "${o.okumaDurak}"` : ""}`].join(" | "),
+    [o.id, o.rol, o.tur, D.gelen ?? "—", o.ileri ? `${o.ileri.ad}/${o.ileri.geri?.ad ?? "—"}` : "—", o.dongu?.ad ?? "—", D.poster ?? "—", `${okuma}${o.okumaDurak ? ` · "${o.okumaDurak}"` : ""}`].join(" | "),
   );
 }
+const say = (v) => (Array.isArray(v) ? v.length : v && typeof v === "object" ? Object.entries(v).map(([b, l]) => `${b} ${Array.isArray(l) ? (typeof l[0] === "number" ? "[x,y]" : l.length) : "?"}`).join(", ") : String(v));
+for (const o of duraklar) if (o.ozel) console.log(`ozel ${o.id}: ${Object.entries(o.ozel).map(([k, v]) => `${k} (${k === "dunyaR" ? v.length : say(v)})`).join("; ")}`);
 if (uyarilar.length) console.log("UYARILAR:\n - " + [...new Set(uyarilar)].join("\n - "));
+else console.log("UYARILAR: yok");

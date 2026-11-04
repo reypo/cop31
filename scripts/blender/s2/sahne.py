@@ -2282,16 +2282,19 @@ def kirpim_ici(x, y):
     return {"dikey": 420 <= x <= 1500 and 0 <= y <= 1920, "yatay": 0 <= x <= 1920 and 420 <= y <= 1500}
 
 
-# Duvar çapaları (brief §12.4-4, §12.4-9 `Ozel.duvarCapalari`): p6 → d6 kılavuz çizgileri (fidan, genc_iklim, orman; arka
-# duvar), p7 → sol duvar çapaları (S2a'nın verdiği kadarı; manifest kullanmıyor, bilgi). Kaynak: S2a dokular.mjs
-# `_duvar-olcum.json` → capalar[ad].dunya (montajlı sahne, m; yazı mürekkep kutusu ortası). Dosya yoksa brief §12.3
-# yerleşiminden TAHMİN (yalnız p6). Yön başına kırpımın (kenardan ≥ 24 video px) içinde kalan ilk aday seçilir; "orman"
-# (dağ şeridi) için aynı z'de x boyunca yedek adaylar.
-DUVAR_CAPA_VARSAYILAN = {   # (x, z − Z0) arka duvar iç yüzü, m
-    "fidan": (-6.25, 2.25),          # "300" rakamı
-    "genc_iklim": (-4.75, 1.64),     # "Genç İklim"
-    "orman": (-5.45, 0.30),          # dağ şeridi
+# Duvar çapaları (brief §12.4-9 `Ozel.duvarCapalari`; G-B §14.4.2 / §14.4.4): p6 → d6 arka duvar: bulusma ("50+"), solen
+# ("100.000+"), motto (pencere dışı üç satırlık slogan "AK Parti / Her Anında / Hep Yanında"; yalnız yatay, dikeyde kırpım
+# dışı kalır → kirpimda false, W yön başına atlar); p7 → sol duvar çapaları (uye, il_ilce; manifest kullanmıyor, bilgi).
+# Kaynak: dokular.mjs `_duvar-olcum.json` → capalar[ad].dunya (montajlı sahne, m; mürekkep kutusu ortası, motto: üç satırın
+# birleşik kutusu). Dosya yoksa §14.4.4 G-B dokusunun ölçülen yerleşiminden TAHMİN (yalnız p6). Yön başına kırpımın
+# (kenardan ≥ 24 video px) içinde kalan ilk aday seçilir; kutusu bilinen çapada (json kutu_u_m ya da DUVAR_CAPA_KUTU) yedek
+# adaylar aynı z'de kutunun içinde, pencereye doğru (−x) 0,15 m adımla.
+DUVAR_CAPA_VARSAYILAN = {   # (x, z − Z0) arka duvar iç yüzü, m — dokular.mjs _duvar-olcum.json (G-B, 4 Kasım 2026)
+    "bulusma": (-6.39, 2.352),       # "50+" rakamı
+    "solen": (-5.751, 1.165),        # "100.000+" rakamı
+    "motto": (-3.032, 2.474),        # pencere dışı slogan (3 satır)
 }
+DUVAR_CAPA_KUTU = {"motto": (-3.702, -2.362)}   # yedek aday x aralığı (json'da kutu_u_m yoksa)
 CAPA_PAY = 36   # master px (= 24 video px)
 CAPA_DUVAR = {"p6": "duvar-arka.png", "p7": "duvar-sol.png"}
 
@@ -2303,26 +2306,29 @@ def kirpimda(boyut, x, y, pay=CAPA_PAY):
 
 
 def duvar_capalari(klip):
-    kaynak, noktalar = None, {}
+    kaynak, noktalar, kutu = None, {}, {}
     yol = DOKU + "_duvar-olcum.json"
     if os.path.exists(yol):
         try:
             for ad, v in json.load(open(yol, encoding="utf-8")).get("capalar", {}).items():
                 if v.get("doku") == CAPA_DUVAR[klip]:
                     noktalar[ad] = Vector(v["dunya"])
+                    if klip == "p6" and v.get("kutu_u_m"):
+                        kutu[ad] = tuple(v["kutu_u_m"])
             kaynak = yol + " (capalar.dunya)"
         except Exception as e:   # bozuk dosya: varsayılanla devam, uyar
             print(f"[UYARI] {yol} okunamadı ({e}); varsayılan çapalar", flush=True)
-            noktalar = {}
+            noktalar, kutu = {}, {}
     if not noktalar and klip == "p6":
         noktalar = {ad: Vector((x, Y_ARKA_IC - BASKI_T, Z0 + z)) for ad, (x, z) in DUVAR_CAPA_VARSAYILAN.items()}
-        kaynak = "varsayılan (brief §12.3 yerleşiminden tahmin; _duvar-olcum.json yok)"
+        kutu = dict(DUVAR_CAPA_KUTU)
+        kaynak = "varsayılan (brief §14.4.4 G-B yerleşiminden; _duvar-olcum.json yok)"
         print("[UYARI] _duvar-olcum.json yok: duvar çapaları tahmin", flush=True)
     capalar, liste, video, ayrinti = {}, [], [], {}
     for ad, w0 in noktalar.items():
         aday = [w0]
-        if ad == "orman":   # dağ şeridi boyunca yedekler (aynı yükseklik)
-            aday += [w0 + Vector((dx, 0, 0)) for dx in (0.6, -0.6, 1.2, -1.2, 1.8, -1.8) if X_SOL_IC + 0.1 < w0.x + dx < PX(0.38) - 0.1]
+        if ad in kutu:   # kutunun içinde, aynı z'de pencereye doğru (−x) yedekler (motto: pencere dışı slogan)
+            aday += [w0 + Vector((-0.15 * i, 0, 0)) for i in range(1, 9) if w0.x - 0.15 * i >= kutu[ad][0] + 0.05]
         sec = {}
         for boyut in ("dikey", "yatay", "ikisi"):
             for w in aday:

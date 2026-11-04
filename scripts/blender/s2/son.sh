@@ -11,6 +11,9 @@
 #   p6 = t56 son karesi (E k_0059, F-B k_0053), p7 = t67 son karesi (k_0047): "son-kare" — render yok, kopya + <p>.json (tip son-kare);
 #   p8 = eski p6 plakası: render yok; S2c ÖNCE render-son/p6 → render-son/p8 taşır (ve p6.json → p8.json); son.sh p8.json'u
 #   tip "plaka" ile yeniden yazar. p8 yoksa p6 kopyası YAPILMAZ (eski plaka ezilmesin).
+#   G-B (brief §14.4.2-3): p8 = t78[59] son-kare; eski plaka render-son-f/p8'e taşındı, render-son/p8 dizini YOK ve p8.json'u
+#   kodla.mjs yazar (tip "son-kare"). Bu durumda son.sh p8.json'a dokunmaz ve p6 kopyası yapılır. Koruma yalnız eski plaka
+#   henüz taşınmamışsa (render-son/p8 yok VE p8.json tip "son-kare" değil) devrede kalır.
 #   p4 = l4[0] ("dongu"; kodla.mjs tablosu) — ayrıca render yok.
 # Dokular: duvar-arka / duvar-sol / ekran-soz / cephe-on (S2a) yoksa son render reddedilir (S2_GECICI=1 ile geçilir).
 # Ortam: S2_EK="--yikama_w 300 …" (sahne.py'ye ek argüman), S2_BOSLUK (s), S2_GECICI=1.
@@ -31,7 +34,8 @@ EKG=${S2_EK:-}
 if echo " $EKG " | grep -q -- " --profil eski "; then T34B_BAS=48; PARLAMA_N=8; else T34B_BAS=36; PARLAMA_N=3; fi   # F-B / E
 VRAM_ESIK=7782            # MiB (7,6 GiB)
 mkdir -p $O
-KLIPLER=${*:-"t34b l4 t45 t56 t67 t78"}
+# G-B: t78 artık S3 t78f karelerini taşır (scripts/blender/s3/son.sh); S2 ile yeniden render edilmesi kasayı siler → varsayılan listede YOK, yalnız açıkça "t78" verilirse.
+KLIPLER=${*:-"t34b l4 t45 t56 t67"}
 
 eksik=""
 for d in duvar-arka.png duvar-sol.png ekran-soz.png cephe-on.png; do [ -f "$DOKU/$d" ] || eksik="$eksik $d"; done
@@ -64,8 +68,8 @@ son_kare_no() {   # $1 klip → son kare dizini (render-son/<klip>.json "kare" �
 son_kare() {   # $1 poster, $2 kaynak klip, $3 kaynak kare
   local src=$R/$2/k_$(printf %04d $3).png
   if [ ! -f "$src" ]; then echo "[HATA] $1: $src yok"; return; fi
-  if [ "$1" = "p6" ] && [ ! -d "$R/p8" ]; then
-    echo "[HATA] p6: render-son/p8 yok — eski p6 plakası henüz taşınmamış (S2c: mv render-son/p6 render-son/p8). p6 kopyası atlandı."
+  if [ "$1" = "p6" ] && [ ! -d "$R/p8" ] && [ "$(p8_tip)" != "son-kare" ]; then
+    echo "[HATA] p6: render-son/p8 yok ve p8.json tip son-kare değil — eski p6 plakası henüz taşınmamış (S2c: mv render-son/p6 render-son/p8). p6 kopyası atlandı."
     return
   fi
   mkdir -p $R/$1
@@ -75,8 +79,15 @@ son_kare() {   # $1 poster, $2 kaynak klip, $3 kaynak kare
   echo "[SON-KARE] $1 ← $2/k_$(printf %04d $3).png"
 }
 
-# p8 (eski p6 plakası) json'u: dizin taşındıysa tip "plaka" ile yaz
-if [ -d "$R/p8" ]; then sahne --klip p8 --kok $R --yalniz_json --yigin 0; else echo "[UYARI] render-son/p8 yok (S2c taşıması bekleniyor)"; fi
+p8_tip() {   # render-son/p8.json "tip" (yoksa / okunamazsa boş)
+  [ -f "$R/p8.json" ] || return 0
+  python -X utf8 -c "import json,sys; print(json.load(open(sys.argv[1], encoding='utf-8')).get('tip', ''))" "$R/p8.json" 2>/dev/null || true
+}
+
+# p8 json'u: E/F'de eski p6 plakası (dizin varsa tip "plaka" ile yaz); G-B'de son-kare = t78[59] (kodla.mjs yazar, dokunma)
+if [ -d "$R/p8" ]; then sahne --klip p8 --kok $R --yalniz_json --yigin 0
+elif [ "$(p8_tip)" = "son-kare" ]; then echo "[BILGI] p8 son-kare (G-B; p8.json kodla.mjs'nin, dokunulmadı; eski plaka render-son-f/p8)"
+else echo "[UYARI] render-son/p8 yok ve p8.json tip son-kare değil (S2c taşıması bekleniyor)"; fi
 
 ILK=1
 for k in $KLIPLER; do
