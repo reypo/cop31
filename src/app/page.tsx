@@ -52,7 +52,7 @@ const comparison = [
   {
     href: "/brosur",
     title: "Dijital Broşür",
-    text: "Basılı broşürün 12 sayfası, ekranda sayfa sayfa canlanır.",
+    text: "Yeni basılı broşürün (1 Milyon Genç, Tek Ortak Ev) 10 bölümü, telefonda okunur web sayfası olarak.",
     icon: <BookIcon />,
   },
   {

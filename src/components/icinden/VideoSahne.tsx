@@ -210,6 +210,23 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   let kodek = kodek0;
   let k = 0; // bulunulan durak (N = kapanış)
   let faz: "dur" | "gecis" = "dur";
+  /**
+   * Broşür bağlantıları (sabit düğme, d0 şeridi, kapanış): /brosur'daki "← COP31'in İçinden" tarayıcı geçmişinde geri
+   * gidebilsin diye sekmeye özgü işaret (src/components/brosur/geri.tsx, anahtar "bro-geldi"); "icinden-donus" broşüre
+   * gidilen durak, "başlangıç" bloğu bir kez okuyup o duraktan sürer.
+   */
+  const brosurIsaret = (e: MouseEvent) => {
+    if (!(e.target instanceof Element) || !e.target.closest('a[href="/brosur"]')) return;
+    try {
+      sessionStorage.setItem("bro-geldi", "icinden");
+      // Geri dönüşte bu duraktan sürülsün (başlangıç bloğu okur): kaydırma geri yüklemesi d10'dan d1'e düşürüyordu.
+      const h = Number(kok.dataset.hedef); // geçiş sürerken gidilen durak (hedefYaz)
+      sessionStorage.setItem("icinden-donus", String(faz === "gecis" && Number.isInteger(h) ? h : k));
+    } catch {
+      // Depolama kapalı (gizli kip): geri bağlantısı /icinden'i baştan açar.
+    }
+  };
+  kok.addEventListener("click", brosurIsaret);
   const zamanlar = new Set<number>();
   const sonra = (ms: number, f: () => void) => {
     const id = window.setTimeout(() => {
@@ -746,6 +763,15 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   duraklar.forEach((s, i) => {
     if (Math.abs(s.start - y0) < Math.abs(duraklar[k0].start - y0)) k0 = i;
   });
+  // Broşürden dönüş (brosurIsaret yazar, bir kez okunur): broşüre gidilen durak. Kapanış (N) kaydırmayla geri gelir.
+  try {
+    const donus = sessionStorage.getItem("icinden-donus");
+    sessionStorage.removeItem("icinden-donus");
+    const j = donus === null ? NaN : Number(donus);
+    if (!kiosk && Number.isInteger(j) && j >= 0 && j < N) k0 = j;
+  } catch {
+    // Depolama kapalı: kaydırma konumundan.
+  }
   if (k0 >= N) {
     kapanisKur();
     kioskPlanla();
@@ -832,6 +858,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     stepper.destroy();
     oy.yokEt();
     window.removeEventListener("resize", yenidenOlc);
+    kok.removeEventListener("click", brosurIsaret);
     ro.disconnect();
     delete w.__icinden3;
   };

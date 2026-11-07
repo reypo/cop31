@@ -13,7 +13,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useScrollProgressCallback } from "@/lib/useScrollProgress";
 
-const SNAP_CSS = "html{scroll-snap-type:y proximity}";
+/** Snap yok (bölümler telefonda ekrandan uzun); İçindekiler çapaları yumuşak kayar (hareket azaltmada anlık). */
+const SNAP_CSS = "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}";
 
 /** Görünürken stili açar, Activity gizleyince/unmount'ta kapatır. */
 function enableWhileVisible(style: HTMLStyleElement | null) {
@@ -28,9 +29,11 @@ type Props = {
   children: ReactNode;
   /** Kapak hariç sayfa sayısı (her biri için gövdede bir yaprak). */
   leafCount: number;
+  /** Köke ek sınıf (rota yazısının CSS değişkeni). */
+  className?: string;
 };
 
-export function BrosurShell({ children, leafCount }: Props) {
+export function BrosurShell({ children, leafCount, className = "" }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const leafPos = useRef<number[]>([]);
@@ -43,7 +46,7 @@ export function BrosurShell({ children, leafCount }: Props) {
     if (!root || !bar) return;
 
     const measure = () => {
-      const pages = Array.from(root.querySelectorAll<HTMLElement>(".br-page")).slice(1);
+      const pages = Array.from(root.querySelectorAll<HTMLElement>(".bro-bolum")).slice(1);
       const leaves = Array.from(bar.querySelectorAll<HTMLElement>("[data-leaf]"));
       // Önce tüm okumalar, sonra yazmalar: döngüde okuma/yazma karışırsa her
       // yaprak için ayrı zorunlu layout olur.
@@ -84,11 +87,11 @@ export function BrosurShell({ children, leafCount }: Props) {
   });
 
   return (
-    <div ref={rootRef} className="br-root relative">
+    <div ref={rootRef} className={`br-root relative ${className}`}>
       {/*
-        Belge scroll'u üzerinde y proximity snap. Next 16 (cacheComponents)
+        Belge kaydırma davranışı (yumuşak çapa). Next 16 (cacheComponents)
         ayrılan rotayı <Activity hidden> ile DOM'da tutar; ref temizliği
-        stili kapatır, böylece snap diğer sayfalara sızmaz.
+        stili kapatır, böylece öteki sayfalara (/icinden adımlayıcısı) sızmaz.
       */}
       <style ref={enableWhileVisible}>{SNAP_CSS}</style>
       {children}

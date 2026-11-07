@@ -1820,3 +1820,55 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ============================== sabit "Dijital broşür →" (her aşamada; 7 Kasım 2026) ============================== */
+
+/*
+ * Müşteri: "animasyon akışının her aşamasında kullanıcı direkt broşüre erişebilmeli". Sağ üst köşe, metin bantlarının
+ * boş bıraktığı üst 44 px şeridinde (bant-ust dolgusu); kadraj okuması düğmenin soluna kayar (--v3-brosur-g).
+ * d0'da gizli: açılış şeridinin sağında aynı düğme duruyor. Kapanış paneli (z 30) kayıp gelince üstünü örter; orada
+ * slogan altındaki düğme var. Kiosk'ta gizli (.v3[data-kiosk="1"] .v3-dijital kuralı). Açık ve koyu sahnede okunsun
+ * diye marka mavisi dolgu + gölge; ön getirme yok (DijitalBrosur prefetch={false}).
+ */
+.v3-brosur-sabit {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  right: 16px;
+  z-index: 13;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: var(--color-brand-blue);
+  padding: 6px 12px;
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  outline-offset: 2px;
+  box-shadow: 0 4px 14px -4px rgb(0 0 0 / 0.5);
+  transition:
+    opacity 200ms linear,
+    background-color 150ms ease;
+}
+.v3-brosur-sabit:hover {
+  background: color-mix(in srgb, var(--color-brand-blue) 82%, #000);
+}
+.v3-brosur-sabit:focus-visible {
+  outline: 2px solid #fff;
+}
+.v3[data-rol="lombar"] .v3-brosur-sabit {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 200ms linear,
+    visibility 0s linear 200ms;
+}
+.v3:not([data-kiosk="1"]) {
+  --v3-brosur-g: 136px;
+}
+.v3 .v3-kadraj {
+  right: calc(16px + var(--v3-brosur-g, 0px));
+}

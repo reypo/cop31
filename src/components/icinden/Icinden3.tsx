@@ -75,7 +75,8 @@ const ATIFLAR = [
 const Tarih = ({ children }: { children: ReactNode }) => <span className="v3-nowrap">{children}</span>;
 
 /**
- * Dijital broşür bağlantısı (§14.4.6: d0 üst şeridi ve kapanış; W-3'te masa bandı kalktı). Kiosk'ta gizli (stant ekranı döngüden çıkmasın).
+ * Dijital broşür bağlantısı (§14.4.6: d0 üst şeridi ve kapanış; W-3'te masa bandı kalktı; 7 Kasım: d1'den kapanışa dek sağ üstte
+ * sabit düğme, müşteri isteği "her aşamada broşüre erişim"). Kiosk'ta gizli (stant ekranı döngüden çıkmasın).
  * Ön getirme yok (`prefetch={false}`): d0 şeridindeki bağlantı açılışta görünür, /brosur'un RSC yükü ve stil dosyası her
  * oturumda inip mobil bütçeye (§14.4.1, ≤ 12,0 MB) giriyordu ve Chrome "preload edilip kullanılmadı" uyarısı veriyordu.
  */
@@ -541,6 +542,8 @@ export default function Icinden3() {
         </>
       }
     >
+      {/* Her aşamada broşüre doğrudan erişim (sağ üst; d0'da şeritteki düğme görünür, kiosk'ta gizli). */}
+      <DijitalBrosur className="v3-brosur-sabit" />
       {D.map(bolum)}
       <IcindenKapanis atiflar={ATIFLAR} brosur={<DijitalBrosur className="ic-kapanis-brosur" />} />
     </VideoSahne>
