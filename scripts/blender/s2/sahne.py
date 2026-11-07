@@ -2282,16 +2282,16 @@ def kirpim_ici(x, y):
     return {"dikey": 420 <= x <= 1500 and 0 <= y <= 1920, "yatay": 0 <= x <= 1920 and 420 <= y <= 1500}
 
 
-# Duvar çapaları (brief §12.4-9 `Ozel.duvarCapalari`; G-B §14.4.2 / §14.4.4): p6 → d6 arka duvar: bulusma ("50+"), solen
+# Duvar çapaları (brief §12.4-9 `Ozel.duvarCapalari`; G-B §14.4.2 / §14.4.4): p6 → d6 arka duvar: bulusma ("30+"), solen
 # ("100.000+"), motto (pencere dışı üç satırlık slogan "AK Parti / Her Anında / Hep Yanında"; yalnız yatay, dikeyde kırpım
 # dışı kalır → kirpimda false, W yön başına atlar); p7 → sol duvar çapaları (uye, il_ilce; manifest kullanmıyor, bilgi).
 # Kaynak: dokular.mjs `_duvar-olcum.json` → capalar[ad].dunya (montajlı sahne, m; mürekkep kutusu ortası, motto: üç satırın
 # birleşik kutusu). Dosya yoksa §14.4.4 G-B dokusunun ölçülen yerleşiminden TAHMİN (yalnız p6). Yön başına kırpımın
 # (kenardan ≥ 24 video px) içinde kalan ilk aday seçilir; kutusu bilinen çapada (json kutu_u_m ya da DUVAR_CAPA_KUTU) yedek
 # adaylar aynı z'de kutunun içinde, pencereye doğru (−x) 0,15 m adımla.
-DUVAR_CAPA_VARSAYILAN = {   # (x, z − Z0) arka duvar iç yüzü, m — dokular.mjs _duvar-olcum.json (G-B, 4 Kasım 2026)
-    "bulusma": (-6.39, 2.352),       # "50+" rakamı
-    "solen": (-5.751, 1.165),        # "100.000+" rakamı
+DUVAR_CAPA_VARSAYILAN = {   # (x, z − Z0) arka duvar iç yüzü, m — dokular.mjs _duvar-olcum.json (G2-30, 7 Kasım 2026)
+    "bulusma": (-6.384, 2.367),      # "30+" rakamı (G'deki "50+": −6,39, 2,352)
+    "solen": (-5.751, 1.195),        # "100.000+" rakamı (Şölen bloğu +0,03 m; G: 1,165)
     "motto": (-3.032, 2.474),        # pencere dışı slogan (3 satır)
 }
 DUVAR_CAPA_KUTU = {"motto": (-3.702, -2.362)}   # yedek aday x aralığı (json'da kutu_u_m yoksa)

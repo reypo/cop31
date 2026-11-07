@@ -2,8 +2,11 @@
 /**
  * "← COP31'in İçinden": ziyaretçi broşüre /icinden'deki düğmeden geldiyse tarayıcı geçmişinde geri gider (dalışın
  * kaldığı yer; yeni bir /icinden yüklemesi açılıştan başlardı). İşaret: /icinden'deki broşür bağlantısı tıklanınca
- * sessionStorage "bro-geldi" (sekmeye özgü; VideoSahne yazar). Doğrudan gelindiyse (QR, paylaşılan bağlantı) /icinden'e
- * gider. JS yokken düz bağlantı.
+ * sessionStorage "bro-geldi" (sekmeye özgü; VideoSahne yazar, /icinden'e her gelişte siler). Doğrudan gelindiyse (QR,
+ * paylaşılan bağlantı) /icinden'e gider. JS yokken düz bağlantı.
+ * Broşür içi çapa (İçindekiler, "Aşağı kaydır") geçmişe aynı belgede `/brosur#…` girdisi ekler: adreste # varken bir adım
+ * geri broşürde kalırdı (sayfa yukarı zıplıyor, işaret de siliniyordu). O durumda bağlantı /icinden'e gider; durak yine
+ * "icinden-donus"tan (VideoSahne başlangıç bloğu), sonuç aynı.
  */
 import Link from "next/link";
 import type { MouseEvent } from "react";
@@ -20,7 +23,7 @@ export function GeriBaglanti({ className = "" }: { className?: string }) {
     } catch {
       geldi = false;
     }
-    if (geldi && window.history.length > 1) {
+    if (geldi && window.history.length > 1 && !window.location.hash) {
       e.preventDefault();
       window.history.back();
     }

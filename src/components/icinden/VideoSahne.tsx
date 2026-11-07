@@ -84,13 +84,39 @@ export default function VideoSahne({
     const kok = kokRef.current;
     if (!kok) return;
     const q = new URLSearchParams(location.search);
+    // "bro-geldi" (geri.tsx history.back) yalnız "/icinden → broşür" adımının hemen ardından geçerli: /icinden'e her
+    // gelişte silinir (tarayıcının geri tuşu/jesti dahil; Activity görünür olunca bu etki yeniden çalışır), broşür
+    // bağlantısı yeniden yazar. Silinmezse sonraki broşür ziyaretinde "← COP31'in İçinden" ana sayfaya gidiyordu.
+    try {
+      sessionStorage.removeItem(GELDI);
+    } catch {
+      // Depolama kapalı.
+    }
     // Eski reduced düzeni (akış + posterler, video yok, adımlama yok) yalnız el ile (W-2 §14.7; ölçüm aracı "reduced").
     // prefers-reduced-motion artık bu düzeni AÇMAZ: kamera hareketleri sürer, DOM süsleri CSS'te anında.
     if (q.get("azalt") === "1") {
       kok.dataset.azalt = "1";
       // Akış düzeninde polaroidler bölümün içinde statik: tarayıcının tembel yüklemesiyle.
       polaroidYukle(kok, true);
-      return;
+      // Broşür dönüşü: history.back adresi (?azalt=1) korur; kaydırma yeri işaretten (dönüşte broşürün konumunda kalır).
+      try {
+        const y = Number(sessionStorage.getItem(DONUS_Y) ?? NaN);
+        sessionStorage.removeItem(DONUS_Y);
+        if (Number.isFinite(y)) window.scrollTo({ top: y, behavior: "instant" });
+      } catch {
+        // Depolama kapalı.
+      }
+      const azaltIsaret = (e: MouseEvent) => {
+        if (!brosurTiki(e)) return;
+        try {
+          sessionStorage.setItem(GELDI, "icinden");
+          sessionStorage.setItem(DONUS_Y, String(Math.round(window.scrollY)));
+        } catch {
+          // Depolama kapalı: geri bağlantısı /icinden'i baştan açar.
+        }
+      };
+      kok.addEventListener("click", azaltIsaret);
+      return () => kok.removeEventListener("click", azaltIsaret);
     }
     let iptal = false;
     let temizle: (() => void) | null = null;
@@ -174,6 +200,23 @@ function polaroidYukle(kok: HTMLElement, tembel: boolean): Promise<void>[] {
   });
 }
 
+/** Broşür dönüş işaretleri (sekmeye özgü sessionStorage). GELDI: src/components/brosur/geri.tsx `GELDI_ANAHTAR`. */
+const GELDI = "bro-geldi";
+/** Broşüre gidilen durak (kapanış N dahil); başlangıç bloğu bir kez okur. */
+const DONUS = "icinden-donus";
+/** `?azalt=1` akış düzeninde broşüre gidilen kaydırma yeri (px). */
+const DONUS_Y = "icinden-donus-y";
+
+/**
+ * Broşür bağlantısına düz tık mı: değiştirici tuşlu (Ctrl/Cmd/Shift/Alt: yeni sekme/pencere) ya da sol düğme dışı tık bu
+ * sekmeden ayrılmaz, işaret yazılmamalı (bayat işaret sonraki /icinden açılışını eski durakta başlatıyordu). geri.tsx ile
+ * aynı kural.
+ */
+function brosurTiki(e: MouseEvent): boolean {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
+  return e.target instanceof Element && !!e.target.closest('a[href="/brosur"]');
+}
+
 /**
  * Poster kipi yalnız el ile (`?poster=1`; W-2 §14.7). Save-Data, 2G/3G tahmini ve prefers-reduced-data eskiden kendiliğinden
  * poster kipine geçiriyordu (brief §6): kullanıcının telefonunda "yalnız resimler değişiyor"du. Şimdilik tamamen kapalı.
@@ -216,12 +259,12 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
    * gidilen durak, "başlangıç" bloğu bir kez okuyup o duraktan sürer.
    */
   const brosurIsaret = (e: MouseEvent) => {
-    if (!(e.target instanceof Element) || !e.target.closest('a[href="/brosur"]')) return;
+    if (!brosurTiki(e)) return;
     try {
-      sessionStorage.setItem("bro-geldi", "icinden");
+      sessionStorage.setItem(GELDI, "icinden");
       // Geri dönüşte bu duraktan sürülsün (başlangıç bloğu okur): kaydırma geri yüklemesi d10'dan d1'e düşürüyordu.
       const h = Number(kok.dataset.hedef); // geçiş sürerken gidilen durak (hedefYaz)
-      sessionStorage.setItem("icinden-donus", String(faz === "gecis" && Number.isInteger(h) ? h : k));
+      sessionStorage.setItem(DONUS, String(faz === "gecis" && Number.isInteger(h) ? h : k));
     } catch {
       // Depolama kapalı (gizli kip): geri bağlantısı /icinden'i baştan açar.
     }
@@ -384,7 +427,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   };
   /**
    * Etkin satırın sahnedeki çapası (video px): sutunlar → ozel.sutunlar[no − 1]; duvar (d6, G7 §14.4.4) → satırın
-   * `data-capa` adıyla ozel.duvarCapalari (bulusma "50+", solen "100.000+", motto). Çapa yoksa (p6.json G7 adlarını
+   * `data-capa` adıyla ozel.duvarCapalari (bulusma "30+", solen "100.000+", motto). Çapa yoksa (p6.json G7 adlarını
    * taşımıyorsa ya da o yönde kırpımdaysa) null: kılavuz çizilmez, satır döngüsü sürer.
    */
   const kilavuzCapa = (j: number, no: number, satir: HTMLElement): Nokta | null => {
@@ -763,16 +806,24 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
   duraklar.forEach((s, i) => {
     if (Math.abs(s.start - y0) < Math.abs(duraklar[k0].start - y0)) k0 = i;
   });
-  // Broşürden dönüş (brosurIsaret yazar, bir kez okunur): broşüre gidilen durak. Kapanış (N) kaydırmayla geri gelir.
+  // Broşürden dönüş (brosurIsaret yazar, bir kez okunur): broşüre gidilen durak, kapanış (N) dahil. Dönüşte kaydırma
+  // broşürün konumunda kalır (Activity; kapanış "kaydırmayla" broşürdeki yere göre d0/d3/… düşüyordu): durak işaretten,
+  // kapanışa da başından girilir.
+  let donus = false;
   try {
-    const donus = sessionStorage.getItem("icinden-donus");
-    sessionStorage.removeItem("icinden-donus");
-    const j = donus === null ? NaN : Number(donus);
-    if (!kiosk && Number.isInteger(j) && j >= 0 && j < N) k0 = j;
+    const s = sessionStorage.getItem(DONUS);
+    sessionStorage.removeItem(DONUS);
+    sessionStorage.removeItem(DONUS_Y); // ?azalt=1 düzeninin işareti: bayat kalmasın
+    const j = s === null ? NaN : Number(s);
+    if (!kiosk && Number.isInteger(j) && j >= 0 && j <= N) {
+      k0 = j;
+      donus = true;
+    }
   } catch {
     // Depolama kapalı: kaydırma konumundan.
   }
   if (k0 >= N) {
+    if (donus) stepper.atla(N);
     kapanisKur();
     kioskPlanla();
   } else {

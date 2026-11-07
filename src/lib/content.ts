@@ -80,7 +80,7 @@ export const bulusmalar = {
     "Gençlik buluşmaları çalışmalarımızın en görünür ve süreklilik taşıyan alanlarından biridir. \"Gençlik Buluşmaları\" başlığı altında düzenlenen programlar, gençlerin farklı şehirlerde doğrudan muhataplarla bir araya gelmesi için buluşma ortamları oluşturur.",
     "Cumhurbaşkanımız Sayın Recep Tayyip Erdoğan'ın gençlerle buluşmalarının teşkilat tarihinde ayrı bir yeri vardır.",
     "Cumhurbaşkanımız, ülkemizin siyasi, ekonomik, sosyal ve kültürel politikaları başta olmak üzere pek çok alanda gençlerle istişare etmeye, onların fikir ve önerilerini dinlemeye, beklentilerini doğrudan kendilerinden öğrenmeye büyük önem vermektedir.",
-    "Bu yaklaşım doğrultusunda, son 5 yılda Cumhurbaşkanımızın katılımıyla 50'den fazla gençlik buluşması gerçekleştirilmiştir. Bu buluşmalar, gençlerin görüş ve önerilerini doğrudan Cumhurbaşkanımıza iletebildiği, ülke gündemine ilişkin düşüncelerini paylaşabildiği ve karar alma süreçlerine katkı sunabildiği önemli buluşma programları olmuştur.",
+    "Bu yaklaşım doğrultusunda, son 5 yılda Cumhurbaşkanımızın katılımıyla 30'dan fazla gençlik buluşması gerçekleştirilmiştir. Bu buluşmalar, gençlerin görüş ve önerilerini doğrudan Cumhurbaşkanımıza iletebildiği, ülke gündemine ilişkin düşüncelerini paylaşabildiği ve karar alma süreçlerine katkı sunabildiği önemli buluşma programları olmuştur.",
     "Söz konusu programların ortak yönü, soruların, görüşlerin ve yerel gündemlerin konuşulabildiği bir ortam sağlamayı hedeflemesidir. Bir ilçede küçük ölçekli bir sohbet, başka bir şehirde daha geniş katılımlı bir buluşma düzenlenebilmesi, teşkilatımızın farklı kitlelerle çalışabilen yapısını ortaya koymaktadır.",
   ],
 } as const;
@@ -150,7 +150,7 @@ export const facts = {
   members: 1000000,
   provinces: 81,
   districts: 922,
-  meetings: 50,
+  meetings: 30, // yeni broşür (brosur/icerik.ts dinleyen.rakamlar[0] "30’dan fazla"); değişirse :83'teki ek, Icinden3.tsx d6 eki, S2 duvar dokusu da
   meetingsYears: 5,
   solenAttendees: 100000,
   solenDate: "16 Mayıs 2026",

@@ -160,7 +160,7 @@ const EMANET_AD = /^emanet_?0?(\d{1,2})$/;
  */
 const EMANET_OFSET = { 4: { dx: -10, dy: 0 }, 5: { dx: -10, dy: 0 }, 6: { dx: 10, dy: 0 }, 7: { dx: -10, dy: 0 } };
 /**
- * d6 arka duvar çapaları (p6; G7 §14.4.4, fotoğrafsız duvar): sıra = d6 bandının 3 spot satırı — `bulusma` ("50+"
+ * d6 arka duvar çapaları (p6; G7 §14.4.4, fotoğrafsız duvar): sıra = d6 bandının 3 spot satırı — `bulusma` ("30+"
  * rakamı), `solen` ("100.000+" rakamı), `motto` (`backCover.quote`). E/F'nin `fidan`/`genc_iklim`/`orman` adları
  * artık okunmaz (p6.json yeni G7 render'ıyla gelir; eski adlıysa alan boş + uyarı).
  */

@@ -64,16 +64,19 @@ export function Counter({ value, delay = 0, className }: Props) {
   }, [value, delay, signal]);
 
   // Son değerin genişliği görünmez kopyayla ayrılır; sayarken satır kırılımı
-  // ve yerleşim değişmez (CLS / scroll anchoring sıçraması olmaz).
+  // ve yerleşim değişmez (CLS / scroll anchoring sıçraması olmaz). Sayan kopya
+  // erişilebilirlik ağacından gizli (bölüme girilmeden "0" okunuyordu); ekran
+  // okuyucu ve sayfa içi arama sr-only kopyadan hep son değeri bulur.
   const final = formatNumber(value);
   return (
     <span className={cx("relative inline-block", className)}>
       <span aria-hidden="true" className="invisible">
         {final}
       </span>
-      <span ref={ref} className="absolute inset-y-0 right-0 whitespace-nowrap">
+      <span ref={ref} aria-hidden="true" className="absolute inset-y-0 right-0 whitespace-nowrap">
         {final}
       </span>
+      <span className="sr-only">{final}</span>
     </span>
   );
 }

@@ -1546,6 +1546,12 @@
   text-decoration: none;
   box-shadow: 0 6px 18px -8px rgb(6 15 34 / 0.55);
 }
+/* Dokunma kutusu ≥ 44 px (Apple HIG 44 pt; görünür hap ~28 px): görünüm aynı, kutu 8 px yukarı/aşağı, 4 px yana taşar. */
+.bro-geri-sabit::before {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
 
 /* ============================== giriş animasyonları (reveal.tsx) ============================== */
 

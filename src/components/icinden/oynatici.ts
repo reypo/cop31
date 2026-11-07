@@ -1578,16 +1578,21 @@ export class Oynatici {
     const n = g.kare;
     const t0 = performance.now();
     const sure = (g.sure * 1000) / g.hiz;
-    // Kadraj/lombar zamana bağlı akar (video yok).
+    // Kadraj/lombar zamana bağlı akar (video yok). Denetim çağrıdan ÖNCE: varış zamanlayıcısı bekleyen rAF'ten önce
+    // tetiklenirse (son kare dilimi bir rAF aralığından kısa) rAF, durakKur'un yazdığı durak okumasını ezmesin (WebKit
+    // ?poster=1'de d6/d7 "kadraj ~3 m" kalıyordu). `bitti` yerel: sonraki geçiş bu döngüyü sürdürmesin.
+    let bitti = false;
     const raf = () => {
+      if (bitti || this.durum !== "gecis") return;
       const f = Math.min(n - 1, Math.round(((performance.now() - t0) / sure) * (n - 1)));
       sec.kare?.(f, n);
-      if (f < n - 1 && this.durum === "gecis") requestAnimationFrame(raf);
+      if (f < n - 1) requestAnimationFrame(raf);
     };
     if (sec.kare) requestAnimationFrame(raf);
     if (this.posterKipi) this.posterOnyukle(j, dir);
     else this.dagit(j, dir);
     this.sonra(Math.max(YEDEK_MS, sure - (kayit.beklemeMs ?? 0)), () => {
+      bitti = true;
       for (const y of this.yuvalar) if (!y.oynat || y.url !== this.dongu(j)?.url) y.el.pause();
       this.gizle(0);
       this.k = j;

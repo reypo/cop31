@@ -391,7 +391,8 @@ export default function Icinden3() {
               <En>Youth Meetings</En>
               <ul className="v3-spot-satirlari v3-duvar-satirlari" aria-label={bulusmalar.title}>
                 <li data-no={1} data-capa="bulusma" className="v3-spot-satir">
-                  Son {facts.meetingsYears} yılda {facts.meetings}&apos;den fazla gençlik buluşması.
+                  {/* ek sayıya bağlı: 30 → "otuz'dan" (content.ts facts.meetings yorumu) */}
+                  Son {facts.meetingsYears} yılda {facts.meetings}&apos;dan fazla gençlik buluşması.
                 </li>
                 <li data-no={2} data-capa="solen" className="v3-spot-satir">
                   {solenAdi}: <span className="v3-nowrap">{facts.solenDate}</span>, {facts.solenPlace}, {tr(facts.solenAttendees)}+ genç.

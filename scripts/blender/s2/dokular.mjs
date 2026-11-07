@@ -18,11 +18,11 @@
  * Yalnız duvarları üretmek için (eski dokular bayt bayt değişmesin):
  *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png,duvar-sol.png,ekran-soz.png,cephe-on.png
  *
- * G-B turu (brief §14.4.4, karar K7): arka duvar FOTOĞRAFSIZ, genel bilgi: "Gençlik Buluşmaları" (50+ · son 5 yılda)
+ * G-B turu (brief §14.4.4, karar K7): arka duvar FOTOĞRAFSIZ, genel bilgi: "Gençlik Buluşmaları" (30+ · son 5 yılda)
  * ve "Bir Gençlik Şöleni" (100.000+ genç · 16 Mayıs 2026 · Kocaeli Stadyumu); pencere dışında "AK Parti / Her Anında /
  * Hep Yanında" + #YaniBanaEmanet. Metinler content.ts (bulusmalar, solenler, backCover, facts) ve stant.ts'ten birebir;
  * kelimelerin kaynak cümlede geçtiği düzenli ifadeyle denetlenir (değişirse betik durur). Yerleşim ölçülerek kurulur
- * (ARKA boyları + canvas metrikleri; satırlar yukarıdan aşağı). Çapalar: bulusma ("50+"), solen ("100.000+"), motto
+ * (ARKA boyları + canvas metrikleri; satırlar yukarıdan aşağı). Çapalar: bulusma ("30+"), solen ("100.000+"), motto
  * (pencere dışı üç satırın birleşik kutusu). Yalnız arka duvar (öteki dokular bayt bayt aynı kalır):
  *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png --onizleme .qa/icinden3/gb/g7-doku
  * Kısmi çalışmada _duvar-olcum.json'daki öteki dokuların ölçümleri ve çapaları (sol duvar: uye, il_ilce) korunur.
@@ -278,7 +278,7 @@ const IC_PAN = { lon0: 29.0, zAlt: 0.3, zUst: 0.95, uzun: 5.33 + 5.58 };
 const CEPHE_DAG = { lon0: 29.6, zAlt: 0.8, zUst: 1.5 }; // 29,60…33,11 D: Beydağları, Antalya ovası çukuru, Geyik Dağları
 const RAKAM_0 = 0.732; // Lora '0' mürekkebi (−16…716)/1000 → "rakam mürekkebi h" için font = h / 0,732 ('5' bayrağı 765'e çıkar)
 // G-B arka duvar boyları (m; büyük harf yüksekliği, rakamlarda '0' mürekkebi) ve dikey aralıklar (mürekkep → mürekkep).
-// Brief §14.4.4'ün boyları (başlık 0,26, "50+" 0,60, etiket 0,20, Şölen 0,20, "100.000+" 0,35, tarih/yer 0,14) pencereye
+// Brief §14.4.4'ün boyları (başlık 0,26, buluşma rakamı 0,60, etiket 0,20, Şölen 0,20, "100.000+" 0,35, tarih/yer 0,14) pencereye
 // (2,95 × ~2,8 m) birlikte sığmıyor: "Gençlik Buluşmaları" 0,26'da 3,55 m → iki satır; "gençlik buluşması" 0,20'de 2,42 m,
 // "Bir Gençlik Şöleni" 2,43 m, "100.000+" 0,35'te 2,06 m → iki sütun yan yana kurulamıyor, satırlar alt alta. Okunurluk
 // tabanları §12.3: başlık ≥ 40, rakam ≥ 60, ikincil ≥ 24 video px (POZ_A'da pencerede ~165–245 video px/m).
@@ -318,8 +318,8 @@ const arti = (n) => {
   if (!/^\d{1,3}(\.\d{3})*\+$/.test(s)) throw new Error(`toLocaleString("tr-TR") beklenmedik: ${s} (Node ICU?)`);
   return s;
 };
-const bP = bulusmalar.paragraphs[3]; // content.ts:83 "… son 5 yılda … 50'den fazla gençlik buluşması gerçekleştirilmiştir."
-const mB = bP.match(/\b(son (\d+) yılda) .+? (\d+)'den fazla (gençlik buluşması) /);
+const bP = bulusmalar.paragraphs[3]; // content.ts:83 "… son 5 yılda … 30'dan fazla gençlik buluşması gerçekleştirilmiştir."
+const mB = bP.match(/\b(son (\d+) yılda) .+? (\d+)'[dt][ae]n fazla (gençlik buluşması) /); // ek sayıya bağlı: 30'dan, 50'den
 if (!mB || +mB[2] !== facts.meetingsYears || +mB[3] !== facts.meetings)
   throw new Error("content.ts bulusmalar.paragraphs[3] ya da facts.meetings/meetingsYears değişti; arka duvar yeniden kurulmalı");
 const sP = solenler.paragraphs[0]; // content.ts:91 "16 Mayıs 2026 tarihinde Kocaeli Stadyumu'nda düzenlenen "Bir Gençlik Şöleni", … 100 binden fazla genci …"
@@ -338,7 +338,7 @@ if (bB.length !== 2) throw new Error("content.ts bulusmalar.title iki kelime de�
 const METIN = {
   baslik: bB, // ["Gençlik", "Buluşmaları"]
   baslikEn: "Youth Meetings", // d6 EN satırı (brief §14.4.4; DOM'da data-onay="en"; onay-listesi)
-  bulusmaSayi: arti(facts.meetings), // content.ts:153 → "50+"
+  bulusmaSayi: arti(facts.meetings), // content.ts:153 → "30+"
   bulusma: mB[4], // "gençlik buluşması" (bulusmalar.paragraphs[3])
   bulusmaYil: mB[1], // "son 5 yılda" (aynı cümle; sayı = facts.meetingsYears denetlendi)
   solen: mS[3], // "Bir Gençlik Şöleni" (solenler.paragraphs[0])
@@ -458,7 +458,7 @@ async function duvarlariHazirla(sayfaB) {
 
   /* ---------- arka duvar (G-B §14.4.4): x −7,38…−1,80; telefon penceresi x −7,0…−3,95 (390×844'te görünen 592 video px,
      brief §2.1); fotoğraf yok. Satırlar font = 1 m ile ölçülür (canvas mürekkep üst/alt, genişlik), sonra yukarıdan aşağı
-     dizilir: başlık iki satır (tek satırda 3,55 m) → EN → "50+" ve yanında iki satır etiket → Şölen bloğu (sağa hizalı)
+     dizilir: başlık iki satır (tek satırda 3,55 m) → EN → buluşma rakamı ("30+") ve yanında iki satır etiket → Şölen bloğu (sağa hizalı)
      → tarih · yer. Pencere dışında (yalnız yatay) slogan üç satır + hashtag (E turu "etkinlik" bloğunun yerinde). ---------- */
   const A = { ad: "duvar-arka.png", w: 2790, h: 2000, pxm: PXM, u0: -7.38, H: DUVAR_H, ofs: 5.33, pencere: [-7.0, -3.95] };
   A.zDag = (u) => zIc(A.ofs + (u - A.u0));
@@ -497,9 +497,9 @@ async function duvarlariHazirla(sayfaB) {
   z.b1 = B.zUst - m.b1.ust * f.t;
   z.b2 = z.b1 - B.baslikAra;
   z.en = z.b2 - m.b2.alt * f.t - B.gEn - ust("en");
-  const ust50 = z.en - alt("en") - B.gRakam; // "50+" mürekkep üstü ('5' bayrağı)
+  const ust50 = z.en - alt("en") - B.gRakam; // buluşma rakamının mürekkep üstü ("30+": '3'/'0' 716/1000; G'deki "50+": '5' bayrağı 765)
   z.n1 = ust50 - ust("n1");
-  z.e1 = ust50 - ust("e1"); // etiket 1. satır: yükselenler '5' üstüyle aynı
+  z.e1 = ust50 - ust("e1"); // etiket 1. satır: yükselenler rakamın mürekkep üstüyle aynı
   z.e2 = z.n1; // etiket 2. satır: rakamla aynı taban
   // Şölen bloğu: başlık → tarih · yer → "100.000+ genç" (rakam satırı en altta: tarih satırı 2,88 m, sol ucu bitkinin
   // önünde kalmasın diye z ≥ 1,3'te; rakam satırı −6,42'den başlar, dağın alçak kısmının üstünde; DOM bant satırı (2) ile

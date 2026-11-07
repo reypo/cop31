@@ -54,7 +54,7 @@ export type Etiket = {
   readonly dy?: number;
 };
 /**
- * d6 arka duvar çapaları (p6; G7 §14.4.4): `bulusma` ("50+"), `solen` ("100.000+"), `motto` (backCover.quote); sıra =
+ * d6 arka duvar çapaları (p6; G7 §14.4.4): `bulusma` ("30+"), `solen` ("100.000+"), `motto` (backCover.quote); sıra =
  * d6 bandının 3 spot satırı. p6.json G7 render'ıyla gelene dek manifestte yok (uyarı).
  */
 export type DuvarCapaAd = "bulusma" | "solen" | "motto";

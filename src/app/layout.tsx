@@ -81,8 +81,11 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  // data-scroll-behavior: /brosur'un yumuşak çapa kaydırması (html{scroll-behavior:smooth}) rota geçişinde Next 16'nın
+  // tepeye kaydırmasını da yumuşatıyordu (sayfa önceki konumda açılıp ~1 s kayıyor, aradaki bölümler ekran dışında
+  // "giriyordu"). Öznitelikle Next geçiş sırasında geçici `auto` yazar (docs: upgrading/version-16 "Scroll Behavior Override").
   return (
-    <html lang="tr" className={`${montserrat.variable} ${greatVibes.variable}`}>
+    <html lang="tr" data-scroll-behavior="smooth" className={`${montserrat.variable} ${greatVibes.variable}`}>
       <body>{children}</body>
     </html>
   );

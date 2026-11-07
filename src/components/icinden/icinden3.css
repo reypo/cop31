@@ -1826,8 +1826,8 @@
 /*
  * Müşteri: "animasyon akışının her aşamasında kullanıcı direkt broşüre erişebilmeli". Sağ üst köşe, metin bantlarının
  * boş bıraktığı üst 44 px şeridinde (bant-ust dolgusu); kadraj okuması düğmenin soluna kayar (--v3-brosur-g).
- * d0'da gizli: açılış şeridinin sağında aynı düğme duruyor. Kapanış paneli (z 30) kayıp gelince üstünü örter; orada
- * slogan altındaki düğme var. Kiosk'ta gizli (.v3[data-kiosk="1"] .v3-dijital kuralı). Açık ve koyu sahnede okunsun
+ * d0'da gizli: açılış şeridinin sağında aynı düğme duruyor. Kapanış paneli (z 30) kayıp gelince üstünü örter; kapanışta
+ * gizli (slogan altındaki düğme var), yalnız kısa ekranda panelin üstünde görünür (aşağıda). Kiosk'ta gizli (.v3[data-kiosk="1"] .v3-dijital kuralı). Açık ve koyu sahnede okunsun
  * diye marka mavisi dolgu + gölge; ön getirme yok (DijitalBrosur prefetch={false}).
  */
 .v3-brosur-sabit {
@@ -1853,18 +1853,46 @@
     opacity 200ms linear,
     background-color 150ms ease;
 }
+/* Dokunma kutusu ≥ 44 px (Apple HIG 44 pt; görünür hap 30 px): görünüm aynı, kutu 7 px yukarı/aşağı, 4 px yana taşar. */
+.v3-brosur-sabit::before {
+  content: "";
+  position: absolute;
+  inset: -7px -4px;
+}
 .v3-brosur-sabit:hover {
   background: color-mix(in srgb, var(--color-brand-blue) 82%, #000);
 }
 .v3-brosur-sabit:focus-visible {
   outline: 2px solid #fff;
 }
-.v3[data-rol="lombar"] .v3-brosur-sabit {
+/*
+ * d0'da (şeritteki düğme) ve kapanışta gizli: kapanışta panel (z 30) üstünü örter, görünmeyen düğme Shift+Tab ile odak
+ * alıyordu (WCAG 2.4.11); orada slogan altındaki düğme var.
+ */
+.v3:is([data-rol="lombar"], [data-rol="kapanis"]) .v3-brosur-sabit {
   visibility: hidden;
   opacity: 0;
   transition:
     opacity 200ms linear,
     visibility 0s linear 200ms;
+}
+/*
+ * Kısa ekranda (yatay telefon, 844×390; alçak pencere) slogan altındaki düğme kapanışa varışta ekranın altında kalıyor
+ * (y ≈ 494): sabit düğme kapanışta da görünür, panelin üstünde (z 31). Panel içeriği 480 px'lik orta sütunda; sağ üst köşe
+ * varışta boş. Kiosk'ta yine gizli.
+ */
+@media (max-height: 480px) {
+  .v3:not([data-kiosk="1"])[data-rol="kapanis"] .v3-brosur-sabit {
+    z-index: 31;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 200ms linear;
+  }
+}
+/* ?azalt=1 akış düzeni: kök data-rol SSR'daki "lombar"da kalır (kur() çalışmaz); düğme baştan sona görünür. */
+.v3[data-azalt="1"] .v3-brosur-sabit {
+  visibility: visible;
+  opacity: 1;
 }
 .v3:not([data-kiosk="1"]) {
   --v3-brosur-g: 136px;

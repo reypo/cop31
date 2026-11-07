@@ -1,6 +1,6 @@
 {
  "surum": 3,
- "olusturma": "2026-11-04T16:08:43.983Z",
+ "olusturma": "2026-11-07T14:17:20.180Z",
  "kaynak": "render",
  "fps": 30,
  "master": 1920,
@@ -2041,24 +2041,24 @@
     "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t56.25fce188.h264.mp4",
-      "hevc": "/icinden/v/d/t56.bfbad7f6.hevc.mp4",
-      "av1": "/icinden/v/d/t56.3223f197.av1.mp4"
+      "h264": "/icinden/v/d/t56.e70ea5e8.h264.mp4",
+      "hevc": "/icinden/v/d/t56.2e38fe21.hevc.mp4",
+      "av1": "/icinden/v/d/t56.fd0cd473.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t56.37ff1a37.h264.mp4",
-      "av1": "/icinden/v/y/t56.3dc7360f.av1.mp4"
+      "h264": "/icinden/v/y/t56.7b3d6222.h264.mp4",
+      "av1": "/icinden/v/y/t56.952c9d2e.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 527205,
-      "hevc": 398195,
-      "av1": 321557
+      "h264": 525717,
+      "hevc": 401345,
+      "av1": 321200
      },
      "yatay": {
-      "h264": 543416,
-      "av1": 363057
+      "h264": 543169,
+      "av1": 363404
      }
     },
     "geri": {
@@ -2067,24 +2067,24 @@
      "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r65.551fb9e3.h264.mp4",
-       "hevc": "/icinden/v/d/r65.1cf3331c.hevc.mp4",
-       "av1": "/icinden/v/d/r65.543fb399.av1.mp4"
+       "h264": "/icinden/v/d/r65.19b62e99.h264.mp4",
+       "hevc": "/icinden/v/d/r65.4bd2af9f.hevc.mp4",
+       "av1": "/icinden/v/d/r65.bfe74f1d.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r65.8130e958.h264.mp4",
-       "av1": "/icinden/v/y/r65.0b4ea68b.av1.mp4"
+       "h264": "/icinden/v/y/r65.012dd422.h264.mp4",
+       "av1": "/icinden/v/y/r65.73448fb1.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 389308,
-       "hevc": 285073,
-       "av1": 257118
+       "h264": 393092,
+       "hevc": 286012,
+       "av1": 257408
       },
       "yatay": {
-       "h264": 423491,
-       "av1": 284766
+       "h264": 420583,
+       "av1": 285300
       }
      }
     },
@@ -2131,14 +2131,14 @@
    "okumaDurak": "arka duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p6.e3c4c59f.webp",
-     "bayt": 43034,
-     "lqip": "data:image/webp;base64,UklGRjABAABXRUJQVlA4ICQBAAAwBwCdASoYACsAPtFcpk4oJSMiKqgBABoJQBcMZi3/1NJLfhVMy/vy1xln57d0yYQAZcfC826OyKgYM9pssI9R9QAA/vd4nIV7doZEZmMNpmZG5rmi7rrUxyNhCFHlM/DWaaRIY035j6wOyg/4jkUtStB+3eOXDDrVFi2u2BiZvP756m6kcXSYsWpZ/vXwkaRWtMgMH6fNFHuijrpXyXMYciMwFDTlZWsjJMcC/6NipCHuTof2zXqzI+jdZ2I5FiADFdldaFBj//8zow+o2Hg6ZFVSnoecm9N+g4iY21TV2M0FS/t8YTYDOfZcENCBrMH04AoTtp2Xwh9Cut1ItUuzFGXC5M3Y5P7O5VfXZGIN2ddg4Gdf+xVl5pCp1Hg5r5mwxHwA"
+     "dosya": "/icinden/p/d/p6.8d5a6fd9.webp",
+     "bayt": 42986,
+     "lqip": "data:image/webp;base64,UklGRiQBAABXRUJQVlA4IBgBAACwBwCdASoYACsAPtFaoU0oJSKiKqwBABoJQBcMY2ecDut/88J5W4j03yO6eC5izGn9yJL8s9I0PVdzLXqriPaAMuGcCUTAAP73eKABC5kv2k8fIKSITF2i4j1tz7PXhpm2eQb2JpX0BilQsJgYhjQFc5iHL2ayI/bl2zHRKAiJGDK9f+GUbkzyGt1M9kDcBznP9MEwTUYmS7+b3Yf/IS0nrNUoYqK2v5qujubi+HUvNvBAlHSQszigKL/s1iK2cSx49cE3OQ7TO2yVXQ8oXuOjC7Ua0Jst6/6KIWDFaobhYaXnH3ogw8CxKPxX6UYiy4qIf/ZP8DsLWWZAonkuoCU9UFKKPZKj89ETLSBwJ8xaSMLFj5nJAAAA"
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p6.011cb558.webp",
-     "bayt": 43218,
-     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAADwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBYdgxtv/xTiB+vxOMsAAMyaA75XZKKP3DehxMoMO7GPkHCl6iaGjohQQu7wHLfuBHmoTq6RfB8/dzeV4nQ0Xy5FqChoHbijSX0dN8qle7UF0Bh5rFM55lPtWgaKn3W4gtT5ocGw1RWl2ct1dJ+MwOdA6gAA"
+     "dosya": "/icinden/p/y/p6.d4548004.webp",
+     "bayt": 43384,
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAACwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBYdgxsYEiYooFOrOADMmgO+V2Sij9w3ocTKDDuxj5BijtP/QKswC+LqZI6jRlFHRAjzUJ1dIvPePLi7P9lpF8uRagoaB24o0l9HTfKo8U5sQ0JuLJsYQRqWoJJdQ+mJcfdeUcdqtrIv5DgPv+ZvhOMs46gA"
     }
    },
    "dongu": null,
@@ -2148,24 +2148,24 @@
     "kare": 48,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t67.9bf1289f.h264.mp4",
-      "hevc": "/icinden/v/d/t67.35bb3844.hevc.mp4",
-      "av1": "/icinden/v/d/t67.a4d35991.av1.mp4"
+      "h264": "/icinden/v/d/t67.39e343f4.h264.mp4",
+      "hevc": "/icinden/v/d/t67.ee4e2078.hevc.mp4",
+      "av1": "/icinden/v/d/t67.c432d0c7.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t67.27388584.h264.mp4",
-      "av1": "/icinden/v/y/t67.7c4785cc.av1.mp4"
+      "h264": "/icinden/v/y/t67.601ecc0d.h264.mp4",
+      "av1": "/icinden/v/y/t67.6ff97305.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 315770,
-      "hevc": 237514,
-      "av1": 202674
+      "h264": 317389,
+      "hevc": 240096,
+      "av1": 202369
      },
      "yatay": {
-      "h264": 333830,
-      "av1": 231063
+      "h264": 338672,
+      "av1": 228165
      }
     },
     "geri": {
@@ -2174,24 +2174,24 @@
      "kare": 48,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r76.aa5e7dbd.h264.mp4",
-       "hevc": "/icinden/v/d/r76.cd902645.hevc.mp4",
-       "av1": "/icinden/v/d/r76.6eef5b5f.av1.mp4"
+       "h264": "/icinden/v/d/r76.6852fe18.h264.mp4",
+       "hevc": "/icinden/v/d/r76.5604da98.hevc.mp4",
+       "av1": "/icinden/v/d/r76.5693170e.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r76.b957759d.h264.mp4",
-       "av1": "/icinden/v/y/r76.f595fddb.av1.mp4"
+       "h264": "/icinden/v/y/r76.e2f029e0.h264.mp4",
+       "av1": "/icinden/v/y/r76.3d4f0ba6.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 222281,
-       "hevc": 167323,
-       "av1": 152123
+       "h264": 221187,
+       "hevc": 168468,
+       "av1": 151864
       },
       "yatay": {
-       "h264": 241788,
-       "av1": 177247
+       "h264": 244085,
+       "av1": 176941
       }
      }
     },
@@ -2201,13 +2201,13 @@
     "duvarCapalari": [
      {
       "ad": "bulusma",
-      "dikey": [160.4, 536.9],
-      "yatay": [440.4, 341.5]
+      "dikey": [161.4, 533.9],
+      "yatay": [441.4, 338.5]
      },
      {
       "ad": "solen",
-      "dikey": [264.7, 762.1],
-      "yatay": [544.7, 566.7]
+      "dikey": [264.7, 756],
+      "yatay": [544.7, 560.7]
      },
      {
       "ad": "motto",
@@ -2224,14 +2224,14 @@
    "okumaDurak": "sol duvar · ~3 m",
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p7.fbbca2ba.webp",
-     "bayt": 31794,
-     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ3TmnuXmi0S7S8cry19y7InjOk8alIOAdhF9G/bprjLJva1bkGtZLAA/vSA9vcdsYEB2WOvHad+g9XTU424lbcLNk3BTnBgIHf0LLhbWsHNeKkzBhfdNMenNj/3piv+STrGh/4/+IvH5DsG4/D2j3rbECU4X3exgcLbjyYdu/73tKETFu57MccH6Wk3yTWADAA5g/WCp6VNITatXL+slNg63JZBx1qUrJmGFtkKyotTeAfIIaLVfgWOMHJOcpCQpKVdZuu389/mE477GEbVkGwpUBVRQENsm/19NokHPB8g5EiMfiiQw/2Oany4U1lZBTj8hsTx/aesk3S2LgXWTOvgJj0RTXAfueU3pURem8L5prAFCdJpW5OzRRM+ICfNW0bDZddXW4KQ+3rYSiwVj0WDESIAAA=="
+     "dosya": "/icinden/p/d/p7.e7fd3b60.webp",
+     "bayt": 31720,
+     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ2wf+GVKuklUvk7Jpw/Bs2Q9yKMTHddwS6Ch8uWomGjwJ6UW5BqriAA/vSA+3uO2MEGaL7qwf01qnV01ONuJW3CzZNwU5wYCB39Cy4W1rBzXipMwYX3TTHqA4++hvStWmhZOG42BlYxmGSQghIeWqC/9LF0jtfwkvMhrWdkGNoTB0RyK6ptlUSA6hPam0ONycwb3wd1WN6kvnGAnDEALOu3Ll1hHGjvq0cXS4vAKKcrkU5ossU6zFvX7WZJRrfPRUlKuuxA4Sif4/25M12ZfnYBiNOo1I6LGgMsIMV6GFcXPNqWAZBwrxreJc3jnYpQUerMTCt31iR6wVa/vPWcMMue3H3ySQMaPdIcX9TOgEPampZwtIGqd2WmqVhhSYZ4Gm6KYCTlcIgzfoyyTDg9FgxEiAAAAA=="
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p7.722cef3d.webp",
-     "bayt": 27300,
-     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAwBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4Pn44wTV3CAA9yHZojChH+B/QsdnARicO+Ktrit0+WSZMOcbbJOr78zSH5wOKQHuB4KY8Xx/fA1c8dv7zbMlssX0QGIrnwLZB238t25HvtK/LeL8MF7zHXtkZhE9Bx4EcEIDshBbSXhjhAAA"
+     "dosya": "/icinden/p/y/p7.0689365f.webp",
+     "bayt": 27236,
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4Pn44wUnMGeAAPch2aIwoR/gf0LHZwEYnDvira4rdPlkmTDnG2yTq+/M0h+cDikB7geCmPF8f3wNXPHb+82zJbLF9EBiK58C2Qdt/LduR77Svy3K0Tgc6F09u4e5zttEX1JwsRTsZhATJSAA"
     }
    },
    "dongu": null,
