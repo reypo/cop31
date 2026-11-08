@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -69,11 +70,20 @@ export const kokViewport: Viewport = {
 /**
  * <html>/<body> kabuğu. data-scroll-behavior: /brosur'un yumuşak çapa kaydırması rota geçişinde Next 16'nın tepeye
  * kaydırmasını da yumuşatıyordu; öznitelikle Next geçiş sırasında geçici `auto` yazar (docs: upgrading/version-16).
+ *
+ * Ziyaretçi sayımı (9 Kasım 2026; kullanıcı: "siteye kaç kişinin girdiğini listeleyelim, backend bağlantısı olmasın"):
+ * Vercel Web Analytics. Kendi sunucumuz/veritabanımız yok; sayfa görüntülemesi aynı kökene (/_vercel/insights/*)
+ * gönderilir, rakamlar Vercel panelinde (proje → Analytics). Çerez yok, ziyaretçi 24 saatlik özetle sayılır. Adres
+ * değişince bir görüntüleme: /icinden'deki duraklar ve broşürdeki #p=N sayfa çevirmeleri sayılmaz. Panelde etkinleştirilmeden
+ * ve Vercel dışında betik 404 döner, site etkilenmez.
  */
 export function KokBelge({ dil, children }: { dil: Dil; children: ReactNode }) {
   return (
     <html lang={dil} data-scroll-behavior="smooth" className={`${montserrat.variable} ${greatVibes.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
