@@ -165,35 +165,11 @@
   color: rgb(85 84 84 / 0.85);
 }
 
-/* "Dijital broşür" düğmesi (G turu §14.4.6, slogan altı): sitenin düğmesi gibi beyaz, marka mavisi kontur. */
-/* Broşür düğmesi + dil seçici (7 Kasım: her aşamada) yan yana; dar ekranda alt alta. */
-.ic-kapanis-brosur-satir {
+/* Dil seçici (7 Kasım: her aşamada), slogan altı. Broşür artık kapanışın ilk ekranında (icinden3.css .v3-brosur-son). */
+.ic-kapanis-dil-satir {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
   margin-top: 14px;
-}
-.ic-kapanis-brosur {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1.5px solid var(--color-brand-blue);
-  border-radius: 999px;
-  background: #fff;
-  padding: 9px 18px;
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--color-brand-blue);
-  outline-offset: 2px;
-  transition: background-color 150ms ease;
-}
-.ic-kapanis-brosur:hover {
-  background: color-mix(in srgb, var(--color-brand-blue) 8%, #fff);
-}
-.ic-kapanis-brosur:focus-visible {
-  outline: 2px solid var(--color-brand-blue);
 }
 
 /* ============================== reduced-motion düzeni ============================== */

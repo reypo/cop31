@@ -7,10 +7,11 @@ import { METIN } from "./metin";
 
 /**
  * Kapanış (akış, snap'siz; docs/brief-icinden.md §1 son satır): logolar, "AK Parti Gençlik
- * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, hashtag (stant.hashtag: #YarınBanaEmanet), slogan, "Dijital broşür" düğmesi (G turu §14.4.6,
- * slogan altı; `brosur`) ve dil seçici (`dil`, 7 Kasım: her aşamada) ve atıf satırları (v3: brief-icinden-3 §9.6 —
+ * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, hashtag (stant.hashtag: #YarınBanaEmanet), slogan, dil seçici (`dilSecici`,
+ * 7 Kasım: her aşamada) ve atıf satırları (v3: brief-icinden-3 §9.6 —
  * Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî COP31 logosu; G turu: "Stant ve fidan görünümü temsilîdir."). Sahnenin
- * üstüne beyaz bir sayfa gibi kayarak gelir. İzin verilen linkler sosyal hesaplar, site, /brosur ve öteki dildeki /icinden.
+ * üstüne beyaz bir sayfa gibi kayarak gelir. İlk ekranı broşür (`brosur`, 8 Kasım 2026: müşteri "dünyaya dönünce aşağı
+ * kaydırarak broşüre"; Icinden3 BrosurSon); eskiden slogan altında küçük "Dijital broşür" düğmesiydi (G turu §14.4.6). İzin verilen linkler sosyal hesaplar, site, /brosur ve öteki dildeki /icinden.
  * Alıntı broşürün arka kapağıyla aynı tipografik tırnakla (“…”); meta satırlar orta noktasız, cümle. Metinler dile göre
  * (metin.ts `kapanis`); Türkçe sayfada İngilizce kalan lisans metinleri `lang="en"` (WCAG 3.1.2; birleşik metin birebir).
  */
@@ -29,6 +30,7 @@ export default function IcindenKapanis({
 
   return (
     <footer className="ic-kapanis">
+      {brosur}
       <div className="ic-kapanis-ic">
         <div className="ic-kapanis-logolar">
           <Image
@@ -75,12 +77,7 @@ export default function IcindenKapanis({
 
         <p className="ic-kapanis-etiket ic-serif">{M.etiket}</p>
         <p className="ic-kapanis-slogan font-script">{M.slogan}</p>
-        {brosur || dilSecici ? (
-          <div className="ic-kapanis-brosur-satir">
-            {brosur}
-            {dilSecici}
-          </div>
-        ) : null}
+        {dilSecici ? <div className="ic-kapanis-dil-satir">{dilSecici}</div> : null}
         <p className="ic-kapanis-etkinlik">
           {M.etkinlik.on}
           <span className="v3-nowrap">{M.etkinlik.tarih}</span>

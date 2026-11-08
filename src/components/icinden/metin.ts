@@ -57,8 +57,11 @@ export type IcindenMetin = {
     kimlikLogo: string;
     logoAlti: Parcali;
     ipucu: string;
-    /** d0 broşür kartı (8 Kasım 2026): üst etiket, broşürün kapak başlığı, eylem. */
-    brosurKart: { etiket: string; baslik: string; eylem: string };
+    /**
+     * Broşür kartı (8 Kasım 2026): üst etiket, broşürün kapak başlığı, eylem. d0'daki kart ve kapanışın ilk ekranı
+     * (`sayfa`: sayfa sayısının birimi, "26 sayfa").
+     */
+    brosurKart: { etiket: string; baslik: string; eylem: string; sayfa: string };
   };
   dunya: { baslik: string; govde: Parcali };
   emanet: { srBaslik: string; baslik: string; govde: string };
@@ -170,7 +173,7 @@ const TR: IcindenMetin = {
     logoAlti: { on: "", tarih: cop31.dates, son: `, ${cop31.venue}` },
     ipucu: "Aşağı kaydır",
     // Başlık broşürün kapağındaki (COP31_Brosur_TR.pdf s. 1).
-    brosurKart: { etiket: "Dijital broşür", baslik: "1 Milyon Genç, Tek Ortak Ev", eylem: "Broşürü aç" },
+    brosurKart: { etiket: "Dijital broşür", baslik: "1 Milyon Genç, Tek Ortak Ev", eylem: "Broşürü aç", sayfa: "sayfa" },
   },
   dunya: {
     baslik: "Dünya Antalya'da buluşuyor",
@@ -407,7 +410,7 @@ const EN: IcindenMetin = {
     logoAlti: { on: "", tarih: EN_TARIH, son: `, ${cop31.venue}` },
     ipucu: "Scroll down",
     // Kapak başlığı (COP31_Brosur_EN.pdf s. 1).
-    brosurKart: { etiket: "Digital brochure", baslik: "1 Million Youth, One Common Home", eylem: "Open the brochure" },
+    brosurKart: { etiket: "Digital brochure", baslik: "1 Million Youth, One Common Home", eylem: "Open the brochure", sayfa: "pages" },
   },
   dunya: {
     baslik: "The world meets in Antalya",

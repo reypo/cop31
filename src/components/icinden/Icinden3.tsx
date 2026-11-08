@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { OZET } from "@/components/brosur/sayfalar";
+import { OZET, SAYFA_SAYISI } from "@/components/brosur/sayfalar";
 import { DIL_ETIKET, DILLER, yol, type Dil } from "@/lib/dil";
 import { logos } from "@/lib/photos";
 import Cop31Logo from "./Cop31Logo";
@@ -106,20 +106,68 @@ function BrosurKart({ dil, T }: { dil: Dil; T: IcindenMetin["lombar"]["brosurKar
           <KitapSimgesi />
           {T.etiket}
         </span>{" "}
-        {/* Kapaktaki gibi iki satır: virgülden sonra satır başı ("1 Million Youth," / "One Common Home"). */}
         <span className="v3-brosur-kart-baslik">
-          {T.baslik.split(/(?<=,) /).map((parca, i) => (
-            <span key={i} className="v3-brosur-kart-satir">
-              {i ? " " : null}
-              {parca}
-            </span>
-          ))}
+          <KapakBasligi baslik={T.baslik} />
         </span>{" "}
         <span className="v3-brosur-kart-eylem">
           {T.eylem} <span aria-hidden="true">→</span>
         </span>
       </span>
     </Link>
+  );
+}
+
+/** Kapaktaki gibi iki satır: virgülden sonra satır başı ("1 Million Youth," / "One Common Home"). */
+function KapakBasligi({ baslik }: { baslik: string }) {
+  return baslik.split(/(?<=,) /).map((parca, i) => (
+    <span key={i} className="v3-brosur-satir">
+      {i ? " " : null}
+      {parca}
+    </span>
+  ));
+}
+
+/**
+ * Kapanışın ilk ekranı: broşür (8 Kasım 2026; müşteri: "animasyon bitip dünyaya dönünce aşağı kaydırarak broşüre
+ * geçelim"; kullanıcı seçimi: kapanış broşürle başlasın, kendiliğinden açılmasın). d12'den aşağı kaydırınca gelen panelin
+ * ilk ekranını doldurur: büyük kapak (kitap görünümü), etiket + sayfa sayısı, kapak başlığı, "Broşürü aç"; bloğun tamamı
+ * tek bağlantı. Kurum, sosyal hesaplar ve atıflar altta. Kapak 240/800 px sayfa görüntüsü (AVIF 9/59 kB; tembel: kapanışa
+ * yaklaşınca iner). Kiosk'ta gizli (kapanış eskisi gibi atıflara kayar).
+ */
+function BrosurSon({ dil, T }: { dil: Dil; T: IcindenMetin["lombar"]["brosurKart"] }) {
+  const g = (w: number, uzanti: "avif" | "webp") => `/brosur/${dil}/p01-${w}.${OZET[dil][0]}.${uzanti}`;
+  return (
+    <div className="v3-brosur-son">
+      <Link href={yol(dil, "/brosur")} prefetch={false} className="v3-brosur-son-bag">
+        <span className="v3-brosur-son-kapak">
+          <picture>
+            <source srcSet={`${g(240, "avif")} 240w, ${g(800, "avif")} 800w`} sizes="(orientation: landscape) 280px, 240px" type="image/avif" />
+            <img
+              src={g(240, "webp")}
+              srcSet={`${g(240, "webp")} 240w, ${g(1240, "webp")} 1240w`}
+              sizes="(orientation: landscape) 280px, 240px"
+              alt=""
+              width={240}
+              height={340}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+        </span>{" "}
+        <span className="v3-brosur-son-metin">
+          <span className="v3-brosur-son-etiket">
+            <KitapSimgesi />
+            {T.etiket} · {SAYFA_SAYISI} {T.sayfa}
+          </span>{" "}
+          <span className="v3-brosur-son-baslik">
+            <KapakBasligi baslik={T.baslik} />
+          </span>{" "}
+          <span className="v3-brosur-son-eylem">
+            {T.eylem} <span aria-hidden="true">→</span>
+          </span>
+        </span>
+      </Link>
+    </div>
   );
 }
 
@@ -562,7 +610,7 @@ export default function Icinden3({ dil }: { dil: Dil }) {
       }
     >
       {D.map(bolum)}
-      <IcindenKapanis dil={dil} brosur={<DijitalBrosur dil={dil} className="ic-kapanis-brosur" />} dilSecici={<DilSecici dil={dil} className="ic-kapanis-dil" />} />
+      <IcindenKapanis dil={dil} brosur={<BrosurSon dil={dil} T={M.lombar.brosurKart} />} dilSecici={<DilSecici dil={dil} className="ic-kapanis-dil" />} />
     </VideoSahne>
   );
 }
