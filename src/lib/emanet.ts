@@ -250,9 +250,8 @@ export const emanetAlanlari: readonly EmanetAlani[] = [
 ] as const;
 
 /**
- * Antalya Expo (Aksu) — COP31 alanı. Değer src/components/dunya/iller.ts içindeki ANTALYA_EXPO
- * sabitinden KOPYALANDI (import edilmez: src/lib bileşen klasörlerine bağımlı olmasın).
- * İki dosyada da aynı kalmalı.
+ * Antalya Expo (Aksu) — COP31 alanı. Değer /dunya konseptinin (8 Kasım 2026'da kaldırıldı) iller.ts'indeki
+ * ANTALYA_EXPO sabitinden kopyalanmıştı.
  */
 const ANTALYA_EXPO = { lat: 36.94, lng: 30.86 } as const;
 

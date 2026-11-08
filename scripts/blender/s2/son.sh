@@ -15,7 +15,8 @@
 #   kodla.mjs yazar (tip "son-kare"). Bu durumda son.sh p8.json'a dokunmaz ve p6 kopyası yapılır. Koruma yalnız eski plaka
 #   henüz taşınmamışsa (render-son/p8 yok VE p8.json tip "son-kare" değil) devrede kalır.
 #   p4 = l4[0] ("dongu"; kodla.mjs tablosu) — ayrıca render yok.
-# Dokular: duvar-arka / duvar-sol / ekran-soz / cephe-on (S2a) yoksa son render reddedilir (S2_GECICI=1 ile geçilir).
+# Dokular: duvar-arka / duvar-sol / ekran-fidan / ekran-cop / cephe-on (S2a; 8 Kasım 2026: ekran-soz.png yerine iki fotoğraf)
+#   yoksa son render reddedilir (S2_GECICI=1 ile geçilir).
 # Ortam: S2_EK="--yikama_w 300 …" (sahne.py'ye ek argüman), S2_BOSLUK (s), S2_GECICI=1.
 # F turu (brief §13, §13.5 F-B): sahne.py varsayılanı --profil fiske (eski için S2_EK="--profil eski"). F-B süreleri: t34b
 #   t34 kare 36–59 (24), t45 54, t56 54, t67 48, t78 60 kare (sahne.py SON_KARE). Parlama: F-B t34 kare 36–38 (36 tam
@@ -44,7 +45,7 @@ mkdir -p $O
 KLIPLER=${*:-"t34b l4 t45 t56 t67"}
 
 eksik=""
-for d in duvar-arka.png duvar-sol.png ekran-soz.png cephe-on.png; do [ -f "$DOKU/$d" ] || eksik="$eksik $d"; done
+for d in duvar-arka.png duvar-sol.png ekran-fidan.png ekran-cop.png cephe-on.png; do [ -f "$DOKU/$d" ] || eksik="$eksik $d"; done
 if [ -n "$eksik" ] && [ "${S2_GECICI:-0}" != "1" ]; then
   echo "[HATA] S2a dokuları eksik:$eksik ($DOKU). Son render yapılmadı (geçici düz renkle zorlamak için S2_GECICI=1)."
   exit 2

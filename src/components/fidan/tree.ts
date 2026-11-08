@@ -1,6 +1,9 @@
 /**
  * Fidan geometrisi (ağaç birimi; gövde x≈200'de, toprak y=470, kök uçları y≤700).
  *
+ * /fidan konsepti 8 Kasım 2026'da kaldırıldı; bu dosya /icinden'in S3 render'ındaki ağacın kaynağı olarak kalır
+ * (scripts/blender/s3/agac_disa.mjs Node ile içe aktarır). Değişirse fidan klipleri yeniden render edilmeli.
+ *
  * Her şey modül yüklenirken, seed'li bir PRNG ile (Math.random YOK) üretilir;
  * sunucu ve istemci aynı çıktıyı verir → hydration uyuşmazlığı olmaz.
  * Koordinatlar 0,1 hassasiyete yuvarlanır.

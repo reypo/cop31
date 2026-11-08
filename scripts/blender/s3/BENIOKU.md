@@ -192,5 +192,10 @@ lc 23/27/32. Fidan bölümü dikey AV1 1,134 MB, HEVC 1,114 MB (posterler dahil)
   S2_DOKU=D:/soft/cop31-varlik/s2/doku-en S2_KOK=D:/soft/cop31-varlik/render-son-en bash scripts/blender/s2/son.sh l5 t56 t67
   ```
   `render-son-en/t34a/` = `render-son/t34a/` sabit bağları (S1, yazısız). Kodlama: `kodla.mjs --dil en` (docs/klip-oynatma.md §10).
+- **d7 ekran fotoğrafları + hashtag düzeltmesi (8 Kasım 2026, müşteri; onay-listesi §14.1-G):** sol duvardaki iki 50″ ekranda yazı
+  yerine fotoğraf (`ekran-fidan.png` / `ekran-cop.png`, iki dilde aynı; S2 `sahne.py` ekran başına malzeme `ekran_foto_0/1`,
+  `EKRAN_G` 1,8, koyu panel tabanı 0,04), "#YarınBanaEmanet" (arka duvar, ön cephe, kiosk). Hangi klipte göründüğü ışın testiyle
+  ölçüldü (`.qa/icinden-ekran/gorunurluk-ozet.json`; teslim kırpımları): iki dilde S3 t34b l4 t45 t79 ve S2 t56 t67 (+ p6/p7) yeniden;
+  l5/p5'te değişen yüzey yok (0 örnek), dokunulmadı. Komut: `.qa/icinden-ekran/render/calistir.sh` (klip başına son.sh, kaldığı yerden).
 - EEVEE arızası (7 Kasım önizlemesi, iki kez): kare ışıksız (yalnız emisyonlu yüzeyler), 13–16 s/kare; aynı komut sonra normal.
   Tam render'da her klipten sonra `.qa/icinden-en/render/parlaklik.py` (karşı master'a luma oranı) denetler, karanlık kare yeniden işlenir.

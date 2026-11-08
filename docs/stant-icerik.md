@@ -55,7 +55,7 @@ Not: brief'te geçen "standın 6. sayfası" antetteki PAGE 6'dır, yani PDF'in 7
 | Koyu totem, ana (s.2, 5) | İklim, doğa ve sıfır atık bize miras. | okundu |
 | Koyu totem, alt (s.5; s.2'de kısmen) | Tarihe göre - 12.000 yıl önceden bugüne. | kısmen ("Tarihe göre" soluk) |
 | Büyük giriş pankartı, krem zemin üzerinde koyu yeşil dağ silüeti (s.4) | İklim, doğa, sıfır atık bize miras. | okundu (totemdeki "ve"li yazımdan farklı) |
-| Büyük giriş pankartı, sol alt (s.4) | #YaniBanaEmanet | okundu |
+| Büyük giriş pankartı, sol alt (s.4) | #YarınBanaEmanet | stant PDF'inde #YaniBanaEmanet okunmuştu, müşteri 8 Kasım'da #YarınBanaEmanet olarak düzeltti |
 | Büyük giriş pankartı, sağ alt (s.4) | GençİKlim - 12.000 Yıllık Emanet - İçeride → | okundu |
 | Sol turuncu dikey pankart (s.3) | Gel, oyna! Come and play! | okundu |
 | Oyun alanı koyu bandı, TR (s.3) | Oyna - Sen olsan ne yapardın? ("Oyna" altın sarısı) | okundu |
@@ -158,7 +158,7 @@ Renkler render'lardan PIL ile örneklendi (bölge medyanı). Render ışığı (
 | Turuncu pankart | sağ dikey s.2 `#D98D5A`, sol dikey s.3 `#E69A64`; birleşik `#DF9560` | (stant.ts'te alan yok) `#DF9560`. Marka turuncusu `#F08322` bu ailede. |
 | Ahşap | dikey çıtalar s.3/s.4 birleşik `#B49168`; amfi bankı (aydınlık) s.6 `#DBB484` | `ahsap: "#B49168"` |
 | Bordo (sütun çipi ve numarası) | s.5 `#58281F` (render koyu; gözle `#7A2A1E` civarı) | — |
-| Altın vurgu ("Oyna", "#YaniBanaEmanet", halkadaki "BUGÜN" ve ▲) | "Oyna" s.3 `#C0A665`, hashtag s.4 `#AA9671` | — |
+| Altın vurgu ("Oyna", "#YarınBanaEmanet", halkadaki "BUGÜN" ve ▲) | "Oyna" s.3 `#C0A665`, hashtag s.4 `#AA9671` | — |
 | Zemin halkası iç segmentleri | yeşil `#495F35`, mavi `#3B4C5E`, oker `#8B5C24` (gölgede) | `donemler` renkleri bu üç aileye ve marka tokenlarına dayanıyor |
 
 `donemler` renkleri kronolojik sıcaktan soğuğa ilerliyor. Antik dönemler turuncu ve krem tonlarında (Neolitik `#F2C48D` → Helenistik-Roma `#A9581C`, Lidya'da marka turuncusu `#F08322`). Orta çağ mavi ailesinde (Bizans `#5FA3CF`, Selçuklu marka mavisi `#0C77B6`, Akkoyunlu marka lacivert `#1B4F9C`). Osmanlı marka yeşili `#47B27A`, Osmanlı'dan bugüne marka teal `#1F8879`. Doğal miras `#2F5D4A`: standın koyu yeşilinin bir ton açığı, küre üzerinde boşluk gibi görünmesin diye.

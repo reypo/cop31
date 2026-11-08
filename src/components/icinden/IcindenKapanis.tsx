@@ -7,7 +7,7 @@ import { METIN } from "./metin";
 
 /**
  * Kapanış (akış, snap'siz; docs/brief-icinden.md §1 son satır): logolar, "AK Parti Gençlik
- * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, #YaniBanaEmanet, slogan, "Dijital broşür" düğmesi (G turu §14.4.6,
+ * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, hashtag (stant.hashtag: #YarınBanaEmanet), slogan, "Dijital broşür" düğmesi (G turu §14.4.6,
  * slogan altı; `brosur`) ve dil seçici (`dil`, 7 Kasım: her aşamada) ve atıf satırları (v3: brief-icinden-3 §9.6 —
  * Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî COP31 logosu; G turu: "Stant ve fidan görünümü temsilîdir."). Sahnenin
  * üstüne beyaz bir sayfa gibi kayarak gelir. İzin verilen linkler sosyal hesaplar, site, /brosur ve öteki dildeki /icinden.

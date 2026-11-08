@@ -71,6 +71,17 @@ KLIPLER = {
 }
 
 
+# Fotoğraflı ekranlar (8 Kasım 2026): emisyon gücü ve koyu panel taban çarpanı. Ölçüm (p7 = t67[47], 1920² EEVEE TAA 32, AgX
+# Punchy, pozlama 0,3; ekran içi %4 kenar payıyla, sRGB luma ort. / p99 / kırpılan [kanal ≥ 254]; yan duvar baskısı 137,5 / 116,2):
+#   g 1,0 → fidan 114,9 / 176 / %0, çöp 87,4 / 174 / %0      g 1,5 → 133,5 / 192 / %0, 104,1 / 190 / %0
+#   g 2,0 → 146,2 / 202 / %0, 116,1 / 200 / %0 (eski "Sen de söz ver." değeri)      g 3,0 → 163,1 / 214 / %0, 132,8 / 213 / %0
+# Hiçbirinde kırpılma yok (AgX); 1,8'de iki ekranın ortalaması yan duvar baskılarının ortalamasına (126,9) eşit, parlak yerler
+# duvarın ~45 düzey üstünde (ışıklı ekran), 3,0 soluk/yıkanmış. Taban 1,0 (fotoğraf baskı gibi de aydınlanır) karşılaştırması:
+# g 2,0'da +6 düzey, karşıtlık düşük → 0,04 (koyu panel). Kontak: .qa/icinden-ekran/kalibre/kalibre-kontak.png.
+EKRAN_G = 1.8
+EKRAN_TABAN = 0.04
+
+
 def ek_arg(p):
     p.add_argument("--klip", required=True, choices=list(KLIPLER))
     p.add_argument("--kareler", default="")
@@ -90,7 +101,7 @@ def ek_arg(p):
     # E turu (brief §12.3)
     p.add_argument("--yikama_w", type=float, default=260.0)     # duvar yıkama spotu gücü (W, EEVEE; CARP uygulanır); önizlemede ayarlanır
     p.add_argument("--yikama_golge", type=float, default=1.0)   # yıkama spotu gölge çözünürlük ölçeği (VRAM geri dönüşü §12.7-9: 0,5)
-    p.add_argument("--ekran_g", type=float, default=2.0)        # "Sen de söz ver." ekranlarının emisyon gücü (kiosk ekranıyla aynı)
+    p.add_argument("--ekran_g", type=float, default=EKRAN_G)    # sol duvardaki iki fotoğraflı ekranın emisyon gücü (8 Kasım 2026; EKRAN_G)
     p.add_argument("--t78_rampa", type=float, default=0.0)      # t78 zaman eğrisi: 0 easeInOutSine (eski t56); 0,3 → tepe hız −%9 (bulanıklık yedeği)
     p.add_argument("--carpisma", action="store_true")           # render yok: kamera yolu ↔ nesne en küçük uzaklık raporu
     p.add_argument("--carpisma_json", default="")               # rapor dosyası (boş → <kok>/_onizleme/s2-carpisma.json)
@@ -215,7 +226,9 @@ Y_ARKA_IC = DP / 2 - DUVAR_T          # 4,83: arka_kapali iç yüzü (güneye ba
 X_SOL_IC = -W / 2 + DUVAR_T           # −7,38: sol_kapali iç yüzü (doğuya bakar)
 Y_ON_DIS = -DP / 2                    # −4,95: on_kapali dış yüzü (güneye bakar)
 BASKI_T = 0.005                       # baskı paneli kalınlığı (5 mm)
-DUVAR_DOKU = {"arka": "duvar-arka.png", "sol": "duvar-sol.png", "ekran": "ekran-soz.png", "cephe": "cephe-on.png"}
+# 8 Kasım 2026 (müşteri): sol duvardaki iki 50" ekranda yazı yerine fotoğraf (dokular.mjs EKRAN_FOTO; dilden bağımsız, iki doku
+# dizininde aynı bayt): ekran 0 (güney, içeriden bakana solda) fidan dikimi, ekran 1 (kuzey, sağda) çöp toplama.
+DUVAR_DOKU = {"arka": "duvar-arka.png", "sol": "duvar-sol.png", "ekran": ("ekran-fidan.png", "ekran-cop.png"), "cephe": "cephe-on.png"}
 # poz A (d6, arka duvar) ve poz B (d7, sol duvar): brief z'leri stant zemininden (Z0) ölçülü (P5 gibi)
 POZ_A = {"konum": Vector((-4.30, 1.90, Z0 + 1.55)), "psi": -18.0, "phi": 4.0, "lens": 18.0}
 POZ_B = {"konum": Vector((-4.75, 1.60, Z0 + 1.55)), "psi": -80.0, "phi": 4.0, "lens": 18.0}
@@ -483,7 +496,10 @@ def duvar_baskilari(d_on, d_arka, d_sol):
     ma = m_baski("baski_arka", DUVAR_DOKU["arka"], "#F7E6CD", rough=0.75, spec=0.3)
     ms = m_baski("baski_sol", DUVAR_DOKU["sol"], "#F7E6CD", rough=0.75, spec=0.3)
     mc = m_baski("baski_cephe", DUVAR_DOKU["cephe"], "#F7E6CD", rough=0.75, spec=0.3)
-    me = m_baski("ekran_soz", DUVAR_DOKU["ekran"], "#17241D", emis_g=a.ekran_g, rough=0.08, spec=0.6, coat=1.0)
+    # ekran başına malzeme (iki fotoğraf). Panel gibi: taban rengi fotoğrafın EKRAN_TABAN katı (koyu, parlak kaplamalı yüz;
+    # yıkama spotu fotoğrafı "baskı" gibi aydınlatmasın), görüntü emisyonla (a.ekran_g; ölçüm EKRAN_G yorumunda).
+    me = [m_baski(f"ekran_foto_{i}", DUVAR_DOKU["ekran"][i], "#17241D", emis_g=a.ekran_g, rough=0.08, spec=0.6, coat=1.0,
+                  koyu_carp=EKRAN_TABAN) for i in range(2)]
     # arka_kapali iç yüzü: x −7,38…−1,80 × z 0–4 (2.790 × 2.000 px); ön yüz −Y
     x0, x1 = X_SOL_IC, PX(0.38)
     panel_doku("baski_arka", x1 - x0, DUVAR_H, BASKI_T, ((x0 + x1) / 2, Y_ARKA_IC - BASKI_T / 2, Z0), 0.0, ma, bw, parent=d_arka)
@@ -493,7 +509,7 @@ def duvar_baskilari(d_on, d_arka, d_sol):
     # 2 × 50" emisyonlu panel: 1,11 × 0,62 m, 4 cm ara, y 1,05…3,31, z 1,20–1,82; gövde 5 cm
     for i in range(2):
         yc = 1.05 + 1.11 / 2 + i * (1.11 + 0.04)
-        panel_doku(f"ekran_soz_{i}", 1.11, 0.62, 0.05, (X_SOL_IC + BASKI_T + 0.025, yc, Z0 + 1.20), math.pi / 2, me,
+        panel_doku(f"ekran_soz_{i}", 1.11, 0.62, 0.05, (X_SOL_IC + BASKI_T + 0.025, yc, Z0 + 1.20), math.pi / 2, me[i],
                    MAT["metal_siyah"], parent=d_sol)
     # on_kapali dış yüzü: x 1,95…7,5 (2.775 × 2.000 px); ön yüz −Y (dışarı)
     xk = PX(0.63)
@@ -2369,7 +2385,8 @@ def duvar_capalari(klip):
 def doku_denetim():
     """E turu dokuları: bulunan / eksik, piksel boyutu (beklenen 500 px/m), bit derinliği (16 bit PNG Blender'da float →
     VRAM ×4)."""
-    bekl = {"duvar-arka.png": (2790, 2000), "duvar-sol.png": (2665, 2000), "ekran-soz.png": (1110, 620), "cephe-on.png": (2775, 2000)}
+    bekl = {"duvar-arka.png": (2790, 2000), "duvar-sol.png": (2665, 2000), "ekran-fidan.png": (1110, 620), "ekran-cop.png": (1110, 620),
+            "cephe-on.png": (2775, 2000)}
     for ad, (bw_, bh_) in bekl.items():
         im = next((i for i in bpy.data.images if i.filepath and os.path.basename(i.filepath) == ad), None)
         if im is None:

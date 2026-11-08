@@ -761,30 +761,18 @@
   justify-content: space-between;
   gap: 8px 12px;
 }
-/* Dil seçici + "Dijital broşür →" (§14.4.6; 7 Kasım): şeridin sağında birlikte; dar ekranda ikinci satıra, sağa yaslı. */
+/* Dil seçici (7 Kasım; 8 Kasım'a dek yanında "Dijital broşür →" vardı, yerini logonun altındaki broşür kartı aldı). */
 .v3-serit-sag {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
 }
-.v3-geri {
-  border-radius: 999px;
-  padding: 6px 2px;
-  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-brand-ink);
-  outline-offset: 2px;
-}
-.v3-geri:focus-visible {
-  outline: 2px solid var(--color-brand-blue);
-}
 /*
- * Kiosk (?auto=1): stant ekranında iç önizleme sayfasına giden bağlantı yok (A1-07); "Dijital broşür" de yok (G turu:
- * dokunan ziyaretçi /brosur'a gidip döngüden çıkardı; standda basılı broşür var).
+ * Kiosk (?auto=1): "Dijital broşür" ve dil seçici yok (G turu: dokunan ziyaretçi /brosur'a gidip döngüden çıkardı;
+ * standda basılı broşür var).
  */
-.v3[data-kiosk="1"] :is(.v3-geri, .v3-dijital, .v3-dil) {
+.v3[data-kiosk="1"] :is(.v3-dijital, .v3-dil, .v3-brosur-kart) {
   visibility: hidden;
 }
 /* Sağ üst kümede gizli düğme yer tutmasın: kadraj okuması kiosk'ta sağ kenarda (16 px). */
@@ -885,7 +873,7 @@
   .v3-bant.v3-bant-ince:not(.v3-bant-ek) {
     justify-content: flex-end;
   }
-  /* Geri + kimlik solda yan yana; "Dijital broşür →" sağ kenarda (margin-left: auto; logonun üstüne binmez). */
+  /* Kimlik solda; dil seçici sağ kenarda (margin-left: auto; logonun üstüne binmez). */
   .v3-serit {
     justify-content: flex-start;
     gap: 28px;
@@ -1132,33 +1120,210 @@
   }
 }
 
-/* ============================== "Dijital broşür →" ============================== */
+/* ============================== d0 broşür kartı (8 Kasım 2026) ============================== */
 
-/* Bağlantı düğmesi (d0 şeridi; W-3'te d8 masa bandı kalktı; kapanıştaki .ic-kapanis-brosur icinden.css'te). */
-:is(.v3-bant, .v3-serit) .v3-dijital {
+/*
+ * Müşteri: "açılışta direkt dünya geliyor, broşür çok kenarda köşede kalıyor". Kapaklı kart (kapanıştaki düğme
+ * .ic-kapanis-brosur icinden.css'te; d1–d12'de sağ üstteki .v3-brosur-sabit). Konum logo gibi video uzayından (--ax/--ay/
+ * --lk; logo 450,839 × 636,03 birim, disk merkezi sol üstten 225,384 / 171,213): dikeyde tarih satırının (18 px payı +
+ * 20 px satır) 22 px altında, ortada; yatayda logonun sağ kenarından clamp(20px, 3cqw, 56px) sonra, logonun dikey
+ * ortasında (disk merkezinin 146,4 birim altı).
+ */
+.v3-brosur-kart {
+  --ax: var(--ax-d);
+  --ay: var(--ay-d);
+  --lk: calc(var(--ar) / 160.445 * var(--s));
+  position: absolute;
+  top: calc(50% + (var(--ay) - var(--cy)) * var(--s) + (636.03 - 171.213) * var(--lk) + 18px + 20px + 22px);
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  border-radius: 16px;
+  background: #fff;
+  padding: 10px 18px 10px 10px;
+  box-shadow:
+    0 0 0 1px rgb(16 42 86 / 0.08),
+    0 14px 34px -14px rgb(16 42 86 / 0.5);
+  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-brand-ink);
+  text-align: left;
+  outline-offset: 3px;
+  transition: box-shadow 150ms ease;
+}
+.v3-brosur-kart:hover {
+  box-shadow:
+    0 0 0 1px rgb(16 42 86 / 0.14),
+    0 18px 40px -14px rgb(16 42 86 / 0.6);
+}
+.v3-brosur-kart:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+}
+.v3-brosur-kapak {
+  display: block;
+  flex: none;
+  width: 64px;
+  aspect-ratio: 240 / 340;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.55);
+}
+.v3-brosur-kapak img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.v3-brosur-kart-metin {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.v3-brosur-kart-etiket {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-blue);
+}
+.v3-brosur-kart-etiket .v3-kitap {
+  width: 14px;
+  height: 14px;
+}
+.v3-brosur-kart-baslik {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 800;
+}
+.v3-brosur-kart-satir {
+  display: block;
+}
+.v3-brosur-kart-eylem {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  margin-top: 5px;
   border-radius: 999px;
   background: var(--color-brand-blue);
-  padding: 7px 14px;
-  font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  padding: 6px 14px;
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
   color: #fff;
-  outline-offset: 2px;
   transition: background-color 150ms ease;
 }
-:is(.v3-bant, .v3-serit) .v3-dijital:hover {
+.v3-brosur-kart:hover .v3-brosur-kart-eylem {
   background: color-mix(in srgb, var(--color-brand-blue) 82%, #000);
 }
-:is(.v3-bant, .v3-serit) .v3-dijital:focus-visible {
-  outline: 2px solid var(--color-brand-blue);
+/* Kısa ekran (360×640, 375×667): kart küçülür, altındaki "Aşağı kaydır" ipucuyla arası ≥ 20 px kalsın. */
+@container (max-height: 700px) {
+  .v3-brosur-kart {
+    gap: 12px;
+    padding: 8px 16px 8px 8px;
+  }
+  .v3-brosur-kapak {
+    width: 52px;
+  }
+  .v3-brosur-kart-baslik {
+    font-size: 15px;
+    line-height: 19px;
+  }
+  .v3-brosur-kart-eylem {
+    margin-top: 3px;
+    padding: 5px 12px;
+    font-size: 12px;
+  }
 }
-.v3-serit .v3-dijital {
-  padding: 6px 12px;
-  font-size: 12px;
+/* Yatay (vw/H ≥ 4:3): logonun sağında; değişkenler logonunkiler gibi yatay video uzayından (ana kuraldan sonra). */
+@container (min-aspect-ratio: 4/3) {
+  .v3-brosur-kart {
+    --ax: var(--ax-y);
+    --ay: var(--ay-y);
+    --s: max(calc(100cqw / 1280), calc(100cqh / 720));
+    --cx: 640;
+    --cy: 360;
+    --kl: calc(50% + (var(--ax) - var(--cx)) * var(--s) + 225.455 * var(--lk) + clamp(20px, 3cqw, 56px));
+    top: calc(50% + (var(--ay) - var(--cy)) * var(--s) + 146.4 * var(--lk));
+    left: var(--kl);
+    translate: 0 -50%;
+    max-width: calc(100% - var(--kl) - 16px);
+  }
+}
+/* Geniş ekran (masaüstü, 1280×720 ve üstü): logonun yanında daha büyük kart. */
+@container (min-aspect-ratio: 4/3) and (min-width: 1100px) and (min-height: 650px) {
+  .v3-brosur-kart {
+    gap: 18px;
+    border-radius: 20px;
+    padding: 14px 24px 14px 14px;
+  }
+  .v3-brosur-kapak {
+    width: 92px;
+    border-radius: 5px;
+  }
+  .v3-brosur-kart-metin {
+    gap: 4px;
+  }
+  .v3-brosur-kart-etiket {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .v3-brosur-kart-baslik {
+    font-size: 21px;
+    line-height: 26px;
+  }
+  .v3-brosur-kart-eylem {
+    margin-top: 8px;
+    padding: 8px 18px;
+    font-size: 15px;
+    line-height: 20px;
+  }
+}
+/* Kap birimi / kap sorgusu olmayan tarayıcı (Safari < 16): aynı yerleşim vw/vh ile (bkz. aşağıdaki @supports bloğu). */
+@supports not (width: 1cqw) {
+  @media (min-aspect-ratio: 4/3) {
+    .v3-brosur-kart {
+      --ax: var(--ax-y);
+      --ay: var(--ay-y);
+      --s: max(calc(100vw / 1280), calc(100vh / 720));
+      --cx: 640;
+      --cy: 360;
+      --kl: calc(50% + (var(--ax) - var(--cx)) * var(--s) + 225.455 * var(--lk) + clamp(20px, 3vw, 56px));
+      top: calc(50% + (var(--ay) - var(--cy)) * var(--s) + 146.4 * var(--lk));
+      left: var(--kl);
+      translate: 0 -50%;
+      max-width: calc(100% - var(--kl) - 16px);
+    }
+  }
+}
+/* Yatay telefon (844×390): logo ekran yüksekliğini dolduruyor, sağında ~280 px. */
+@container (min-aspect-ratio: 4/3) and (max-height: 480px) {
+  .v3-brosur-kart {
+    gap: 10px;
+    border-radius: 12px;
+    padding: 8px 12px 8px 8px;
+  }
+  .v3-brosur-kapak {
+    width: 46px;
+  }
+  .v3-brosur-kart-baslik {
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .v3-brosur-kart-eylem {
+    margin-top: 3px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
 }
 
 /* ============================== fidan bölümü (d8–d11; G turu §14.3, §14.4.6; W-3) ============================== */
@@ -1681,6 +1846,12 @@
   width: auto;
   height: auto;
 }
+/* Akış düzeninde açılış bandı içeriği kadar geniş (esnek öğe): kartın 32 px payı kartı kendi içeriğinden dar bırakıyordu. */
+:where(.v3[data-azalt="1"]) .v3-brosur-kart {
+  position: static;
+  max-width: 100%;
+  translate: none;
+}
 :where(.v3[data-azalt="1"]) .v3-serit {
   align-self: stretch;
 }
@@ -1838,7 +2009,7 @@
   gap: 6px;
   border-radius: 999px;
   background: var(--color-brand-blue);
-  padding: 6px 12px;
+  padding: 6px 12px 6px 10px;
   font-family: var(--font-display), "Montserrat", ui-sans-serif, system-ui, sans-serif;
   font-size: 12px;
   line-height: 18px;
@@ -1859,6 +2030,62 @@
 }
 .v3-brosur-sabit:hover {
   background: color-mix(in srgb, var(--color-brand-blue) 82%, #000);
+}
+/*
+ * 8 Kasım 2026 (müşteri: "broşür kenarda köşede kalıyor"): kitap simgeli; ≥ 768 px'te büyük (14 px, 36 px yükseklik, ok
+ * da var). Telefonda boy aynı (12 px), ok yerine simge: kadraj okuması + EN|TR + düğme 390 px'te sığmalı (13 px + ok ile
+ * sol kenardan taşıyordu). d1'e varışta (açılıştaki kart buraya "taşınır") iki kez beyaz halka yayılır; hareket azaltmada
+ * ve kiosk'ta yok.
+ */
+@media (max-width: 767.98px) {
+  .v3-brosur-sabit {
+    gap: 5px;
+  }
+  .v3-brosur-sabit > span[aria-hidden="true"] {
+    display: none;
+  }
+  .v3-brosur-sabit .v3-kitap {
+    width: 14px;
+    height: 14px;
+  }
+}
+.v3-brosur-sabit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .v3:not([data-kiosk="1"], [data-azalt="1"])[data-rol="dunya"] .v3-brosur-sabit::after {
+    animation: v3-brosur-halka 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) 0.6s 2;
+  }
+}
+@keyframes v3-brosur-halka {
+  from {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 0.85);
+  }
+  to {
+    opacity: 0;
+    box-shadow: 0 0 0 14px rgb(255 255 255 / 0);
+  }
+}
+@media (min-width: 768px) {
+  .v3-brosur-sabit {
+    gap: 7px;
+    padding: 8px 17px 8px 14px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .v3-brosur-sabit .v3-kitap {
+    width: 18px;
+    height: 18px;
+  }
+  .v3-brosur-sabit::before {
+    inset: -4px -4px;
+  }
 }
 .v3-brosur-sabit:focus-visible {
   outline: 2px solid #fff;

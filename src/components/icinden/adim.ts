@@ -1,5 +1,5 @@
 /**
- * /icinden v3 kilitli adımlama — `src/components/dunya/adim.ts`'in uyarlaması (o dosyaya dokunulmaz).
+ * /icinden v3 kilitli adımlama — /dunya konseptinin adim.ts'inden uyarlandı (o konsept 8 Kasım 2026'da kaldırıldı).
  *
  * Korunan (WebKit güvenli kalıp, docs/brief-dunya-apple.md): tekerlek eşiği 40 px + adımdan sonra "susana
  * dek kapı" (momentum ikinci adım atmaz), yatay jest elemesi (|dx| > 1,5·|dy| + 2), dokunma 40 px (parmak

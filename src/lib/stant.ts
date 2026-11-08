@@ -20,8 +20,8 @@ export const stant = {
   // ONAY: bantta "A 12.000-Year Trust" yazıyor (pankartlar[0]). İngilizcede binlik ayıracı virgül;
   // yabancı ziyaretçi "12.000"i "12" gibi okuyabilir. Sitede İngilizce yazımla (onay-listesi §13).
   temaEn: "A 12,000-Year Trust",
-  /** Büyük giriş pankartı (okundu). */
-  hashtag: "#YaniBanaEmanet",
+  /** Büyük giriş pankartı. Stant PDF'inde "#YaniBanaEmanet" okunmuştu; müşteri düzeltmesi (8 Kasım 2026): "#YarınBanaEmanet". */
+  hashtag: "#YarınBanaEmanet",
   /** Büyük giriş pankartı alt satırı: "GençİKlim – 12.000 Yıllık Emanet – İçeride →" (okundu). */
   program: "GençİKlim",
   // ONAY: iki yazım var — koyu totem "İklim, doğa ve sıfır atık bize miras." (aşağıdaki),
@@ -75,7 +75,7 @@ export const stant = {
   pankartlar: [
     "12.000 Yıllık Emanet – A 12.000-Year Trust", // rotunda bandı
     "İklim, doğa, sıfır atık bize miras.", // büyük giriş pankartı
-    "#YaniBanaEmanet", // büyük giriş pankartı
+    "#YarınBanaEmanet", // büyük giriş pankartı (müşteri düzeltmesi, 8 Kasım 2026)
     "GençİKlim – 12.000 Yıllık Emanet – İçeride", // büyük giriş pankartı alt satırı (sonda "→")
     "Gel, oyna! Come and play!", // sol turuncu dikey pankart
     "Oyna – Sen olsan ne yapardın?", // oyun alanı bandı (TR)

@@ -50,7 +50,16 @@ export type IcindenMetin = {
     /** `okumaDurak` (Türkçe metin → çeviri): "arka duvar · ~3 m", "sol duvar · ~3 m", "ortak evimiz". */
     okumaDurak: Readonly<Record<string, string>>;
   };
-  lombar: { baslik: string; geri: string; kimlikAd: string; kimlikAlt: string; kimlikLogo: string; logoAlti: Parcali; ipucu: string };
+  lombar: {
+    baslik: string;
+    kimlikAd: string;
+    kimlikAlt: string;
+    kimlikLogo: string;
+    logoAlti: Parcali;
+    ipucu: string;
+    /** d0 broşür kartı (8 Kasım 2026): üst etiket, broşürün kapak başlığı, eylem. */
+    brosurKart: { etiket: string; baslik: string; eylem: string };
+  };
   dunya: { baslik: string; govde: Parcali };
   emanet: { srBaslik: string; baslik: string; govde: string };
   expo: { baslik: string; altSatir: string };
@@ -141,7 +150,9 @@ const TR: IcindenMetin = {
     anatomi: `Karanlık fuar holünde, ışığın altında standımız yukarıdan: ortada 12 sütunlu Emanet Rotundası ve '12.000 Yıllık Emanet' bandı, solda 'Oyna – Sen olsan ne yapardın?' alanı ve turuncu 'Gel, oyna!' pankartı, sağda amfi; arkada '${bulusmalar.title}' duvarı, girişte '${stant.pankartlar[1]}' pankartı.`,
     sutunlar: "Rotundanın içinden yere bakış: renkli dönem halkasının ortasında 'Buradasın, Bugün' yazıyor; çevrede 12 miras sütununun alt uçları.",
     duvar: `Standın arka duvarı, çapraz açıdan: krem zemin, altta koyu dağ silueti. Solda '${bulusmalar.title}' başlığı, büyük '${facts.meetings}+' ve 'gençlik buluşması, son ${facts.meetingsYears} yılda'; altında 'Bir Gençlik Şöleni', '${facts.solenDate} · ${facts.solenPlace}' ve büyük '${tr(facts.solenAttendees)}+ genç'.`,
-    "duvar-2": "Standın sol duvarı: '1.000.000+ Genç Üye' ve '81 İl · 922 İlçe' yazıları, altında iki ekranda 'Sen de söz ver.'; sağ altta bir bank.",
+    // 8 Kasım 2026 (müşteri): iki ekranda yazı yerine fotoğraf (dokular.mjs EKRAN_FOTO; t67/p7, t79 yeniden render edildi).
+    "duvar-2":
+      "Standın sol duvarı: '1.000.000+ Genç Üye' ve '81 İl · 922 İlçe' yazıları; altında iki ekranda fotoğraf: solda mavi yelekli gençler bir fidan dikiyor, sağda yeşil şeritli beyaz yelekli gönüllüler ormanda çöp topluyor. Sağ altta bir bank.",
     "fidan-kok":
       "Karanlık fuar holünde, bankonun üstünde ahşap çerçeveli, ön yüzü camlı bir kök kasası. Koyu toprağın içinde ortadaki tohumdan inen kazık kök ve iki yana açılan ince kökler; köklerin krem renkli uçları spot ışığında seçiliyor.",
     "fidan-govde": "Kök kasasının toprağından ince bir fidan gövdesi yükseliyor, hafif S biçiminde kıvrılarak; gövdede iki küçük boğum. Camın ardında kökler, arkada karanlık hol ve stant duvarları.",
@@ -153,12 +164,13 @@ const TR: IcindenMetin = {
   sahne: { etiket: {}, kunye: null, okumaDurak: {} },
   lombar: {
     baslik: "COP31'in İçinden",
-    geri: "Konseptler",
     kimlikAd: genclikKollari.title,
     kimlikAlt: "COP31 Antalya standı",
     kimlikLogo: logos.genclikKollari.alt,
     logoAlti: { on: "", tarih: cop31.dates, son: `, ${cop31.venue}` },
     ipucu: "Aşağı kaydır",
+    // Başlık broşürün kapağındaki (COP31_Brosur_TR.pdf s. 1).
+    brosurKart: { etiket: "Dijital broşür", baslik: "1 Milyon Genç, Tek Ortak Ev", eylem: "Broşürü aç" },
   },
   dunya: {
     baslik: "Dünya Antalya'da buluşuyor",
@@ -214,7 +226,7 @@ const TR: IcindenMetin = {
     baslik: stant.kiosk.cagri,
     govde: genclikKollari.subtitle,
     duvarEtiket: "Sol duvarda yazanlar",
-    duvar: [`${tr(uye.value ?? 0)}${uye.suffix ?? ""} ${uye.label}`, ilIlce, `İki ekranda: ${stant.kiosk.cagri}`].map((metin) => ({ metin })),
+    duvar: [`${tr(uye.value ?? 0)}${uye.suffix ?? ""} ${uye.label}`, ilIlce].map((metin) => ({ metin })), // iki ekranda yazı yok, fotoğraf (8 Kasım 2026)
   },
   // d8 — Kökler: Biz Kimiz? + 81 İl · 922 İlçe (§14.4.1 K8) + bizKimiz.paragraphs[0].
   fidanKok: { srBaslik: `Kökler: ${bizKimiz.title}`, cip: "Kökler", baslik: bizKimiz.title, altSatir: ilIlce, govde: bizKimiz.paragraphs[0] },
@@ -337,8 +349,8 @@ export const DOKU_EN = {
     motto: EN_MOTTO,
     hashtag: stant.hashtag,
   },
-  /** d7 sol duvar + iki ekran. */
-  sol: { uye: `${en(facts.members)}+`, uyeEt: "Young Members", ilIlce: EN_IL_ILCE, soz: EN_CAGRI },
+  /** d7 sol duvar (iki ekranda yazı yok, fotoğraf: 8 Kasım 2026). */
+  sol: { uye: `${en(facts.members)}+`, uyeEt: "Young Members", ilIlce: EN_IL_ILCE },
   sutunlar: EN_SUTUNLAR,
 } as const;
 const DA = DOKU_EN.arka;
@@ -363,7 +375,7 @@ const EN: IcindenMetin = {
     anatomi: `Our stand from above, under the lights of a dark exhibition hall: in the middle, the 12-column ${EN_ROTUNDA} with its '${EN_TEMA}' band; on the left, the '${EN_OYUN}' area and the orange '${EN_GEL}' banner; on the right, the amphitheater; at the back, the '${EN_BULUSMA}' wall; at the entrance, the '${EN_SLOGAN_CEPHE}' banner.`,
     sutunlar: `Looking down from inside the rotunda: in the middle of the colorful ring of periods it reads '${DOKU_EN.zemin.ust}, ${DOKU_EN.zemin.alt}'; around it, the bases of the 12 heritage columns.`,
     duvar: `The stand's back wall at an angle: cream background with a dark mountain silhouette along the bottom. On the left, the heading '${DA.baslik}', a large '${DA.bulusmaSayi}' and '${DA.bulusma} ${DA.bulusmaYil}'; below, '${DA.solen}', '${DA.solenTarihYer}' and a large '${DA.solenSayi}' above '${DA.genc}'.`,
-    "duvar-2": `The stand's left wall: '${DS.uye} ${DS.uyeEt}' and '${DS.ilIlce}', with '${DS.soz}' on two screens below; a bench at bottom right.`,
+    "duvar-2": `The stand's left wall: '${DS.uye} ${DS.uyeEt}' and '${DS.ilIlce}'; below, two screens show photos: on the left, young people in blue vests planting a sapling; on the right, volunteers in white vests with green stripes collecting litter in a forest. A bench at bottom right.`,
     "fidan-kok":
       "A wooden-framed root box with a glass front, on a counter in the dark exhibition hall. In the dark soil, a taproot descends from the seed in the middle and fine roots spread to both sides; the cream-colored root tips catch the spotlight.",
     "fidan-govde": "A slender sapling trunk rises from the soil of the root box in a gentle S-curve, with two small nodes. Behind the glass, the roots; beyond, the dark hall and the stand walls.",
@@ -389,12 +401,13 @@ const EN: IcindenMetin = {
   },
   lombar: {
     baslik: "Inside COP31",
-    geri: "Concepts",
     kimlikAd: "AK Party Youth Branches",
     kimlikAlt: "COP31 Antalya stand",
     kimlikLogo: "AK Party Youth Branches logo",
     logoAlti: { on: "", tarih: EN_TARIH, son: `, ${cop31.venue}` },
     ipucu: "Scroll down",
+    // Kapak başlığı (COP31_Brosur_EN.pdf s. 1).
+    brosurKart: { etiket: "Digital brochure", baslik: "1 Million Youth, One Common Home", eylem: "Open the brochure" },
   },
   dunya: {
     baslik: "The world meets in Antalya",
@@ -459,7 +472,7 @@ const EN: IcindenMetin = {
     // (B) bölüm 01: "The largest youth movement in Türkiye and the world, with more than 1 million members" + "81 provinces, 922 districts"
     govde: `The largest youth movement in Türkiye and the world, with more than 1 million members in ${facts.provinces} provinces and ${facts.districts} districts`,
     duvarEtiket: "Written on the left wall",
-    duvar: [`${DS.uye} ${DS.uyeEt}`, DS.ilIlce, `On two screens: ${DS.soz}`].map((metin) => ({ metin })),
+    duvar: [`${DS.uye} ${DS.uyeEt}`, DS.ilIlce].map((metin) => ({ metin })),
   },
   fidanKok: {
     srBaslik: "Roots: Who We Are",

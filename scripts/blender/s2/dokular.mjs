@@ -11,16 +11,17 @@
  * Sütun yüzlerinde FOTOĞRAF YOK: numara, ad, il, dönem çipi, emanet cümlesi, dönem rengi şeridi.
  * Değişirse yalnız t45 / l5 / p5 yeniden render edilir (onay-listesi §1–§4).
  *
- * E turu (brief §12.3): duvar-arka.png, duvar-sol.png, ekran-soz.png, cephe-on.png (500 px/m; ekran 1000 px/m).
+ * E turu (brief §12.3): duvar-arka.png, duvar-sol.png, ekran-soz.png (8 Kasım'dan beri iki fotoğraf dokusu, aşağıda),
+ * cephe-on.png (500 px/m; ekran 1000 px/m).
  * Tüm yazılar tek bir SVG'de, taban çizgisi metre cinsinden verilir. Her duvar dokusu üretildikten sonra PNG'den
  * harf yükseklikleri (referans harfin mürekkep yüksekliği), WCAG kontrastı, metin kutusu çakışmaları, telefon
  * penceresi ve köşe sürekliliği ölçülür → <out>/_duvar-olcum.json; 1/8 önizlemeler → <onizleme>/doku-*.png.
  * Yalnız duvarları üretmek için (eski dokular bayt bayt değişmesin):
- *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png,duvar-sol.png,ekran-soz.png,cephe-on.png
+ *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png,duvar-sol.png,cephe-on.png,ekran-fidan.png,ekran-cop.png
  *
  * G-B turu (brief §14.4.4, karar K7): arka duvar FOTOĞRAFSIZ, genel bilgi: "Gençlik Buluşmaları" (30+ · son 5 yılda)
  * ve "Bir Gençlik Şöleni" (100.000+ genç · 16 Mayıs 2026 · Kocaeli Stadyumu); pencere dışında "AK Parti / Her Anında /
- * Hep Yanında" + #YaniBanaEmanet. Metinler content.ts (bulusmalar, solenler, backCover, facts) ve stant.ts'ten birebir;
+ * Hep Yanında" + hashtag (stant.hashtag). Metinler content.ts (bulusmalar, solenler, backCover, facts) ve stant.ts'ten birebir;
  * kelimelerin kaynak cümlede geçtiği düzenli ifadeyle denetlenir (değişirse betik durur). Yerleşim ölçülerek kurulur
  * (ARKA boyları + canvas metrikleri; satırlar yukarıdan aşağı). Çapalar: bulusma ("30+"), solen ("100.000+"), motto
  * (pencere dışı üç satırın birleşik kutusu). Yalnız arka duvar (öteki dokular bayt bayt aynı kalır):
@@ -35,12 +36,27 @@
  * totem / sütun yazıları taşarsa küçültülür (`data-sig`; ölçü günlükte ve _dokular.json `sigdirma`). Varsayılan (Türkçe)
  * çıktı bayt bayt aynı kalır (Türkçe HTML'e dokunulmadı; .qa/icinden-en/doku/md5-*).
  *   node scripts/blender/s2/dokular.mjs --dil en
+ *
+ * Müşteri düzeltmeleri (8 Kasım 2026; onay-listesi §14.1-G, §15):
+ *  - Hashtag "#YarınBanaEmanet" (stant PDF'inde "#YaniBanaEmanet" okunmuştu; kaynak stant.ts). Arka duvarın pencere dışı
+ *    hashtag'i bir harf uzadı: duvar ucuna (x −1,80) payı G-B'deki gibi ≥ 0,118 m kalsın diye gerekirse küçülür (HASH_PAY).
+ *    İngilizce dokularda da Türkçe yazılır (özel ad; TR_IZINLI).
+ *  - d7 sol duvarındaki iki 50″ ekranda yazı ("Sen de söz ver." / "Make your pledge too.") yerine FOTOĞRAF (EKRAN_FOTO):
+ *    ekran-fidan.png (ekran 0, güney, içeriden bakana solda) ve ekran-cop.png (ekran 1, kuzey, sağda); public/photos'tan
+ *    sharp ile "cover" kırpım (1110 × 620, 1000 px/m), dilden bağımsız (iki dizine aynı bayt). Brief §12.0'daki "insanlı
+ *    fotoğraf baskısı yok" kuralı müşteri kararıyla yalnız bu iki ekran için kalktı. ekran-soz.png artık üretilmez.
+ *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png,duvar-sol.png,cephe-on.png,kiosk-ekran.png,ekran-fidan.png,ekran-cop.png
+ *  DİKKAT (ölçüldü): bir dokunun baytları aynı tarayıcı oturumunda ondan ÖNCE çizilen yazılara bağlı (Chrome glif önbelleği;
+ *  ör. İngilizce duvar-sol.png'de "1,000,000+" kenar yumuşatması ±2 düzey, 249 px). Türkçe duvar-sol.png yukarıdaki komutla
+ *  bayt bayt aynı çıktı; İngilizcesi değişti ve 7/8 Kasım tam çalışmasının baytları geri kondu. Değişmeyecek dokuları
+ *  yeniden yazdırmayın ya da önce geçici --out dizinine üretip md5 karşılaştırarak yalnız değişenleri kopyalayın.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { registerHooks } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
+import sharp from "sharp";
 
 const KOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const { emanetAlanlari, donemler } = await import(pathToFileURL(path.join(KOK, "src/lib/emanet.ts")).href);
@@ -370,7 +386,6 @@ const PAL = {
   krem: stant.palet.krem, // #F7E6CD
   yesil: stant.palet.koyuYesil, // #28332F
   turuncu: "#DF9560", // stant-icerik.md §3 (turuncu pankart birleşik medyanı)
-  ekran: "#17241D", // kiosk ekranı (stant-icerik.md §3)
 };
 // Metinler (birebir kaynaktan). G-B arka duvar (brief §14.4.4): kelimelerin kaynak cümlede geçtiği düzenli ifadeyle
 // denetlenir; sayılar facts'ten toLocaleString("tr-TR") + "+". Kaynak değişirse betik durur (duvar yeniden bölünmeli).
@@ -412,7 +427,6 @@ const METIN_TR = {
   uye: sayiYaz(stats[0]), // content.ts:22 → "1.000.000+"
   uyeEt: stats[0].label, // "Genç Üye"
   ilIlce: `${stats[1].value} ${stats[1].label} · ${stats[2].value} ${stats[2].label}`, // content.ts:23–24
-  soz: stant.kiosk.cagri, // stant.ts:72 "Sen de söz ver."
   slogan: stant.pankartlar[1], // stant.ts:77
   program: `${stant.pankartlar[3]} →`, // stant.ts:79 (+ sondaki "→", stant.ts:25 ve :79 yorumu)
 };
@@ -434,7 +448,6 @@ const METIN_EN = EN_MI
       uye: DOKU_EN.sol.uye,
       uyeEt: DOKU_EN.sol.uyeEt,
       ilIlce: DOKU_EN.sol.ilIlce,
-      soz: DOKU_EN.sol.soz,
       slogan: DOKU_EN.cephe.slogan,
       program: `${DOKU_EN.cephe.program} →`,
     }
@@ -442,7 +455,8 @@ const METIN_EN = EN_MI
 const METIN = EN_MI ? METIN_EN : METIN_TR;
 // İngilizce dokularda kalmaması gereken Türkçe harfler (özel adlar hariç: GençİKlim, il adları, Göbekli Tepe …)
 const TR_HARF = /[çğıöşüÇĞİÖŞÜ]/;
-const TR_IZINLI = ["GençİKlim", "Göbekli", "Çorum", "Muğla", "Nevşehir", "Sultanhanı", "Diyarbakır", "Karabük", "Eskişehir", "Şanlıurfa", "Güllük", "Türkiye"];
+// (hashtag özel ad: İngilizce dokularda da "#YarınBanaEmanet"; müşteri düzeltmesi 8 Kasım 2026)
+const TR_IZINLI = ["GençİKlim", "Göbekli", "Çorum", "Muğla", "Nevşehir", "Sultanhanı", "Diyarbakır", "Karabük", "Eskişehir", "Şanlıurfa", "Güllük", "Türkiye", stant.hashtag];
 // satır bölme yalnız boşluktan (metin değişmez): kelime dizisini verilen kelime sayılarına böl
 const bol = (s, ...adet) => {
   const k = s.split(" ");
@@ -555,6 +569,13 @@ async function duvarlariHazirla(sayfaB) {
   const XR = -4.0; // Şölen bloğu sağ hizası (text-anchor end)
   const XD = -3.7; // pencere dışı (yalnız yatay)
   const B = ARKA;
+  // Hashtag (pencere dışı, XD'ye sola hizalı): sağ ucu ile duvar ucu (A.u0 + A.w/PXM = −1,80) arasında ≥ HASH_PAY kalsın
+  // (G-B'deki "#YaniBanaEmanet" payı 0,118 m). 8 Kasım 2026: "#YarınBanaEmanet" bir harf uzun → büyük harf 0,13 m'den
+  // gerektiği kadar küçülür (ölçü _duvar-olcum.json "hashtag" kutusu ve arka_yerlesim.hashtag).
+  const HASH_PAY = 0.118;
+  const [mHash] = await metinMetrik(sayfaB, [M({ metin: METIN.hashtag, font: 1, ref: 1 })], 1000);
+  const fHash = Math.min(kh(B.hashtag), (A.u0 + A.w / PXM - HASH_PAY - XD) / mHash.sag);
+  const hashYerlesim = { buyuk_harf_m: +(0.7 * fHash).toFixed(4), hedef_m: B.hashtag, sag_pay_m: HASH_PAY, olcek: +(fHash / kh(B.hashtag)).toFixed(4) };
   const f = {
     t: kh(B.baslik),
     en: kh(B.en),
@@ -608,6 +629,7 @@ async function duvarlariHazirla(sayfaB) {
       etiket_u_m: +uEt.toFixed(4),
       solen_sayi_bitis_u_m: +uN2.toFixed(4),
       son_satir_alt_z_m: +altSinir.toFixed(4),
+      hashtag: hashYerlesim,
     };
     const Yz = (k, ad, o) => Y(ad, sat[k].metin, { ...sat[k], font: f[k] ?? f.t, z: z[k], ...o });
     A.yazilar = [
@@ -625,7 +647,7 @@ async function duvarlariHazirla(sayfaB) {
       Y("motto_1", METIN.motto[0], L({ u: XD, z: 2.7, font: kh(B.motto), ref: 1, hedef: ["büyük harf ('K')", B.motto], capa: "motto", pencereDisi: true })),
       Y("motto_2", METIN.motto[1], L({ u: XD, z: 2.42, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
       Y("motto_3", METIN.motto[2], L({ u: XD, z: 2.14, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
-      Y("hashtag", METIN.hashtag, M({ u: XD, z: 1.8, font: kh(B.hashtag), ref: 1, hedef: ["büyük harf", B.hashtag], pencereDisi: true })),
+      Y("hashtag", METIN.hashtag, M({ u: XD, z: 1.8, font: fHash, ref: 1, hedef: ["büyük harf", hashYerlesim.buyuk_harf_m], pencereDisi: true })),
     ];
     const cubuk = z.b1 + 0.7 * f.t + B.cubukAra; // başlık büyük harf üstü + 0,17 m (E turu: 3,26 → 3,43)
     A.sekiller = [
@@ -702,6 +724,7 @@ async function duvarlariHazirla(sayfaB) {
       etiket_u_m: +uEt.toFixed(4),
       solen_sayi_bitis_u_m: +uN2.toFixed(4),
       son_satir_alt_z_m: +altSinir.toFixed(4),
+      hashtag: hashYerlesim,
     };
     const Yz = (k, ad, o) => Y(ad, sat[k].metin, { ...sat[k], font: f[k], z: z[k], ...o });
     const ml = METIN.motto; // pencere dışı (yalnız yatay): Türkçe üç satırın ortasına iki satır, aynı satır aralığı (0,28 m)
@@ -719,7 +742,7 @@ async function duvarlariHazirla(sayfaB) {
       Yz("g", "genc", { u: XR, hiza: "end", hedef: ["büyük harf ölçeği ('n' x yüksekliği)", B.genc] }),
       Yz("ty", "solen_tarih_yer", { u: XR, hiza: "end", hedef: ["ikincil büyük harf ('M')", B.tarihYer] }),
       ...ml.map((t, i) => Y(`motto_${i + 1}`, t, L({ u: XD, z: zM[i], font: kh(B.motto), ref: 0, hedef: ["büyük harf", B.motto], capa: "motto", pencereDisi: true }))),
-      Y("hashtag", METIN.hashtag, M({ u: XD, z: zM.at(-1) - 0.34, font: kh(B.hashtag), ref: 1, hedef: ["büyük harf", B.hashtag], pencereDisi: true })),
+      Y("hashtag", METIN.hashtag, M({ u: XD, z: zM.at(-1) - 0.34, font: fHash, ref: 1, hedef: ["büyük harf", hashYerlesim.buyuk_harf_m], pencereDisi: true })),
     ];
     const cubuk = (tek ? z.bt : z.b1) + 0.7 * f.t + B.cubukAra;
     const cubukM = zM[0] + 0.7 * kh(B.motto) + 0.11; // Türkçede motto üstü + 0,11 m (2,868 → 2,98)
@@ -771,24 +794,7 @@ async function duvarlariHazirla(sayfaB) {
   C.sekiller = []; // logo yok; süs çubuğu da yok (slogan duvarın üst kenarına yakın)
   C.zDag = (u) => zCep(u - C.u0);
 
-  /* ---------- 2 × 50″ ekran: 1,11 × 0,62 m → 1110 × 620 (1000 px/m); yalnız "Sen de söz ver." ---------- */
-  const E = { ad: "ekran-soz.png", w: 1110, h: 620, pxm: 1000, u0: 0, H: 0.62, zemin: PAL.ekran };
-  const sz = bol(METIN.soz, 2); // "Sen de" / "söz ver."
-  // font: geniş satır 0,68 × 1110 px; iki satır dikeyde ortalı (aşağıda ölçülerek)
-  E.yazilar = [
-    Y("soz_1", sz[0], L({ u: 0.555, z: 0, font: 0.2, agirlik: 700, renk: PAL.krem, zemin: PAL.ekran, hiza: "middle", ref: 0, hedef: ["büyük harf", null] })),
-    Y("soz_2", sz[1], L({ u: 0.555, z: 0, font: 0.2, agirlik: 700, renk: PAL.krem, zemin: PAL.ekran, hiza: "middle", ref: 2, hedef: ["büyük harf (ölçek)", null] })),
-  ];
-  E.sekiller = [];
-
-  // ekran yazısını ölçerek boyutla
-  const [g1, g2] = await metinMetrik(sayfaB, E.yazilar.map((t) => ({ ...t, font: 1 })), 1000);
-  const fE = (0.68 * 1.11) / Math.max(g1.gen, g2.gen); // m
-  const satir = (EN_MI ? 1.22 : 1.1) * fE; // İngilizce: "your" inen harfleri ↔ "pledge too." çıkanları (1,1'de 0,027 m)
-  const blok = g1.ust * fE + satir + g2.alt * fE;
-  const z1 = 0.62 - (0.62 - blok) / 2 - g1.ust * fE;
-  E.yazilar[0] = { ...E.yazilar[0], font: fE, z: z1, hedef: ["büyük harf", 0.7 * fE] };
-  E.yazilar[1] = { ...E.yazilar[1], font: fE, z: z1 - satir, hedef: ["büyük harf (ölçek)", 0.7 * fE] };
+  // 2 × 50″ ekran: 8 Kasım 2026'dan beri yazı yok, fotoğraf (EKRAN_FOTO; sharp, Chrome'suz).
 
   for (const d of [A, S, C]) {
     d.zemin = PAL.krem;
@@ -802,9 +808,9 @@ async function duvarlariHazirla(sayfaB) {
         d.sekiller.join("") +
         d.yazilar.map((t) => yaziSvg(t, d)).join(""),
     );
-  for (const d of [A, S, C, E]) d.html = ciz(d);
+  for (const d of [A, S, C]) d.html = ciz(d);
   return {
-    duvarlar: [A, S, E, C],
+    duvarlar: [A, S, C],
     profil: {
       kaynak: GEBCO_8K,
       bant_K: [TOROS.lat0, TOROS.lat1],
@@ -1073,7 +1079,16 @@ function trHarfDenetim(ad, metinler) {
   if (kalan.length) throw new Error(`${ad}: İngilizce dokuda Türkçe harfli sözcük: ${kalan.join(", ")}`);
 }
 
-const DUVAR_ADLARI = ["duvar-arka.png", "duvar-sol.png", "ekran-soz.png", "cephe-on.png"];
+const DUVAR_ADLARI = ["duvar-arka.png", "duvar-sol.png", "cephe-on.png"];
+/* ---------- 2 × 50″ ekran (d7 sol duvarı): 1,11 × 0,62 m → 1110 × 620 (1000 px/m), FOTOĞRAF (8 Kasım 2026, müşteri: "bu panolara
+   fotoğraf koyulabilir, 3 tane make your pledge too fazla olmuş"). Kaynak 1200 × 1600 dikey; "cover": genişlik 1110'a (lanczos3,
+   1110 × 1480), `ust` px'ten 620 satır (kaynakta ust / 0,925 … + 670 px). Kırpımlar başlar kesilmeden seçildi: fidan merkez kırpımda
+   (430) sağdaki gencin saçı üst kenara ~10 px kalıyordu → 390 (üstte ~45 px pay; sol ve ortadaki gençler dizden yukarı); çöp
+   toplamada kişiler alt-ortada → 675 (üç gönüllü başlarından, iki gencin ayakları ve torbalar kadrajda). Dilden bağımsız. ---------- */
+const EKRAN_FOTO = [
+  { ad: "ekran-fidan.png", kaynak: "public/photos/fidan-dikimi-ekip.jpg", ust: 390, ekran: "ekran_soz_0 (güney, y 1,05…2,16; içeriden bakana solda)" },
+  { ad: "ekran-cop.png", kaynak: "public/photos/cop-toplama-orman.jpg", ust: 675, ekran: "ekran_soz_1 (kuzey, y 2,20…3,31; sağda)" },
+];
 const ister = (ad) => !SADECE || SADECE.includes(ad);
 
 await mkdir(OUT, { recursive: true });
@@ -1136,6 +1151,39 @@ for (const [ad, html, w, h, alfa, d] of isler) {
   }
 }
 await tarayici.close();
+const fotolar = {};
+for (const e of EKRAN_FOTO) {
+  if (!ister(e.ad)) continue;
+  const W = 1110, H = 620;
+  const kaynak = path.join(KOK, e.kaynak);
+  const meta = await sharp(kaynak).metadata();
+  if (meta.width !== 1200 || meta.height !== 1600) throw new Error(`${e.kaynak}: ${meta.width}×${meta.height} (kırpım 1200×1600 için seçildi)`);
+  const hOlcek = Math.round((meta.height * W) / meta.width); // 1480
+  if (e.ust < 0 || e.ust + H > hOlcek) throw new Error(`${e.ad}: ust ${e.ust} + ${H} > ${hOlcek}`);
+  const png = await sharp(kaynak).resize(W, hOlcek, { kernel: "lanczos3" }).extract({ left: 0, top: e.ust, width: W, height: H }).png({ compressionLevel: 9 }).toBuffer();
+  await writeFile(path.join(OUT, e.ad), png);
+  uretilen.push(e.ad);
+  // doku istatistikleri (sRGB 8 bit): Rec.709 luma ortalaması / p99, beyaza yakın (en büyük kanal ≥ 250) piksel oranı
+  const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  const lumalar = [];
+  let beyaz = 0;
+  for (let i = 0; i < data.length; i += info.channels) {
+    lumalar.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
+    if (Math.max(data[i], data[i + 1], data[i + 2]) >= 250) beyaz++;
+  }
+  lumalar.sort((p, q) => p - q);
+  const n = lumalar.length;
+  fotolar[e.ad] = {
+    kaynak: e.kaynak,
+    ekran: e.ekran,
+    kirpim: { olcekli: [W, hOlcek], ust_px: e.ust, kaynak_y_px: [+(e.ust / (W / meta.width)).toFixed(1), +((e.ust + H) / (W / meta.width)).toFixed(1)] },
+    bayt: png.length,
+    luma_ort: +(lumalar.reduce((p, q) => p + q, 0) / n).toFixed(1),
+    luma_p99: +lumalar[Math.floor(0.99 * n)].toFixed(1),
+    beyaz_oran: +(beyaz / n).toFixed(4),
+  };
+  console.log("yazıldı", e.ad, W, "×", H, `${png.length} B · ${e.kaynak} y ${e.ust} · luma ort ${fotolar[e.ad].luma_ort} p99 ${fotolar[e.ad].luma_p99} · ≥250 %${(100 * fotolar[e.ad].beyaz_oran).toFixed(2)}`);
+}
 if (duvar) {
   // Kısmi çalışma (--sadece): bu çalışmada üretilmeyen duvar dokularının ölçümleri ve çapaları eski _duvar-olcum.json'dan
   // korunur (ör. yalnız arka duvar yeniden üretilince sol duvarın uye / il_ilce çapaları p7 için kalır).
@@ -1199,7 +1247,6 @@ if (duvar) {
           "#28332F/#F7E6CD": +kontrast(PAL.yesil, PAL.krem).toFixed(2),
           "#F7E6CD/#28332F": +kontrast(PAL.krem, PAL.yesil).toFixed(2),
           "#DF9560/#28332F": +kontrast(PAL.turuncu, PAL.yesil).toFixed(2),
-          "#F7E6CD/#17241D": +kontrast(PAL.krem, PAL.ekran).toFixed(2),
           "#DF9560/#F7E6CD (yalnız süs çubuğu, yazı değil)": +kontrast(PAL.turuncu, PAL.krem).toFixed(2),
         },
         dokular: tumOlcum,
@@ -1209,8 +1256,8 @@ if (duvar) {
     ),
   );
 }
-const tumu = [...new Set([...isler.map((i) => i[0]), ...DUVAR_ADLARI])];
+const tumu = [...new Set([...isler.map((i) => i[0]), ...DUVAR_ADLARI, ...EKRAN_FOTO.map((e) => e.ad)])];
 await writeFile(
   path.join(OUT, "_dokular.json"),
-  JSON.stringify({ uretim: new Date().toISOString(), betik: "scripts/blender/s2/dokular.mjs", ...(EN_MI ? { dil: DIL, metin: "src/components/icinden/metin.ts DOKU_EN", sigdirma, metinler } : {}), dosyalar: tumu, bu_calisma: uretilen }, null, 1),
+  JSON.stringify({ uretim: new Date().toISOString(), betik: "scripts/blender/s2/dokular.mjs", ...(EN_MI ? { dil: DIL, metin: "src/components/icinden/metin.ts DOKU_EN", sigdirma, metinler } : {}), dosyalar: tumu, bu_calisma: uretilen, ...(Object.keys(fotolar).length ? { ekran_fotograflari: fotolar } : {}) }, null, 1),
 );

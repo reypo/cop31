@@ -1,18 +1,19 @@
-# COP31'de AK Gençlik — konsept önizlemeleri
+# COP31'de AK Gençlik — "COP31'in İçinden"
 
-AK Parti Gençlik Kolları'nın COP31 Antalya standı için mobil öncelikli deneyim prototipleri (Next.js 16, React 19,
-Tailwind v4, TypeScript). Kod, belge ve yorum dili Türkçe.
+AK Parti Gençlik Kolları'nın COP31 Antalya standı için mobil öncelikli deneyim (Next.js 16, React 19, Tailwind v4,
+TypeScript). Kod, belge ve yorum dili Türkçe. Site İngilizce açılır; Türkçesi `/tr` altında.
 
 ## Rotalar
 
-| Rota | Konsept | Belge |
+| Rota | İçerik | Belge |
 |---|---|---|
-| `/` | Konsept seçimi (kartlar, QR) | — |
-| `/icinden` | "COP31'in İçinden": resmî logodan uzaya, Antalya Expo'ya, standa ve broşüre; önceden render edilmiş kliplerle bölüm bölüm dalış. Kiosk: `/icinden?auto=1` | `docs/brief-icinden-3.md` |
-| `/dunya` | "Antalya'dan Dünyaya" ("12.000 Yıllık Emanet") | `docs/brief-dunya-2.md`, `docs/brief-dunya-apple.md` |
-| `/fidan` | "Bir Fidanın Yolculuğu" | `docs/brief.md` |
-| `/brosur` | Dijital broşür | `docs/brief.md` |
-| `/nabiz` | "Gezegenin Nabzı" | `docs/brief.md` |
+| `/` | `/icinden`'e yönlendirir (307; `next.config.ts`) | — |
+| `/icinden` · `/tr/icinden` | "COP31'in İçinden": resmî logodan uzaya, Antalya Expo'ya, standa ve fidana; önceden render edilmiş kliplerle bölüm bölüm dalış. Kiosk: `/icinden?auto=1` | `docs/brief-icinden-3.md` |
+| `/brosur` · `/tr/brosur` | Dijital broşür: basılı broşür PDF'inin sayfa görüntüleriyle 3B sayfa çevirme | `docs/onay-listesi.md` §15 |
+
+Öteki konseptler (`/dunya`, `/fidan`, `/nabiz`) ve konsept seçme sayfası 8 Kasım 2026'da kaldırıldı; eski adresler
+`/icinden`'e yönlenir. Belgeleri (`docs/brief.md`, `docs/brief-dunya-2.md`, `docs/brief-dunya-apple.md`) geçmiş kaydı
+olarak duruyor; kodları git geçmişinde. `src/components/fidan/tree.ts` S3 render'ındaki ağacın kaynağı olarak kaldı.
 
 Müşteri onayı bekleyen maddeler: `docs/onay-listesi.md`.
 

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { OZET } from "@/components/brosur/sayfalar";
 import { DIL_ETIKET, DILLER, yol, type Dil } from "@/lib/dil";
 import { logos } from "@/lib/photos";
 import Cop31Logo from "./Cop31Logo";
@@ -59,15 +60,65 @@ const TarihliMetin = ({ p }: { p: Parcali }) => (
 );
 
 /**
- * Dijital broşür bağlantısı (§14.4.6: d0 üst şeridi ve kapanış; 7 Kasım: d1'den kapanışa dek sağ üstte sabit düğme, müşteri
- * isteği "her aşamada broşüre erişim"). Dile göre /brosur ya da /tr/brosur. Kiosk'ta gizli (stant ekranı döngüden çıkmasın).
- * Ön getirme yok (`prefetch={false}`): d0 şeridindeki bağlantı açılışta görünür, broşürün RSC yükü ve stil dosyası her
- * oturumda inip mobil bütçeye (§14.4.1, ≤ 12,0 MB) giriyordu ve Chrome "preload edilip kullanılmadı" uyarısı veriyordu.
+ * Dijital broşür bağlantısı (§14.4.6: kapanış; 7 Kasım: d1'den kapanışa dek sağ üstte sabit düğme, müşteri isteği "her
+ * aşamada broşüre erişim"; 8 Kasım: d0'da şerit düğmesi yerine kapaklı kart, `BrosurKart`). Dile göre /brosur ya da
+ * /tr/brosur. Kiosk'ta gizli (stant ekranı döngüden çıkmasın). Ön getirme yok (`prefetch={false}`): bağlantı açılışta
+ * görünür, broşürün RSC yükü ve stil dosyası her oturumda inip mobil bütçeye (§14.4.1, ≤ 12,0 MB) giriyordu ve Chrome
+ * "preload edilip kullanılmadı" uyarısı veriyordu.
  */
 export function DijitalBrosur({ dil, className = "" }: { dil: Dil; className?: string }) {
   return (
     <Link href={yol(dil, "/brosur")} prefetch={false} className={`v3-dijital ${className}`}>
+      <KitapSimgesi />
       {METIN[dil].brosur} <span aria-hidden="true">→</span>
+    </Link>
+  );
+}
+
+/** Açık kitap (broşür düğmeleri; 8 Kasım: müşteri "broşür kenarda köşede kalıyor"). Renk metinden (currentColor). */
+function KitapSimgesi() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="v3-kitap">
+      <path d="M12 6.5C10.2 5 7.6 4.4 3.5 4.5v13c4.1-.1 6.7.5 8.5 2 1.8-1.5 4.4-2.1 8.5-2v-13c-4.1-.1-6.7.5-8.5 2Z" />
+      <path d="M12 6.5v13" />
+    </svg>
+  );
+}
+
+/**
+ * d0 broşür kartı (8 Kasım 2026; müşteri: "açılışta direkt dünya geliyor, broşür çok kenarda köşede kalıyor, daha belirgin
+ * olsun"): dikeyde logo + tarih satırının altında, yatayda logonun sağında; kapak görüntüsü, üst etiket, broşürün kapak
+ * başlığı ve eylem düğmesi; kartın tamamı bağlantı. Kapak broşürün kendi 240 px sayfa görüntüsü (AVIF ~9 kB, WebP
+ * yedeği ~10 kB; next.config kalıcı önbellek). Şeritteki küçük düğmenin yerini aldı. Kiosk'ta gizli.
+ */
+function BrosurKart({ dil, T }: { dil: Dil; T: IcindenMetin["lombar"]["brosurKart"] }) {
+  const kapak = (uzanti: "avif" | "webp") => `/brosur/${dil}/p01-240.${OZET[dil][0]}.${uzanti}`;
+  return (
+    <Link href={yol(dil, "/brosur")} prefetch={false} className="v3-brosur-kart">
+      <picture className="v3-brosur-kapak">
+        <source srcSet={kapak("avif")} type="image/avif" />
+        {/* broşürün önceden boyutlu sayfa görüntüsü: next/image gerekmez */}
+        <img src={kapak("webp")} alt="" width={240} height={340} decoding="async" fetchPriority="low" />
+      </picture>
+      {/* Parçalar arası boşluklar ({" "}) erişilebilir adda kelimeler bitişmesin diye; esnek/blok düzende görünmez. */}
+      <span className="v3-brosur-kart-metin">
+        <span className="v3-brosur-kart-etiket">
+          <KitapSimgesi />
+          {T.etiket}
+        </span>{" "}
+        {/* Kapaktaki gibi iki satır: virgülden sonra satır başı ("1 Million Youth," / "One Common Home"). */}
+        <span className="v3-brosur-kart-baslik">
+          {T.baslik.split(/(?<=,) /).map((parca, i) => (
+            <span key={i} className="v3-brosur-kart-satir">
+              {i ? " " : null}
+              {parca}
+            </span>
+          ))}
+        </span>{" "}
+        <span className="v3-brosur-kart-eylem">
+          {T.eylem} <span aria-hidden="true">→</span>
+        </span>
+      </span>
     </Link>
   );
 }
@@ -214,15 +265,14 @@ export default function Icinden3({ dil }: { dil: Dil }) {
     const alt = M.alt[anahtar] ?? "";
     switch (anahtar) {
       case "lombar": {
-        // d0 — Açılış: resmî logo beyaz zeminde; AK Gençlik kimliği ayrı üst şeritte; sağda dil seçici + "Dijital broşür →".
+        // d0 — Açılış: resmî logo beyaz zeminde; AK Gençlik kimliği ayrı üst şeritte, sağda dil seçici; logonun altında
+        // (yatayda sağında) broşür kartı. Site doğrudan buradan açılır (8 Kasım 2026): konsept önizlemeleri ve
+        // "← Konseptler" bağlantısı kaldırıldı; şeritteki küçük "Dijital broşür →" yerine kart.
         const T = M.lombar;
         return (
           <Bolum key={k} k={k} rol={d.rol} baslik={T.baslik} alt={alt} h1>
             <div data-d={k} data-rol={d.rol} className="v3-bant v3-acilis" style={logoStil}>
               <div className="v3-serit">
-                <Link href="/" hrefLang={dil === "tr" ? undefined : "tr"} className="v3-geri">
-                  <span aria-hidden="true">←</span> {T.geri}
-                </Link>
                 <div className="v3-kimlik">
                   <Image
                     src={logos.genclikKollari.src}
@@ -240,7 +290,6 @@ export default function Icinden3({ dil }: { dil: Dil }) {
                 </div>
                 <div className="v3-serit-sag">
                   <DilSecici dil={dil} className="v3-dil-serit" />
-                  <DijitalBrosur dil={dil} className="v3-dijital-serit" />
                 </div>
               </div>
               <div className="v3-logo">
@@ -250,6 +299,7 @@ export default function Icinden3({ dil }: { dil: Dil }) {
               <p className="v3-logo-alti">
                 <TarihliMetin p={T.logoAlti} />
               </p>
+              <BrosurKart dil={dil} T={T.brosurKart} />
               <div className="v3-ipucu">
                 <p>{T.ipucu}</p>
               </div>

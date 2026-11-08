@@ -1146,6 +1146,7 @@ Değişmeyenler: kilitli adımlama, "yalnız kaydırma", geçişler 1,6–2,8 s,
 - **d1 videosuna dokunmak:** sepya leke düzeltmesi ilk yüklemeyi, lombarı ve kartı etkiler.
 - **d1 "mercek":** d3'ün ödülünü önceden açar.
 - **Fotoğraf yasakları:** insanlı ya da Cumhurbaşkanlı fotoğraf baskısı yok; gencIklimPanel hiçbir koşulda kullanılmaz (fonunda COP31 logosu var); fidanDikimiGencler kullanılmaz (çocuk var).
+  **İstisna (müşteri, 8 Kasım 2026):** d7 sol duvarındaki iki 50″ ekranda insanlı fotoğraf var ("bu panolara fotoğraf koyulabilir, 3 tane make your pledge too fazla olmuş"): `public/photos/fidan-dikimi-ekip.jpg` (ekran 0) ve `cop-toplama-orman.jpg` (ekran 1); ikisi de çocuksuz, Cumhurbaşkanısız, gencIklimPanel değil. "İnsanlı fotoğraf yok" kuralı yalnız bu iki ekranda kalktı, öteki yasaklar sürüyor (`dokular.mjs` EKRAN_FOTO, onay-listesi §14.1-G).
 - **d4/d5 bantlarını duvara gömmek:** okunurluk ve erişilebilirlik bozulur, her düzeltme yeniden render ister.
 
 ### 12.1 Durak listesi

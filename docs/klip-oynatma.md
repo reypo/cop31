@@ -694,3 +694,10 @@ alanlarını atar: istemci manifesti, ön yükleme / ısıtma / ön sarma sıras
 (`oynatici.ts`, `VideoSahne.tsx`) değişmedi. İngilizce klipler (8 Kasım): t34 r43 l4 p4 t45 r54 l5 p5 t56 r65 p6 t67 r76 p7 t79 r97;
 d11 → d12 zinciri (r43 → r32 → r21) ve p4 köprüsü İngilizce sayfada r43.en / p4.en. `kodla.mjs --artik` iki listenin dosyalarını
 birlikte tutar; `kodlama-dogrula.py --dil en` İngilizce oturumu (Türkçe liste + İngilizce kayıtlar) denetler.
+
+**8 Kasım (d7 ekran fotoğrafları + "#YarınBanaEmanet"; onay-listesi §14.1-G):** değişen yüzeylerin (iki ekran, arka duvar / ön cephe /
+kiosk hashtag'i) teslim kırpımlarında göründüğü klipler ışın testiyle bulundu (`.qa/icinden-ekran/gorunurluk-ozet.json`) ve iki dilde yeniden
+render + kodlandı: t34 r43 l4 p4 t45 r54 t56 r65 p6 t67 r76 p7 t79 r97 (dil başına 61 dosya); l5/p5 değişmedi. Eski 122 dosya `--artik` ile
+silindi (liste = manifest = public = 215; public/icinden 82,11 → 82,93 MB). Fotoğraflar d7 kliplerini büyüttü (dikey AV1 t67 +18, r76 +18,
+t79 +14 kB; p7 posteri TR 31,7 → 45,7, EN 48,6 → 65,5 kB); 4G tam tur oturumu Türkçe AV1 12,310 / HEVC 11,876, İngilizce 12,280 / 11,860 MB
+(tavan 12,5). Dikişler, son-kare çapaları ve VMAF (110 dosya) eşiklerde; ayrıntı `.qa/icinden-ekran/kodlama/`.

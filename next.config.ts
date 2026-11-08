@@ -48,6 +48,15 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Site doğrudan /icinden ile açılır (8 Kasım 2026; varsayılan dil İngilizce, Türkçe /tr/icinden). Öteki konseptler
+  // (/dunya, /fidan, /nabiz) ve konsept önizleme sayfası kaldırıldı; paylaşılmış eski adresler de /icinden'e gider.
+  // 307 (permanent: false): tarayıcılar yönlendirmeyi kalıcı önbelleğe almaz.
+  async redirects() {
+    return [
+      { source: "/", destination: "/icinden", permanent: false },
+      { source: "/:eski(dunya|fidan|nabiz|konseptler)", destination: "/icinden", permanent: false },
+    ];
+  },
   async headers() {
     return [
       { source: "/icinden/v/:path*", headers: KALICI },
