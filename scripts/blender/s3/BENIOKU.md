@@ -173,3 +173,24 @@ lc 23/27/32. Fidan bölümü dikey AV1 1,134 MB, HEVC 1,114 MB (posterler dahil)
 - Önizleme 960² TAA 16; son render 1920² TAA 64'te yaprak doygunluğu ve ΔL* biraz farklı çıkabilir (V ölçer).
 - tbc'de büyüme ≥ 2 px kare 12–57, sonda 8 kare durgun (K10; G-A 13). tab sonda 9 (G-A'dan aynen, K10 kapsamı dışı).
 - `--olc` arka plan yoklaması render'da gizli nesneleri atlar; kamera ↔ kasa (+0,55 m fidan zarfı) en yakın t89 0,29 m.
+
+## İki dil ve "S2 klibi + kasa" (8 Kasım 2026; onay-listesi §14.1-G, §15)
+
+- **S2 klibi + kasa** (`sahne.py --klip t34b | l4 | t45`, `S2_KASA`): S2'nin o klibi kendi kamerası, ışık devri, parça
+  animasyonu ve deklanşörüyle aynen kurulur (t78f gibi; S2 `KLIPLER` kare aralığı), üstüne yalnız kasa (palamut, fidan yok,
+  fidan_spot / güneş 0, `pankart_gel` görünür ve gölgeli). Kasa bankoyla birlikte patlatılmış d4'te kalkar. l5/p5'te kasa görünmez
+  (ışın testi 0 örnek) → l5 S2 `son.sh` ile. `son.sh t34b l4 t45`: t34b `<kök>/t34b/ham/` (t34 numarası 36–59) → S2 `parlama.py`
+  → `k_0000–0023`; JSON S2'nin (`s2/sahne.py --klip <klip> --yalniz_json`); sonra `scripts/icinden/t34-birlestir.py --kok <kök>`.
+  Böylece d4/d5 de güncel sahnede (G7 arka duvarı + kasa); eski "Kasa d4/d5'te yok" sınırı kalktı.
+- **Dil**: yazılı dokular `S2_DOKU` ortam değişkeninden (S2 `sahne.py --doku`; boş → `s2/doku` Türkçe). İngilizce dokular
+  `node scripts/blender/s2/dokular.mjs --dil en` → `s2/doku-en` (metinler `src/components/icinden/metin.ts` `DOKU_EN`). Çıktı kökü
+  `S3_KOK` (S2'de `S2_KOK`). İngilizce yalnız yazının göründüğü klipler: S3 t34b l4 t45 **t79** (başı d7 sol duvarı, ekranlar), S2 l5
+  t56 t67 (+ p6/p7). t89/t9a/tab/tbc/lc ve p9–pc'de okunur yazı yok → iki dilde ortak.
+  ```bash
+  S2_DOKU=D:/soft/cop31-varlik/s2/doku bash scripts/blender/s3/son.sh t34b l4 t45                       # Türkçe (render-son)
+  S2_DOKU=D:/soft/cop31-varlik/s2/doku-en S3_KOK=D:/soft/cop31-varlik/render-son-en bash scripts/blender/s3/son.sh t34b l4 t45 t79
+  S2_DOKU=D:/soft/cop31-varlik/s2/doku-en S2_KOK=D:/soft/cop31-varlik/render-son-en bash scripts/blender/s2/son.sh l5 t56 t67
+  ```
+  `render-son-en/t34a/` = `render-son/t34a/` sabit bağları (S1, yazısız). Kodlama: `kodla.mjs --dil en` (docs/klip-oynatma.md §10).
+- EEVEE arızası (7 Kasım önizlemesi, iki kez): kare ışıksız (yalnız emisyonlu yüzeyler), 13–16 s/kare; aynı komut sonra normal.
+  Tam render'da her klipten sonra `.qa/icinden-en/render/parlaklik.py` (karşı master'a luma oranı) denetler, karanlık kare yeniden işlenir.

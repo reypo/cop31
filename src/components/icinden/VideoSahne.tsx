@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import type { Dil } from "@/lib/dil";
 import { createStepper, type Durak as AdimDurak, type Jest, type Stepper } from "./adim";
 import KadrajOkumasi, { okumaYaz } from "./KadrajOkumasi";
 import type { Boyut, IstemciManifest, KodekAd, Nokta } from "./klipler";
@@ -39,6 +40,10 @@ import { dizinler, fidanRolu, rolu, sirasi, type Rol } from "./rol";
  * video ister. Otomatik oynatma engeli: oynatıcı her jestte kilidi yeniden dener (oynatici.ts `kilitAc`).
  * Bekle kipi (W-4 §14.7): klip inmediyse / oynatma reddedildiyse geçiş poster sönmesine düşmez; mevcut kare durur, kökte
  * `data-bekle="1"` (300 ms'den uzunsa sol üstte halka), metin ertelenir, adımlayıcı kilidi varışa dek sürer.
+ *
+ * İki dil (7 Kasım 2026): `dil` yalnız kadraj okumasının biçimi için (metinler sunucuda, Icinden3/metin.ts). Dil seçicinin
+ * bağlantıları (`a[data-v3-dil]`) bulunulan adresin sorgusunu taşır; tıkta durak "icinden-donus"a yazılır, öteki dilin sayfası
+ * (tam yükleme: kök yerleşim değişir) başlangıç bloğunda aynı duraktan sürer (broşür dönüşüyle aynı yol).
  */
 
 const KIOSK_KAPANIS_MS = 9000;
@@ -71,11 +76,16 @@ const easeInCubic = (x: number) => x * x * x;
 
 export default function VideoSahne({
   manifest,
+  dil,
   etiketler,
+  ust,
   children,
 }: {
   manifest: IstemciManifest;
+  dil: Dil;
   etiketler: ReactNode;
+  /** Sağ üst kümede kadraj okumasının sağı: dil seçici ve "Dijital broşür →" (sabit, d1–d12). */
+  ust?: ReactNode;
   children: ReactNode;
 }) {
   const kokRef = useRef<HTMLDivElement>(null);
@@ -84,6 +94,8 @@ export default function VideoSahne({
     const kok = kokRef.current;
     if (!kok) return;
     const q = new URLSearchParams(location.search);
+    // Dil seçici: öteki dildeki adres aynı sorguyla (?azalt=1, ?kodek=… korunur; HTML'de sorgusuz, JS yokken de çalışır).
+    for (const a of kok.querySelectorAll<HTMLAnchorElement>(DIL_SECICI)) a.search = location.search;
     // "bro-geldi" (geri.tsx history.back) yalnız "/icinden → broşür" adımının hemen ardından geçerli: /icinden'e her
     // gelişte silinir (tarayıcının geri tuşu/jesti dahil; Activity görünür olunca bu etki yeniden çalışır), broşür
     // bağlantısı yeniden yazar. Silinmezse sonraki broşür ziyaretinde "← COP31'in İçinden" ana sayfaya gidiyordu.
@@ -99,16 +111,30 @@ export default function VideoSahne({
       // Akış düzeninde polaroidler bölümün içinde statik: tarayıcının tembel yüklemesiyle.
       polaroidYukle(kok, true);
       // Broşür dönüşü: history.back adresi (?azalt=1) korur; kaydırma yeri işaretten (dönüşte broşürün konumunda kalır).
+      // Dil geçişi: öteki dilde bölüm boyları farklı, kaydırma yeri değil bölüm (durak no, N = kapanış) taşınır.
+      const azaltBolumler = () => [...kok.querySelectorAll<HTMLElement>(".v3-durak, .ic-kapanis")];
       try {
         const y = Number(sessionStorage.getItem(DONUS_Y) ?? NaN);
+        const s = sessionStorage.getItem(DONUS);
         sessionStorage.removeItem(DONUS_Y);
+        sessionStorage.removeItem(DONUS);
+        const b = s === null ? undefined : azaltBolumler()[Number(s)];
         if (Number.isFinite(y)) window.scrollTo({ top: y, behavior: "instant" });
+        else if (b) window.scrollTo({ top: b.getBoundingClientRect().top + window.scrollY, behavior: "instant" });
       } catch {
         // Depolama kapalı.
       }
       const azaltIsaret = (e: MouseEvent) => {
-        if (!brosurTiki(e)) return;
+        const dilTik = baglantiTiki(e, DIL_SECICI);
+        if (!dilTik && !brosurTiki(e)) return;
         try {
+          if (dilTik) {
+            // Görünen bölüm: üstü ekranın üst üçte birinde ya da yukarıda kalan son bölüm.
+            const sinir = window.innerHeight / 3;
+            const j = azaltBolumler().reduce((s, b, i) => (b.getBoundingClientRect().top <= sinir ? i : s), 0);
+            sessionStorage.setItem(DONUS, String(j));
+            return;
+          }
           sessionStorage.setItem(GELDI, "icinden");
           sessionStorage.setItem(DONUS_Y, String(Math.round(window.scrollY)));
         } catch {
@@ -127,13 +153,13 @@ export default function VideoSahne({
     const b0 = boyutHesapla();
     void kodekSec(manifest, b0, q.get("kodek")).then((kodek) => {
       if (iptal) return;
-      temizle = kur(kok, manifest, b0, kodek, q);
+      temizle = kur(kok, manifest, b0, kodek, q, dil);
     });
     return () => {
       iptal = true;
       temizle?.();
     };
-  }, [manifest]);
+  }, [manifest, dil]);
 
   return (
     <div
@@ -161,8 +187,14 @@ export default function VideoSahne({
         <div data-v3-sutun-cizgi className="v3-sutun-cizgi" />
         <div data-v3-perde className="v3-perde" />
       </div>
-      {/* Sahne kabının dışında: metin bandının scrim'i (z 10) okumayı karartmasın. */}
-      <KadrajOkumasi />
+      {/*
+        Sahne kabının dışında: metin bandının scrim'i (z 10) okumayı karartmasın. Sağ üst küme (sağdan sola: broşür, dil,
+        kadraj okuması): okuma düğmelerin genişliği kadar sola kayar (iki dilde ayrı genişlik; sabit pay yok).
+      */}
+      <div className="v3-ust">
+        <KadrajOkumasi />
+        {ust}
+      </div>
       {/* Bekle kipi (W-4): klip inene dek mevcut kare durur; halka yalnız 300 ms'den uzun beklemede (CSS). */}
       <div className="v3-bekle" aria-hidden="true">
         <i />
@@ -207,15 +239,20 @@ const DONUS = "icinden-donus";
 /** `?azalt=1` akış düzeninde broşüre gidilen kaydırma yeri (px). */
 const DONUS_Y = "icinden-donus-y";
 
+/** Broşür bağlantıları (iki dil: /brosur, /tr/brosur; DijitalBrosur) ve dil seçicinin bağlantıları (DilSecici). */
+const BROSUR = 'a:is([href="/brosur"], [href="/tr/brosur"])';
+const DIL_SECICI = "a[data-v3-dil]";
+
 /**
- * Broşür bağlantısına düz tık mı: değiştirici tuşlu (Ctrl/Cmd/Shift/Alt: yeni sekme/pencere) ya da sol düğme dışı tık bu
+ * Bağlantıya düz tık mı: değiştirici tuşlu (Ctrl/Cmd/Shift/Alt: yeni sekme/pencere) ya da sol düğme dışı tık bu
  * sekmeden ayrılmaz, işaret yazılmamalı (bayat işaret sonraki /icinden açılışını eski durakta başlatıyordu). geri.tsx ile
  * aynı kural.
  */
-function brosurTiki(e: MouseEvent): boolean {
+function baglantiTiki(e: MouseEvent, secici: string): boolean {
   if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
-  return e.target instanceof Element && !!e.target.closest('a[href="/brosur"]');
+  return e.target instanceof Element && !!e.target.closest(secici);
 }
+const brosurTiki = (e: MouseEvent) => baglantiTiki(e, BROSUR);
 
 /**
  * Poster kipi yalnız el ile (`?poster=1`; W-2 §14.7). Save-Data, 2G/3G tahmini ve prefers-reduced-data eskiden kendiliğinden
@@ -225,7 +262,7 @@ function azVeri(q: URLSearchParams): boolean {
   return q.get("poster") === "1";
 }
 
-function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekAd, q: URLSearchParams): () => void {
+function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekAd, q: URLSearchParams, dil: Dil): () => void {
   const sahne = kok.querySelector<HTMLElement>(".v3-sahne")!;
   const kagit = sahne.querySelector<HTMLElement>("[data-v3-kagit]");
   const kadrajEl = kok.querySelector<HTMLElement>("[data-v3-kadraj]");
@@ -259,9 +296,11 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
    * gidilen durak, "başlangıç" bloğu bir kez okuyup o duraktan sürer.
    */
   const brosurIsaret = (e: MouseEvent) => {
-    if (!brosurTiki(e)) return;
+    // Dil seçici (DilSecici): yalnız durak (öteki dildeki /icinden aynı duraktan sürer); broşür: durak + "bro-geldi".
+    const dilTik = baglantiTiki(e, DIL_SECICI);
+    if (!dilTik && !brosurTiki(e)) return;
     try {
-      sessionStorage.setItem(GELDI, "icinden");
+      if (!dilTik) sessionStorage.setItem(GELDI, "icinden");
       // Geri dönüşte bu duraktan sürülsün (başlangıç bloğu okur): kaydırma geri yüklemesi d10'dan d1'e düşürüyordu.
       const h = Number(kok.dataset.hedef); // geçiş sürerken gidilen durak (hedefYaz)
       sessionStorage.setItem(DONUS, String(faz === "gecis" && Number.isInteger(h) ? h : k));
@@ -526,7 +565,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     baglantiOdak(j);
     iptalEt(dinlenmeId);
     dinlenmeId = sonra(400, () => dinlenmeYaz(j));
-    okumaYaz(kadrajEl, okuma(j));
+    okumaYaz(kadrajEl, okuma(j), dil);
     spotBaslat(j);
     // d10 polaroidleri: d9 (gövde) dinlenmesinde, varış devrinin dışında indirilip çözülür (§14.4.6); d10/d11'e doğrudan
     // varışta (yerleşme, kiosk başa dönüşü değil) hemen. d12'ye (Dünya) doğrudan varışta değil.
@@ -571,7 +610,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     const o = D[hedefDizi]?.okuma;
     if (!Array.isArray(o) || !o.length) return;
     const i = ters ? n - 1 - f : f;
-    okumaYaz(kadrajEl, o[Math.max(0, Math.min(o.length - 1, i))]);
+    okumaYaz(kadrajEl, o[Math.max(0, Math.min(o.length - 1, i))], dil);
   };
 
   /* ---------------- durak kurulumu (statik) ---------------- */
@@ -612,7 +651,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
     // kapanış (son fidan durağı → kapanış: DOM, 1 s)
     if (to === N) {
       gecisBasi(N);
-      okumaYaz(kadrajEl, "");
+      okumaYaz(kadrajEl, "", dil);
       sonra(1000, () => {
         kapanisKur();
         if (olcBekliyor) yenidenOlc();
@@ -676,7 +715,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
           });
         },
       });
-      okumaYaz(kadrajEl, "");
+      okumaYaz(kadrajEl, "", dil);
       return v + 2 * LOGO_MS;
     }
     // Klipli geçişler (ileri ve geri; d1 … d12). Döngüsüz duraklar (duvar, fidan d8–d10) gelen klibin son karesinde
@@ -785,7 +824,7 @@ function kur(kok: HTMLElement, m: IstemciManifest, boyut0: Boyut, kodek0: KodekA
       // Tarayıcının kendi kaydırması (kaydırma çubuğu, bul, Home/End, odak): klipsiz o durağa.
       if (faz !== "dur" || i === k) return;
       if (i >= N) {
-        okumaYaz(kadrajEl, "");
+        okumaYaz(kadrajEl, "", dil);
         spotDurdur();
         kapanisKur();
         kioskPlanla();

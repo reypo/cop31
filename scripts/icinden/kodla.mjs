@@ -9,6 +9,14 @@
 //   node scripts/icinden/kodla.mjs --artik [--kuru]   (listede olmayan özetli dosyaları sil / yalnız listele)
 //   node scripts/icinden/kodla.mjs --dus r98           (çıktı adının kayıtlarını listeden çıkar; bütçe merdiveni)
 //
+// İki dil (8 Kasım 2026; onay-listesi §15): `--dil en` render içindeki yazıları İngilizce olan master'ları (D:/soft/cop31-varlik/
+// render-son-en; dokular.mjs --dil en) kodlar. Adlar `<ad>.en.<8 hex>.<kodek>.mp4` / `<ad>.en.<8 hex>.webp`, liste
+// `kodlama/render-son-en.json` (kayıtlarda `dil: "en"`); yalnız yazının göründüğü klipler (öteki klipler iki dilde ortak).
+// manifest-birlestir.mjs İngilizce kayıtları klip/poster girdilerine `dil.en` olarak ekler, site dile göre çözer (klipler.ts
+// dilManifesti). `--artik` iki dilin etkin listelerini (render-son.json + render-son-en.json, varsa; `--liste-ek` ile başka) birlikte
+// tutar: birinin dosyası ötekinin temizliğinde silinmez.
+//   node scripts/icinden/kodla.mjs --dil en --kaynak D:/soft/cop31-varlik/render-son-en --klip t34,r43,l4,p4,t45,r54,l5,p5,t56,r65,p6,t67,r76,p7,t79,r97
+//
 // G-B önizleme (S3 EEVEE 960², brief §14.4.3; t78 = t78f kareleri):
 //   node scripts/icinden/kodla.mjs --kaynak D:/soft/cop31-varlik/render-son --esle t78=<_onizleme>/s3-t78f,t89=…/s3-t89,
 //        t9a=…/s3-t9a,tab=…/s3-tab,tbc=…/s3-tbc,lc=…/s3-lc --klip t78,r87,p8,t89,r98,t9a,tab,tbc,lc,p9,pa,pb,pc
@@ -59,10 +67,20 @@ import { dizi, fragmanOku, kareParcalari } from "./fragman.mjs";
 const argv = process.argv.slice(2);
 const arg = (k, d) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : d);
 const bayrak = (k) => argv.includes(k);
-const KAYNAK = resolve(arg("--kaynak", "D:/soft/cop31-varlik/render-son"));
+const DIL = arg("--dil", "tr");
+if (!["tr", "en"].includes(DIL)) throw new Error(`--dil ${DIL}: tr | en`);
+/** Dosya adı dil eki: Türkçe (taban) eksiz, öteki dil ".en". */
+const DIL_EK = DIL === "tr" ? "" : `.${DIL}`;
+const KAYNAK = resolve(arg("--kaynak", DIL === "tr" ? "D:/soft/cop31-varlik/render-son" : `D:/soft/cop31-varlik/render-son-${DIL}`));
 const FRAGMAN = resolve(arg("--fragman", KAYNAK));
 const CIKTI = resolve(arg("--cikti", "public/icinden"));
 const LISTE = resolve(arg("--liste", `D:/soft/cop31-varlik/kodlama/${basename(KAYNAK)}.json`));
+if (DIL !== "tr" && !argv.includes("--liste") && !basename(LISTE).endsWith(`-${DIL}.json`))
+  throw new Error(`--dil ${DIL}: liste ${LISTE} dile özgü değil (kaynak klasörü "-${DIL}" ile bitmeli ya da --liste verin)`);
+/** İki dilin etkin listeleri (`--artik` hepsinin dosyalarını tutar). */
+const ETKIN_LISTELER = [
+  ...new Set([LISTE, resolve("D:/soft/cop31-varlik/kodlama/render-son.json"), resolve("D:/soft/cop31-varlik/kodlama/render-son-en.json"), ...arg("--liste-ek", "").split(",").filter(Boolean).map((x) => resolve(x))]),
+];
 const PRESET = arg("--preset", "slow");
 const TEMIZLE = bayrak("--temizle");
 const ESLE = Object.fromEntries(
@@ -321,7 +339,10 @@ function crfSec(kodek, tur, ad) {
 // p6/p7 q80 (F turu, denetim D3-03): "oto" merdiveni q68'i seçiyor ve §12.6 başlık bölgesi sınırını (ΔE00 ≤ 2) bozuyordu
 // (K2: q68 2,134–2,295 ✗, q80 1,857–1,974 ✓); E teslimi q80 ile yapıldı. "oto" `--poster-q p6=oto` ile hâlâ seçilebilir.
 const POSTER_Q_TABAN = { p3: 68, p6: 80, p7: 80 };
-const POSTER_Q = { ...POSTER_Q_TABAN, ...Object.fromEntries(arg("--poster-q", "").split(",").filter(Boolean).map((s) => s.split("="))) };
+// İki dil (8 Kasım): İngilizce p7'de "81 Provinces / 922 Districts" iki satır (Türkçede tek satır) → q80'de il_ilce çapa bölgesi
+// ΔE00 2,04 / 2,07 (dikey / yatay; §12.6 ≤ 2) → q86 (kodlama-dogrula --dil en; .qa/icinden-en/kodlama).
+const POSTER_Q_DIL = { en: { p7: 86 } };
+const POSTER_Q = { ...POSTER_Q_TABAN, ...(POSTER_Q_DIL[DIL] ?? {}), ...Object.fromEntries(arg("--poster-q", "").split(",").filter(Boolean).map((s) => s.split("="))) };
 const posterQ = (ad, boyut) => {
   const v = POSTER_Q[`${ad}.${boyut}`] ?? POSTER_Q[ad] ?? 80;
   return v === "oto" ? "oto" : Number(v);
@@ -442,15 +463,15 @@ function sureKare(yol) {
   return { kare: Number(s.nb_read_frames), etiket: `${s.codec_tag_string} ${s.profile} L${s.level} ${s.width}x${s.height} ${s.color_space ?? "?"}` };
 }
 
-// Ad: harf + 1–2 hane/harf (t01, l3, p6; G-B: t9a, tab, tbc, lc, r98, pa, pb, pc).
-const OZETLI = /^([a-z][0-9a-z]{1,2})\.([0-9a-f]{8})\.((?:h264|hevc|av1)\.mp4|webp)$/;
-/** `<dz>` içinde `<ad>.<8 hex>.<uzantı>` biçimli, `tut` dışındaki dosyalar. */
+// Ad: harf + 1–2 hane/harf (t01, l3, p6; G-B: t9a, tab, tbc, lc, r98, pa, pb, pc), isteğe bağlı dil eki (".en").
+const OZETLI = /^([a-z][0-9a-z]{1,2})(?:\.(en))?\.([0-9a-f]{8})\.((?:h264|hevc|av1)\.mp4|webp)$/;
+/** `<dz>` içinde bu dilin `<ad>[.en].<8 hex>.<uzantı>` biçimli, `tut` dışındaki dosyaları. */
 function eskiler(dz, ad, uzanti, tut) {
   if (!existsSync(dz)) return [];
   return readdirSync(dz)
     .filter((f) => {
       const m = OZETLI.exec(f);
-      return m && m[1] === ad && m[3] === uzanti && f !== tut;
+      return m && m[1] === ad && (m[2] ?? "tr") === DIL && m[4] === uzanti && f !== tut;
     })
     .map((f) => join(dz, f));
 }
@@ -569,7 +590,10 @@ const kaydet = (s) => yeniKayitlar.set(anahtar(s), s);
 // ---------- artık temizliği (`--artik`) ----------
 if (bayrak("--artik")) {
   const kuru = bayrak("--kuru");
-  const l = listeOku();
+  // İki dil: etkin listelerin hepsi (yoksa atlanır); dosyası hiçbirinde olmayan özetli dosya artıktır.
+  const listeler = ETKIN_LISTELER.filter((y) => existsSync(y));
+  const l = listeler.flatMap((y) => JSON.parse(readFileSync(y, "utf8")));
+  console.log(`artık: tutulan listeler ${listeler.map((y) => `${basename(y)} (${JSON.parse(readFileSync(y, "utf8")).length})`).join(" + ")}`);
   const tut = new Set(l.map((s) => resolve(s.yol ?? join(CIKTI, "..", s.dosya))));
   let n = 0, bayt = 0;
   for (const alt of ["v/d", "v/y", "p/d", "p/y"]) {
@@ -585,7 +609,7 @@ if (bayrak("--artik")) {
       if (!kuru) rmSync(yol);
     }
   }
-  console.log(`artık: ${n} dosya, ${(bayt / 1e6).toFixed(3)} MB${kuru ? " (kuru koşu, silinmedi)" : ""}; liste ${l.length} kayıt → ${LISTE}`);
+  console.log(`artık: ${n} dosya, ${(bayt / 1e6).toFixed(3)} MB${kuru ? " (kuru koşu, silinmedi)" : ""}; listeler ${l.length} kayıt`);
   process.exit(0);
 }
 
@@ -629,10 +653,10 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
   const kirp = boyut === "yatay" ? (p.tip === "son-kare" ? BOYUT.yatay.kirp(kY) : B.kirp(kirpimYOf(p.kaynak))) : B.kirp();
   const vf = `${PG.bas};[g]${kirp},scale=${B.g}:${B.y}:flags=lanczos,format=rgb24[o]`;
   const kaynakOzet = PG.png ? ozetTam(PG.png).slice(0, 16) : null;
-  const kayit = { kaynakKlip: p.kaynak, klip: ad, tur: "poster", boyut, kodek: "webp", posterTip: p.tip, kaynakKare: PG.kaynakKare, kaynakOzet, kirpimY: kY, kirpim: kirp, giris: G.giris };
+  const kayit = { kaynakKlip: p.kaynak, klip: ad, tur: "poster", boyut, kodek: "webp", ...(DIL_EK ? { dil: DIL } : {}), posterTip: p.tip, kaynakKare: PG.kaynakKare, kaynakOzet, kirpimY: kY, kirpim: kirp, giris: G.giris };
   const kodla = (q, yol) => calistir([...PG.args, "-filter_complex", vf, "-map", "[o]", "-frames:v", "1", "-c:v", "libwebp", "-quality", String(q), "-compression_level", "6", yol]);
   let q = posterQ(ad, boyut);
-  const gecici = join(pdz, `${ad}.tmp.webp`);
+  const gecici = join(pdz, `${ad}${DIL_EK}.tmp.webp`);
   let merdiven;
   if (q === "oto") {
     // Referans: aynı kırpım + ölçek, rgb24 (kodlayıcıya giren görüntü).
@@ -640,7 +664,7 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
     merdiven = [];
     let q80 = null;
     for (const mq of MERDIVEN) {
-      const y = join(pdz, `${ad}.q${mq}.tmp.webp`);
+      const y = join(pdz, `${ad}${DIL_EK}.q${mq}.tmp.webp`);
       kodla(mq, y);
       const lab = await webpLab(y);
       q80 ??= lab;
@@ -650,7 +674,7 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
     const sec = merdiven.filter((m) => m.dE00_master <= sinir).sort((a, b) => a.q - b.q)[0];
     q = sec.q;
     for (const m of merdiven) {
-      const y = join(pdz, `${ad}.q${m.q}.tmp.webp`);
+      const y = join(pdz, `${ad}${DIL_EK}.q${m.q}.tmp.webp`);
       if (m.q === q) renameSync(y, gecici);
       else rmSync(y, { force: true });
     }
@@ -658,10 +682,10 @@ async function posterKodla({ ad, p, G, boyut, B, pdz }) {
   } else kodla(q, gecici);
 
   const h = ozet(gecici);
-  const son = join(pdz, `${ad}.${h}.webp`);
+  const son = join(pdz, `${ad}${DIL_EK}.${h}.webp`);
   if (existsSync(son)) rmSync(son);
   renameSync(gecici, son);
-  Object.assign(kayit, { dosya: `/icinden/p/${B.kisa}/${ad}.${h}.webp`, bayt: statSync(son).size, kalite: q, ...(merdiven ? { merdiven } : {}), yol: son });
+  Object.assign(kayit, { dosya: `/icinden/p/${B.kisa}/${ad}${DIL_EK}.${h}.webp`, bayt: statSync(son).size, kalite: q, ...(merdiven ? { merdiven } : {}), yol: son });
   console.log(`${boyut} ${ad} poster (${p.tip} ← ${p.kaynak}[${PG.kaynakKare}]${kY != null ? `, kirpimY ${kY}` : ""}): q${q} ${(kayit.bayt / 1000).toFixed(1)} kB → ${basename(son)}`);
   return kayit;
 }
@@ -671,6 +695,7 @@ const t00 = Date.now();
 const silinecek = [];
 const tutulan = [];
 let sayac = 0;
+console.log(`dil ${DIL}${DIL_EK ? ` (dosya eki "${DIL_EK}")` : ""} · kaynak ${KAYNAK} · liste ${LISTE}`);
 if (SECIM.length) console.log(`seçim: ${SECIM.map((x) => [x.ad, x.kodek, x.boyut].filter(Boolean).join(".")).join(", ")}`);
 for (const [ad, p] of Object.entries(POSTER))
   if (p.tip === "son-kare" && SECIM.some((x) => x.ad === p.kaynak) && !adSecildi(ad))
@@ -715,19 +740,19 @@ for (const kaynak of KAYNAKLAR) {
       for (const kodek of B.kodekler) {
         if (!secildi(c.ad, boyut, kodek)) continue;
         const t0 = Date.now();
-        const gecici = join(dz, `${c.ad}.tmp.${kodek}.mp4`);
+        const gecici = join(dz, `${c.ad}${DIL_EK}.tmp.${kodek}.mp4`);
         const vf = `${G.bas};[g]${kirp},scale=${B.g}:${B.y}:flags=lanczos:${RENK},format=yuv420p${c.tur === "geri" ? ",reverse" : ""}[o]`;
         const crf = crfSec(kodek, c.tur, c.ad);
         const bolge = kodek === "av1" ? null : bolgeSec(c.ad, kodek);
         calistir([...G.args, "-filter_complex", vf, "-map", "[o]", "-r", String(FPS), ...kodekArg(kodek, crf, G.kare, bolge), ...RENK_ETIKET, "-an", "-movflags", "+faststart", gecici]);
         const h = ozet(gecici);
-        const son = join(dz, `${c.ad}.${h}.${kodek}.mp4`);
+        const son = join(dz, `${c.ad}${DIL_EK}.${h}.${kodek}.mp4`);
         if (existsSync(son)) rmSync(son);
         renameSync(gecici, son);
         (TEMIZLE ? silinecek : tutulan).push(...eskiler(dz, c.ad, `${kodek}.mp4`, basename(son)));
         const p = sureKare(son);
         if (p.kare !== G.kare) console.warn(`UYARI ${c.ad} ${kodek}: kodlanmış ${p.kare} kare, kaynak ${G.kare}`);
-        kaydet({ kaynakKlip: kaynak, klip: c.ad, tur: c.tur, boyut, kodek, dosya: `/icinden/v/${B.kisa}/${c.ad}.${h}.${kodek}.mp4`, bayt: statSync(son).size, kare: p.kare, sure: +(p.kare / FPS).toFixed(4), crf, ...(bolge ? { bolge: bolgeDize(bolge) } : {}), kirpimY, kirpim: kirp, etiket: p.etiket, ms: Date.now() - t0, yol: son, giris: G.giris });
+        kaydet({ kaynakKlip: kaynak, klip: c.ad, tur: c.tur, boyut, kodek, ...(DIL_EK ? { dil: DIL } : {}), dosya: `/icinden/v/${B.kisa}/${c.ad}${DIL_EK}.${h}.${kodek}.mp4`, bayt: statSync(son).size, kare: p.kare, sure: +(p.kare / FPS).toFixed(4), crf, ...(bolge ? { bolge: bolgeDize(bolge) } : {}), kirpimY, kirpim: kirp, etiket: p.etiket, ms: Date.now() - t0, yol: son, giris: G.giris });
         sayac++;
         console.log(`${boyut} ${c.ad} ${kodek}: ${(statSync(son).size / 1000).toFixed(1)} kB, ${p.kare} kare, crf ${crf}${bolge ? ` zones ${bolgeDize(bolge)}` : ""}, ${p.etiket}, ${Date.now() - t0} ms → ${basename(son)}`);
       }

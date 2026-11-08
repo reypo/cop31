@@ -1,6 +1,6 @@
 {
  "surum": 3,
- "olusturma": "2026-11-07T14:17:20.180Z",
+ "olusturma": "2026-11-07T22:53:38.652Z",
  "kaynak": "render",
  "fps": 30,
  "master": 1920,
@@ -1812,24 +1812,50 @@
     "kare": 60,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t34.11a00a0a.h264.mp4",
-      "hevc": "/icinden/v/d/t34.f480e9f0.hevc.mp4",
-      "av1": "/icinden/v/d/t34.47a0349d.av1.mp4"
+      "h264": "/icinden/v/d/t34.e6ecdbae.h264.mp4",
+      "hevc": "/icinden/v/d/t34.d0d43ee0.hevc.mp4",
+      "av1": "/icinden/v/d/t34.a4c2b699.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t34.35dbf44e.h264.mp4",
-      "av1": "/icinden/v/y/t34.5e408b3f.av1.mp4"
+      "h264": "/icinden/v/y/t34.8e0b251e.h264.mp4",
+      "av1": "/icinden/v/y/t34.c496ac7f.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 884663,
-      "hevc": 798750,
-      "av1": 885197
+      "h264": 885845,
+      "hevc": 803264,
+      "av1": 882941
      },
      "yatay": {
-      "h264": 918682,
-      "av1": 891065
+      "h264": 919872,
+      "av1": 891788
+     }
+    },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/t34.en.f308eb45.h264.mp4",
+        "hevc": "/icinden/v/d/t34.en.cee0d0e3.hevc.mp4",
+        "av1": "/icinden/v/d/t34.en.4686042e.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/t34.en.005b0a6e.h264.mp4",
+        "av1": "/icinden/v/y/t34.en.23315eb3.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 882548,
+        "hevc": 800805,
+        "av1": 884703
+       },
+       "yatay": {
+        "h264": 916424,
+        "av1": 890309
+       }
+      }
      }
     },
     "geri": {
@@ -1838,24 +1864,50 @@
      "kare": 60,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r43.9cfb6527.h264.mp4",
-       "hevc": "/icinden/v/d/r43.e9a2b881.hevc.mp4",
-       "av1": "/icinden/v/d/r43.97d6af75.av1.mp4"
+       "h264": "/icinden/v/d/r43.d943370e.h264.mp4",
+       "hevc": "/icinden/v/d/r43.b6256508.hevc.mp4",
+       "av1": "/icinden/v/d/r43.b759375c.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r43.fd4431b0.h264.mp4",
-       "av1": "/icinden/v/y/r43.4eed8f5b.av1.mp4"
+       "h264": "/icinden/v/y/r43.07406210.h264.mp4",
+       "av1": "/icinden/v/y/r43.b9b6ba62.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 907836,
-       "hevc": 724382,
-       "av1": 860285
+       "h264": 904018,
+       "hevc": 723764,
+       "av1": 860569
       },
       "yatay": {
-       "h264": 859071,
-       "av1": 856873
+       "h264": 860074,
+       "av1": 855733
+      }
+     },
+     "dil": {
+      "en": {
+       "dosya": {
+        "dikey": {
+         "h264": "/icinden/v/d/r43.en.13d9adcd.h264.mp4",
+         "hevc": "/icinden/v/d/r43.en.58937af8.hevc.mp4",
+         "av1": "/icinden/v/d/r43.en.9da88404.av1.mp4"
+        },
+        "yatay": {
+         "h264": "/icinden/v/y/r43.en.eb89136c.h264.mp4",
+         "av1": "/icinden/v/y/r43.en.f74d3210.av1.mp4"
+        }
+       },
+       "bayt": {
+        "dikey": {
+         "h264": 906941,
+         "hevc": 724112,
+         "av1": 857588
+        },
+        "yatay": {
+         "h264": 859110,
+         "av1": 852467
+        }
+       }
       }
      }
     },
@@ -1885,14 +1937,28 @@
    "okuma": [1420, 1420, 1414, 1380, 1312, 1221, 1125, 1034, 949.3, 871.3, 799.9, 735.1, 673.2, 611.5, 551.4, 494, 439.9, 389.5, 343.1, 300.7, 262.4, 228, 197.4, 170.4, 146.7, 126, 108.1, 92.6, 79.1, 67.6, 57.6, 49, 41.7, 35.4, 30, 25.4, 25.31, 26.23, 26.14, 25.87, 25.68, 25.47, 25.26, 25.05, 24.86, 24.67, 24.5, 24.36, 24.22, 24.11, 24.02, 23.95, 23.89, 23.84, 23.81, 23.79, 23.78, 23.77, 23.77, 23.77],
    "poster": {
     "dikey": {
-     "dosya": "/icinden/p/d/p4.5bc2e1d1.webp",
-     "bayt": 51784,
-     "lqip": "data:image/webp;base64,UklGRgABAABXRUJQVlA4IPQAAAAwBgCdASoYACsAPtFWpk2oJCOvKrgMAeAaCWcAxzAit1Cu4vef469BVG8wpirz/eHV9m4wTroGPx6AAP75SpAO6fqqbZ6f1wJjWMNlPCao6yJnlg7VgvQWjdIrd+8xQeeO6QEM5WvYalsoSah7Dz5IXFnUdtNML/Z+rCl4EzJaCPvZh/CZGgBJjX2tL3fHgl1SurpbpUYdiXN/qUG+cG5wddgRmv9dTtGS8gM3NAZFVqZyRC+MR6i7tXhgF9g0hP+ranj6PBksS0IUOyq1NT44wWuM12/qeCoyrFAED/PTyLzWmkOo4v5zYQbmc6vmi2cBIoAA"
+     "dosya": "/icinden/p/d/p4.dd43dc4d.webp",
+     "bayt": 52112,
+     "lqip": "data:image/webp;base64,UklGRgABAABXRUJQVlA4IPQAAADQBgCdASoYACsAPtFWpk0oJKOxKrgMAiAaCWcAxzMuWcFNW5wKDJ5r1guPKw55qW+eREzdrij5YOtXohbloAAA/vlKkA7p+qptnp/XAmNYwpB79Yr2mG2wi6xOvuNCn4ymoUMa+uXzBD1lqzADNbEMLFvT9EHkfnTokKdIiCy5ar/zu3Jlb4L7QbQoB/zogYHuQ+3aTMfKj/F71ZRQWr/Sm8+qrP23pVeA1O0ZgQNbBWeQxciS4UXPhPZm1a8MAvsGkJkRU6EUM94gDQhMboqgUMccYtlsGDMtEM8GYEYrQkH+cfL+ZUcX86LCb2q1AF+bMAAA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/d/p4.en.3db214b6.webp",
+       "bayt": 51242,
+       "lqip": "data:image/webp;base64,UklGRv4AAABXRUJQVlA4IPIAAACQBgCdASoYACsAPtFWpk2oJCOvKrgMAeAaCWcAxzAit1BfCbkPvXN+MHomQ4vVI3V+giO2sQrzvbArdShAAP75SpAO6fqqbZ6f1wJjWMNlPCaot9yFuZBMoaPpiNUpUwihjX1y+YIestWYAZwsvl28CoGjyPzsw8e/2+PTe2CBSvDJ/2r3Lo8JLPv2Zvi86HqQfOP6SjWBpJ9rUuGdm1d8ZhnZPncrLJYe0wwnQ8kMCJq5labSrF7D5BPrwwC+waQmzzEIlmDl5Y2gYPYBj0UlbB8ysn/iGeDMPGNBwVimj1HOa+EljaP9TocEWWFrQUsAAA=="
+      }
+     }
     },
     "yatay": {
-     "dosya": "/icinden/p/y/p4.237296d3.webp",
-     "bayt": 46100,
-     "lqip": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAAAQBACdASoYAA4APtFWpEuoJKOhsAgBABoJQBWABDzaMtLnq8OV0gz6QAD+9o3MWs05DIlO/vNDXqvnYR7/dJQWsEs84c5KwnKdMCjHqv6uLjJHn4nPBvoL+jqY1UcLvpVYsyzgvJ0g/8z3Az6qWCmpoWSKULehmL5clZr6f0dv4QHiAAA="
+     "dosya": "/icinden/p/y/p4.263b4d6b.webp",
+     "bayt": 46264,
+     "lqip": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAAAwBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBWABDzshadfOxzvj4ohEgAA/vaNzFrNOQyJTv7zQ16r52Ee/3SUFquTcksiYhQLijpSUuPOt8byJLMnYX8sp37BVSHeGoJ88Qy73UeikHHzBche95tt61XSoUxTR3JwdGEzWkgtBR2/hAeIAA==",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/y/p4.en.e6313e81.webp",
+       "bayt": 46266,
+       "lqip": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAAAwBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBWABDzshahK0338UT6KNMAA/vaNzFrNOQyJTv7zQ16r52Ee/3SUFquTcksiYhQLijpSUuPOt8byJKfa/EalrdXmB2lcIPhtmHYpWs1sCtZZC+I3Z1sMgRUbSk62kk9izZMauu1WPMTOwAA="
+      }
+     }
     }
    },
    "dongu": {
@@ -1901,24 +1967,50 @@
     "kare": 120,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/l4.58e81f61.h264.mp4",
-      "hevc": "/icinden/v/d/l4.cf1feb2e.hevc.mp4",
-      "av1": "/icinden/v/d/l4.26465c82.av1.mp4"
+      "h264": "/icinden/v/d/l4.cb393836.h264.mp4",
+      "hevc": "/icinden/v/d/l4.0ddbcd45.hevc.mp4",
+      "av1": "/icinden/v/d/l4.bda9fd78.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/l4.76d23e02.h264.mp4",
-      "av1": "/icinden/v/y/l4.f6a8896a.av1.mp4"
+      "h264": "/icinden/v/y/l4.814ca6d0.h264.mp4",
+      "av1": "/icinden/v/y/l4.395107aa.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 204635,
-      "hevc": 140747,
-      "av1": 230682
+      "h264": 205606,
+      "hevc": 142140,
+      "av1": 230900
      },
      "yatay": {
-      "h264": 188642,
-      "av1": 195059
+      "h264": 190707,
+      "av1": 197256
+     }
+    },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/l4.en.3f1cc05a.h264.mp4",
+        "hevc": "/icinden/v/d/l4.en.fd32117c.hevc.mp4",
+        "av1": "/icinden/v/d/l4.en.ef189f9f.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/l4.en.e6823e76.h264.mp4",
+        "av1": "/icinden/v/y/l4.en.5fffaeb8.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 203822,
+        "hevc": 142902,
+        "av1": 228071
+       },
+       "yatay": {
+        "h264": 186931,
+        "av1": 194489
+       }
+      }
      }
     }
    },
@@ -1928,24 +2020,50 @@
     "kare": 54,
     "dosya": {
      "dikey": {
-      "h264": "/icinden/v/d/t45.6657e516.h264.mp4",
-      "hevc": "/icinden/v/d/t45.6fd1780f.hevc.mp4",
-      "av1": "/icinden/v/d/t45.2e6ec994.av1.mp4"
+      "h264": "/icinden/v/d/t45.87c31265.h264.mp4",
+      "hevc": "/icinden/v/d/t45.a88b56b5.hevc.mp4",
+      "av1": "/icinden/v/d/t45.ec6daa9c.av1.mp4"
      },
      "yatay": {
-      "h264": "/icinden/v/y/t45.18407723.h264.mp4",
-      "av1": "/icinden/v/y/t45.8c45771e.av1.mp4"
+      "h264": "/icinden/v/y/t45.b9312a5f.h264.mp4",
+      "av1": "/icinden/v/y/t45.bd8f311c.av1.mp4"
      }
     },
     "bayt": {
      "dikey": {
-      "h264": 710522,
-      "hevc": 517374,
-      "av1": 568218
+      "h264": 709165,
+      "hevc": 513851,
+      "av1": 568691
      },
      "yatay": {
-      "h264": 706425,
-      "av1": 574265
+      "h264": 706937,
+      "av1": 576679
+     }
+    },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/t45.en.735a2ca3.h264.mp4",
+        "hevc": "/icinden/v/d/t45.en.f17e6e2e.hevc.mp4",
+        "av1": "/icinden/v/d/t45.en.7484ad5c.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/t45.en.8c821b62.h264.mp4",
+        "av1": "/icinden/v/y/t45.en.ff107054.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 692191,
+        "hevc": 497403,
+        "av1": 544567
+       },
+       "yatay": {
+        "h264": 688427,
+        "av1": 552866
+       }
+      }
      }
     },
     "geri": {
@@ -1954,24 +2072,50 @@
      "kare": 54,
      "dosya": {
       "dikey": {
-       "h264": "/icinden/v/d/r54.fc31f02d.h264.mp4",
-       "hevc": "/icinden/v/d/r54.cdc3ff46.hevc.mp4",
-       "av1": "/icinden/v/d/r54.3dc7b552.av1.mp4"
+       "h264": "/icinden/v/d/r54.c982b0ad.h264.mp4",
+       "hevc": "/icinden/v/d/r54.c26a9336.hevc.mp4",
+       "av1": "/icinden/v/d/r54.d2957a6e.av1.mp4"
       },
       "yatay": {
-       "h264": "/icinden/v/y/r54.9d6ee310.h264.mp4",
-       "av1": "/icinden/v/y/r54.578798f6.av1.mp4"
+       "h264": "/icinden/v/y/r54.65b921ca.h264.mp4",
+       "av1": "/icinden/v/y/r54.38d5964a.av1.mp4"
       }
      },
      "bayt": {
       "dikey": {
-       "h264": 490320,
-       "hevc": 374362,
-       "av1": 439608
+       "h264": 488796,
+       "hevc": 376110,
+       "av1": 440057
       },
       "yatay": {
-       "h264": 505141,
-       "av1": 444337
+       "h264": 505473,
+       "av1": 446675
+      }
+     },
+     "dil": {
+      "en": {
+       "dosya": {
+        "dikey": {
+         "h264": "/icinden/v/d/r54.en.dec533c4.h264.mp4",
+         "hevc": "/icinden/v/d/r54.en.1e7e8993.hevc.mp4",
+         "av1": "/icinden/v/d/r54.en.1210df64.av1.mp4"
+        },
+        "yatay": {
+         "h264": "/icinden/v/y/r54.en.23fb37d6.h264.mp4",
+         "av1": "/icinden/v/y/r54.en.dc4b8409.av1.mp4"
+        }
+       },
+       "bayt": {
+        "dikey": {
+         "h264": 474993,
+         "hevc": 365255,
+         "av1": 419269
+        },
+        "yatay": {
+         "h264": 491100,
+         "av1": 429809
+        }
+       }
       }
      }
     },
@@ -2000,12 +2144,26 @@
     "dikey": {
      "dosya": "/icinden/p/d/p5.b35b4c8e.webp",
      "bayt": 43720,
-     "lqip": "data:image/webp;base64,UklGRloBAABXRUJQVlA4IE4BAABwBwCdASoYACsAPtFcqE8oJKOiJWsxABoJaACdMsDrEcAIIQaQrXqbqZR6PvQRZENnw7OMsmmhH76Dhh2WuxW4wE22YAD+6VhtRWSztFr6UJjujHleH5449GG5gaXYmn2pssFLHVxveMjpJKruL8i0a/gWrvlyPrgtCMl6B6u9XUkJFsX5t0r1qxjJzaC35xFnkserICJ1GB08Q6nW5LyrrkAm8wyvSXLn5rBlPiUewEKcBCga5gI/DC5R2HElK8Q+e29FAY/wlurkEdvE1Mo4pZwidfxoJz6XXrYmTSxuq2rBHnd/kb18PHk5VLhdaR9JRPDZfuONAEB7VdIBhI4zVJA/L7xOBJXtAQ9pD7Iyg1MQS9yjeBJPDxm6792DBQL20jeuL/mYXHXrtJ5tLq4R7vYH5ocUK5JvDbRTvraYvBBxMbHzbVzBbZ25gAAA"
+     "lqip": "data:image/webp;base64,UklGRloBAABXRUJQVlA4IE4BAABwBwCdASoYACsAPtFcqE8oJKOiJWsxABoJaACdMsDrEcAIIQaQrXqbqZR6PvQRZENnw7OMsmmhH76Dhh2WuxW4wE22YAD+6VhtRWSztFr6UJjujHleH5449GG5gaXYmn2pssFLHVxveMjpJKruL8i0a/gWrvlyPrgtCMl6B6u9XUkJFsX5t0r1qxjJzaC35xFnkserICJ1GB08Q6nW5LyrrkAm8wyvSXLn5rBlPiUewEKcBCga5gI/DC5R2HElK8Q+e29FAY/wlurkEdvE1Mo4pZwidfxoJz6XXrYmTSxuq2rBHnd/kb18PHk5VLhdaR9JRPDZfuONAEB7VdIBhI4zVJA/L7xOBJXtAQ9pD7Iyg1MQS9yjeBJPDxm6792DBQL20jeuL/mYXHXrtJ5tLq4R7vYH5ocUK5JvDbRTvraYvBBxMbHzbVzBbZ25gAAA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/d/p5.en.127c6104.webp",
+       "bayt": 40702,
+       "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAAAwCACdASoYACsAPtFWpU4oJCMiKrgMAQAaCWgAnTLKc1V/5AA0zKpFcWeTbxqmj04GrgE5LHzMclbpsgigChrKVkUPj+JrLvowAAD+6TpWvO28Aq8ecSkA/MbzwnzewENBvaBuQDHktpbaEOLN4ljyhl5EsyDknY7dQPgs+j0b2CsBAwDixzxXG288wPwZB5qX1j0ZR/8aCMgxYo7QwFPRaa9tiFkuGCbNqwec5f025x+ubpov36RgIbyuX9BwatwBRKkyaDtvAe23JMlg05iUGY9ADuYLvurwZCNPkxuKZmoZ7wFS1KQl022+u+hqqRPDwEVE8zG/M+6haTYwD2Ojsl8SnD9GRtQPgrUHngag9Dxp2Myy4YTlbk2VzgLvdBAtwmXKMD9FQbYky2vwJaPu+bwqFJygxz2MQLh7AKCGR1lxvasQ5W1oiy/Gb3igjgAAAA=="
+      }
+     }
     },
     "yatay": {
      "dosya": "/icinden/p/y/p5.ab7bcce4.webp",
      "bayt": 46462,
-     "lqip": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJZACdAYxi1aSNOzdjQDDCN8SAAP6+U8p+CH2NrLV/Sr49brFnC1eXkNOpOOEvxXe24Kl/U0sV9IZnHaS0XEROdbZ3wp7VgekulvIbKDk1GNiYQg/s/qyXYxtfXH6CkRMX29JBt/GNiYVZVNJrf8K1gRhiBXbXfOCz/xYddbsRZgruFtjny3HvgxXUADGKtU8gdYAA"
+     "lqip": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJZACdAYxi1aSNOzdjQDDCN8SAAP6+U8p+CH2NrLV/Sr49brFnC1eXkNOpOOEvxXe24Kl/U0sV9IZnHaS0XEROdbZ3wp7VgekulvIbKDk1GNiYQg/s/qyXYxtfXH6CkRMX29JBt/GNiYVZVNJrf8K1gRhiBXbXfOCz/xYddbsRZgruFtjny3HvgxXUADGKtU8gdYAA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/y/p5.en.1e1e4bd6.webp",
+       "bayt": 43256,
+       "lqip": "data:image/webp;base64,UklGRroAAABXRUJQVlA4IK4AAABwBACdASoYAA4APtFUo0uoJKMhsAgBABoJZACdACB0Itjp608ksEDOkH7KBgD+z1VcN1KSXx8tY6KMZRo/riPQWtjIJkVyO86t5sKujPlt9lINybUAJFPNuLlzQRuqePYYS/6wZcYsvc6Y3JH9n9WS7aTf9aLW+xmxsbuEIU3Glmj+p7XLs1M3jQIRRa8WfbBCmKFI+DXPze1eugK+0wow8skAAtG8MrkIBU/gAAA="
+      }
+     }
     }
    },
    "dongu": {
@@ -2032,6 +2190,32 @@
      "yatay": {
       "h264": 187994,
       "av1": 152192
+     }
+    },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/l5.en.e6678cf4.h264.mp4",
+        "hevc": "/icinden/v/d/l5.en.b034bd55.hevc.mp4",
+        "av1": "/icinden/v/d/l5.en.00cb1cbb.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/l5.en.0ba1989e.h264.mp4",
+        "av1": "/icinden/v/y/l5.en.2914ac73.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 177278,
+        "hevc": 69800,
+        "av1": 144871
+       },
+       "yatay": {
+        "h264": 185055,
+        "av1": 146164
+       }
+      }
      }
     }
    },
@@ -2061,6 +2245,32 @@
       "av1": 363404
      }
     },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/t56.en.90e1274b.h264.mp4",
+        "hevc": "/icinden/v/d/t56.en.63f7196c.hevc.mp4",
+        "av1": "/icinden/v/d/t56.en.85420345.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/t56.en.531037b7.h264.mp4",
+        "av1": "/icinden/v/y/t56.en.b765ab94.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 511487,
+        "hevc": 382335,
+        "av1": 312298
+       },
+       "yatay": {
+        "h264": 527375,
+        "av1": 347926
+       }
+      }
+     }
+    },
     "geri": {
      "ad": "r65",
      "sure": 1.8,
@@ -2085,6 +2295,32 @@
       "yatay": {
        "h264": 420583,
        "av1": 285300
+      }
+     },
+     "dil": {
+      "en": {
+       "dosya": {
+        "dikey": {
+         "h264": "/icinden/v/d/r65.en.3b695960.h264.mp4",
+         "hevc": "/icinden/v/d/r65.en.0d48298e.hevc.mp4",
+         "av1": "/icinden/v/d/r65.en.8f69feb5.av1.mp4"
+        },
+        "yatay": {
+         "h264": "/icinden/v/y/r65.en.305206a5.h264.mp4",
+         "av1": "/icinden/v/y/r65.en.4901b6b5.av1.mp4"
+        }
+       },
+       "bayt": {
+        "dikey": {
+         "h264": 382223,
+         "hevc": 274277,
+         "av1": 248802
+        },
+        "yatay": {
+         "h264": 409472,
+         "av1": 273540
+        }
+       }
       }
      }
     },
@@ -2133,12 +2369,26 @@
     "dikey": {
      "dosya": "/icinden/p/d/p6.8d5a6fd9.webp",
      "bayt": 42986,
-     "lqip": "data:image/webp;base64,UklGRiQBAABXRUJQVlA4IBgBAACwBwCdASoYACsAPtFaoU0oJSKiKqwBABoJQBcMY2ecDut/88J5W4j03yO6eC5izGn9yJL8s9I0PVdzLXqriPaAMuGcCUTAAP73eKABC5kv2k8fIKSITF2i4j1tz7PXhpm2eQb2JpX0BilQsJgYhjQFc5iHL2ayI/bl2zHRKAiJGDK9f+GUbkzyGt1M9kDcBznP9MEwTUYmS7+b3Yf/IS0nrNUoYqK2v5qujubi+HUvNvBAlHSQszigKL/s1iK2cSx49cE3OQ7TO2yVXQ8oXuOjC7Ua0Jst6/6KIWDFaobhYaXnH3ogw8CxKPxX6UYiy4qIf/ZP8DsLWWZAonkuoCU9UFKKPZKj89ETLSBwJ8xaSMLFj5nJAAAA"
+     "lqip": "data:image/webp;base64,UklGRiQBAABXRUJQVlA4IBgBAACwBwCdASoYACsAPtFaoU0oJSKiKqwBABoJQBcMY2ecDut/88J5W4j03yO6eC5izGn9yJL8s9I0PVdzLXqriPaAMuGcCUTAAP73eKABC5kv2k8fIKSITF2i4j1tz7PXhpm2eQb2JpX0BilQsJgYhjQFc5iHL2ayI/bl2zHRKAiJGDK9f+GUbkzyGt1M9kDcBznP9MEwTUYmS7+b3Yf/IS0nrNUoYqK2v5qujubi+HUvNvBAlHSQszigKL/s1iK2cSx49cE3OQ7TO2yVXQ8oXuOjC7Ua0Jst6/6KIWDFaobhYaXnH3ogw8CxKPxX6UYiy4qIf/ZP8DsLWWZAonkuoCU9UFKKPZKj89ETLSBwJ8xaSMLFj5nJAAAA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/d/p6.en.e1962e65.webp",
+       "bayt": 41494,
+       "lqip": "data:image/webp;base64,UklGRjABAABXRUJQVlA4ICQBAAAQCACdASoYACsAPtFaoU0oJSMiKqwBABoJQBb9bX9HEAt/8nHQj03yx+4fbKen56T5begMyi64Zr00xSxWaapLxUMIQDT8qfiAAP73eKO65ztDWf7r3OLFYDWuaqJ1Ly5qanGBBLWj4AZankNBxlPie89eGm9U+FILJQ2p2tY54NRrJ4Ajr7H/NGcyctQt5SrPuU3o63Wp5oEUQ3RjU100KneaE3pX/yf03Og7EP043md0/F10MkMJrpUjYzHIf72W8BkNWn6V6Y7dgp02tvvbqUCW9pYpInKdOpzfm8ReQKV3mhOw99oLaJtQ/ERaU3EoG4zjH38eFiVONE93KHQP/soGmBR1Au7elZteoS3V3rtFRedz1qBQQJA86OkEuFWP8AAA"
+      }
+     }
     },
     "yatay": {
      "dosya": "/icinden/p/y/p6.d4548004.webp",
      "bayt": 43384,
-     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAACwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBYdgxsYEiYooFOrOADMmgO+V2Sij9w3ocTKDDuxj5BijtP/QKswC+LqZI6jRlFHRAjzUJ1dIvPePLi7P9lpF8uRagoaB24o0l9HTfKo8U5sQ0JuLJsYQRqWoJJdQ+mJcfdeUcdqtrIv5DgPv+ZvhOMs46gA"
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAACwAwCdASoYAA4APtFUo0uoJKMhsAgBABoJQBYdgxsYEiYooFOrOADMmgO+V2Sij9w3ocTKDDuxj5BijtP/QKswC+LqZI6jRlFHRAjzUJ1dIvPePLi7P9lpF8uRagoaB24o0l9HTfKo8U5sQ0JuLJsYQRqWoJJdQ+mJcfdeUcdqtrIv5DgPv+ZvhOMs46gA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/y/p6.en.fe5b9ccf.webp",
+       "bayt": 40546,
+       "lqip": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUABffu/w11V6RQap3PYwAMyaA75C33I5SnSmTcXiOGpHlD+kZmvDBVb9FsNl1KkcZuL+kg41iWuNx/NHBExrOpkwCqWEKd5wvePIpJS2NjLe/EUBHcKmdXxhuj9loUQNEuPuvKIleALnwO5jA/55v8yW+RKYUcAA"
+      }
+     }
     }
    },
    "dongu": null,
@@ -2168,6 +2418,32 @@
       "av1": 228165
      }
     },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/t67.en.bb4cb6cb.h264.mp4",
+        "hevc": "/icinden/v/d/t67.en.8cf97093.hevc.mp4",
+        "av1": "/icinden/v/d/t67.en.6cba5c73.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/t67.en.1bb3f61d.h264.mp4",
+        "av1": "/icinden/v/y/t67.en.f6e7fc5b.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 330306,
+        "hevc": 268115,
+        "av1": 211603
+       },
+       "yatay": {
+        "h264": 341616,
+        "av1": 234681
+       }
+      }
+     }
+    },
     "geri": {
      "ad": "r76",
      "sure": 1.6,
@@ -2193,6 +2469,32 @@
        "h264": 244085,
        "av1": 176941
       }
+     },
+     "dil": {
+      "en": {
+       "dosya": {
+        "dikey": {
+         "h264": "/icinden/v/d/r76.en.3dc02fe5.h264.mp4",
+         "hevc": "/icinden/v/d/r76.en.7cce1281.hevc.mp4",
+         "av1": "/icinden/v/d/r76.en.249434b5.av1.mp4"
+        },
+        "yatay": {
+         "h264": "/icinden/v/y/r76.en.67caf95c.h264.mp4",
+         "av1": "/icinden/v/y/r76.en.eb873a73.av1.mp4"
+        }
+       },
+       "bayt": {
+        "dikey": {
+         "h264": 229679,
+         "hevc": 173230,
+         "av1": 162045
+        },
+        "yatay": {
+         "h264": 247391,
+         "av1": 178780
+        }
+       }
+      }
      }
     },
     "hizGeri": 1
@@ -2213,7 +2515,27 @@
       "ad": "motto",
       "yatay": [1191.5, 247.3]
      }
-    ]
+    ],
+    "dil": {
+     "en": {
+      "duvarCapalari": [
+       {
+        "ad": "bulusma",
+        "dikey": [162.9, 468.5],
+        "yatay": [442.9, 273.1]
+       },
+       {
+        "ad": "solen",
+        "dikey": [401.6, 682.8],
+        "yatay": [681.6, 487.5]
+       },
+       {
+        "ad": "motto",
+        "yatay": [1229.2, 243.2]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -2226,12 +2548,26 @@
     "dikey": {
      "dosya": "/icinden/p/d/p7.e7fd3b60.webp",
      "bayt": 31720,
-     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ2wf+GVKuklUvk7Jpw/Bs2Q9yKMTHddwS6Ch8uWomGjwJ6UW5BqriAA/vSA+3uO2MEGaL7qwf01qnV01ONuJW3CzZNwU5wYCB39Cy4W1rBzXipMwYX3TTHqA4++hvStWmhZOG42BlYxmGSQghIeWqC/9LF0jtfwkvMhrWdkGNoTB0RyK6ptlUSA6hPam0ONycwb3wd1WN6kvnGAnDEALOu3Ll1hHGjvq0cXS4vAKKcrkU5ossU6zFvX7WZJRrfPRUlKuuxA4Sif4/25M12ZfnYBiNOo1I6LGgMsIMV6GFcXPNqWAZBwrxreJc3jnYpQUerMTCt31iR6wVa/vPWcMMue3H3ySQMaPdIcX9TOgEPampZwtIGqd2WmqVhhSYZ4Gm6KYCTlcIgzfoyyTDg9FgxEiAAAAA=="
+     "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACQBwCdASoYACsAPtFip1AoJSMipWmZABoJQBWGYZ2wf+GVKuklUvk7Jpw/Bs2Q9yKMTHddwS6Ch8uWomGjwJ6UW5BqriAA/vSA+3uO2MEGaL7qwf01qnV01ONuJW3CzZNwU5wYCB39Cy4W1rBzXipMwYX3TTHqA4++hvStWmhZOG42BlYxmGSQghIeWqC/9LF0jtfwkvMhrWdkGNoTB0RyK6ptlUSA6hPam0ONycwb3wd1WN6kvnGAnDEALOu3Ll1hHGjvq0cXS4vAKKcrkU5ossU6zFvX7WZJRrfPRUlKuuxA4Sif4/25M12ZfnYBiNOo1I6LGgMsIMV6GFcXPNqWAZBwrxreJc3jnYpQUerMTCt31iR6wVa/vPWcMMue3H3ySQMaPdIcX9TOgEPampZwtIGqd2WmqVhhSYZ4Gm6KYCTlcIgzfoyyTDg9FgxEiAAAAA==",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/d/p7.en.cd73999f.webp",
+       "bayt": 48588,
+       "lqip": "data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAACwBwCdASoYACsAPtFgqVAoJSOipWmZABoJQBOmUIBMUkvc3SfNEjF+K/mbH3IKOYy6L7VWqUZKjxLITCSiEyr7gMsyBIwAAP70gPt7dkKBY4vO7PYj7vYZX89OHOjFmJWwYTD8vyX1Ov2MhTvezXVlXsc5mTkJVni3BGB+Botcd0NH3oIDDGx1N5BidROhdzEKlA0WkhTLiXr6jNJKD6NxxRRjBhV6dTf2Dk50zzoE6gDsH0Y4NQhp+cmbMylYm1WTT40Xb6ecs9GoU42/rRmJBcyhWCgg+x7JzwEvHQVwuHD/lBiXK0Fmn+azuf87Ib8CCsnaYrIMJNOFgjaHPBo+j4wn39O2Bf/SZBsLr14vfzf0r2um14+Il23VLUIINYiu8gHj3g8NLKsXnclLpwm0hsURBx713B7MaGNvbj8Q8NdI0Zum8FhCYKG0FGj8FBTgAA=="
+      }
+     }
     },
     "yatay": {
      "dosya": "/icinden/p/y/p7.0689365f.webp",
      "bayt": 27236,
-     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4Pn44wUnMGeAAPch2aIwoR/gf0LHZwEYnDvira4rdPlkmTDnG2yTq+/M0h+cDikB7geCmPF8f3wNXPHb+82zJbLF9EBiK58C2Qdt/LduR77Svy3K0Tgc6F09u4e5zttEX1JwsRTsZhATJSAA"
+     "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMABbZu4Pn44wUnMGeAAPch2aIwoR/gf0LHZwEYnDvira4rdPlkmTDnG2yTq+/M0h+cDikB7geCmPF8f3wNXPHb+82zJbLF9EBiK58C2Qdt/LduR77Svy3K0Tgc6F09u4e5zttEX1JwsRTsZhATJSAA",
+     "dil": {
+      "en": {
+       "dosya": "/icinden/p/y/p7.en.d4786b80.webp",
+       "bayt": 40094,
+       "lqip": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAAAQBACdASoYAA4APtFUo0uoJKMhsAgBABoJQBOmUGMAA6MOhHdevi5KAAD3IdmiMKIeFoKwU2WdqtNyCZxhdIwV0Ow8+j9huRVMPwVmc9wPBTHi+P74Grnjt/XjHAkdSsgFhRblAaZzA0e69NeQXdtaM9jYB3Ye9HUf6QSMKJb0rSAETzgAAA=="
+      }
+     }
     }
    },
    "dongu": null,
@@ -2261,6 +2597,32 @@
       "av1": 221496
      }
     },
+    "dil": {
+     "en": {
+      "dosya": {
+       "dikey": {
+        "h264": "/icinden/v/d/t79.en.433eb1fd.h264.mp4",
+        "hevc": "/icinden/v/d/t79.en.41f10b92.hevc.mp4",
+        "av1": "/icinden/v/d/t79.en.b826add5.av1.mp4"
+       },
+       "yatay": {
+        "h264": "/icinden/v/y/t79.en.b9435b20.h264.mp4",
+        "av1": "/icinden/v/y/t79.en.32666c03.av1.mp4"
+       }
+      },
+      "bayt": {
+       "dikey": {
+        "h264": 439483,
+        "hevc": 252331,
+        "av1": 248565
+       },
+       "yatay": {
+        "h264": 421338,
+        "av1": 235299
+       }
+      }
+     }
+    },
     "geri": {
      "ad": "r97",
      "sure": 2,
@@ -2285,6 +2647,32 @@
       "yatay": {
        "h264": 291042,
        "av1": 195340
+      }
+     },
+     "dil": {
+      "en": {
+       "dosya": {
+        "dikey": {
+         "h264": "/icinden/v/d/r97.en.58ed3e7e.h264.mp4",
+         "hevc": "/icinden/v/d/r97.en.adbf2235.hevc.mp4",
+         "av1": "/icinden/v/d/r97.en.3dd3604f.av1.mp4"
+        },
+        "yatay": {
+         "h264": "/icinden/v/y/r97.en.264f1ee5.h264.mp4",
+         "av1": "/icinden/v/y/r97.en.2a238c9e.av1.mp4"
+        }
+       },
+       "bayt": {
+        "dikey": {
+         "h264": 319190,
+         "hevc": 224623,
+         "av1": 222271
+        },
+        "yatay": {
+         "h264": 302204,
+         "av1": 205249
+        }
+       }
       }
      }
     },
@@ -2696,24 +3084,50 @@
       "kare": 60,
       "dosya": {
        "dikey": {
-        "h264": "/icinden/v/d/r43.9cfb6527.h264.mp4",
-        "hevc": "/icinden/v/d/r43.e9a2b881.hevc.mp4",
-        "av1": "/icinden/v/d/r43.97d6af75.av1.mp4"
+        "h264": "/icinden/v/d/r43.d943370e.h264.mp4",
+        "hevc": "/icinden/v/d/r43.b6256508.hevc.mp4",
+        "av1": "/icinden/v/d/r43.b759375c.av1.mp4"
        },
        "yatay": {
-        "h264": "/icinden/v/y/r43.fd4431b0.h264.mp4",
-        "av1": "/icinden/v/y/r43.4eed8f5b.av1.mp4"
+        "h264": "/icinden/v/y/r43.07406210.h264.mp4",
+        "av1": "/icinden/v/y/r43.b9b6ba62.av1.mp4"
        }
       },
       "bayt": {
        "dikey": {
-        "h264": 907836,
-        "hevc": 724382,
-        "av1": 860285
+        "h264": 904018,
+        "hevc": 723764,
+        "av1": 860569
        },
        "yatay": {
-        "h264": 859071,
-        "av1": 856873
+        "h264": 860074,
+        "av1": 855733
+       }
+      },
+      "dil": {
+       "en": {
+        "dosya": {
+         "dikey": {
+          "h264": "/icinden/v/d/r43.en.13d9adcd.h264.mp4",
+          "hevc": "/icinden/v/d/r43.en.58937af8.hevc.mp4",
+          "av1": "/icinden/v/d/r43.en.9da88404.av1.mp4"
+         },
+         "yatay": {
+          "h264": "/icinden/v/y/r43.en.eb89136c.h264.mp4",
+          "av1": "/icinden/v/y/r43.en.f74d3210.av1.mp4"
+         }
+        },
+        "bayt": {
+         "dikey": {
+          "h264": 906941,
+          "hevc": 724112,
+          "av1": 857588
+         },
+         "yatay": {
+          "h264": 859110,
+          "av1": 852467
+         }
+        }
        }
       }
      },

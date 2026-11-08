@@ -1,21 +1,29 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { backCover, cop31, cover, socials } from "@/lib/content";
+import { socials } from "@/lib/content";
+import type { Dil } from "@/lib/dil";
 import { logos } from "@/lib/photos";
-import { stant } from "@/lib/stant";
-
-/** Atıf satırı: isteğe bağlı Türkçe önek + metin; İngilizce metin `lang="en"` ile (birleşik metin birebir). */
-export type Atif = { readonly on?: string; readonly metin: string; readonly en?: boolean };
+import { METIN } from "./metin";
 
 /**
  * Kapanış (akış, snap'siz; docs/brief-icinden.md §1 son satır): logolar, "AK Parti Gençlik
  * Kolları Türkiye", sosyal hesaplar, akgenclik.org.tr, #YaniBanaEmanet, slogan, "Dijital broşür" düğmesi (G turu §14.4.6,
- * slogan altı; `brosur`) ve atıf satırları (v3: brief-icinden-3 §9.6 — Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî
- * COP31 logosu; G turu: "Stant ve fidan görünümü temsilîdir."). Sahnenin üstüne beyaz bir sayfa gibi kayarak gelir. İzin
- * verilen linkler sosyal hesaplar, site ve /brosur. Alıntı broşürün arka kapağıyla aynı tipografik tırnakla (“…”); meta
- * satırlar orta noktasız, cümle.
+ * slogan altı; `brosur`) ve dil seçici (`dil`, 7 Kasım: her aşamada) ve atıf satırları (v3: brief-icinden-3 §9.6 —
+ * Sentinel, Copernicus DEM, NASA, GEBCO, OSM, resmî COP31 logosu; G turu: "Stant ve fidan görünümü temsilîdir."). Sahnenin
+ * üstüne beyaz bir sayfa gibi kayarak gelir. İzin verilen linkler sosyal hesaplar, site, /brosur ve öteki dildeki /icinden.
+ * Alıntı broşürün arka kapağıyla aynı tipografik tırnakla (“…”); meta satırlar orta noktasız, cümle. Metinler dile göre
+ * (metin.ts `kapanis`); Türkçe sayfada İngilizce kalan lisans metinleri `lang="en"` (WCAG 3.1.2; birleşik metin birebir).
  */
-export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly Atif[]; brosur?: ReactNode }) {
+export default function IcindenKapanis({
+  dil,
+  brosur,
+  dilSecici,
+}: {
+  dil: Dil;
+  brosur?: ReactNode;
+  dilSecici?: ReactNode;
+}) {
+  const M = METIN[dil].kapanis;
   const sosyal = socials.filter((s) => s.name !== "Web");
   const web = socials.find((s) => s.name === "Web");
 
@@ -25,7 +33,7 @@ export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly 
         <div className="ic-kapanis-logolar">
           <Image
             src={logos.akParti.src}
-            alt={logos.akParti.alt}
+            alt={M.logoAkParti}
             width={logos.akParti.width}
             height={logos.akParti.height}
             sizes="56px"
@@ -34,7 +42,7 @@ export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly 
           <span aria-hidden="true" className="ic-kapanis-ayrac" />
           <Image
             src={logos.genclikKollari.src}
-            alt={logos.genclikKollari.alt}
+            alt={M.logoGenclik}
             width={logos.genclikKollari.width}
             height={logos.genclikKollari.height}
             sizes="64px"
@@ -42,10 +50,10 @@ export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly 
           />
         </div>
 
-        <p className="ic-kapanis-kurum">{cover.org}</p>
+        <p className="ic-kapanis-kurum">{M.kurum}</p>
         <p className="ic-kapanis-alinti">
           {"“"}
-          {backCover.quote.replace(/^"|"$/g, "")}
+          {M.alinti}
           {"”"}
         </p>
 
@@ -65,22 +73,27 @@ export default function IcindenKapanis({ atiflar, brosur }: { atiflar: readonly 
           </a>
         ) : null}
 
-        <p className="ic-kapanis-etiket ic-serif">
-          {stant.tema}. {stant.hashtag}
-        </p>
-        <p className="ic-kapanis-slogan font-script">{cover.slogan}</p>
-        {brosur ? <p className="ic-kapanis-brosur-satir">{brosur}</p> : null}
+        <p className="ic-kapanis-etiket ic-serif">{M.etiket}</p>
+        <p className="ic-kapanis-slogan font-script">{M.slogan}</p>
+        {brosur || dilSecici ? (
+          <div className="ic-kapanis-brosur-satir">
+            {brosur}
+            {dilSecici}
+          </div>
+        ) : null}
         <p className="ic-kapanis-etkinlik">
-          {backCover.line1}: <span className="v3-nowrap">{cop31.dates}</span>, {cop31.venue}.
+          {M.etkinlik.on}
+          <span className="v3-nowrap">{M.etkinlik.tarih}</span>
+          {M.etkinlik.son}
         </p>
 
         {/* ONAY: atıf satırlarının yeri ve metni (docs/onay-listesi.md §14). OSM bağlantısı izinli linkler dışında: yalnızca metin. */}
         {/* v3 (sinematik): veri atıfları brief-icinden-3 §9.6 / varliklar-icinden.md §3 metniyle (ONAY). */}
         <ul className="ic-kapanis-atif v3-atiflar">
-          {atiflar.map((a) => (
+          {M.atiflar.map((a) => (
             <li key={a.metin}>
               {a.on ? `${a.on} ` : null}
-              {a.en ? <span lang="en">{a.metin}</span> : a.metin}
+              {a.en && dil !== "en" ? <span lang="en">{a.metin}</span> : a.metin}
             </li>
           ))}
         </ul>

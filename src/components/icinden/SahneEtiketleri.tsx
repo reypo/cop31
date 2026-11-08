@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
+import type { Dil } from "@/lib/dil";
 import DunyaYaylari, { KunyeMetin } from "./DunyaYaylari";
 import EmanetBaglari, { emanetIsigi } from "./EmanetIsiklari";
 import type { Durak, Etiket } from "./klipler";
+import { etiketMetni, METIN } from "./metin";
 import { dizinler } from "./rol";
 
 /**
@@ -17,9 +19,12 @@ import { dizinler } from "./rol";
  * E turu (W2a, §12.4-2/3): d1 ışık yayları (DunyaYaylari) ve d2 bağları (EmanetBaglari) aynı katmanda, etiketlerin
  * altında. `kunye` (d1 Antalya): 18 px kılavuz + "Antalya" + SSR satırı (KunyeSatiri, mount sonrası gün sayacı).
  * `emanet` (d2): dönem renkli çekirdek + numara (ad yok); varış dizisi ve ofsetler CSS değişkeninde (icinden3-isik.css).
+ *
+ * Metin dile göre (metin.ts `etiketMetni`): manifestteki Türkçe etiket adı/künye satırı İngilizcede sözlükten.
  */
-export default function SahneEtiketleri({ duraklar }: { duraklar: readonly Durak[] }) {
+export default function SahneEtiketleri({ duraklar, dil }: { duraklar: readonly Durak[]; dil: Dil }) {
   const I = dizinler(duraklar.map((d) => d.rol));
+  const M = METIN[dil];
   return (
     <div className="v3-etiketler">
       <DunyaYaylari D={duraklar[I.dunya]} />
@@ -43,19 +48,35 @@ export default function SahneEtiketleri({ duraklar }: { duraklar: readonly Durak
           // d2'de Antalya d1'in buluşma çekirdeğini kullanır (denetim D1-06: 3 px nokta, 05'in çekirdeğinin yanında
           // en zayıf işaretti; bağlar bu noktada buluşuyor).
           const cekirdek = k === I.emanet && ad === "antalya";
-          return <EtiketEl key={`${k}-${ad}`} k={k} t={t} stil={stil} yok={yok} cekirdek={cekirdek} />;
+          return <EtiketEl key={`${k}-${ad}`} k={k} t={t} metin={etiketMetni(M, t)} dil={dil} stil={stil} yok={yok} cekirdek={cekirdek} />;
         });
       })}
     </div>
   );
 }
 
-function EtiketEl({ k, t, stil, yok, cekirdek }: { k: number; t: Etiket; stil: CSSProperties; yok?: string; cekirdek?: boolean }) {
+function EtiketEl({
+  k,
+  t,
+  metin,
+  dil,
+  stil,
+  yok,
+  cekirdek,
+}: {
+  k: number;
+  t: Etiket;
+  metin: string;
+  dil: Dil;
+  stil: CSSProperties;
+  yok?: string;
+  cekirdek?: boolean;
+}) {
   if (t.tur === "kunye")
     return (
       <div data-d={k} data-yok={yok} className="v3-et v3-et-kunye" style={stil}>
         <span className="v3-kunye-cizgi" />
-        <KunyeMetin metin={t.metin} />
+        <KunyeMetin metin={metin} dil={dil} />
       </div>
     );
   if (t.tur === "emanet")
@@ -77,7 +98,7 @@ function EtiketEl({ k, t, stil, yok, cekirdek }: { k: number; t: Etiket; stil: C
     >
       {cekirdek ? <span className="v3-yay-cekirdek" /> : t.nokta || t.tur === "bolge" ? <span className="v3-et-nokta" /> : null}
       {t.tur === "bolge" ? <span className="v3-et-cizgi" /> : null}
-      <span className="v3-et-metin">{t.metin}</span>
+      <span className="v3-et-metin">{metin}</span>
     </div>
   );
 }

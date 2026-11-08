@@ -102,6 +102,10 @@ def ek_arg(p):
     p.add_argument("--montaj_c", type=float, default=1.0)         # t45 montaj sıkıştırması (fiske saatinde; 1 = aynı eğri; bkz. montaj_kur)
     p.add_argument("--pen", default="")                           # pencere/k deneme: JSON {"t56.phi1": [0, 0.5], "k.t67": 2.2, …}
     p.add_argument("--kamera_dok", default="")                    # render yok: iki profilin kare kare kamera + kenar ışın dökümü (JSON)
+    # İki dil (7 Kasım 2026, onay-listesi §15): yazılı dokuların dizini (dokular.mjs çıktısı + _duvar-olcum.json çapaları).
+    # Boş → S2_DOKU ortam değişkeni (S3 sahne.py S2'yi kendi argümanlarıyla çalıştırdığı için onu okur), o da yoksa s2/doku
+    # (Türkçe). İngilizce: D:/soft/cop31-varlik/s2/doku-en (dokular.mjs --dil en). Broşür kapağı (kapak-dom*) hep s2/doku'dan.
+    p.add_argument("--doku", default="")
 
 
 a = O.argumanlar(ek_arg)
@@ -193,6 +197,10 @@ BANKO_W, BANKO_D, BANKO_H = 1.60, 0.62, 1.05
 BROSUR_H, BROSUR_T, BROSUR_N = 0.210, 0.0003, 40
 BROSUR_W = BROSUR_H * 0.708
 DOKU = O.VARLIK + "/s2/doku/"
+DOKU_YAZI = (a.doku or os.environ.get("S2_DOKU", "") or DOKU).replace("\\", "/").rstrip("/") + "/"   # yazılı dokular (dile göre)
+if not os.path.isdir(DOKU_YAZI):
+    raise SystemExit(f"[HATA] yazılı doku dizini yok: {DOKU_YAZI}")
+print(f"[DOKU] yazılı dokular: {DOKU_YAZI}", flush=True)
 PH = O.VARLIK + "/s2/polyhaven/"
 FONT = O.VARLIK + "/font/"
 LOGO = "D:/soft/cop31/public/brand/logo-genclik-kollari.png"
@@ -326,7 +334,7 @@ YEDEK_DOKU = []   # bulunamayıp düz renkle kurulan doku dosyaları (son.sh bun
 
 def m_baski(ad, dosya, yedek_hex, emis_g=0.0, **kw):
     """E turu duvar baskısı / ekran (S2a dokuları, DOKU altında). Dosya yoksa düz renkli geçici malzeme (uyarıyla)."""
-    yol = DOKU + dosya
+    yol = DOKU_YAZI + dosya
     if os.path.exists(yol):
         return m_doku(ad, yol, emis_g=emis_g, **kw)
     print(f"[UYARI] doku yok: {yol} → düz {yedek_hex} (geçici; S2a üretince gerçeği kullanılır)", flush=True)
@@ -699,7 +707,7 @@ def stant_kur():
     uvp = lambda v: (0.5 + (v[0] - RC.x) / 4.5, 0.5 + (v[1] - RC.y) / 4.5)
     uv = [[uvp(co[a_]), uvp(co[b_]), uvp(co[c_])] for a_, b_, c_ in f]
     me = O.ag("halka", co, f, uv)
-    O.obje("halka", me, COL["stant"], m_doku("halka_baski", DOKU + "halka.png", rough=0.55, spec=0.35), parent=zem)
+    O.obje("halka", me, COL["stant"], m_doku("halka_baski", DOKU_YAZI + "halka.png", rough=0.55, spec=0.35), parent=zem)
 
     # ---- çevre duvarları (+1,4 m yukarı, 0,6 m dışarı)
     def duvar_parca(ad, normal):
@@ -752,14 +760,14 @@ def stant_kur():
         for k in range(3):
             kutu(f"cita_arka_{gx}_{k}", 0.08, 0.08, FASIA_ALT, (gx + k * 0.17, DP / 2 - 0.2, Z0), MAT["mese"], parent=cit, bev=0.003)
     # ---- bantlar (ön açıklık içinde, ön duvarla birlikte)
-    bp = m_doku("bant_play", DOKU + "bant-play.png", rough=0.7)
-    bo = m_doku("bant_oyna", DOKU + "bant-oyna.png", rough=0.7)
+    bp = m_doku("bant_play", DOKU_YAZI + "bant-play.png", rough=0.7)
+    bo = m_doku("bant_oyna", DOKU_YAZI + "bant-oyna.png", rough=0.7)
     panel_doku("bant_play", 4.2, 0.40, 0.03, (-5.15, -DP / 2 + 0.16, Z0 + 2.72), 0.0, bp, MAT["koyu_yesil"], parent=d_on)
     panel_doku("bant_oyna", 1.9, 0.27, 0.03, (0.95, -DP / 2 + 0.16, Z0 + 2.80), 0.0, bo, MAT["koyu_yesil"], parent=d_on)
     # ---- turuncu dikey pankartlar (duvarların yanında: +1,1 m, 0,9 m dışarı)
     pk = parca("pankartlar", (0, -0.9, 1.1), 0.9, 0.4)
-    pg = m_doku("pankart_gel", DOKU + "pankart-gel.png", rough=0.75)
-    ps = m_doku("pankart_sifir", DOKU + "pankart-sifir.png", rough=0.75)
+    pg = m_doku("pankart_gel", DOKU_YAZI + "pankart-gel.png", rough=0.75)
+    ps = m_doku("pankart_sifir", DOKU_YAZI + "pankart-sifir.png", rough=0.75)
     turuncu = m_principled("turuncu", srgb("#DF9560"), rough=0.75)
     panel_doku("pankart_gel", 0.75, 3.0, 0.03, (-W / 2 + 0.45, -DP / 2 - 0.05, Z0 + 0.35), 0.0, pg, turuncu, parent=pk, dikey_metin=True)
     panel_doku("pankart_sifir", 0.75, 3.0, 0.03, (W / 2 - 0.5, -DP / 2 - 0.05, Z0 + 0.35), 0.0, ps, turuncu, parent=pk, dikey_metin=True)
@@ -782,7 +790,7 @@ def stant_kur():
         z4 = [(0, 0)] * 4
         uv = [z4, z4, [(0, 0), (1, 0), (1, 1), (0, 1)], z4, [(0, 0), (1, 0), (1, 1), (0, 1)], z4]
         me = O.ag(f"sutun_{k:02d}", co, fz, uv)
-        mt = m_doku(f"sutun_yuz_{k:02d}", DOKU + f"sutun-{k:02d}.png", rough=0.5, spec=0.35)
+        mt = m_doku(f"sutun_yuz_{k:02d}", DOKU_YAZI + f"sutun-{k:02d}.png", rough=0.5, spec=0.35)
         me.materials.append(mt)
         me.materials.append(beyaz_kenar)
         for i_, pl in enumerate(me.polygons):
@@ -814,7 +822,7 @@ def stant_kur():
         uv += [[(u0, 0), (u1, 0), (u1, 1), (u0, 1)], [(0, 0)] * 4, [(0, 0)] * 4, [(0, 0)] * 4]
         mi += [0, 1, 1, 1]
     me = O.ag("kanopi", co, f, uv)
-    me.materials.append(m_doku("kanopi_bant", DOKU + "kanopi.png", rough=0.6, uzanti="REPEAT"))
+    me.materials.append(m_doku("kanopi_bant", DOKU_YAZI + "kanopi.png", rough=0.6, uzanti="REPEAT"))
     me.materials.append(MAT["kanopi_ic"])
     for pl, m_ in zip(me.polygons, mi):
         pl.material_index = m_
@@ -933,7 +941,7 @@ def stant_kur():
     S["brosur_ust_z"] = z_ust + BROSUR_N * BROSUR_T
     # ---- totem (+0,6 m): koyu yeşil yüz, beyaz kaide — rotundaya (+X) bakar
     tt = parca("totem", (0, 0, 0.6), 0.75, 0.4)
-    tm = m_doku("totem", DOKU + "totem.png", rough=0.55)
+    tm = m_doku("totem", DOKU_YAZI + "totem.png", rough=0.55)
     tcx, tcy = PX(0.168), PY(0.432)
     panel_doku("totem_yuz", 1.10, 2.20, 0.10, (tcx, tcy, Z0 + 0.14), math.pi / 2, tm, MAT["boya_beyaz"], parent=tt, arka=tm)
     kutu("totem_kaide", 0.20, 1.16, 0.14, (tcx, tcy, Z0), MAT["boya_beyaz"], parent=tt, bev=0.004)
@@ -941,7 +949,7 @@ def stant_kur():
     ko = parca("kiosk", (0, 0, 0.45), 0.75, 0.4)
     kx, ky = 0.0, DP / 2 - 0.75
     kutu("kiosk_govde", 0.66, 0.34, 1.90, (kx, ky, Z0), MAT["koyu_yesil"], parent=ko, bev=0.01)
-    ke = m_doku("kiosk_ekran", DOKU + "kiosk-ekran.png", rough=0.08, emis_g=2.0, spec=0.6, coat=1.0)
+    ke = m_doku("kiosk_ekran", DOKU_YAZI + "kiosk-ekran.png", rough=0.08, emis_g=2.0, spec=0.6, coat=1.0)
     panel_doku("kiosk_ekran", 0.55, 0.98, 0.01, (kx, ky - 0.175, Z0 + 0.80), 0.0, ke, MAT["ekran_kapali"], parent=ko)
     S["kiosk_ekran"] = ke
     # ---- oyun alanı (+0,35 m): iki ışıklı masa, 4'er sandalye, 3 puf
@@ -2307,7 +2315,7 @@ def kirpimda(boyut, x, y, pay=CAPA_PAY):
 
 def duvar_capalari(klip):
     kaynak, noktalar, kutu = None, {}, {}
-    yol = DOKU + "_duvar-olcum.json"
+    yol = DOKU_YAZI + "_duvar-olcum.json"
     if os.path.exists(yol):
         try:
             for ad, v in json.load(open(yol, encoding="utf-8")).get("capalar", {}).items():
@@ -2383,6 +2391,7 @@ def json_yaz():
         "kamera": {},
         "kaynak": "scripts/blender/s2/sahne.py",
         "uretim": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "doku": DOKU_YAZI,   # yazılı dokuların dizini (dile göre: s2/doku Türkçe, s2/doku-en İngilizce)
     }
     k0, k1 = KAYIT["kamera"][K0], KAYIT["kamera"][K1]
     js["kamera"] = {

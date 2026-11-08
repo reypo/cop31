@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { cop31 } from "@/lib/content";
+import type { Dil } from "@/lib/dil";
 import KunyeSatiri from "./KunyeSatiri";
 import type { Durak, Nokta } from "./klipler";
 
@@ -181,8 +182,8 @@ export default function DunyaYaylari({ D }: { D: Durak | undefined }) {
   );
 }
 
-/** Künye metni: "Antalya" + SSR satırı (mount sonrası geri sayım/gün; KunyeSatiri). */
-export function KunyeMetin({ metin }: { metin: string }) {
+/** Künye metni: "Antalya" + SSR satırı (dile göre; mount sonrası geri sayım/gün, KunyeSatiri). */
+export function KunyeMetin({ metin, dil }: { metin: string; dil: Dil }) {
   // Açılış ve kapanış günleri content.ts'ten: başlangıç startIso, bitiş tarih aralığının ikinci günü ("9–20 Kasım 2026").
   const bas = cop31.startIso.slice(0, 10);
   const sonGun = /–(\d{1,2})\s/.exec(cop31.dates)?.[1];
@@ -190,13 +191,13 @@ export function KunyeMetin({ metin }: { metin: string }) {
   return (
     <span className="v3-kunye-metin">
       <span className="v3-kunye-ad">{cop31.city}</span>
-      <KunyeSatiri metin={metin} bas={bas} son={son} />
+      <KunyeSatiri metin={metin} bas={bas} son={son} dil={dil} />
     </span>
   );
 }
 
 /** Reduced-motion posterinin üstü: aynı yollar dinlenme opaklığında, Antalya çekirdeği, (d1'de) künye; halka yok. */
-export function YaylarStatik({ D, kunye }: { D: Durak | undefined; kunye?: string }) {
+export function YaylarStatik({ D, kunye, dil }: { D: Durak | undefined; kunye?: string; dil: Dil }) {
   const v = yayVerisi(D);
   if (!v) return null;
   const [ox, oy] = v.o;
@@ -214,7 +215,7 @@ export function YaylarStatik({ D, kunye }: { D: Durak | undefined; kunye?: strin
       {kunye ? (
         <span className="v3-azalt-nokta v3-azalt-kunye">
           <span className="v3-kunye-cizgi" />
-          <KunyeMetin metin={kunye} />
+          <KunyeMetin metin={kunye} dil={dil} />
         </span>
       ) : null}
     </div>

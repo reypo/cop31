@@ -21,12 +21,18 @@
 #   t34 kare 36–59 (24), t45 54, t56 54, t67 48, t78 60 kare (sahne.py SON_KARE). Parlama: F-B t34 kare 36–38 (36 tam
 #   #FFF1DC, 39 temiz; parlama.py 36 3 36); "--profil eski" → 48–55 (48 8 48). Son kare dizinleri klibin render-son/<klip>.json'undan
 #   (kare − 1): p6 = t56[53], p7 = t67[47], t78 tek kare yeniden = t78[59]. t34b ham/ önce temizlenir (E'nin 0048–0071'i kalmasın).
+# İki dil (7 Kasım 2026): S2_DOKU = yazılı doku dizini (Windows biçimi, ör. D:/soft/cop31-varlik/s2/doku-en; sahne.py da okur),
+#   S2_KOK = çıktı kökü (ör. D:/soft/cop31-varlik/render-son-en). Varsayılan kökten başka kökte p8 koruması yok (p6 kopyası yapılır).
+#   İngilizce: S2_DOKU=D:/soft/cop31-varlik/s2/doku-en S2_KOK=D:/soft/cop31-varlik/render-son-en bash scripts/blender/s2/son.sh l5 t56 t67
+#   t34b / l4 / t45 artık kasayla S3'ten: bash scripts/blender/s3/son.sh t34b l4 t45 (l5'te kasa görünmez).
 # Kullanım: bash scripts/blender/s2/son.sh [klip ...]   (varsayılan: t34b l4 t45 t56 t67 t78)
 set -uo pipefail
 KOK="$(cd "$(dirname "$0")/../../.." && pwd)"
 B=/d/soft/cop31-varlik/blender/blender-5.2.3-windows-x64/blender.exe
-R=/d/soft/cop31-varlik/render-son
-DOKU=/d/soft/cop31-varlik/s2/doku
+R_VARSAYILAN=/d/soft/cop31-varlik/render-son
+R=${S2_KOK:-$R_VARSAYILAN}
+DOKU=${S2_DOKU:-/d/soft/cop31-varlik/s2/doku}
+echo "[BILGI] çıktı $R · yazılı dokular $DOKU"
 O=$R/_onizleme
 LOG=$O/s2-son.jsonl
 BOSLUK=${S2_BOSLUK:-20}   # klipler arası bekleme (s), kilit bırakıldıktan sonra
@@ -68,7 +74,7 @@ son_kare_no() {   # $1 klip → son kare dizini (render-son/<klip>.json "kare" �
 son_kare() {   # $1 poster, $2 kaynak klip, $3 kaynak kare
   local src=$R/$2/k_$(printf %04d $3).png
   if [ ! -f "$src" ]; then echo "[HATA] $1: $src yok"; return; fi
-  if [ "$1" = "p6" ] && [ ! -d "$R/p8" ] && [ "$(p8_tip)" != "son-kare" ]; then
+  if [ "$1" = "p6" ] && [ "$R" = "$R_VARSAYILAN" ] && [ ! -d "$R/p8" ] && [ "$(p8_tip)" != "son-kare" ]; then
     echo "[HATA] p6: render-son/p8 yok ve p8.json tip son-kare değil — eski p6 plakası henüz taşınmamış (S2c: mv render-son/p6 render-son/p8). p6 kopyası atlandı."
     return
   fi
@@ -85,7 +91,8 @@ p8_tip() {   # render-son/p8.json "tip" (yoksa / okunamazsa boş)
 }
 
 # p8 json'u: E/F'de eski p6 plakası (dizin varsa tip "plaka" ile yaz); G-B'de son-kare = t78[59] (kodla.mjs yazar, dokunma)
-if [ -d "$R/p8" ]; then sahne --klip p8 --kok $R --yalniz_json --yigin 0
+if [ "$R" != "$R_VARSAYILAN" ]; then echo "[BILGI] p8: varsayılan dışı kök ($R), p8 işi yok"
+elif [ -d "$R/p8" ]; then sahne --klip p8 --kok $R --yalniz_json --yigin 0
 elif [ "$(p8_tip)" = "son-kare" ]; then echo "[BILGI] p8 son-kare (G-B; p8.json kodla.mjs'nin, dokunulmadı; eski plaka render-son-f/p8)"
 else echo "[UYARI] render-son/p8 yok ve p8.json tip son-kare değil (S2c taşıması bekleniyor)"; fi
 

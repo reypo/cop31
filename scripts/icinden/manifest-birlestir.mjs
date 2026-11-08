@@ -31,6 +31,12 @@
 // `ileri: {ad, sure, kare (toplam), dosya: {}, bayt: {}, geri: null, hizGeri, parcalar: Klip[], kopruDurak}`; `kopruDurak`
 // ilk parçanın 0. karesine eşit posterin durağı (r43[0] ≡ t34 son ≡ l4[0] ≡ p4 → "d4"; site d11 → p4 350 ms çapraz sönme).
 // LQIP: posterden 24 px genişlikte WebP (sharp).
+//
+// İki dil (8 Kasım 2026; onay-listesi §15): render içindeki yazıları İngilizce olan klipler ayrı listede (`--liste-en`,
+// varsayılan kodlama/render-son-en.json; fragmanlar `--fragman-en`, render-son-en). Manifest Türkçe tabanlı kalır; İngilizce
+// kodlaması olan her klip / poster yönü / d6 `ozel` girdisine `dil: { en: {…} }` eklenir (klip: dosya + bayt; poster: dosya +
+// bayt + lqip; ozel: duvarCapalari — İngilizce duvarın kendi çapaları). Site sunucuda dile göre çözer (klipler.ts
+// dilManifesti): istemciye giden manifest ve HTML yalnız o dilin adreslerini taşır. Kare sayısı / kırpım iki dilde aynı olmalı.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import sharp from "sharp";
@@ -48,6 +54,8 @@ if (!["render", "onizleme", "yer-tutucu"].includes(KAYNAK)) throw new Error(`--k
 const YAYLAR = resolve(arg("--yaylar", join(FRAGMAN, "yaylar.json")));
 /** Bilerek geri klipsiz bırakılan geri klipler (bütçe merdiveni; `kodla.mjs --dus`). */
 const GERI_YOK = new Set(arg("--geri-yok", "").split(",").filter(Boolean));
+const LISTE_EN = resolve(arg("--liste-en", "D:/soft/cop31-varlik/kodlama/render-son-en.json"));
+const FRAGMAN_EN = resolve(arg("--fragman-en", "D:/soft/cop31-varlik/render-son-en"));
 
 const SURUM = 3;
 const MASTER = 1920;
@@ -197,6 +205,17 @@ const ONIZLEME_FRAGMAN = Object.entries(fragmanlar)
 if (KAYNAK === "render" && ONIZLEME_FRAGMAN.length) uyarilar.push(`--kaynak render ama önizleme fragmanları var (kaynak_set "onizleme"): ${ONIZLEME_FRAGMAN.join(" ")} — A5 son render'ı bekleniyor`);
 const liste = JSON.parse(readFileSync(LISTE, "utf8"));
 const bul = (klip, tur) => liste.filter((x) => x.klip === klip && x.tur === tur);
+/** İngilizce kodlamalar (yoksa boş: manifest yalnız Türkçe). */
+const listeEn = existsSync(LISTE_EN) ? JSON.parse(readFileSync(LISTE_EN, "utf8")) : [];
+if (!listeEn.length) uyarilar.push(`İngilizce liste yok ya da boş (${LISTE_EN}): manifestte dil.en yok`);
+const bulEn = (klip, tur) => listeEn.filter((x) => x.klip === klip && x.tur === tur);
+const kullanilanEn = new Set();
+const fragmanlarEn = {};
+for (const ad of FRAGMAN_ADLARI) {
+  if (!listeEn.some((x) => x.kaynakKlip === ad || x.klip === ad)) continue;
+  const f = fragmanOku(FRAGMAN_EN, ad, (m) => uyarilar.push(`EN ${m}`));
+  if (f) fragmanlarEn[ad] = f;
+}
 /**
  * Geçici yedek geçişler (W-3 §14.7 C): t79 (sol duvar → kök kasası) ve r97 paralel üretiliyor. Kodlama listesinde t79
  * yoksa DURAKLAR'daki t79 (d7.ileri, d8.gelen) t89'la değişir: ilk karesi masadaki broşür (d7'den kesme), geri klip yok
@@ -253,6 +272,23 @@ function dosyalar(klip, tur) {
   return { dosya, bayt, kare: satir[0].kare, sure: satir[0].sure };
 }
 
+/** İngilizce kodlamanın dosya + bayt eşi (yön/kodek kümesi Türkçeyle aynı olmalı); yoksa null. */
+function dilEn(ad, tur, d) {
+  const satir = bulEn(ad, tur);
+  if (!satir.length) return null;
+  const dosya = {};
+  const bayt = {};
+  for (const s of satir) {
+    (dosya[s.boyut] ??= {})[s.kodek] = s.dosya;
+    (bayt[s.boyut] ??= {})[s.kodek] = s.bayt;
+    kullanilanEn.add(s.dosya);
+    if (s.kare !== d.kare) uyarilar.push(`EN ${ad} ${s.boyut} ${s.kodek}: ${s.kare} kare, Türkçe ${d.kare}`);
+  }
+  for (const [b, kd] of Object.entries(d.dosya))
+    for (const k of Object.keys(kd)) if (!dosya[b]?.[k]) uyarilar.push(`EN ${ad} (${tur}): ${b} ${k} kodlaması yok → İngilizce sayfa bu yön/kodekte Türkçe dosyayı alır`);
+  return { dosya, bayt };
+}
+
 function klipNesnesi(ad, tur) {
   const d = dosyalar(ad, tur);
   if (!d) return null;
@@ -260,7 +296,8 @@ function klipNesnesi(ad, tur) {
   const ileriAd = tur === "geri" ? ileriOf(ad) : ad;
   const fr = fragmanlar[ileriAd];
   if (fr && fr.kare !== d.kare) uyarilar.push(`${ad}: fragman ${fr.kare} kare, kodlanmış ${d.kare} kare`);
-  return { ad, sure: d.sure, kare: d.kare, dosya: d.dosya, bayt: d.bayt };
+  const en = dilEn(ad, tur, d);
+  return { ad, sure: d.sure, kare: d.kare, dosya: d.dosya, bayt: d.bayt, ...(en ? { dil: { en } } : {}) };
 }
 
 async function lqip(yol) {
@@ -281,6 +318,13 @@ async function poster(ad) {
     }
     const yol = s.yol && existsSync(s.yol) ? s.yol : join(PUBLIC, s.dosya);
     p[boyut] = { dosya: s.dosya, bayt: s.bayt, lqip: await lqip(yol) };
+    const e = listeEn.find((x) => x.klip === ad && x.tur === "poster" && x.boyut === boyut);
+    if (e) {
+      kullanilanEn.add(e.dosya);
+      const ey = e.yol && existsSync(e.yol) ? e.yol : join(PUBLIC, e.dosya);
+      if (e.kirpimY !== s.kirpimY) uyarilar.push(`EN poster ${ad} ${boyut}: kirpimY ${e.kirpimY} ≠ Türkçe ${s.kirpimY}`);
+      p[boyut].dil = { en: { dosya: e.dosya, bayt: e.bayt, lqip: await lqip(ey) } };
+    }
   }
   posterOnbellek.set(ad, p);
   return p;
@@ -374,6 +418,34 @@ function dalUclari(durakId, kaynak, yY) {
   if (l.length !== BEKLENEN.dalUclari) uyarilar.push(`${durakId} dalUclari: ${l.length} uç (${BEKLENEN.dalUclari} beklenir; ${kaynak.ad})`);
   for (const { ad } of l) if (!DAL_UCU_AD.includes(ad)) uyarilar.push(`${durakId} dalUclari: bilinmeyen ad "${ad}" (${DAL_UCU_AD.join(", ")})`);
   return yonlu(durakId, "dalUclari", l.map((x) => x.n), yY, (_, i) => ({ on: { ad: l[i].ad } }));
+}
+
+/**
+ * d6 arka duvar çapaları (G7 §14.4.4): `fr` = p6 fragmanı (yön başına `duvarCapalari`, yoksa tek nokta `capalar`), yatay
+ * kırpım p6 posterinin kirpimY'si. Kırpım dışına ya da kenara 24 px'ten yakın düşen yön YAZILMAZ (motto dikeyde x ≈ 911
+ * video px); site o yönde çapa yoksa kılavuz çizmez (VideoSahne kilavuzCapa `?.[boyut] ?? null`). G7 adları yoksa null.
+ */
+function duvarCapalari(D, fr, yP6, onek) {
+  const yon = Array.isArray(fr?.duvarCapalari) ? Object.fromEntries(fr.duvarCapalari.map((x) => [x.ad, x])) : null;
+  const tek = fr?.capalar ?? null;
+  const bulunan = DUVAR_CAPA.filter((ad) => yon?.[ad] || tek?.[ad]);
+  if (bulunan.length !== DUVAR_CAPA.length) {
+    const eski = Object.keys(yon ?? tek ?? {});
+    uyarilar.push(`${onek}${D.id}: duvar çapası ${bulunan.length}/${DUVAR_CAPA.length} (${DUVAR_CAPA.join(", ")}; p6.json'da: ${eski.join(", ") || "—"})`);
+  }
+  if (!bulunan.length) return null;
+  return bulunan.map((ad) => {
+    const v = {
+      dikey: video("dikey", yon?.[ad]?.dikey ?? tek[ad]),
+      yatay: video("yatay", yon?.[ad]?.yatay ?? tek[ad], yP6),
+    };
+    const c = { ad };
+    for (const b of Object.keys(BOYUTLAR)) {
+      if (icinde(b, v[b])) c[b] = v[b];
+      else uyarilar.push(`${onek}${D.id}: duvar çapası "${ad}" ${b} kırpım dışında ya da kenara < ${KENAR} px (${v[b].join(", ")}${b === "yatay" ? `; kirpimY ${yP6}` : ""}) — o yönde yazılmadı (§14.4.4)`);
+    }
+    return c;
+  });
 }
 
 const duraklar = [];
@@ -472,29 +544,14 @@ for (const D of DURAKLAR) {
     // p6 çapaları (S2 json_yaz): önce p6 fragmanının yön başına `duvarCapalari` listesi (master px; her yön kendi
     // kırpımına giren nokta), yoksa p6 `capalar` (iki kırpıma da giren tek nokta). Yatay: p6 posterinin kirpimY'si
     // (E2: 293; §12.12). G-B'de site d6 kılavuzunu yeniden çizer (bant satırı → rakam); kırpım dışına düşen yön
-    // yazılmaz (uyarı). G7 adları (bulusma, solen, motto) yoksa alan yazılmaz.
+    // yazılmaz (uyarı). G7 adları (bulusma, solen, motto) yoksa alan yazılmaz. İngilizce duvar (render-son-en/p6.json)
+    // kendi yerleşimiyle: ozel.dil.en.duvarCapalari.
     const yP6 = posterKirpimY("p6", "t56", (fragmanlar.t56?.kare ?? 1) - 1);
-    const yon = Array.isArray(fragmanlar.p6?.duvarCapalari) ? Object.fromEntries(fragmanlar.p6.duvarCapalari.map((x) => [x.ad, x])) : null;
-    const tek = fragmanlar.p6?.capalar ?? null;
-    const bulunan = DUVAR_CAPA.filter((ad) => yon?.[ad] || tek?.[ad]);
-    // G7 (§14.4.4, K-son): kırpım dışına ya da kenara 24 px'ten yakın düşen yön YAZILMAZ (motto dikeyde x ≈ 911 video
-    // px); site o yönde çapa yoksa kılavuz çizmez (VideoSahne kilavuzCapa `?.[boyut] ?? null`).
-    if (bulunan.length)
-      ozel.duvarCapalari = bulunan.map((ad) => {
-        const v = {
-          dikey: video("dikey", yon?.[ad]?.dikey ?? tek[ad]),
-          yatay: video("yatay", yon?.[ad]?.yatay ?? tek[ad], yP6),
-        };
-        const c = { ad };
-        for (const b of Object.keys(BOYUTLAR)) {
-          if (icinde(b, v[b])) c[b] = v[b];
-          else uyarilar.push(`${D.id}: duvar çapası "${ad}" ${b} kırpım dışında ya da kenara < ${KENAR} px (${v[b].join(", ")}${b === "yatay" ? `; kirpimY ${yP6}` : ""}) — o yönde yazılmadı (§14.4.4)`);
-        }
-        return c;
-      });
-    if (bulunan.length !== DUVAR_CAPA.length) {
-      const eski = Object.keys(yon ?? tek ?? {});
-      uyarilar.push(`${D.id}: duvar çapası ${bulunan.length}/${DUVAR_CAPA.length} (${DUVAR_CAPA.join(", ")}; p6.json'da: ${eski.join(", ") || "—"}) — G7 render'ı (A6 son.sh t56 t67) + A8 manifestiyle dolar`);
+    const dc = duvarCapalari(D, fragmanlar.p6, yP6, "");
+    if (dc) ozel.duvarCapalari = dc;
+    if (fragmanlarEn.p6) {
+      const dcEn = duvarCapalari(D, fragmanlarEn.p6, yP6, "EN ");
+      if (dcEn) ozel.dil = { en: { duvarCapalari: dcEn } };
     }
   }
   if (D.rol === "fidan-kok") {
@@ -564,6 +621,28 @@ for (const d of duraklar) {
   for (const [b, p] of Object.entries(d.poster ?? {})) for (const kodek of ["h264", "hevc", "av1"]) if (KODEKLER.find((x) => x.ad === kodek).boyutlar.includes(b)) ekle(`${b}-${kodek}`, p.dosya, p.bayt);
 }
 console.log(`yazıldı: ${CIKTI} (${(JSON.stringify(manifest).length / 1024).toFixed(1)} KB; surum ${SURUM}; kaynak ${KAYNAK}; ${duraklar.length} durak + kapanış = N ${duraklar.length})`);
+{
+  // İngilizce oturumun medyası: Türkçe manifestin tekil dosyaları, dil.en olan girdide İngilizce dosyayla
+  const medyaEn = {};
+  const ekleEn = (anahtar, dosya, bayt) => ((medyaEn[anahtar] ??= new Map()).set(dosya, bayt));
+  for (const d of duraklar) {
+    for (const k of [d.dongu, d.ileri, d.ileri?.geri, ...(d.ileri?.parcalar ?? [])].filter(Boolean)) {
+      const kk = k.dil?.en ?? k;
+      for (const [b, kd] of Object.entries(k.dosya)) for (const kodek of Object.keys(kd)) ekleEn(`${b}-${kodek}`, kk.dosya[b]?.[kodek] ?? kd[kodek], kk.bayt[b]?.[kodek] ?? k.bayt[b][kodek]);
+    }
+    for (const [b, p] of Object.entries(d.poster ?? {}))
+      for (const kodek of ["h264", "hevc", "av1"]) if (KODEKLER.find((x) => x.ad === kodek).boyutlar.includes(b)) ekleEn(`${b}-${kodek}`, (p.dil?.en ?? p).dosya, (p.dil?.en ?? p).bayt);
+  }
+  console.log(
+    "İngilizce oturum medyası (aynı tanım):",
+    Object.entries(medyaEn)
+      .map(([k, m]) => `${k} ${([...m.values()].reduce((s, v) => s + v, 0) / MB).toFixed(3)}`)
+      .join(" · "),
+  );
+  const bos = listeEn.filter((x) => !kullanilanEn.has(x.dosya)).map((x) => x.dosya);
+  if (bos.length) uyarilar.push(`İngilizce listede manifestin kullanmadığı ${bos.length} kayıt: ${bos.join(" ")}`);
+  console.log(`dil.en: ${kullanilanEn.size}/${listeEn.length} İngilizce kayıt manifestte`);
+}
 console.log(
   "manifest medyası (video + poster, tekil dosya, MB = 10^6; oturum = bu + W'nin medya dışı ölçümü):",
   Object.entries(medya)

@@ -150,7 +150,7 @@ export const facts = {
   members: 1000000,
   provinces: 81,
   districts: 922,
-  meetings: 30, // yeni broşür (brosur/icerik.ts dinleyen.rakamlar[0] "30’dan fazla"); değişirse :83'teki ek, Icinden3.tsx d6 eki, S2 duvar dokusu da
+  meetings: 30, // basılı broşür (7 Kasım 2026) s. 16 "30’dan fazla"; değişirse :83'teki ek, Icinden3.tsx d6 eki, S2 duvar dokusu da
   meetingsYears: 5,
   solenAttendees: 100000,
   solenDate: "16 Mayıs 2026",

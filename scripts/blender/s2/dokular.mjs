@@ -26,8 +26,18 @@
  * (pencere dışı üç satırın birleşik kutusu). Yalnız arka duvar (öteki dokular bayt bayt aynı kalır):
  *   node scripts/blender/s2/dokular.mjs --sadece duvar-arka.png --onizleme .qa/icinden3/gb/g7-doku
  * Kısmi çalışmada _duvar-olcum.json'daki öteki dokuların ölçümleri ve çapaları (sol duvar: uye, il_ilce) korunur.
+ *
+ * İki dil (7 Kasım 2026; onay-listesi §15): `--dil en` İngilizce dokuları yazar (varsayılan çıktı D:/soft/cop31-varlik/s2/
+ * doku-en, önizleme .qa/icinden-en/doku). Metinler `src/components/icinden/metin.ts` `DOKU_EN`'den (DOM sözlüğüyle tek
+ * kaynak; "@/" takma adı Node çözümleme kancasıyla), yalnız İngilizce (Türkçe alt satır yok), sayılar en-US. Düzen Türkçeyle
+ * aynı kurallarla ölçülerek kurulur; İngilizce satır uzunlukları farklı olduğundan: arka duvar başlığı sığarsa tek satır,
+ * "100,000+" ile "young people" alt alta, sol duvarda "81 Provinces · 922 Districts" sığmazsa iki satır, pankart / kiosk /
+ * totem / sütun yazıları taşarsa küçültülür (`data-sig`; ölçü günlükte ve _dokular.json `sigdirma`). Varsayılan (Türkçe)
+ * çıktı bayt bayt aynı kalır (Türkçe HTML'e dokunulmadı; .qa/icinden-en/doku/md5-*).
+ *   node scripts/blender/s2/dokular.mjs --dil en
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { registerHooks } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
@@ -41,9 +51,25 @@ const arg = (ad, vars) => {
   const i = process.argv.indexOf(ad);
   return i > 0 ? process.argv[i + 1] : vars;
 };
-const OUT = arg("--out", "D:/soft/cop31-varlik/s2/doku");
+const DIL = arg("--dil", "tr");
+if (!["tr", "en"].includes(DIL)) throw new Error(`--dil ${DIL}: tr | en`);
+const EN_MI = DIL === "en";
+const OUT = arg("--out", EN_MI ? "D:/soft/cop31-varlik/s2/doku-en" : "D:/soft/cop31-varlik/s2/doku");
 const SADECE = arg("--sadece", null)?.split(",").map((s) => s.trim()).filter(Boolean) ?? null;
-const ONIZLEME = path.resolve(KOK, arg("--onizleme", ".qa/icinden3/e"));
+const ONIZLEME = path.resolve(KOK, arg("--onizleme", EN_MI ? ".qa/icinden-en/doku" : ".qa/icinden3/e"));
+// İngilizce metinler: DOM sözlüğü (metin.ts DOKU_EN). metin.ts "@/lib/…" takma adlarıyla içe aktarır → src/…ts'e çözülür.
+let DOKU_EN = null;
+if (EN_MI) {
+  registerHooks({
+    resolve(belirtec, baglam, sonraki) {
+      if (belirtec.startsWith("@/")) return sonraki(pathToFileURL(path.join(KOK, "src", `${belirtec.slice(2)}.ts`)).href, baglam);
+      return sonraki(belirtec, baglam);
+    },
+  });
+  ({ DOKU_EN } = await import(pathToFileURL(path.join(KOK, "src/components/icinden/metin.ts")).href));
+}
+/** Dile göre büyük harf (Türkçede İ/ı kuralı; İngilizcede "A 12,000-YEAR TRUST"). */
+const BUYUK = (s) => s.toLocaleUpperCase(DIL);
 const FONT_DIZIN = "D:/soft/cop31-varlik/font/";
 // setContent (about:blank) file:// yazı tiplerini yükleyemez → base64 data: URL olarak gömülür
 const gom = async (ad) => `data:font/ttf;base64,${(await readFile(FONT_DIZIN + ad)).toString("base64")}`;
@@ -73,6 +99,18 @@ const EN = {
   "Doğal miras": "Natural heritage",
 };
 
+// İngilizce dokular: dönem adı (zemin halkası, sütun çipi) DOM sözlüğünün sütunlarından (emanetAlanlari no ↔ DOKU_EN.sutunlar
+// no); standda okunan EN etiketlerle (yukarıdaki EN) aynı olmalı, değilse dur (iki kaynak ayrıştı).
+const EN_SUTUN = EN_MI ? Object.fromEntries(DOKU_EN.sutunlar.map((s) => [s.no, s])) : null;
+if (EN_MI) {
+  for (const a of emanetAlanlari) {
+    const e = EN_SUTUN[a.no];
+    if (!e) throw new Error(`metin.ts DOKU_EN.sutunlar: no ${a.no} yok`);
+    if (EN[a.donem] !== e.donem) throw new Error(`dönem ${a.donem}: stant EN etiketi "${EN[a.donem]}", metin.ts "${e.donem}" — iki kaynak ayrıştı`);
+  }
+  for (const d of donemler) if (!EN[d.ad]) throw new Error(`EN dönem adı yok: ${d.ad}`);
+}
+
 const PALET = {
   koyuYesil: stant.palet.koyuYesil, // #28332F
   krem: stant.palet.krem, // #F7E6CD
@@ -98,7 +136,7 @@ const sayfa = (w, h, ic, bg = "transparent") =>
   `<!doctype html><html><head><meta charset="utf-8"><style>${CSS} body{width:${w}px;height:${h}px;background:${bg};overflow:hidden;position:relative}</style></head><body>${ic}</body></html>`;
 
 /* ---------------- sütun yüzü: 0,46 × 2,30 m → 600 × 3000 px ---------------- */
-function sutunYuzu(a) {
+function sutunYuzu(a, y = { ad: a.ad, il: a.il, donem: TR(a.donem), emanet: a.emanet, alt: "12.000 Yıllık Emanet" }) {
   const renk = donemRenk(a.donem);
   return sayfa(
     600,
@@ -107,19 +145,25 @@ function sutunYuzu(a) {
   <div style="position:absolute;inset:0;background:${PALET.yuz}"></div>
   <div style="position:absolute;left:56px;right:50px;top:170px;color:${PALET.murekkep}">
     <div style="font:700 300px/1 Lora;letter-spacing:-8px;color:${PALET.bordo}">${iki(a.no)}</div>
-    <div style="font:700 86px/1.06 Lora;margin-top:60px">${a.ad}</div>
-    <div style="font:500 44px/1 Mont;color:#6E6862;margin-top:34px;letter-spacing:.5px">${a.il}</div>
-    <div style="display:inline-block;margin-top:44px;background:${PALET.bordo};color:#fff;font:600 32px/1 Mont;letter-spacing:.12em;padding:16px 20px 14px">${TR(a.donem)}</div>
+    <div style="font:700 86px/1.06 Lora;margin-top:60px">${y.ad}</div>
+    <div style="font:500 44px/1 Mont;color:#6E6862;margin-top:34px;letter-spacing:.5px">${y.il}</div>
+    <div style="display:inline-block;margin-top:44px;background:${PALET.bordo};color:#fff;font:600 32px/1 Mont;letter-spacing:.12em;padding:16px 20px 14px">${y.donem}</div>
     <div style="height:3px;background:#D9D2C8;margin:90px 0 70px"></div>
-    <div style="font:italic 400 50px/1.36 Lora;color:#3A3330">${a.emanet}</div>
+    <div${y.sig ?? ""} style="font:italic 400 50px/1.36 Lora;color:#3A3330">${y.emanet}</div>
   </div>
-  <div style="position:absolute;left:56px;right:56px;bottom:520px;font:600 30px/1 Mont;color:#8A8178;letter-spacing:.06em">12.000 Yıllık Emanet</div>
+  <div style="position:absolute;left:56px;right:56px;bottom:520px;font:600 30px/1 Mont;color:#8A8178;letter-spacing:.06em">${y.alt}</div>
   <div style="position:absolute;left:56px;width:120px;bottom:490px;height:6px;background:${PALET.koyuYesil}"></div>
   <div style="position:absolute;left:0;right:0;bottom:0;height:380px;background:${renk}"></div>
   <div style="position:absolute;left:0;right:0;bottom:380px;height:10px;background:${PALET.koyuYesil}"></div>
   `,
   );
 }
+
+// İngilizce sütun yüzü: emanet cümlesi alt satırın (bottom 520 → y 2480) en az 80 px üstünde bitmeli (taşarsa küçült)
+const sutunYuzuEn = (a) => {
+  const e = EN_SUTUN[a.no];
+  return sutunYuzu(a, { ad: e.ad, il: e.il, donem: BUYUK(e.donem), emanet: e.emanet, alt: DOKU_EN.tema, sig: ` data-sig="alt:2400"` });
+};
 
 /* ---------------- zemin halkası: ±2,25 m → 4096² px (910,2 px/m), alfa dışarıda ---------------- */
 function halka() {
@@ -128,12 +172,21 @@ function halka() {
   const c = N / 2;
   const r = (m) => m * pxm;
   // Etiket dizisi: 9 yönünden (batı) saat yönünde; işaretler (GİRİŞ, BUGÜN) dönem değil (stant-icerik §2.3)
-  const etiketler = [
-    { tr: "GİRİŞ · ~12.000 YIL ÖNCE", en: "Start · 12,000 years ago", isaret: true },
-    ...donemler.slice(0, 6).map((d) => ({ tr: TR(d.ad), en: EN[d.ad] })),
-    { tr: "BUGÜN", en: "Today", isaret: true, altin: true },
-    ...donemler.slice(6).map((d) => ({ tr: TR(d.ad), en: EN[d.ad] })),
-  ];
+  // İngilizce: tek satır (`en: null`), standın kendi EN etiketleri büyük harfle (DOKU_EN.halka; dönemler sözlükle denetli EN).
+  const etiketler = EN_MI
+    ? [
+        { tr: BUYUK(DOKU_EN.halka.giris), en: null, isaret: true },
+        ...donemler.slice(0, 6).map((d) => ({ tr: BUYUK(EN[d.ad]), en: null })),
+        { tr: BUYUK(DOKU_EN.halka.bugun), en: null, isaret: true, altin: true },
+        ...donemler.slice(6).map((d) => ({ tr: BUYUK(EN[d.ad]), en: null })),
+      ]
+    : [
+        { tr: "GİRİŞ · ~12.000 YIL ÖNCE", en: "Start · 12,000 years ago", isaret: true },
+        ...donemler.slice(0, 6).map((d) => ({ tr: TR(d.ad), en: EN[d.ad] })),
+        { tr: "BUGÜN", en: "Today", isaret: true, altin: true },
+        ...donemler.slice(6).map((d) => ({ tr: TR(d.ad), en: EN[d.ad] })),
+      ];
+  const orta = EN_MI ? DOKU_EN.zemin : { ust: "Buradasın", alt: stant.zemin.alt };
   const n = etiketler.length;
   const bantOrta = r((1.665 + 2.01) / 2);
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${N}" height="${N}" viewBox="0 0 ${N} ${N}">`;
@@ -171,8 +224,15 @@ function halka() {
     const renk = e.altin ? PALET.altin : PALET.krem;
     const boy = e.isaret && !e.altin ? 52 : 62;
     svg += `<g transform="translate(${x},${y}) rotate(${rot})">`;
-    svg += `<text x="0" y="-8" text-anchor="middle" font-family="Mont" font-weight="700" font-size="${boy}" letter-spacing="7" fill="${renk}">${e.tr}</text>`;
-    svg += `<text x="0" y="62" text-anchor="middle" font-family="Mont" font-style="italic" font-weight="500" font-size="42" fill="${PALET.krem}" fill-opacity=".72">${e.en}</text>`;
+    if (e.en != null) {
+      svg += `<text x="0" y="-8" text-anchor="middle" font-family="Mont" font-weight="700" font-size="${boy}" letter-spacing="7" fill="${renk}">${e.tr}</text>`;
+      svg += `<text x="0" y="62" text-anchor="middle" font-family="Mont" font-style="italic" font-weight="500" font-size="42" fill="${PALET.krem}" fill-opacity=".72">${e.en}</text>`;
+    } else {
+      // tek satır (İngilizce): büyük harf yüksekliği (0,70 em) bandın ortasında. İngilizce adlar Türkçeden uzun ("LYCIAN –
+      // HELLENISTIC"): taban çizgisi boyunca ≤ 740 px (etiket merkezinden komşu üçgene 400 px, üçgen yarısı 26 px; Türkçe en uzun
+      // etiket ~830 px) — önce harf aralığı 7 → 3, sonra yazı boyu küçülür.
+      svg += `<text data-halka="${i}" data-sig="svgw:740" x="0" y="${(0.35 * boy).toFixed(1)}" text-anchor="middle" font-family="Mont" font-weight="700" font-size="${boy}" letter-spacing="7" fill="${renk}">${e.tr}</text>`;
+    }
     svg += `</g>`;
     // üçgen: iki etiketin arasında
     const au = 180 + ((i + 0.5) * 360) / n;
@@ -181,8 +241,8 @@ function halka() {
     svg += `<g transform="translate(${xu},${yu}) rotate(${au + 90})"><path d="M0,-30 L26,16 L-26,16 Z" fill="${PALET.altin}"/></g>`;
   }
   // orta: "Buradasın" küçük, "Bugün" büyük serif, altın ▲ — girişten (alt kenar) düz okunur
-  svg += `<text x="${c}" y="${c - r(0.20)}" text-anchor="middle" font-family="Mont" font-weight="600" font-size="96" letter-spacing="10" fill="${PALET.koyuYesil}">Buradasın</text>`;
-  svg += `<text x="${c}" y="${c + r(0.13)}" text-anchor="middle" font-family="Lora" font-weight="700" font-size="300" fill="${PALET.koyuYesil}">${stant.zemin.alt}</text>`;
+  svg += `<text x="${c}" y="${c - r(0.20)}" text-anchor="middle" font-family="Mont" font-weight="600" font-size="96" letter-spacing="10" fill="${PALET.koyuYesil}">${orta.ust}</text>`;
+  svg += `<text x="${c}" y="${c + r(0.13)}" text-anchor="middle" font-family="Lora" font-weight="700" font-size="300" fill="${PALET.koyuYesil}">${orta.alt}</text>`;
   svg += `<path transform="translate(${c},${c + r(0.36)})" d="M0,-60 L62,44 L-62,44 Z" fill="${PALET.altin}"/>`;
   svg += `</svg>`;
   return sayfa(N, N, svg);
@@ -190,7 +250,7 @@ function halka() {
 
 /* ---------------- kanopi bandı: 14,05 × 0,60 m → 8192 × 350 ---------------- */
 function kanopi() {
-  const metin = `${stant.tema} – ${stant.temaEn}`;
+  const metin = EN_MI ? DOKU_EN.tema : `${stant.tema} – ${stant.temaEn}`;
   const parca = (x) =>
     `<div style="position:absolute;left:${x}px;top:0;width:4096px;height:350px;display:flex;align-items:center;justify-content:center;font:600 150px/1 Mont;color:${PALET.krem};letter-spacing:2px;white-space:nowrap">${metin}</div>`;
   return sayfa(
@@ -207,7 +267,7 @@ function kanopi() {
    soldan sağa); Blender'da UV 90° döndürülür → pankartta metin aşağıdan yukarı okunur. ---------------- */
 function pankartDikey(satirlar) {
   const ic = satirlar
-    .map((s) => `<div style="font:${s.agirlik} ${s.boy}px/1.02 Mont;letter-spacing:${s.aralik ?? -2}px;white-space:nowrap">${s.metin}</div>`)
+    .map((s) => `<div${EN_MI ? ` data-sig="w:1820"` : ""} style="font:${s.agirlik} ${s.boy}px/1.02 Mont;letter-spacing:${s.aralik ?? -2}px;white-space:nowrap">${s.metin}</div>`)
     .join("");
   return sayfa(
     2000,
@@ -223,15 +283,17 @@ function bantPlay() {
     2200,
     210,
     `<div style="position:absolute;inset:0;background:#1E2A25"></div>
-     <div style="position:absolute;inset:0;display:flex;align-items:center;padding-left:120px;color:#fff;font:italic 500 120px/1 Mont;letter-spacing:6px;white-space:nowrap">Play – What would you do?</div>`,
+     <div style="position:absolute;inset:0;display:flex;align-items:center;padding-left:120px;color:#fff;font:italic 500 120px/1 Mont;letter-spacing:6px;white-space:nowrap">${EN_MI ? DOKU_EN.oyun : "Play – What would you do?"}</div>`,
   );
 }
 function bantOyna() {
+  // Türkçe "Oyna – Sen olsan ne yapardın?"; İngilizce aynı bant düzeniyle "Play – What would you do?" ("Play" altın)
+  const [on, soru] = EN_MI ? DOKU_EN.oyun.split(" – ") : ["Oyna", "Sen olsan ne yapardın?"];
   return sayfa(
     1500,
     210,
     `<div style="position:absolute;inset:0;background:#1E2A25"></div>
-     <div style="position:absolute;inset:0;display:flex;align-items:center;padding-left:70px;color:#fff;font:500 82px/1 Mont;white-space:nowrap"><span style="color:${PALET.altin};font-weight:700">Oyna</span>&nbsp;– Sen olsan ne yapardın?</div>`,
+     <div style="position:absolute;inset:0;display:flex;align-items:center;padding-left:70px;color:#fff;font:500 82px/1 Mont;white-space:nowrap"><span style="color:${PALET.altin};font-weight:700">${on}</span>&nbsp;– ${soru}</div>`,
   );
 }
 
@@ -241,8 +303,8 @@ function kioskEkran() {
     550,
     980,
     `<div style="position:absolute;inset:0;background:#17241D"></div>
-     <div style="position:absolute;left:50px;top:90px;font:600 26px/1 Mont;color:#9FB2A8;letter-spacing:.08em">${TR(stant.tema)}</div>
-     <div style="position:absolute;left:50px;right:40px;top:330px;font:700 92px/1.08 Lora;color:#fff">${stant.kiosk.cagri}</div>
+     <div style="position:absolute;left:50px;top:90px;font:600 26px/1 Mont;color:#9FB2A8;letter-spacing:.08em">${EN_MI ? BUYUK(DOKU_EN.tema) : TR(stant.tema)}</div>
+     <div${EN_MI ? ` data-sig="alt:580"` : ""} style="position:absolute;left:50px;right:40px;top:330px;font:700 92px/1.08 Lora;color:#fff">${EN_MI ? DOKU_EN.kiosk : stant.kiosk.cagri}</div>
      <div style="position:absolute;left:50px;width:150px;top:600px;height:8px;background:${PALET.altin}"></div>
      <div style="position:absolute;left:50px;bottom:80px;font:500 30px/1 Mont;color:#9FB2A8">${stant.hashtag}</div>`,
   );
@@ -254,9 +316,9 @@ function totem() {
     550,
     1100,
     `<div style="position:absolute;inset:0;background:${PALET.koyuYesil}"></div>
-     <div style="position:absolute;left:46px;top:70px;font:700 24px/1 Mont;color:#C9D2CC;letter-spacing:.12em">${TR(stant.tema)}</div>
-     <div style="position:absolute;left:46px;right:40px;top:300px;font:700 74px/1.12 Lora;color:${PALET.krem}">${stant.slogan}</div>
-     <div style="position:absolute;left:46px;right:40px;bottom:110px;font:500 28px/1.35 Mont;color:#C9D2CC">${stant.girisMetni[0]}</div>`,
+     <div style="position:absolute;left:46px;top:70px;font:700 24px/1 Mont;color:#C9D2CC;letter-spacing:.12em">${EN_MI ? BUYUK(DOKU_EN.tema) : TR(stant.tema)}</div>
+     <div${EN_MI ? ` data-sig="alt:860"` : ""} style="position:absolute;left:46px;right:40px;top:300px;font:700 74px/1.12 Lora;color:${PALET.krem}">${EN_MI ? DOKU_EN.totem.slogan : stant.slogan}</div>
+     <div style="position:absolute;left:46px;right:40px;bottom:110px;font:500 28px/1.35 Mont;color:#C9D2CC">${EN_MI ? DOKU_EN.totem.alt : stant.girisMetni[0]}</div>`,
   );
 }
 
@@ -335,7 +397,7 @@ const mQ = backCover.quote.match(/^"(AK Parti) (Her Anında) (Hep Yanında)"$/);
 if (!mQ) throw new Error("content.ts backCover.quote değişti; pencere dışı slogan satırları yeniden bölünmeli");
 const bB = bulusmalar.title.split(" "); // content.ts:78 "Gençlik Buluşmaları" → iki satır (tek satırda 3,55 m; pencere 2,95 m)
 if (bB.length !== 2) throw new Error("content.ts bulusmalar.title iki kelime değil; başlık satırları yeniden bölünmeli");
-const METIN = {
+const METIN_TR = {
   baslik: bB, // ["Gençlik", "Buluşmaları"]
   baslikEn: "Youth Meetings", // d6 EN satırı (brief §14.4.4; DOM'da data-onay="en"; onay-listesi)
   bulusmaSayi: arti(facts.meetings), // content.ts:153 → "30+"
@@ -354,6 +416,33 @@ const METIN = {
   slogan: stant.pankartlar[1], // stant.ts:77
   program: `${stant.pankartlar[3]} →`, // stant.ts:79 (+ sondaki "→", stant.ts:25 ve :79 yorumu)
 };
+// İngilizce duvarlar (metin.ts DOKU_EN; EN alt satırı yok — başlık zaten İngilizce). baslik/motto/ilIlce düzen sırasında bölünür.
+const METIN_EN = EN_MI
+  ? {
+      baslik: DOKU_EN.arka.baslik.split(" "),
+      baslikTek: DOKU_EN.arka.baslik,
+      baslikEn: null,
+      bulusmaSayi: DOKU_EN.arka.bulusmaSayi,
+      bulusma: DOKU_EN.arka.bulusma,
+      bulusmaYil: DOKU_EN.arka.bulusmaYil,
+      solen: DOKU_EN.arka.solen,
+      solenSayi: DOKU_EN.arka.solenSayi,
+      genc: DOKU_EN.arka.genc,
+      solenTarihYer: DOKU_EN.arka.solenTarihYer,
+      motto: DOKU_EN.arka.motto.split(/(?<=,) /), // "By Your Side," / "Every Moment"
+      hashtag: DOKU_EN.arka.hashtag,
+      uye: DOKU_EN.sol.uye,
+      uyeEt: DOKU_EN.sol.uyeEt,
+      ilIlce: DOKU_EN.sol.ilIlce,
+      soz: DOKU_EN.sol.soz,
+      slogan: DOKU_EN.cephe.slogan,
+      program: `${DOKU_EN.cephe.program} →`,
+    }
+  : null;
+const METIN = EN_MI ? METIN_EN : METIN_TR;
+// İngilizce dokularda kalmaması gereken Türkçe harfler (özel adlar hariç: GençİKlim, il adları, Göbekli Tepe …)
+const TR_HARF = /[çğıöşüÇĞİÖŞÜ]/;
+const TR_IZINLI = ["GençİKlim", "Göbekli", "Çorum", "Muğla", "Nevşehir", "Sultanhanı", "Diyarbakır", "Karabük", "Eskişehir", "Şanlıurfa", "Güllük", "Türkiye"];
 // satır bölme yalnız boşluktan (metin değişmez): kelime dizisini verilen kelime sayılarına böl
 const bol = (s, ...adet) => {
   const k = s.split(" ");
@@ -431,7 +520,7 @@ const duvarSayfa = (d, ic) =>
   sayfa(
     d.w,
     d.h,
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}" viewBox="0 0 ${d.w} ${d.h}" lang="tr" xml:lang="tr" style="display:block;font-variant-numeric:normal;font-kerning:normal;font-variant-ligatures:no-common-ligatures">${ic}</svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}" viewBox="0 0 ${d.w} ${d.h}" lang="${DIL}" xml:lang="${DIL}" style="display:block;font-variant-numeric:normal;font-kerning:normal;font-variant-ligatures:no-common-ligatures">${ic}</svg>`,
   );
 
 async function duvarlariHazirla(sayfaB) {
@@ -477,71 +566,168 @@ async function duvarlariHazirla(sayfaB) {
     g: kh(B.genc),
     ty: kh(B.tarihYer),
   };
-  const sat = {
-    b1: L({ metin: METIN.baslik[0], agirlik: 600, ref: 0 }),
-    b2: L({ metin: METIN.baslik[1], agirlik: 600, ref: 0 }),
-    en: L({ metin: METIN.baslikEn, italik: true, ref: 6 }),
-    n1: L({ metin: METIN.bulusmaSayi, agirlik: 700, ref: 1 }),
-    e1: L({ metin: METIN.bulusma, agirlik: 600, ref: 4 }),
-    e2: L({ metin: METIN.bulusmaYil, ref: 4 }),
-    s1: L({ metin: METIN.solen, agirlik: 600, ref: 0 }),
-    n2: L({ metin: METIN.solenSayi, agirlik: 700, ref: 0 }),
-    g: L({ metin: METIN.genc, agirlik: 600, ref: 2 }),
-    ty: L({ metin: METIN.solenTarihYer, ref: 3 }),
-  };
-  const anah = Object.keys(sat);
-  const olc = await metinMetrik(sayfaB, anah.map((k) => ({ ...sat[k], font: 1 })), 1000);
-  const m = Object.fromEntries(anah.map((k, i) => [k, olc[i]]));
-  const ust = (k) => m[k].ust * (f[k] ?? f.t), alt = (k) => m[k].alt * (f[k] ?? f.t);
-  const z = {};
-  z.b1 = B.zUst - m.b1.ust * f.t;
-  z.b2 = z.b1 - B.baslikAra;
-  z.en = z.b2 - m.b2.alt * f.t - B.gEn - ust("en");
-  const ust50 = z.en - alt("en") - B.gRakam; // buluşma rakamının mürekkep üstü ("30+": '3'/'0' 716/1000; G'deki "50+": '5' bayrağı 765)
-  z.n1 = ust50 - ust("n1");
-  z.e1 = ust50 - ust("e1"); // etiket 1. satır: yükselenler rakamın mürekkep üstüyle aynı
-  z.e2 = z.n1; // etiket 2. satır: rakamla aynı taban
-  // Şölen bloğu: başlık → tarih · yer → "100.000+ genç" (rakam satırı en altta: tarih satırı 2,88 m, sol ucu bitkinin
-  // önünde kalmasın diye z ≥ 1,3'te; rakam satırı −6,42'den başlar, dağın alçak kısmının üstünde; DOM bant satırı (2) ile
-  // aynı sıra)
-  z.s1 = Math.min(z.n1 - alt("n1"), z.e2 - alt("e2")) - B.gBolum - ust("s1");
-  z.ty = z.s1 - alt("s1") - B.gTarih - ust("ty");
-  z.n2 = z.ty - alt("ty") - B.gSolen - ust("n2");
-  z.g = z.n2;
-  const uEt = XL + m.n1.sag * f.n1 + B.etiketAra; // etiketler "+" mürekkebinin sağında
-  const uN2 = XR - m.g.gen * f.g - B.gencAra; // "100.000+" sonu → boşluk → "genç"
-  const altSinir = Math.min(z.n2 - alt("n2"), z.g - alt("g"));
-  A.yerlesim = {
-    boylar_m: B,
-    font_m: Object.fromEntries(Object.entries(f).map(([k, v]) => [k, +v.toFixed(4)])),
-    taban_z_m: Object.fromEntries(Object.entries(z).map(([k, v]) => [k, +v.toFixed(4)])),
-    etiket_u_m: +uEt.toFixed(4),
-    solen_sayi_bitis_u_m: +uN2.toFixed(4),
-    son_satir_alt_z_m: +altSinir.toFixed(4),
-  };
-  const Yz = (k, ad, o) => Y(ad, sat[k].metin, { ...sat[k], font: f[k] ?? f.t, z: z[k], ...o });
-  A.yazilar = [
-    Yz("b1", "baslik_1", { u: XL, hedef: ["başlık büyük harf ('G', taşma payıyla)", B.baslik] }),
-    Yz("b2", "baslik_2", { u: XL, hedef: ["başlık büyük harf ('B')", B.baslik] }),
-    Yz("en", "baslik_en", { u: XL, hedef: ["ikincil (EN) büyük harf ('M')", B.en] }),
-    Yz("n1", "bulusma_sayi", { u: XL, hedef: ["rakam mürekkebi ('0')", B.bulusmaRakam], capa: "bulusma" }),
-    Yz("e1", "bulusma", { u: uEt, hedef: ["ikincil, büyük harf ölçeği ('l' yükselen)", B.etiket] }),
-    Yz("e2", "bulusma_yil", { u: uEt, hedef: ["ikincil (rakam '5')", B.etiket] }),
-    Yz("s1", "solen", { u: XR, hiza: "end", hedef: ["büyük harf ('B')", B.solenBaslik] }),
-    Yz("n2", "solen_sayi", { u: uN2, hiza: "end", hedef: ["rakam mürekkebi ('0'; ölçülen '1')", B.solenRakam], capa: "solen" }),
-    Yz("g", "genc", { u: XR, hiza: "end", hedef: ["büyük harf ölçeği ('n' x yüksekliği)", B.genc] }),
-    Yz("ty", "solen_tarih_yer", { u: XR, hiza: "end", hedef: ["ikincil büyük harf ('M')", B.tarihYer] }),
-    // pencere dışı (x −3,7…−1,8): yalnız yatayda; E turu "etkinlik" bloğunun satır düzeni
-    Y("motto_1", METIN.motto[0], L({ u: XD, z: 2.7, font: kh(B.motto), ref: 1, hedef: ["büyük harf ('K')", B.motto], capa: "motto", pencereDisi: true })),
-    Y("motto_2", METIN.motto[1], L({ u: XD, z: 2.42, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
-    Y("motto_3", METIN.motto[2], L({ u: XD, z: 2.14, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
-    Y("hashtag", METIN.hashtag, M({ u: XD, z: 1.8, font: kh(B.hashtag), ref: 1, hedef: ["büyük harf", B.hashtag], pencereDisi: true })),
-  ];
-  const cubuk = z.b1 + 0.7 * f.t + B.cubukAra; // başlık büyük harf üstü + 0,17 m (E turu: 3,26 → 3,43)
-  A.sekiller = [
-    kutuSvg(A, XL, XL + 0.4, cubuk, cubuk + 0.03, PAL.turuncu), // başlık üstü vurgu (metin değil)
-    kutuSvg(A, XD, XD + 0.4, 2.98, 3.01, PAL.turuncu), // pencere dışı blok vurgusu (E turu ile aynı)
-  ];
+  if (!EN_MI) {
+    const sat = {
+      b1: L({ metin: METIN.baslik[0], agirlik: 600, ref: 0 }),
+      b2: L({ metin: METIN.baslik[1], agirlik: 600, ref: 0 }),
+      en: L({ metin: METIN.baslikEn, italik: true, ref: 6 }),
+      n1: L({ metin: METIN.bulusmaSayi, agirlik: 700, ref: 1 }),
+      e1: L({ metin: METIN.bulusma, agirlik: 600, ref: 4 }),
+      e2: L({ metin: METIN.bulusmaYil, ref: 4 }),
+      s1: L({ metin: METIN.solen, agirlik: 600, ref: 0 }),
+      n2: L({ metin: METIN.solenSayi, agirlik: 700, ref: 0 }),
+      g: L({ metin: METIN.genc, agirlik: 600, ref: 2 }),
+      ty: L({ metin: METIN.solenTarihYer, ref: 3 }),
+    };
+    const anah = Object.keys(sat);
+    const olc = await metinMetrik(sayfaB, anah.map((k) => ({ ...sat[k], font: 1 })), 1000);
+    const m = Object.fromEntries(anah.map((k, i) => [k, olc[i]]));
+    const ust = (k) => m[k].ust * (f[k] ?? f.t), alt = (k) => m[k].alt * (f[k] ?? f.t);
+    const z = {};
+    z.b1 = B.zUst - m.b1.ust * f.t;
+    z.b2 = z.b1 - B.baslikAra;
+    z.en = z.b2 - m.b2.alt * f.t - B.gEn - ust("en");
+    const ust50 = z.en - alt("en") - B.gRakam; // buluşma rakamının mürekkep üstü ("30+": '3'/'0' 716/1000; G'deki "50+": '5' bayrağı 765)
+    z.n1 = ust50 - ust("n1");
+    z.e1 = ust50 - ust("e1"); // etiket 1. satır: yükselenler rakamın mürekkep üstüyle aynı
+    z.e2 = z.n1; // etiket 2. satır: rakamla aynı taban
+    // Şölen bloğu: başlık → tarih · yer → "100.000+ genç" (rakam satırı en altta: tarih satırı 2,88 m, sol ucu bitkinin
+    // önünde kalmasın diye z ≥ 1,3'te; rakam satırı −6,42'den başlar, dağın alçak kısmının üstünde; DOM bant satırı (2) ile
+    // aynı sıra)
+    z.s1 = Math.min(z.n1 - alt("n1"), z.e2 - alt("e2")) - B.gBolum - ust("s1");
+    z.ty = z.s1 - alt("s1") - B.gTarih - ust("ty");
+    z.n2 = z.ty - alt("ty") - B.gSolen - ust("n2");
+    z.g = z.n2;
+    const uEt = XL + m.n1.sag * f.n1 + B.etiketAra; // etiketler "+" mürekkebinin sağında
+    const uN2 = XR - m.g.gen * f.g - B.gencAra; // "100.000+" sonu → boşluk → "genç"
+    const altSinir = Math.min(z.n2 - alt("n2"), z.g - alt("g"));
+    A.yerlesim = {
+      boylar_m: B,
+      font_m: Object.fromEntries(Object.entries(f).map(([k, v]) => [k, +v.toFixed(4)])),
+      taban_z_m: Object.fromEntries(Object.entries(z).map(([k, v]) => [k, +v.toFixed(4)])),
+      etiket_u_m: +uEt.toFixed(4),
+      solen_sayi_bitis_u_m: +uN2.toFixed(4),
+      son_satir_alt_z_m: +altSinir.toFixed(4),
+    };
+    const Yz = (k, ad, o) => Y(ad, sat[k].metin, { ...sat[k], font: f[k] ?? f.t, z: z[k], ...o });
+    A.yazilar = [
+      Yz("b1", "baslik_1", { u: XL, hedef: ["başlık büyük harf ('G', taşma payıyla)", B.baslik] }),
+      Yz("b2", "baslik_2", { u: XL, hedef: ["başlık büyük harf ('B')", B.baslik] }),
+      Yz("en", "baslik_en", { u: XL, hedef: ["ikincil (EN) büyük harf ('M')", B.en] }),
+      Yz("n1", "bulusma_sayi", { u: XL, hedef: ["rakam mürekkebi ('0')", B.bulusmaRakam], capa: "bulusma" }),
+      Yz("e1", "bulusma", { u: uEt, hedef: ["ikincil, büyük harf ölçeği ('l' yükselen)", B.etiket] }),
+      Yz("e2", "bulusma_yil", { u: uEt, hedef: ["ikincil (rakam '5')", B.etiket] }),
+      Yz("s1", "solen", { u: XR, hiza: "end", hedef: ["büyük harf ('B')", B.solenBaslik] }),
+      Yz("n2", "solen_sayi", { u: uN2, hiza: "end", hedef: ["rakam mürekkebi ('0'; ölçülen '1')", B.solenRakam], capa: "solen" }),
+      Yz("g", "genc", { u: XR, hiza: "end", hedef: ["büyük harf ölçeği ('n' x yüksekliği)", B.genc] }),
+      Yz("ty", "solen_tarih_yer", { u: XR, hiza: "end", hedef: ["ikincil büyük harf ('M')", B.tarihYer] }),
+      // pencere dışı (x −3,7…−1,8): yalnız yatayda; E turu "etkinlik" bloğunun satır düzeni
+      Y("motto_1", METIN.motto[0], L({ u: XD, z: 2.7, font: kh(B.motto), ref: 1, hedef: ["büyük harf ('K')", B.motto], capa: "motto", pencereDisi: true })),
+      Y("motto_2", METIN.motto[1], L({ u: XD, z: 2.42, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
+      Y("motto_3", METIN.motto[2], L({ u: XD, z: 2.14, font: kh(B.motto), ref: 0, hedef: ["büyük harf ('H')", B.motto], capa: "motto", pencereDisi: true })),
+      Y("hashtag", METIN.hashtag, M({ u: XD, z: 1.8, font: kh(B.hashtag), ref: 1, hedef: ["büyük harf", B.hashtag], pencereDisi: true })),
+    ];
+    const cubuk = z.b1 + 0.7 * f.t + B.cubukAra; // başlık büyük harf üstü + 0,17 m (E turu: 3,26 → 3,43)
+    A.sekiller = [
+      kutuSvg(A, XL, XL + 0.4, cubuk, cubuk + 0.03, PAL.turuncu), // başlık üstü vurgu (metin değil)
+      kutuSvg(A, XD, XD + 0.4, 2.98, 3.01, PAL.turuncu), // pencere dışı blok vurgusu (E turu ile aynı)
+    ];
+  } else {
+    // İngilizce arka duvar (DOKU_EN.arka): aynı boylar, hizalar ve dikey aralıklar; EN alt satırı yok (başlık zaten İngilizce).
+    // Başlık pencereye (sağ pay ≥ 0,05 m) sığarsa tek satır. "100,000+ young people" tek satıra sığmıyor (rakam 0,35 m'de
+    // ≈ 2,0 m + sözcük ≈ 1,8 m > 2,95 m) → "young people" rakamın altında, sağa hizalı (sığarsa Türkçedeki gibi yan yana).
+    // Etiket satırları ("youth meetings" / "in the last 5 years") rakamın sağına sığmazsa küçülür (ikincil ≥ 0,12 m).
+    const PAY = 0.05;
+    // Tek satır başlık pencerenin sağ ucuna (−4,2) dek uzanır; o uç kameraya yakın, yatay telefon kırpımında (kirpimY 293,
+    // 844×390 cover) zUst 3,72'de üstü y 29 video px'e çıkıyordu (Türkçe kural ≥ 64; önizleme .qa/icinden-en/render) →
+    // başlık bloğu 0,24 m aşağıda (~210 video px/m: y ≈ 80). Türkçedeki EN satırı (≈ 0,25 m) kalktığı için blok araları biraz
+    // geniş (başlık → rakam 0,12; buluşma → Şölen 0,11; tarih → rakam 0,08); alt kenar Türkçeyle aynı düzeyde.
+    const EK = { zUstTek: B.zUst - 0.24, gRakam: 0.12, gBolum: 0.11, gSolen: 0.08, gGenc: 0.07, etiketEnAz: 0.12 };
+    const refi = (t, ch) => {
+      const i = t.indexOf(ch);
+      if (i < 0) throw new Error(`"${t}" içinde '${ch}' yok (ölçü harfi)`);
+      return i;
+    };
+    const sat = {
+      bt: L({ metin: METIN.baslikTek, agirlik: 600, ref: 0 }),
+      b1: L({ metin: METIN.baslik[0], agirlik: 600, ref: 0 }),
+      b2: L({ metin: METIN.baslik.slice(1).join(" "), agirlik: 600, ref: 0 }),
+      n1: L({ metin: METIN.bulusmaSayi, agirlik: 700, ref: 1 }),
+      e1: L({ metin: METIN.bulusma, agirlik: 600, ref: refi(METIN.bulusma, "h") }),
+      e2: L({ metin: METIN.bulusmaYil, ref: refi(METIN.bulusmaYil, "5") }),
+      s1: L({ metin: METIN.solen, agirlik: 600, ref: 0 }),
+      n2: L({ metin: METIN.solenSayi, agirlik: 700, ref: 0 }),
+      g: L({ metin: METIN.genc, agirlik: 600, ref: refi(METIN.genc, "n") }),
+      ty: L({ metin: METIN.solenTarihYer, ref: 0 }),
+    };
+    const anah = Object.keys(sat);
+    const olc = await metinMetrik(sayfaB, anah.map((k) => ({ ...sat[k], font: 1 })), 1000);
+    const m = Object.fromEntries(anah.map((k, i) => [k, olc[i]]));
+    const tek = XL + m.bt.sag * f.t <= A.pencere[1] - PAY;
+    const uEt = XL + m.n1.sag * f.n1 + B.etiketAra; // etiketler "+" mürekkebinin sağında
+    f.e1 = f.e2 = Math.min(kh(B.etiket), (A.pencere[1] - PAY - uEt) / Math.max(m.e1.sag, m.e2.sag));
+    if (0.7 * f.e1 < EK.etiketEnAz) throw new Error(`EN etiket satırları sığmıyor (büyük harf ${(0.7 * f.e1).toFixed(3)} m)`);
+    f.bt = f.b1 = f.b2 = f.t;
+    const ust = (k) => m[k].ust * f[k], alt = (k) => m[k].alt * f[k];
+    const z = {};
+    let altBaslik;
+    if (tek) {
+      z.bt = EK.zUstTek - ust("bt");
+      altBaslik = z.bt - alt("bt");
+    } else {
+      z.b1 = B.zUst - ust("b1");
+      z.b2 = z.b1 - B.baslikAra;
+      altBaslik = z.b2 - alt("b2");
+    }
+    const ustN = altBaslik - EK.gRakam; // buluşma rakamının mürekkep üstü
+    z.n1 = ustN - ust("n1");
+    z.e1 = ustN - ust("e1");
+    z.e2 = z.n1;
+    z.s1 = Math.min(z.n1 - alt("n1"), z.e2 - alt("e2")) - EK.gBolum - ust("s1");
+    z.ty = z.s1 - alt("s1") - B.gTarih - ust("ty");
+    z.n2 = z.ty - alt("ty") - EK.gSolen - ust("n2");
+    // "100,000+" + "young people" yan yana sığar mı (sol uç pencere payının içinde)?
+    const yanYana = XR - m.g.gen * f.g - B.gencAra - m.n2.gen * f.n2 - m.n2.sol * f.n2 >= A.pencere[0] + PAY;
+    const uN2 = yanYana ? XR - m.g.gen * f.g - B.gencAra : XR;
+    z.g = yanYana ? z.n2 : z.n2 - alt("n2") - EK.gGenc - ust("g");
+    const altSinir = Math.min(z.n2 - alt("n2"), z.g - alt("g"));
+    A.yerlesim = {
+      dil: DIL,
+      baslik_tek_satir: tek,
+      genc_yan_yana: yanYana,
+      boylar_m: { ...B, etiket: +(0.7 * f.e1).toFixed(4) },
+      ek_aralik_m: EK,
+      font_m: Object.fromEntries(Object.entries(f).map(([k, v]) => [k, +v.toFixed(4)])),
+      taban_z_m: Object.fromEntries(Object.entries(z).map(([k, v]) => [k, +v.toFixed(4)])),
+      etiket_u_m: +uEt.toFixed(4),
+      solen_sayi_bitis_u_m: +uN2.toFixed(4),
+      son_satir_alt_z_m: +altSinir.toFixed(4),
+    };
+    const Yz = (k, ad, o) => Y(ad, sat[k].metin, { ...sat[k], font: f[k], z: z[k], ...o });
+    const ml = METIN.motto; // pencere dışı (yalnız yatay): Türkçe üç satırın ortasına iki satır, aynı satır aralığı (0,28 m)
+    const zM = [2.56, 2.28];
+    if (ml.length !== zM.length) throw new Error(`EN motto ${ml.length} satır (2 beklenir): ${ml.join(" / ")}`);
+    A.yazilar = [
+      ...(tek
+        ? [Yz("bt", "baslik", { u: XL, hedef: ["başlık büyük harf ('Y', tek satır)", B.baslik] })]
+        : [Yz("b1", "baslik_1", { u: XL, hedef: ["başlık büyük harf", B.baslik] }), Yz("b2", "baslik_2", { u: XL, hedef: ["başlık büyük harf", B.baslik] })]),
+      Yz("n1", "bulusma_sayi", { u: XL, hedef: ["rakam mürekkebi ('0')", B.bulusmaRakam], capa: "bulusma" }),
+      Yz("e1", "bulusma", { u: uEt, hedef: ["ikincil, büyük harf ölçeği ('h' yükselen)", +(0.7 * f.e1).toFixed(3)] }),
+      Yz("e2", "bulusma_yil", { u: uEt, hedef: ["ikincil (rakam '5')", +(0.7 * f.e2).toFixed(3)] }),
+      Yz("s1", "solen", { u: XR, hiza: "end", hedef: ["büyük harf ('Y')", B.solenBaslik] }),
+      Yz("n2", "solen_sayi", { u: uN2, hiza: "end", hedef: ["rakam mürekkebi ('0'; ölçülen '1')", B.solenRakam], capa: "solen" }),
+      Yz("g", "genc", { u: XR, hiza: "end", hedef: ["büyük harf ölçeği ('n' x yüksekliği)", B.genc] }),
+      Yz("ty", "solen_tarih_yer", { u: XR, hiza: "end", hedef: ["ikincil büyük harf ('M')", B.tarihYer] }),
+      ...ml.map((t, i) => Y(`motto_${i + 1}`, t, L({ u: XD, z: zM[i], font: kh(B.motto), ref: 0, hedef: ["büyük harf", B.motto], capa: "motto", pencereDisi: true }))),
+      Y("hashtag", METIN.hashtag, M({ u: XD, z: zM.at(-1) - 0.34, font: kh(B.hashtag), ref: 1, hedef: ["büyük harf", B.hashtag], pencereDisi: true })),
+    ];
+    const cubuk = (tek ? z.bt : z.b1) + 0.7 * f.t + B.cubukAra;
+    const cubukM = zM[0] + 0.7 * kh(B.motto) + 0.11; // Türkçede motto üstü + 0,11 m (2,868 → 2,98)
+    A.sekiller = [
+      kutuSvg(A, XL, XL + 0.4, cubuk, cubuk + 0.03, PAL.turuncu), // başlık üstü vurgu (metin değil)
+      kutuSvg(A, XD, XD + 0.4, cubukM, cubukM + 0.03, PAL.turuncu), // pencere dışı blok vurgusu
+    ];
+  }
 
   /* ---------- sol duvar: y −0,50…4,83; telefonda y ≈ 0,9…3,4; ekranlar y 1,05…3,31 × z 1,20–1,82 boş ---------- */
   const S = { ad: "duvar-sol.png", w: 2665, h: 2000, pxm: PXM, u0: -0.5, H: DUVAR_H, ofs: 0, pencere: [0.9, 3.4], bos: [1.05, 3.31, 1.2, 1.82] };
@@ -553,6 +739,16 @@ async function duvarlariHazirla(sayfaB) {
     Y("uye_et", METIN.uyeEt, L({ u: YC, z: 2.62, font: kh(0.18), agirlik: 600, hiza: "middle", ref: 0, hedef: ["büyük harf", 0.18] })),
     Y("il_ilce", METIN.ilIlce, L({ u: YC, z: 2.15, font: kh(0.2), agirlik: 600, hiza: "middle", ref: 1, hedef: ["büyük harf (rakam '1')", 0.2], capa: "il_ilce" })),
   ];
+  if (EN_MI) {
+    // "81 Provinces · 922 Districts" 0,20 m büyük harfle telefon penceresine (2,5 m) sığmıyorsa " · "dan iki satır, aynı boy:
+    // üst satırın üstü "Young Members"ın inen harflerinden ≥ 0,10 m aşağıda, alt satır ekranların (z 1,82) ≥ 0,12 m üstünde.
+    const [gIl] = await metinMetrik(sayfaB, [{ ...S.yazilar[2], font: 1 }], 1000);
+    if (gIl.gen * kh(0.2) > S.pencere[1] - S.pencere[0] - 0.1) {
+      const [p1, p2] = METIN.ilIlce.split(" · ");
+      S.yazilar[2] = Y("il_ilce", p1, L({ u: YC, z: 2.23, font: kh(0.2), agirlik: 600, hiza: "middle", ref: 1, hedef: ["büyük harf (rakam '1')", 0.2], capa: "il_ilce" }));
+      S.yazilar.push(Y("il_ilce_2", p2, L({ u: YC, z: 1.94, font: kh(0.2), agirlik: 600, hiza: "middle", ref: 0, hedef: ["büyük harf (rakam '9')", 0.2], capa: "il_ilce" })));
+    }
+  }
   S.sekiller = [kutuSvg(S, YC - 0.2, YC + 0.2, 3.4, 3.43, PAL.turuncu)];
   S.zDag = (u) => zIc(S.ofs + (u - S.u0));
 
@@ -564,7 +760,7 @@ async function duvarlariHazirla(sayfaB) {
   const slM = await metinMetrik(sayfaB, sl.map((s) => ({ metin: s, aile: "Lora", agirlik: 700, font: 1, ref: 0 })), 1000);
   const fSl = Math.min(kh(0.48), 4.25 / Math.max(...slM.map((m) => m.gen)));
   const slAra = 1.08 * fSl;
-  const slTaban = CEPHE_DAG.zUst + 0.15;
+  const slTaban = CEPHE_DAG.zUst + 0.15 + (EN_MI ? slM.at(-1).alt * fSl : 0); // İngilizce: "heritage"deki 'g' dağa değmesin
   C.yazilar = [
     ...sl.map((s, i) =>
       Y(`slogan_${i + 1}`, s, L({ u: 2.15, z: slTaban + (sl.length - 1 - i) * slAra, font: fSl, agirlik: 700, ref: [1, 2, 0][i], hedef: ["büyük harf (ölçek)", 0.7 * fSl] })),
@@ -588,7 +784,7 @@ async function duvarlariHazirla(sayfaB) {
   // ekran yazısını ölçerek boyutla
   const [g1, g2] = await metinMetrik(sayfaB, E.yazilar.map((t) => ({ ...t, font: 1 })), 1000);
   const fE = (0.68 * 1.11) / Math.max(g1.gen, g2.gen); // m
-  const satir = 1.1 * fE;
+  const satir = (EN_MI ? 1.22 : 1.1) * fE; // İngilizce: "your" inen harfleri ↔ "pledge too." çıkanları (1,1'de 0,027 m)
   const blok = g1.ust * fE + satir + g2.alt * fE;
   const z1 = 0.62 - (0.62 - blok) / 2 - g1.ust * fE;
   E.yazilar[0] = { ...E.yazilar[0], font: fE, z: z1, hedef: ["büyük harf", 0.7 * fE] };
@@ -806,20 +1002,32 @@ const isler = [
   ["kanopi.png", kanopi(), 8192, 350, false],
   [
     "pankart-gel.png",
-    pankartDikey([
-      { metin: "Gel, oyna!", boy: 205, agirlik: 800 },
-      { metin: "Come and play!", boy: 130, agirlik: 600 },
-    ]),
+    // İngilizce: yalnız standın EN satırı "Come and play!" (Türkçedeki büyük satır boyunda; taşarsa sığdırılır)
+    pankartDikey(
+      EN_MI
+        ? [{ metin: DOKU_EN.gel, boy: 205, agirlik: 800 }]
+        : [
+            { metin: "Gel, oyna!", boy: 205, agirlik: 800 },
+            { metin: "Come and play!", boy: 130, agirlik: 600 },
+          ],
+    ),
     2000,
     500,
     false,
   ],
   [
     "pankart-sifir.png",
-    pankartDikey([
-      { metin: "Sıfır Atık Yöneticileri", boy: 150, agirlik: 800 },
-      { metin: "COP31'e Giden Yol – DengeCOP31", boy: 96, agirlik: 600 },
-    ]),
+    pankartDikey(
+      EN_MI
+        ? [
+            { metin: DOKU_EN.sifir[0], boy: 150, agirlik: 800 },
+            { metin: DOKU_EN.sifir[1], boy: 96, agirlik: 600 },
+          ]
+        : [
+            { metin: "Sıfır Atık Yöneticileri", boy: 150, agirlik: 800 },
+            { metin: "COP31'e Giden Yol – DengeCOP31", boy: 96, agirlik: 600 },
+          ],
+    ),
     2000,
     500,
     false,
@@ -829,6 +1037,41 @@ const isler = [
   ["kiosk-ekran.png", kioskEkran(), 550, 980, false],
   ["totem.png", totem(), 550, 1100, false],
 ];
+
+// İngilizce: sütun yüzleri İngilizce metinle (Türkçe sıra ve renkler aynı)
+if (EN_MI) for (const [i, a] of emanetAlanlari.entries()) isler[i][1] = sutunYuzuEn(a);
+
+/** `data-sig="w:<px>"` (genişlik) / `"alt:<px>"` (alt kenar y) sınırını aşan öğenin yazısı 2 px adımla küçülür (yalnız --dil en). */
+async function sigdir(sayfaB) {
+  return sayfaB.evaluate(() => {
+    const out = [];
+    for (const el of document.querySelectorAll("[data-sig]")) {
+      const [tip, sinir] = el.dataset.sig.split(":");
+      const olc = () => (tip === "svgw" ? el.getComputedTextLength() : tip === "w" ? el.getBoundingClientRect().width : el.getBoundingClientRect().bottom);
+      const ilk = parseFloat(getComputedStyle(el).fontSize);
+      let fs = ilk;
+      const bas = olc();
+      let ls = parseFloat(el.getAttribute("letter-spacing") ?? "0");
+      const ls0 = ls;
+      while (tip === "svgw" && olc() > +sinir && ls > 3) el.setAttribute("letter-spacing", String(--ls));
+      while (olc() > +sinir && fs > 8) {
+        fs -= 2;
+        el.style.fontSize = `${fs}px`;
+        if (el.dataset.halka != null) el.setAttribute("y", (0.35 * fs).toFixed(1)); // zemin halkası: bandın ortasında kalsın
+      }
+      out.push({ metin: el.textContent, tip, sinir: +sinir, olcu_px: +bas.toFixed(1), son_olcu_px: +olc().toFixed(1), font_px: [ilk, fs], ...(ls !== ls0 ? { harf_araligi: [ls0, ls] } : {}) });
+    }
+    return out;
+  });
+}
+/** İngilizce dokunun metinlerinde Türkçe harf (izinli özel adlar dışında) kalmış mı? */
+function trHarfDenetim(ad, metinler) {
+  const kalan = [];
+  for (const t of metinler)
+    for (const sozcuk of String(t).split(/[\s,.;:–·/!?()"]+/))
+      if (TR_HARF.test(sozcuk) && !TR_IZINLI.some((iz) => sozcuk.startsWith(iz))) kalan.push(sozcuk);
+  if (kalan.length) throw new Error(`${ad}: İngilizce dokuda Türkçe harfli sözcük: ${kalan.join(", ")}`);
+}
 
 const DUVAR_ADLARI = ["duvar-arka.png", "duvar-sol.png", "ekran-soz.png", "cephe-on.png"];
 const ister = (ad) => !SADECE || SADECE.includes(ad);
@@ -846,12 +1089,32 @@ if (DUVAR_ADLARI.some(ister)) {
 }
 const uretilen = [];
 const olcum = {};
+const sigdirma = {};
+const metinler = {};
 for (const [ad, html, w, h, alfa, d] of isler) {
   if (!ister(ad)) continue;
   await sayfaB.setViewportSize({ width: w, height: h });
   await sayfaB.setContent(html, { waitUntil: "load" });
   await sayfaB.evaluate(() => document.fonts.ready);
   await sayfaB.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  if (EN_MI) {
+    const sg = await sigdir(sayfaB);
+    if (sg.length) {
+      sigdirma[ad] = sg;
+      for (const x of sg)
+        if (x.font_px[0] !== x.font_px[1] || x.harf_araligi)
+          console.log(`  sığdırma ${ad}: "${x.metin}" ${x.tip} ${x.olcu_px} > ${x.sinir} → font ${x.font_px[0]} → ${x.font_px[1]} px${x.harf_araligi ? `, harf aralığı ${x.harf_araligi.join(" → ")}` : ""}`);
+      await sayfaB.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
+    const yazilar = await sayfaB.evaluate(() => {
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const o = [];
+      while (w.nextNode()) if (w.currentNode.textContent.trim()) o.push(w.currentNode.textContent.trim());
+      return o;
+    });
+    trHarfDenetim(ad, yazilar);
+    metinler[ad] = yazilar; // _dokular.json: dokuya basılan bütün yazılar (rapor / denetim)
+  }
   const png = await sayfaB.screenshot({ omitBackground: alfa, clip: { x: 0, y: 0, width: w, height: h } });
   await writeFile(path.join(OUT, ad), png);
   uretilen.push(ad);
@@ -949,5 +1212,5 @@ if (duvar) {
 const tumu = [...new Set([...isler.map((i) => i[0]), ...DUVAR_ADLARI])];
 await writeFile(
   path.join(OUT, "_dokular.json"),
-  JSON.stringify({ uretim: new Date().toISOString(), betik: "scripts/blender/s2/dokular.mjs", dosyalar: tumu, bu_calisma: uretilen }, null, 1),
+  JSON.stringify({ uretim: new Date().toISOString(), betik: "scripts/blender/s2/dokular.mjs", ...(EN_MI ? { dil: DIL, metin: "src/components/icinden/metin.ts DOKU_EN", sigdirma, metinler } : {}), dosyalar: tumu, bu_calisma: uretilen }, null, 1),
 );

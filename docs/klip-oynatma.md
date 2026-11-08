@@ -682,3 +682,15 @@ Kök: `C:\Users\user\AppData\Local\Temp\claude\D--soft-cop31\4935df5b-f395-4622-
 | `hepsi.sh`, `ozet.mjs`, `kare-analiz.py` | Son ölçüm takımı, tablolar, ekran kaydı analizi |
 | `kodek-yokla.mjs`, `onbellek-yokla.mjs`, `engel-yokla.mjs`, `negatif-kontrol.mjs` | Yoklamalar |
 | `sonuc/` | Tüm JSON/CSV/log ve ekran görüntüleri |
+
+## 10. İki dil (8 Kasım 2026; onay-listesi §15)
+
+Render içindeki yazılar (d4 stant, d5 zemin halkası ve sütunlar, d6/d7 duvarlar) dile göre ayrı kodlanır; yazının görünmediği klipler
+iki dilde ortak. İngilizce dosyalar `<ad>.en.<özet>.<kodek>.mp4` / `p/{d,y}/<ad>.en.<özet>.webp`, liste `kodlama/render-son-en.json`
+(`kodla.mjs --dil en --kaynak D:/soft/cop31-varlik/render-son-en --klip …`). `manifest-birlestir.mjs` Türkçe tabanlı manifestte İngilizce
+eşi olan klip / poster yönü / d6 `ozel` girdisine `dil: { en: {…} }` ekler (klip: dosya + bayt; poster: dosya + bayt + lqip; ozel:
+`duvarCapalari`, İngilizce duvarın kendi çapaları). Sunucu (`Icinden3` → `klipler.ts` `dilManifesti`) dile göre çözer ve `dil`
+alanlarını atar: istemci manifesti, ön yükleme / ısıtma / ön sarma sırası, posterler ve LQIP yalnız o dilin adresleri; oynatıcı
+(`oynatici.ts`, `VideoSahne.tsx`) değişmedi. İngilizce klipler (8 Kasım): t34 r43 l4 p4 t45 r54 l5 p5 t56 r65 p6 t67 r76 p7 t79 r97;
+d11 → d12 zinciri (r43 → r32 → r21) ve p4 köprüsü İngilizce sayfada r43.en / p4.en. `kodla.mjs --artik` iki listenin dosyalarını
+birlikte tutar; `kodlama-dogrula.py --dil en` İngilizce oturumu (Türkçe liste + İngilizce kayıtlar) denetler.

@@ -3,6 +3,7 @@
  * scripts/icinden/manifest-birlestir.mjs üretir (elle düzenlenmez). Sunucu bileşeni okur, istemciye prop
  * olarak geçer: manifest RSC yükünde taşınır, istemci JS paketine girmez.
  */
+import type { Dil } from "@/lib/dil";
 import ham from "./klipler.json";
 import type { Rol } from "./rol";
 
@@ -13,13 +14,18 @@ export type KodekAd = "av1" | "hevc" | "h264";
 export type Nokta = readonly [number, number];
 export type BoyutKodek<T> = Partial<Record<Boyut, Partial<Record<KodekAd, T>>>>;
 
+/**
+ * İki dil (8 Kasım 2026): render içindeki yazıları dile göre ayrı kodlanan girdilerde (d4–d7 klipleri, posterleri, d6 duvar
+ * çapaları) öteki dilin eşi `dil[<dil>]`. Manifest Türkçe tabanlı; `dilManifesti` sunucuda çözer (istemci `dil` görmez).
+ */
+export type DilEsi<T> = { readonly dil?: Partial<Record<Dil, T>> };
 export type Klip = {
   readonly ad: string;
   readonly sure: number;
   readonly kare: number;
   readonly dosya: BoyutKodek<string>;
   readonly bayt: BoyutKodek<number>;
-};
+} & DilEsi<{ readonly dosya: BoyutKodek<string>; readonly bayt: BoyutKodek<number> }>;
 /**
  * Bu duraktan k+1'e ileri geçiş; `geri` k+1 → k ters klibi. `geri: null` (G turu §14.4.1 K4): geri klip yok — oynatıcı
  * geri adımda hedef durağın (k) posterini 350 ms çapraz söndürür (d9→d8, d10→d9, d11→d10, d12→d11; W-3 geçici t89'la d8→d7).
@@ -34,7 +40,7 @@ export type Gecis = Klip & {
   readonly parcalar?: readonly Klip[];
   readonly kopruDurak?: string;
 };
-export type Poster = { readonly dosya: string; readonly bayt: number; readonly lqip: string };
+export type Poster = { readonly dosya: string; readonly bayt: number; readonly lqip: string } & DilEsi<{ readonly dosya: string; readonly bayt: number; readonly lqip: string }>;
 /**
  * doga/yapi/bolge: haritacılık etiketleri (§5). kunye (d1, §12.4-2): Antalya künyesi; `metin` SSR satırı
  * ("9–20 Kasım 2026"). emanet (d2, §12.4-3): 12 emanet ışığı; `no` 1–12, `donem` emanet.ts dönem adı
@@ -85,6 +91,8 @@ export type Ozel = {
   readonly dalUclari?: YonluListe<DalUcu>;
   /** fidan-yaprak (d11): gövde ucu (önder). Kırpım dışına düşen yön yok. */
   readonly govdeUcu?: Partial<Record<Boyut, Nokta>>;
+  /** Öteki dilin alanları (d6: İngilizce duvarın kendi çapaları). */
+  readonly dil?: Partial<Record<Dil, { readonly duvarCapalari?: readonly DuvarCapasi[] }>>;
 };
 export type Durak = {
   /** "d0" … "d12" (tablo sırası; kapanış = N = 13, manifest dışı). */
@@ -119,6 +127,37 @@ export type Manifest = {
 };
 
 export const klipler = ham as unknown as Manifest;
+
+/** `dil` eşini uygula ve alanı kaldır (Türkçe: yalnız kaldırır). */
+function coz<T extends { readonly dil?: Partial<Record<Dil, object>> }>(o: T, dil: Dil): Omit<T, "dil"> {
+  const { dil: es, ...taban } = o;
+  return { ...taban, ...(es?.[dil] ?? {}) } as Omit<T, "dil">;
+}
+
+/**
+ * Seçilen dilin manifesti (sunucuda; Icinden3): dile göre kodlanmış klip, poster (lqip dahil) ve d6 duvar çapaları o dilin
+ * dosyasına çözülür, `dil` alanları kalkar → istemci manifesti, ön yükleme/ısıtma sırası ve HTML (poster, reduced düzeni)
+ * yalnız o dilin adreslerini taşır. Eşi olmayan girdi iki dilde ortak (yazı görünmeyen klipler).
+ */
+export function dilManifesti(m: Manifest, dil: Dil): Manifest {
+  const klip = <K extends Klip | null | undefined>(k: K) => (k ? coz(k, dil) : k);
+  return {
+    ...m,
+    duraklar: m.duraklar.map((d) => ({
+      ...d,
+      poster: d.poster ? (Object.fromEntries(Object.entries(d.poster).map(([b, p]) => [b, coz(p, dil)])) as Durak["poster"]) : d.poster,
+      dongu: klip(d.dongu),
+      ileri: d.ileri
+        ? ({
+            ...coz(d.ileri, dil),
+            geri: klip(d.ileri.geri),
+            ...(d.ileri.parcalar ? { parcalar: d.ileri.parcalar.map((p) => coz(p, dil)) } : {}),
+          } as Gecis)
+        : d.ileri,
+      ...(d.ozel ? { ozel: coz(d.ozel, dil) as Ozel } : {}),
+    })),
+  };
+}
 
 /**
  * İstemciye giden kopya: sahne etiketleri, d1 yayları ve fidan katmanı (81 kök ucu, boğumlar, dal uçları, gövde ucu;

@@ -35,6 +35,9 @@
 #    Eşikler (§12.6): her dosya ortalama ≥ 90; l3 ≥ 93; duvar klipleri (t56 t67 t78 r65 r76 r87) en kötü kare ≥ 80.
 # --sec: kodek/kare/VMAF yalnız seçilen çıktılarda (`ad[.kodek][.boyut]`); dikiş/bütçe yine tüm liste üzerinden.
 # --sec ya da --yalniz-vmaf verilip --cikti verilmezse çıktı `dogrula-<liste adı>-sec.json` (tam raporu ezmez).
+# --dil en (8 Kasım 2026, iki dil): İngilizce oturum = Türkçe liste + üstüne İngilizce liste (`--liste-en`, aynı klip/tür/yön/
+# kodek anahtarında İngilizce kayıt geçerli). İngilizce kaydı olan klibin master kareleri ve fragmanı `--fragman-en`'den
+# (render-son-en). Dikiş, kalkış, geri, son-kare, bütçe ve VMAF bu birleşik set üzerinden; çıktı `dogrula-<liste>-en.json`.
 import argparse
 import hashlib
 import json
@@ -57,16 +60,33 @@ ap.add_argument("--yalniz-vmaf", action="store_true", help="yalnız VMAF (dikiş
 ap.add_argument("--sec", default="", help="kodek/kare/VMAF yalnız bu çıktılarda: ad[.kodek][.boyut], virgüllü")
 ap.add_argument("--esle", default="", help="master kare klasörü eşlemesi: klip=klasör, virgüllü (kodla.mjs --esle)")
 ap.add_argument("--geri-yok", default="", help="bilerek kaldırılan geri klipler (bütçe merdiveni): r98")
+ap.add_argument("--dil", default="tr", choices=["tr", "en"], help="en: Türkçe liste + İngilizce liste (İngilizce oturum)")
+ap.add_argument("--vmaf-is", type=int, default=6, help="libvmaf n_threads (bellek kısıtlıysa 2)")
+ap.add_argument("--liste-en", default="D:/soft/cop31-varlik/kodlama/render-son-en.json")
+ap.add_argument("--fragman-en", default="D:/soft/cop31-varlik/render-son-en")
 a = ap.parse_args()
 ESLE = {k: v for k, v in (x.split("=", 1) for x in filter(None, a.esle.split(",")))}
 GERI_YOK = set(filter(None, a.geri_yok.split(",")))
 
 
+EN_KAYNAK = set()   # --dil en: İngilizce kaydı olan kaynak klipler (master + fragman render-son-en'den)
+
+
 def kaynak_dizin(klip):
-    """Klibin master kare klasörü: --esle ya da <fragman>/<klip>."""
-    return Path(ESLE[klip]) if klip in ESLE else Path(a.fragman) / klip
+    """Klibin master kare klasörü: --esle, İngilizce kaynak (--dil en) ya da <fragman>/<klip>."""
+    if klip in ESLE:
+        return Path(ESLE[klip])
+    return (Path(a.fragman_en) if klip in EN_KAYNAK else Path(a.fragman)) / klip
 liste = json.load(open(a.liste, encoding="utf8"))
 _ad = Path(a.liste).stem
+if a.dil == "en":
+    _en = json.load(open(a.liste_en, encoding="utf8"))
+    _an = lambda s: (s["klip"], s["tur"], s["boyut"], s["kodek"])   # noqa: E731
+    _ek = {_an(s) for s in _en}
+    liste = [s for s in liste if _an(s) not in _ek] + _en
+    EN_KAYNAK = {s["kaynakKlip"] for s in _en}
+    _ad += "-en"
+    print(f"--dil en: {len(_en)} İngilizce kayıt ({', '.join(sorted(EN_KAYNAK))}) Türkçe listenin üstüne; toplam {len(liste)}", flush=True)
 if a.cikti is None:
     a.cikti = str(Path(a.liste).with_name(f"dogrula-{_ad}{'-sec' if (a.sec or a.yalniz_vmaf) else ''}.json"))
 MB = 1e6
@@ -235,7 +255,7 @@ def satir(klip, tur, boyut, kodek=None):
 
 
 def fragman(ad):
-    p = Path(a.fragman) / f"{ad}.json"
+    p = (Path(a.fragman_en) if ad in EN_KAYNAK or (ad in ("t34a", "t34b") and "t34" in EN_KAYNAK) else Path(a.fragman)) / f"{ad}.json"
     if p.exists():
         return json.load(open(p, encoding="utf8"))
     if ad == "t34":
@@ -509,7 +529,7 @@ if a.vmaf:
         tersi = ",reverse" if s["tur"] == "geri" else ""
         # log_path göreli (Windows sürücü iki noktası filtre sözdizimini bozar): ffmpeg `--ref` dizininde çalışır.
         log = Path(a.ref) / f"vmaf-{os.getpid()}.json"
-        fc = f"[0:v]setpts=N/30/TB,format=yuv420p[d];[1:v]setpts=N/30/TB,format=yuv420p{tersi}[r];[d][r]libvmaf=log_path={log.name}:log_fmt=json:n_threads=6"
+        fc = f"[0:v]setpts=N/30/TB,format=yuv420p[d];[1:v]setpts=N/30/TB,format=yuv420p{tersi}[r];[d][r]libvmaf=log_path={log.name}:log_fmt=json:n_threads={a.vmaf_is}"
         r = subprocess.run(["ffmpeg", "-v", "error", "-i", s["yol"], "-i", str(ref), "-filter_complex", fc, "-f", "null", "-"], capture_output=True, text=True, cwd=a.ref)
         if r.returncode:
             sonuc["vmaf"].append({"dosya": s["dosya"], "hata": r.stderr[-300:]})

@@ -20,6 +20,12 @@ Klipler (§12.1 tek hane kuralı: a = 10, b = 11, c = 12 onaltılık; `r${klip[2
   p9 / pa / pb / pc: "son-kare" posterler (render yok; json); geri klip yalnız r98 (= t89 tersi; kodla.mjs).
   kodla.mjs açık ad tablosuna eklenecekler (K): t89 t9a tab tbc lc + r98; posterler p9 pa pb pc (son-kare / lc[0]).
 
+S2 klibi + kasa (7 Kasım 2026; onay-listesi §14.1-G "Kasa d4/d5'te yok" kapandı): `--klip t34b | l4 | t45` S2'nin o
+klibini kendi kamerası, ışığı, parça animasyonu ve deklanşörüyle AYNEN kurar (t78f gibi), üstüne yalnız kasayı (palamut, fidan
+yok, fidan_spot/güneş 0, pankart_gel görünür ve gölgeli) ekler. Kareler S2 numarasıyla (t34b 36–59 → `--out <kök>/t34b/ham`,
+sonra S2 parlama.py); JSON S2'nin (`s2/sahne.py --klip <klip> --yalniz_json`). Yazılı dokular S2_DOKU ortam değişkeninden
+(İngilizce: s2/doku-en). l5/p5'te kasa görünmez (ışın testi 0 örnek) → l5 S2 son.sh ile.
+
 Kipler:
   (varsayılan)   render: <out>/k_%04d.png (önizleme: render/_onizleme/s3-<klip>/), --json → <kok>/<klip>.json
   --olc DOSYA    render yok, GPU yok: kare kare kamera + 81 uç / dal uçları / boğum / kasa izdüşümü, uç aralığı, güvenli
@@ -62,6 +68,10 @@ KLIPLER3 = {
     "lc": (0, 119, "dongu"),
     "pc": (0, 0, "son-kare"),
 }
+# S2 klibi + kasa (kare aralığı S2'nin KLIPLER'inden, exec'ten sonra; buradaki yer tutucu)
+S2_KASA = ("t34b", "l4", "t45")
+for _k in S2_KASA:
+    KLIPLER3[_k] = (0, 0, "s2")
 SIRA = ["t78f", "t79", "t89", "t9a", "tab", "tbc", "lc"]   # t79 → t9a (d8 broşür durağı yok); t78f/t89 r87 / eski akış
 POSTER = {"p9": ("t89", 59), "pa": ("t9a", 53), "pb": ("tab", 53), "pc": ("lc", 0)}
 
@@ -122,7 +132,7 @@ if KLIP in POSTER:
 
 # ================================================================== 1) S2 sahnesi (t78; render bölümüne kadar)
 S2_SAHNE = os.path.join(S2_DIR, "sahne.py")
-s2_arg = ["--klip", "t78", "--kok", os.path.join(os.environ.get("TEMP", "C:/Temp"), "s3-s2json")]
+s2_arg = ["--klip", KLIP if KLIP in S2_KASA else "t78", "--kok", os.path.join(os.environ.get("TEMP", "C:/Temp"), "s3-s2json")]
 if A.onizleme:
     s2_arg.append("--onizleme")
 if A.res:
@@ -144,7 +154,11 @@ a2 = G2["a"]
 N_T78 = G2["N_T78"]
 Z0 = G2["Z0"]
 FPS = 30
-print(f"[S3] S2 sahnesi kuruldu (t78, profil {G2['PROFIL']}, N_T78 {N_T78}); {time.perf_counter() - T_BASLA:.1f} s", flush=True)
+if KLIP in S2_KASA:
+    KLIPLER3[KLIP] = G2["KLIPLER"][KLIP][:2] + ("s2",)
+    K0, K1, TUR = KLIPLER3[KLIP]
+print(f"[S3] S2 sahnesi kuruldu ({KLIP if KLIP in S2_KASA else 't78'}, profil {G2['PROFIL']}, N_T78 {N_T78}; kareler {K0}–{K1}); "
+      f"yazılı dokular {G2['DOKU_YAZI']}; {time.perf_counter() - T_BASLA:.1f} s", flush=True)
 
 # ================================================================== 2) ağaç verisi
 if not os.path.exists(A.agac):
@@ -1224,7 +1238,7 @@ for _ in range(8):
         break
     GUNES_ENGEL.append(f"{_ob.name} @{(_loc - AGAC_ORTA).length:.2f} m")
     _o = _loc + GUNES_V * 1e-3
-    if not _ob.name.startswith("S3_") and KLIP != "t78f":
+    if not _ob.name.startswith("S3_") and KLIP != "t78f" and KLIP not in S2_KASA:
         _ob.visible_shadow = False
 GUNES_LOC = AGAC_ORTA + GUNES_V * GUNES_MESAFE
 _yay = math.degrees(math.atan(0.50 / GUNES_MESAFE)) * 2 + 4
@@ -1507,6 +1521,10 @@ def durum(klip, f):
     u = f / n if n else 0.0
     D = {"g_kok": 0.0, "g_govde": 0.0, "g_dal": 0.0, "g_yaprak": 0.0, "tomurcuk": 0.0, "kalin": 0.0, "kanca": 0.0,
          "titreme": 0.0, "ofs": 0.0, "fidan": 0.0, "fidan_k": 3200.0, "gunes": 0.0, "perde": 0.0, "s": 0.0}
+    if klip in S2_KASA:   # S2 klibi aynen (kamera S2'nin anahtarları); kayıt için S2'nin kare kaydı
+        pos, psi, phi, lens = G2["KAYIT"]["kamera"].get(f, G2["KAYIT"]["kamera"][min(max(f, K0), K1)])
+        D.update(pos=Vector(pos), psi=psi, phi=phi, lens=lens, odak=None, fstop=None, s2=True)
+        return D
     if klip == "t78f":
         k = G2["kamera_durum"]("t78", f)
         D.update(pos=Vector(k["pos"]), psi=k["psi"], phi=k["phi"], lens=k["lens"], odak=k["odak"], fstop=k["fstop"], s=k["s"],
@@ -1630,7 +1648,7 @@ def dondur_s2(f_):
     return n
 
 
-S2_ANIM = KAYNAK_KLIP == "t78f"
+S2_ANIM = KAYNAK_KLIP == "t78f" or KLIP in S2_KASA
 # t79: S2'nin t78 ışık/malzeme anahtarları (kuzey/batı duvar yıkama 0,3/1 → 0/0) korunur — t79 ilerlemesi t78'inkiyle bire
 # bir aynı (fiske k 2,4, 60 kare) → t79[0] ışığı ≡ t67[47], t79[59] ≡ t78[59] = t89'un dondurulmuş durumu. Kamera S3'ün.
 S2_ISIK79 = KAYNAK_KLIP == "t79"
@@ -1655,7 +1673,7 @@ FS_TABAN = FIDAN_SPOT.data.energy
 GN_TABAN = GUNES.data.energy
 KAYIT = {}
 nK = KLIPLER3[KAYNAK_KLIP][1]
-TUM3 = list(range(-1, nK + 2))
+TUM3 = list(range(KLIPLER3[KAYNAK_KLIP][0] - 1, nK + 2))
 for f in TUM3:
     D = durum(KAYNAK_KLIP, f if KAYNAK_KLIP != "lc" else f)
     KAYIT[f] = D
@@ -1679,7 +1697,8 @@ for idb in [bpy.data.objects[o] for o in ("S3_kokler", "S3_govde", "S3_dallar", 
     for fc in fcurves(idb):
         for kp in fc.keyframe_points:
             kp.interpolation = "LINEAR"
-sc.render.motion_blur_shutter = G2["DEKLANSOR_E"]
+if KLIP not in S2_KASA:   # S2 klibi + kasa: S2'nin deklanşörü (t34b/l4/t45 varsayılanı) aynen
+    sc.render.motion_blur_shutter = G2["DEKLANSOR_E"]
 print(f"[S3] {KAYNAK_KLIP}: {len(TUM3)} kare anahtarlandı; yaprak {N_YAPRAK} (tree.ts 274 + derinlik "
       f"{N_YAPRAK - 274}); kurulum {time.perf_counter() - T_BASLA:.1f} s", flush=True)
 

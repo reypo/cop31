@@ -37,6 +37,8 @@ const nextConfig: NextConfig = {
   distDir: DIST,
   ...(TSCONFIG ? { typescript: { tsconfigPath: TSCONFIG } } : {}),
   cacheComponents: true,
+  // İki kök yerleşim ((en) ve (tr) rota grupları): eşleşmeyen adreslerin 404'ü app/global-not-found.tsx (docs: not-found).
+  experimental: { globalNotFound: true },
   partialPrefetching: true,
   turbopack: {
     rules: {
@@ -50,6 +52,16 @@ const nextConfig: NextConfig = {
     return [
       { source: "/icinden/v/:path*", headers: KALICI },
       { source: "/icinden/p/:path*", headers: KALICI },
+      // Dijital broşür sayfa görüntüleri ve PDF'ler (adlarında içerik özeti: scripts/brosur/uret.mjs). "/brosur/:path*"
+      // DEĞİL: `:path*` boş da eşleşir, /brosur sayfasının kendisi bir yıl önbelleğe girerdi.
+      { source: "/brosur/en/:path*", headers: KALICI },
+      { source: "/brosur/tr/:path*", headers: KALICI },
+      { source: "/brosur/pdf/:path*", headers: KALICI },
+      // Sekme simgeleri: adreste içerik özeti var (/icon.png?icon.<özet>.png). Next'in varsayılanı "max-age=0,
+      // must-revalidate" ve doğrulayıcı (ETag) yok: broşürde her sayfa değişimi (#p=N, replaceState) Chrome'da simgeyi
+      // yeniden istetiyordu (88 kB/çevirme, ölçüm .qa/brosur-2/bayt.json).
+      { source: "/icon.png", headers: KALICI },
+      { source: "/apple-icon.png", headers: KALICI },
     ];
   },
 };

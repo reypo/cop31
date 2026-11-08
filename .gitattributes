@@ -1,0 +1,12 @@
+# İkili dosyalar: satır sonu dönüşümü (core.autocrlf) ve metin farkı uygulanmasın.
+# PDF'ler başlarında NUL baytı olmadığı için git'e metin görünüyordu; dönüşüm akışları bozardı.
+*.pdf binary
+*.avif binary
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.ico binary
+*.mp4 binary
+*.woff2 binary
+*.glb binary

@@ -166,7 +166,13 @@
 }
 
 /* "Dijital broşür" düğmesi (G turu §14.4.6, slogan altı): sitenin düğmesi gibi beyaz, marka mavisi kontur. */
+/* Broşür düğmesi + dil seçici (7 Kasım: her aşamada) yan yana; dar ekranda alt alta. */
 .ic-kapanis-brosur-satir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin-top: 14px;
 }
 .ic-kapanis-brosur {

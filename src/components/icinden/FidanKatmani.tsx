@@ -1,8 +1,8 @@
 import { getImageProps } from "next/image";
 import type { CSSProperties } from "react";
-import { facts, vizyon } from "@/lib/content";
-import { photos, type PhotoAsset } from "@/lib/photos";
+import { photos } from "@/lib/photos";
 import type { Boyut, DalUcuAd, Durak, KokUcu, Nokta } from "./klipler";
+import type { IcindenMetin, PolaroidFoto } from "./metin";
 
 /**
  * /icinden v3 fidan bölümünün DOM katmanı (G turu, brief-icinden-3 §14.3, §14.4.6). Sunucu bileşenleri: konumlar manifestin
@@ -14,10 +14,10 @@ import type { Boyut, DalUcuAd, Durak, KokUcu, Nokta } from "./klipler";
  *    TEK `<path>` (81 daire yayı; HTML ve RSC yükünde 162 `<circle>`'dan ~%60 küçük); viewBox = video karesi,
  *    `preserveAspectRatio="xMidYMid slice"` = `object-fit: cover` (aynı dönüşüm, hesap yok). Animasyon yalnız `<svg>`
  *    öğesinin opaklığı (300 ms, dinlenmede). Reduced-motion'da posterin üstünde statik: aynı yol `<use href>` ile.
- *  - BogumEtiketleri (d9 fidan-govde, `ozel.bogumlar`): iki boğuma kılavuzlu etiket; metin content.ts'ten (`vizyon.items`
- *    + `facts`), `taraf` −1 sol (alt boğum, 2017) / +1 sağ (üst boğum, TBMM).
+ *  - BogumEtiketleri (d9 fidan-govde, `ozel.bogumlar`): iki boğuma kılavuzlu etiket; metin sözlükten (metin.ts `fidanGovde.bogumlar`;
+ *    TR content.ts `vizyon.items` + `facts`), `taraf` −1 sol (alt boğum, 2017) / +1 sağ (üst boğum, TBMM).
  *  - Polaroidler (d10 fidan-dal, `ozel.dalUclari`): 6 ana dal ucunun 4'üne asılı fotoğraflar (§14.4.1 K6: sol p12 + p17,
- *    sağ p19 + p22), alt metinler photos.ts'ten. Bölümün içinde (ekran okuyucu akışında), sabit katman.
+ *    sağ p19 + p22), alt metinler sözlükten (TR photos.ts). Bölümün içinde (ekran okuyucu akışında), sabit katman.
  */
 
 /** Halka yarıçapı (video px): kök ucu kapağı ~4,1 px çaplı; halka kapağın dışında, en yakın iki uç (12,6 px) değmeden. */
@@ -56,18 +56,6 @@ export function KokHalkalari({ D, statik = false }: { D: Durak | undefined; stat
   );
 }
 
-/** Boğum etiketlerinin metni (content.ts): sıra taraf −1 (alt boğum) → +1 (üst boğum). */
-export function bogumMetinleri() {
-  return [
-    { taraf: -1 as const, ad: vizyon.items[1].title, satir: `Seçilme yaşı ${facts.electionAge}` },
-    {
-      taraf: 1 as const,
-      ad: vizyon.items[2].title,
-      satir: `${facts.youngMpsAgeLimit} yaş altı ${facts.youngMps} vekilden ${facts.youngMpsOurs}'ü`,
-    },
-  ];
-}
-
 /** Video px noktası → CSS değişkenleri (iki yön; olmayan yön `data-yok`). */
 function noktaDegisken(d: Nokta | undefined, y: Nokta | undefined) {
   return {
@@ -77,12 +65,12 @@ function noktaDegisken(d: Nokta | undefined, y: Nokta | undefined) {
 }
 
 /** d9: iki boğum etiketi (sahne katmanında, aria-hidden; okunur kopyası d9 bandında). */
-export function BogumEtiketleri({ D, k }: { D: Durak | undefined; k: number }) {
+export function BogumEtiketleri({ D, k, M }: { D: Durak | undefined; k: number; M: IcindenMetin }) {
   const b = D?.ozel?.bogumlar;
   if (!b) return null;
   return (
     <>
-      {bogumMetinleri().map((t, i) => {
+      {M.fidanGovde.bogumlar.map((t, i) => {
         const bul = (y: Boyut) => b[y].find((p) => p.taraf === t.taraf);
         const d = bul("dikey");
         const y = bul("yatay");
@@ -107,11 +95,11 @@ export function BogumEtiketleri({ D, k }: { D: Durak | undefined; k: number }) {
  * d10 polaroidleri (§14.4.1 K6). `uc`: asıldığı ana dal ucu (S3 `dal_uclari`); dikey fotoğraf (p22) alt uçta (altında yer
  * var). `konum`: yüzlere göre kırpım (object-position; /dunya DunyaIcerik'teki değerler). `en`: çerçeve genişliği, video px.
  */
-const POLAROIDLER: readonly { uc: DalUcuAd; foto: PhotoAsset; konum: string; oran: string; en: number }[] = [
-  { uc: "solOrta", foto: photos.bulusmaKampusSoylesi, konum: "62% 50%", oran: "4 / 3", en: 118 }, // p12
-  { uc: "solAlt", foto: photos.bulusmaKampusSalonSelam, konum: "72% 50%", oran: "4 / 3", en: 118 }, // p17
-  { uc: "sağOrta", foto: photos.solenKocaeliTribunSelam, konum: "0% 50%", oran: "4 / 3", en: 118 }, // p19
-  { uc: "sağAlt", foto: photos.solenKocaeliSahaIkili, konum: "50% 11%", oran: "3 / 4", en: 92 }, // p22
+const POLAROIDLER: readonly { uc: DalUcuAd; foto: PolaroidFoto; konum: string; oran: string; en: number }[] = [
+  { uc: "solOrta", foto: "bulusmaKampusSoylesi", konum: "62% 50%", oran: "4 / 3", en: 118 }, // p12
+  { uc: "solAlt", foto: "bulusmaKampusSalonSelam", konum: "72% 50%", oran: "4 / 3", en: 118 }, // p17
+  { uc: "sağOrta", foto: "solenKocaeliTribunSelam", konum: "0% 50%", oran: "4 / 3", en: 118 }, // p19
+  { uc: "sağAlt", foto: "solenKocaeliSahaIkili", konum: "50% 11%", oran: "3 / 4", en: 92 }, // p22
 ];
 /**
  * Fotoğrafın ekrandaki genişliği ≈ en · s (dikey 390 px'te ~70 px, 1280 × 800'de ~120 px, 1920 × 1080'de ~165 px): srcset
@@ -122,17 +110,19 @@ const POLAROID_W = 128;
 const BOS = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 /** d10: dört polaroid (bölümün içinde; hareketli düzende sabit katman, reduced'da akışta dörtlü sıra). */
-export function Polaroidler({ D, k }: { D: Durak | undefined; k: number }) {
+export function Polaroidler({ D, k, M }: { D: Durak | undefined; k: number; M: IcindenMetin }) {
   const u = D?.ozel?.dalUclari;
   if (!u) return null;
   return (
-    <div data-d={k} className="v3-polaroidler" role="group" aria-label="Fotoğraflar">
+    <div data-d={k} className="v3-polaroidler" role="group" aria-label={M.fidanDal.polaroidEtiket}>
       {POLAROIDLER.map((p, i) => {
+        const foto = photos[p.foto];
+        const alt = M.fidanDal.polaroidAlt[p.foto];
         const d = u.dikey.find((x) => x.ad === p.uc);
         const y = u.yatay.find((x) => x.ad === p.uc);
         if (!d && !y) return null;
         const { stil, yok } = noktaDegisken(d && [d.x, d.y], y && [y.x, y.y]);
-        const { props } = getImageProps({ src: p.foto.src, alt: p.foto.alt, width: POLAROID_W, height: Math.round((POLAROID_W * p.foto.height) / p.foto.width) });
+        const { props } = getImageProps({ src: foto.src, alt, width: POLAROID_W, height: Math.round((POLAROID_W * foto.height) / foto.width) });
         return (
           <figure key={p.uc} data-v3-pola data-uc={p.uc} data-yok={yok} className="v3-pola" style={{ ...stil, "--pw": p.en, "--i": i } as CSSProperties}>
             <span className="v3-pola-sarkac">
@@ -141,9 +131,9 @@ export function Polaroidler({ D, k }: { D: Durak | undefined; k: number }) {
                 {/* eslint-disable-next-line @next/next/no-img-element -- kaynak JS'le d9 dinlenmesinde atanır, decode() beklenir */}
                 <img
                   src={BOS}
-                  alt={p.foto.alt}
-                  width={p.foto.width}
-                  height={p.foto.height}
+                  alt={alt}
+                  width={foto.width}
+                  height={foto.height}
                   data-v3-src={props.src}
                   data-v3-srcset={props.srcSet}
                   decoding="async"

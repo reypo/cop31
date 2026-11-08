@@ -566,3 +566,9 @@ cd D:/soft/cop31 && python -X utf8 -P scripts/icinden/t34-birlestir.py
 ```
 
 Taşınmadan önce K/V koşuları `--esle t23=$N/t23,l3=$N/l3,t34=$N/t34` vermeli. G görünümüyle yeniden render gerekirse `--orman_k 0`.
+
+## İki dil (8 Kasım 2026)
+
+S1 kliplerinde (t01 … t34a, l1–l3, p1–p3) okunur yazı yok: iki dilde ortak, yeniden render edilmez. t34 = t34a (S1) + t34b (S2,
+dile göre): İngilizce kökte (`render-son-en`) `t34a/` Türkçe kökün karelerine sabit bağ, `t34-birlestir.py --kok <kök>` iki kökte de
+koşar. Dil değişkesi S2/S3'te (`scripts/blender/s3/BENIOKU.md` "İki dil").
